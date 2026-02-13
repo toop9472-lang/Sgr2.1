@@ -429,6 +429,7 @@ function MainApp() {
                   <HomePage 
                     user={user}
                     onNavigateToAds={() => setShowFullScreenAds(true)}
+                    onNavigate={handleNavigate}
                   />
                   <AIFloatingButton user={user} />
                 </>
