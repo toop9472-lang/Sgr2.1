@@ -64,6 +64,10 @@ const SettingsScreen = ({ onBack }) => {
   const languages = [
     { code: 'ar', name: 'العربية', flag: '🇸🇦' },
     { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'fr', name: 'Français', flag: '🇫🇷' },
+    { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
+    { code: 'ur', name: 'اردو', flag: '🇵🇰' },
+    { code: 'hi', name: 'हिन्दी', flag: '🇮🇳' },
   ];
 
   const getThemeName = () => themes.find(t => t.id === theme)?.name || 'داكن';
