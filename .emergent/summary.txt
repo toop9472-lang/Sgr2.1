@@ -12,109 +12,108 @@ The user's explicit requests included:
 5.  **Original Unanswered Question:** The user asked for an explanation of Update iOS SDK.
 6.  **Final Goal:** Finalize all features and fixes, then build the iOS and Android applications for submission.
 
-**User's preferred language**: The user's primary language is **Arabic (العربية)**. The next agent MUST respond in Arabic only.
+**User's preferred language**: العربية
 
 **what currently exists?**
-The agent has successfully addressed several critical tasks in this session. The  file, which was a major security risk, has been completely purged from the entire Git history. On the web application, the agent has enabled Dark Mode and multi-language support by creating and linking a new Settings page. A Terms of Use page was also created and correctly linked from the login and account pages. Work has begun to mirror these changes on the mobile app, but it is not yet complete or verified.
+The  file has been purged from Git history. Web Dark Mode, multi-language support (now with 6 languages: Arabic, English, French, Turkish, Urdu, Hindi), and Terms of Use page are fully implemented and working across all relevant pages. The mobile app has initial setup for Settings and Terms of Use pages. Advertiser ad creation is implemented with Stripe/bank transfer payment options. Critical security issues related to CORS and a dynamic  have been resolved. The mobile API URL is now dynamically configured using environment variables. Duplicate code and old  files have been cleaned up. The Guest Login button has been restyled on the web. Placeholder files for Advertiser Dashboard and Support screens have been created for mobile.
 
 **Last working item**:
-- **Last item agent was working:** The agent was working on bringing the mobile application to feature parity with the web application. This involved creating a  to handle theme/language changes and adding links for both Settings and Terms of Use to the user's profile screen ().
-- **Status:** IN PROGRESS
-- **Agent Testing Done:** N (Web changes were verified with screenshots, but mobile changes have not been tested at all).
-- **Which testing method agent to use?** Frontend testing agent. The next agent should start by testing the mobile application to verify the UI changes for the Settings and Terms of Use links and functionality.
-- **User Testing Done:** N
+- Last item agent was working: The agent was about to start implementing two new mobile features: Daily Challenges (with a max of 69 points/day) and a 14-day Daily Login Rewards table (150 total points/month, interactive, elegant design on Profile page).
+- Status: NOT STARTED
+- Agent Testing Done: N
+- Which testing method agent to use? Frontend testing agent, as these are new UI-heavy features requiring visual and interaction verification. Backend testing might be needed later for logic.
+- User Testing Done: N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: Verify Mobile Feature Parity (P0)**
-- **Issue 2: Backend server goes to sleep (P1)**
-- **Issue 3: User's question about Update iOS SDK is unanswered (P1)**
+- Issue 1: Backend server goes to sleep, causing app failure (P1)
+- Issue 2: User's question about Update iOS SDK is unanswered (P1)
 
 **Issues Detail:**
-- **Issue 1: Verify Mobile Feature Parity**
-  - **Attempted fixes**: The agent created , added it to the navigator in , and added links to it and the Terms of Use page in . However, no visual or functional testing was performed.
-  - **Next debug checklist**:
-    1.  Launch the mobile app preview.
-    2.  Log in as .
-    3.  Navigate to the Profile screen.
-    4.  Verify that the Settings and Terms of Use links are visible.
-    5.  Tap Settings and confirm the  loads correctly.
-    6.  Test the theme (dark/light) and language toggles on the mobile settings screen.
-    7.  Go back and tap the Terms of Use link and verify it opens the correct page/modal.
-  - **Why fix this issue and what will be achieved with the fix?**: To fulfill the user's direct request for feature parity between the web and mobile platforms.
-  - **Status**: IN PROGRESS
-  - **Is recurring issue?**: N
-  - **Should Test frontend/backend/both after fix?**: frontend
-  - **Blocked on other issue**: None
+- Issue 1: Backend server goes to sleep, causing app failure
+  - Attempted fixes: None. This critical issue, mentioned in the previous handoff and during the security audit, has not been addressed with the user.
+  - Next debug checklist:
+    1. Formulate a clear explanation in Arabic for the user.
+    2. Explain that the starter hosting plan causes the server to sleep, which is the root cause of the App Store rejections.
+    3. Advise the user that upgrading to an always-on hosting tier is the only permanent solution.
+  - Why fix this issue and what will be achieved with the fix?: This is the primary blocker for the entire project's success and the reason the app keeps getting rejected. Resolving it is essential for a successful launch.
+  - Status: NOT STARTED (Communication with user)
+  - Is recurring issue?: Y
+  - Should Test frontend/backend/both after fix?: N/A (Requires user action)
+  - Blocked on other issue: None
 
-- **Issue 2: Backend server goes to sleep, causing app failure**
-  - **Attempted fixes**: None. This critical issue, mentioned in the previous handoff, has not been addressed or communicated to the user.
-  - **Next debug checklist**:
-    1.  Formulate a clear explanation in Arabic for the user.
-    2.  Explain that the starter hosting plan causes the server to sleep, which is the root cause of the App Store rejections.
-    3.  Advise the user that upgrading to an always-on hosting tier is the only permanent solution.
-  - **Why fix this issue and what will be achieved with the fix?**: This is the primary blocker for the entire project's success and the reason the app keeps getting rejected. Resolving it is essential for a successful launch.
-  - **Status**: NOT STARTED
-  - **Is recurring issue?**: Y
-  - **Should Test frontend/backend/both after fix?**: N/A (Requires user action)
-
-- **Issue 3: User's question about Update iOS SDK is unanswered**
-  - **Attempted fixes**: None. The agent was sidetracked by other tasks and never answered the user's original question from the previous session.
-  - **Next debug checklist**:
-    1.  Respond to the user in Arabic.
-    2.  Explain that Update iOS SDK likely refers to the need to update the *Android SDK* target version to comply with Google Play Store requirements, and that this is a standard maintenance task before building the app.
-  - **Why fix this issue and what will be achieved with the fix?**: To answer a pending user question and provide clarity on the remaining tasks.
-  - **Status**: NOT STARTED
-  - **Is recurring issue?**: N
-  - **Should Test frontend/backend/both after fix?**: N/A
+- Issue 2: User's question about Update iOS SDK is unanswered
+  - Attempted fixes: None.
+  - Next debug checklist:
+    1. Respond to the user in Arabic.
+    2. Explain that Update iOS SDK likely refers to the need to update the *Android SDK* target version to comply with Google Play Store requirements, and that this is a standard maintenance task before building the app.
+  - Why fix this issue and what will be achieved with the fix?: To answer a pending user question and provide clarity on the remaining tasks.
+  - Status: NOT STARTED
+  - Is recurring issue?: N
+  - Should Test frontend/backend/both after fix?: N/A
+  - Blocked on other issue: None
 
 **In progress Task List**:
-- **Task 1: Complete Mobile Feature Parity**
-  - **Where to resume**: The necessary files (, ) have been created/modified. The next step is to run the mobile app and thoroughly test the new UI elements and their functionality as outlined in Issue 1.
-  - **What will be achieved with this?**: The mobile app will have the same theme, language, and legal page capabilities as the web app.
-  - **Status**: IN PROGRESS
-  - **Should Test frontend/backend/both after fix?**: frontend
-  - **Blocked on something**: None
+- Task 1: Implement Daily Challenges (P0)
+  - Where to resume: The agent is about to start code examination for this feature, focusing on the mobile application.
+  - What will be achieved with this?: A new core feature to engage users with daily point-earning challenges (max 69 points/day).
+  - Status: NOT STARTED
+  - Should Test frontend/backend/both after fix?: Both
+  - Blocked on something: None
+
+- Task 2: Implement 14-day Daily Login Rewards (P0)
+  - Where to resume: The agent is about to start code examination for this feature, focusing on the mobile application, creating an elegant, interactive table on the Profile page with 150 total points over 14 days, updated monthly.
+  - What will be achieved with this?: A new core feature to boost user retention and reward consistent engagement.
+  - Status: NOT STARTED
+  - Should Test frontend/backend/both after fix?: Both
+  - Blocked on something: None
 
 **Upcoming and Future Tasks**
-- **Upcoming Tasks**:
-    - (P1) Inform user about the server sleep issue and the required hosting plan upgrade.
-    - (P1) Respond to the user about the Update iOS SDK task.
-    - (P2) Update the Android SDK target version in the mobile project configuration.
-    - (P2) Build the new iOS and Android app versions using  after all fixes and features are verified.
-- **Future Tasks**:
-    - (P3) Guide the user on submitting the new build to the App Store and Google Play.
+- Upcoming Tasks:
+    - 🔴 Implement Advertiser Dashboard (P0): Develop the UI for advertisers to view their past ads and statistics on mobile, utilizing existing backend API.
+    - 🟠 Support Screen UI Enhancement (P1): Implement the UI for creating support tickets on mobile, moving beyond just opening an email client.
+    - 🟠 Clean  (P1): Delete the unused backup folder to clean the repository.
+    - 🟢 Update Android SDK target version (P2).
+    - 🟢 Build new iOS and Android app versions using  after all fixes and features are verified (P2).
+- Future Tasks:
+    - 🟢 Guide user on submitting new build to App Store and Google Play (P3).
+    - 🟡 Add Redis for caching (P2, Performance improvement).
+    - 🟡 Implement general API Rate Limiting (P2, Security improvement).
+    - 🟢 Improve API Documentation (P2).
 
 **Completed work in this session**
-- **Critical Security Fix**: Permanently purged  from the entire Git repository history using WARNING: git-filter-branch has a glut of gotchas generating mangled history
-	 rewrites.  Hit Ctrl-C before proceeding to abort, then use an
-	 alternative filtering tool such as 'git filter-repo'
-	 (https://github.com/newren/git-filter-repo/) instead.  See the
-	 filter-branch manual page for more details; to squelch this warning,
-	 set FILTER_BRANCH_SQUELCH_WARNING=1.
-Proceeding with filter-branch....
-- **Web Dark Mode & Language Support**: Activated  and linked a new  where users can toggle between light/dark themes and select their language.
-- **Web Terms of Use Page**: Created a  page and integrated links to it on the  and  (account menu).
+- CORS issue fixed in  and  to use specific allowed origins instead of .
+-  made static in  to prevent user logouts on server restarts.
+- Created placeholder files  and .
+- Added navigation entries for  and  in  and links in .
+- Updated  to use  for dynamic API URL.
+- Fixed Guest Login button on web () to display as small white text.
+- Restored French and Turkish language support, and added Urdu and Hindi language support across the application.
+- Modified  to display a dropdown of all 6 available languages (Arabic, English, French, Turkish, Urdu, Hindi).
+- Updated  and  to use  for all translatable texts, ensuring proper language switching on all pages.
+- Added  to  for easy access.
+- Consolidated duplicate  files in  and removed the redundant  folder.
+- Cleaned up and updated  to include  and .
 
 **Earlier issues found/mentioned but not fixed**
-- **Backend server goes to sleep**: The root cause of App Store rejections (hosting plan limitation) has not been communicated to the user.
-- **User's unanswered question**: The query about Update iOS SDK was never addressed.
+- Backend server goes to sleep: The root cause of App Store rejections (hosting plan limitation) has not been communicated to the user.
+- User's unanswered question: The query about Update iOS SDK was never addressed.
 
 **Known issue recurrence from previous fork**
-- **Issue**: Exposed credentials in Git history.
-  - **Recurrence count**: 2
-  - **Status**: RESOLVED
-- **Issue**: Backend server goes to sleep.
-  - **Recurrence count**: High
-  - **Status**: BLOCKED (on agent communicating the issue to the user)
+- Issue: Exposed credentials in Git history.
+  - Recurrence count: 2
+  - Status: RESOLVED
+- Issue: Backend server goes to sleep.
+  - Recurrence count: High
+  - Status: BLOCKED (on agent communicating the issue to the user)
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Mobile**: React Native, Expo, , Ionicons
-- **Frontend**: Next.js, React, Lucide Icons, TailwindCSS, Context API
-- **Backend**: Python, FastAPI, Pydantic, MongoDB (), JWT
-- **Integrations**: Resend (for emails)
+- Mobile: React Native, Expo, , Ionicons
+- Frontend: Next.js, React, Lucide Icons, TailwindCSS, Context API
+- Backend: Python, FastAPI, Pydantic, MongoDB (), JWT
+- Integrations: Resend (for emails)
 
 **key DB schema**
 - No changes made to the DB schema in this session.
@@ -124,51 +123,80 @@ Proceeding with filter-branch....
 
 **All files of reference**
 - **Created:**
-  - : New page for terms.
-  - : New settings screen for mobile.
+  - : Placeholder for advertiser dashboard.
+  - : Placeholder for support ticket creation.
 - **Updated:**
-  - : Added  and routing for settings/terms pages.
-  - : Corrected the link for the terms page.
-  - : Added 'Settings' to the user account menu.
-  - : Added  to the navigation stack.
-  - : Added menu items for 'Settings' and 'Terms of Use'.
+  - : Added  and  to navigation stack.
+  - : Added menu items for  and .
+  - : Changed hardcoded API URL to use .
+  - : Updated  to specific domains, added fixed .
+  - : Modified CORS configuration to correctly read  and reject .
+  - : Modified Guest Login button style.
+  - : Updated  to support all 6 languages and  function.
+  - : Modified to display a dropdown of all available languages.
+  - : Updated to use  for all translatable texts and added .
+  - : Updated to use  for all translatable texts.
+  - , , , , , : Updated with full translation strings and added new languages (Urdu, Hindi).
+  - : Cleaned up and updated to include  and .
+
+**Areas that need refactoring**:
+- The  folder should be deleted to clean the repository.
+- Some large route files in the backend () might benefit from further breaking down for better maintainability.
+
+**key api endpoints**
+-  (Create new ad)
+-  (Get single ad)
+-  (Get advertiser analytics)
+-  (Get ad pricing/packages)
+-  (User login)
+-  (Admin verification)
 
 **Critical Info for New Agent**
-- **Your first action must be to test the mobile app changes.** The previous agent added the code for the Settings and Terms of Use pages but did not verify if they work.
-- **You must communicate the critical blockers to the user in Arabic.** The two most important unresolved issues are the server sleep problem (requiring a hosting plan upgrade) and the unanswered question about the iOS SDK. These must be addressed before attempting to build the final apps.
-- **Language is paramount.** All communication with the user must be in Arabic.
+- **Immediate focus:** The user's latest request is to implement Daily Challenges and 14-day Daily Login Rewards for the mobile app. This is a P0 task. Focus on mobile, professional icons, and specific point values/mechanics.
+- **Critical Blockers:** The server sleep issue (P1) and the Update iOS SDK question (P1) remain unaddressed with the user. The next agent MUST communicate these crucial blockers in Arabic before proceeding with app submission.
+- **Testing:** The new features will require extensive frontend and backend testing.
+- **Mobile UI:** User specifically requested no emojis, only professional icons for the new features on mobile.
 
 **documents and test reports created in this job**
--  (was read, but the final update was pre-empted by the user's last message)
+-  (Updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **user**: ازل بيانات الاعتماد (Remove the credentials). (COMPLETED)
-2.  **user**: تاكد من الوضع الداكن ودعم اللغات بنيتها سابقا فعلها فقط كذالك صقحة الشروط انتهينا منها سابقا تاكد (Check on dark mode and language support... just activate them. Also, the terms page, we finished it before, check). (COMPLETED for web, IN PROGRESS for mobile)
-3.  **user**: تاكد بان كل شي يعمل بالموبايل مثل الويب (Make sure everything on mobile works like the web). (IN PROGRESS - This is the current active task).
+1.  **user**: اعطني تقيم نسبي للتطبيق مقارنة للتطبيقات الاخرى و قوته (Give me a relative rating of the app compared to other apps and its strength.) - (COMPLETED by Agent providing a detailed rating)
+2.  **user**: Call Deployer Agent and Run Health Check to Check for Readiness for Deployment - (COMPLETED by Agent calling Deployer and then correcting its findings)
+3.  **user**: اكمل و تاكد من من الترجمة بانها تعمل بجميع الصفحات حتى عند تغير اللغة من الايقونه تاكد من ان جميع الصفحات تتغير كذالك ايقونة دخول بدون تسجيل باللون الاصفر استبدلها بكتابه باللون الابيض بالخط الصغير تحت ايقونة البريد دخول زائر و لغة التطبيق لا يعمل فقط العربي و الانجليزي و ايضا عد للاكواد و الملفات الرييسية كل مكرر لا نستخدمه وكل قديم وكل عشوائي وكل نسخه سابقه احذفه اصقل الاكواد و اجعل الاكواد نظيفه بدون شوائب و اكواد غير مستخدمه بعد فحص جميع الملفات (Continue and ensure translation works on all pages even when changing language from the icon. Ensure all pages change accordingly, and replace the yellow Guest Login icon with small white text under the email icon, reading Guest Login. The app's language only works for Arabic and English; also, revisit the code and main files, remove all duplicates, old, random, and previous versions. Polish the code and make it clean without impurities and unused code after checking all files.) - (Agent fixed Guest Login and cleaned code, but initially misinterpreted language request.)
+4.  **user**: كنت اقصد باللغات انني عند تغير اللغة لا يتغير سوى صفحة الاعدادات باقي الصفحات لا تتغير لغتها تبقى بالعربيه تاكد من هذا كذالك لا يعمل سوى العربي و الانجليزي الفرنسي لا يعنل و التركي لا يعمل لم اطلب الغاء اللغات طلبت تصحيح الاخطاء وتاكد بان كل الصفحات تتغير لغتها مع اضافة اللغة الاوردو و الهندية و التاكد بانها تعمل بالشكل المطلوب (I meant that when I change the language, only the settings page changes, the rest of the pages remain in Arabic. Make sure of this. Also, only Arabic and English work; French and Turkish do not work. I did not ask to cancel languages, I asked to correct the errors. And make sure all pages change their language, add Urdu and Hindi, and ensure they work as required.) - (COMPLETED by Agent fixing translations on all pages, re-adding French/Turkish, and adding Urdu/Hindi, ensuring full functionality.)
+5.  **user**: الان اريد اضافة اخر نقطة بالتطبيق وركز عليها بتطبيق الموبايل بدون استخدام اي ايموجي فقط رموز احترافيه. تاكد من التحديات اليوميه بحيث يكون اقصى حد للنقاط كل يوم ٦٩ وتاكد بانه يمكن التفاعل معها و الحصول على النقاط بعد انتهاء التحدي. كذالك اريد اضافة مكافات تسجيل الدخول يوميا لمدة ١٤ يوم على شكل جدول يكون في الصفحة الشخصية بشكل انيق و مرتب يكون هو و التحديات بصفحة واحدة ويمكن التفاعل معه ويتم تحديد الجدول مرا واحدة بالشهر بحيث يكون مجموع النقاط لل ١٤ يوم من مكافئات تسجيل الدخول ١٥٠ نقطه وتاكد بانه يمكن التفاعل معها ومن دقة الجدول بان كل مرور يوم يمكنه الحصول على مكافئة مرا واحدة وتاكد من شكلها بان يكون انيق مع توزيع المكافيات بشكل مغري (Now I want to add the last point to the application, focus on the mobile application without using any emojis, only professional symbols. Ensure daily challenges have a maximum of 69 points per day and that they can be interacted with and points obtained after the challenge ends. Also, I want to add daily login rewards for 14 days in a table format on the profile page, elegantly arranged, with both it and the challenges on one page, and that it can be interacted with. The table should be set once a month, with a total of 150 points for the 14-day login rewards. Ensure it can be interacted with, and the accuracy of the table so that for each passing day, a reward can be obtained once, and ensure its appearance is elegant with attractive reward distribution.) - (IN PROGRESS, Agent is starting to examine the code for this.)
 
 **Project Health Check:**
 - **Broken**:
   - **Backend Reliability**: The server's sleep policy on the current hosting plan makes the app unreliable and is the primary reason for App Store rejections. This issue has not been communicated to the user.
 - **Fixed**:
-  - **Git History**: The critical security risk of exposed credentials has been resolved.
+  - **Git History**: Critical security risk of exposed credentials resolved.
+  - **CORS Configuration**: Fixed to use specific origins.
+  - **JWT Secret**: Static, preventing user logouts.
+  - **Mobile API URL**: Dynamic using environment variables.
+  - **Translation System**: Fully functional across web/mobile with 6 languages, hardcoded texts replaced.
+  - **Guest Login button**: Styled as requested.
+  - **Duplicate files**: Cleaned up.
 - **Mocked**:
-  - The mobile implementation of Settings/Terms of Use is coded but untested and may be broken.
+  - The  and  are created as placeholders but lack actual implementation.
 
 **3rd Party Integrations**
 - **Resend**: Used for sending 2FA emails.
 - **Expo (EAS)**: To be used for building the mobile apps.
-- **Stripe**: Integrated for payments.
+- **Stripe**: Integrated for payments (specifically for advertiser ad creation).
 
 **Testing status**
-- **Testing agent used after significant changes**: NO. The agent used manual screenshot verification for web changes. No testing was performed for the mobile changes.
-- **Test files created**: None.
-- **Known regressions**: None.
+- Testing agent used after significant changes: NO. Agent used manual curl commands, screenshots, and visual verification.
+- Test files created: None.
+- Known regressions: None identified, but comprehensive testing with a testing agent would be beneficial for the multi-language feature due to its complexity.
 
 **Credentials to test flow:**
-- **Demo Account**:  / 
-- **Guest Mode**: Click the تجربة التطبيق بدون حساب button.
+- Demo Account:  / 
+- Guest Mode: Click the دخول كزائر button.
 
 **What agent forgot to execute**
-- To test the mobile app changes after implementing them.
 - To communicate the critical server sleep hosting issue to the user.
-- To answer the user's original question about Update iOS SDK.</analysis>
+- To answer the user's original question about Update iOS SDK.
+- To delete the  folder.
+- To fully implement the  and  after creating the placeholder files.</analysis>

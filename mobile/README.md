@@ -209,8 +209,8 @@ eas submit -p android
 
 ## 📞 الدعم والمساعدة
 
-- **الموقع:** https://mobile-verify-9.preview.emergentagent.com
-- **API Docs:** https://mobile-verify-9.preview.emergentagent.com/docs
+- **الموقع:** https://mobile-rewards-3.preview.emergentagent.com
+- **API Docs:** https://mobile-rewards-3.preview.emergentagent.com/docs
 
 ---
 
