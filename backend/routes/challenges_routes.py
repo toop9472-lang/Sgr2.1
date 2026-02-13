@@ -293,6 +293,9 @@ async def get_daily_challenges(user_id: str = Depends(get_current_user_id)):
         # Add timer info for online_time challenge
         if challenge['type'] == 'online_time' and session_start:
             now = datetime.now(timezone.utc)
+            # Ensure session_start is timezone-aware
+            if session_start.tzinfo is None:
+                session_start = session_start.replace(tzinfo=timezone.utc)
             elapsed_seconds = int((now - session_start).total_seconds())
             remaining_seconds = max(0, (challenge['target'] * 60) - elapsed_seconds)
             challenge_data['timer'] = {
