@@ -309,6 +309,7 @@ const ChallengesPage = ({ user, onNavigate, onPointsEarned }) => {
               const Icon = getIconComponent(challenge.icon);
               const progress = (challenge.current / challenge.target) * 100;
               const isClaiming = claimingId === challenge.id;
+              const isTimerChallenge = challenge.id === 'stay_online_1hour';
 
               return (
                 <div key={challenge.id} className="bg-black/30 rounded-xl p-4">
@@ -328,6 +329,21 @@ const ChallengesPage = ({ user, onNavigate, onPointsEarned }) => {
                     </div>
                   </div>
 
+                  {/* Timer display for online challenge */}
+                  {isTimerChallenge && !challenge.completed && !challenge.claimed && timerSeconds !== null && (
+                    <div className="bg-[#3b82f6]/10 rounded-lg py-3 px-4 mb-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Timer className="w-5 h-5 text-[#3b82f6] animate-pulse" />
+                        <span className="text-white/70 text-sm">
+                          {language === 'ar' ? 'الوقت المتبقي:' : 'Time remaining:'}
+                        </span>
+                      </div>
+                      <span className="text-[#3b82f6] font-mono text-lg font-bold">
+                        {formatTime(timerSeconds)}
+                      </span>
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-3 mb-3">
                     <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
                       <div 
@@ -336,7 +352,10 @@ const ChallengesPage = ({ user, onNavigate, onPointsEarned }) => {
                       />
                     </div>
                     <span className="text-white/50 text-xs min-w-[40px]">
-                      {challenge.current}/{challenge.target}
+                      {isTimerChallenge 
+                        ? `${challenge.current}/${challenge.target} ${language === 'ar' ? 'دقيقة' : 'min'}`
+                        : `${challenge.current}/${challenge.target}`
+                      }
                     </span>
                   </div>
 
