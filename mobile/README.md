@@ -209,8 +209,8 @@ eas submit -p android
 
 ## 📞 الدعم والمساعدة
 
-- **الموقع:** https://mobile-rewards-3.preview.emergentagent.com
-- **API Docs:** https://mobile-rewards-3.preview.emergentagent.com/docs
+- **الموقع:** https://app-store-launch-6.preview.emergentagent.com
+- **API Docs:** https://app-store-launch-6.preview.emergentagent.com/docs
 
 ---
 

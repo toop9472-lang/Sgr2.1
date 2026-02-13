@@ -177,7 +177,7 @@ eas build --platform ios --profile production
 
 ### API URL:
 ```
-https://mobile-rewards-3.preview.emergentagent.com
+https://app-store-launch-6.preview.emergentagent.com
 ```
 
 ---

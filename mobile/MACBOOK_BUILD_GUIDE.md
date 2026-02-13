@@ -28,7 +28,7 @@ eas login
 
 ```bash
 # تحميل ملف المشروع
-curl -o mobile-project.zip https://mobile-rewards-3.preview.emergentagent.com/mobile-project.zip
+curl -o mobile-project.zip https://app-store-launch-6.preview.emergentagent.com/mobile-project.zip
 
 # فك الضغط
 unzip mobile-project.zip -d mobile-project
