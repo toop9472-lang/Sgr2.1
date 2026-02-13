@@ -15,8 +15,6 @@ const SettingsPage = ({ onBack, onNavigate }) => {
   const languages = [
     { code: 'ar', name: 'العربية', flag: '🇸🇦' },
     { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'fr', name: 'Français', flag: '🇫🇷' },
-    { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
   ];
 
   const themes = [
