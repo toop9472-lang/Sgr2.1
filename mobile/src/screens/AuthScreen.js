@@ -243,15 +243,14 @@ const AuthScreen = ({ onLogin }) => {
               </Text>
             </TouchableOpacity>
 
-            {/* Guest Login - تجربة بدون حساب */}
+            {/* Guest Login - دخول زائر */}
             <TouchableOpacity 
-              style={styles.guestBtn} 
+              style={styles.guestLink} 
               onPress={handleGuestLogin}
               disabled={isLoading}
-              activeOpacity={0.8}
+              activeOpacity={0.7}
             >
-              <Ionicons name="game-controller-outline" size={18} color="#fbbf24" />
-              <Text style={styles.guestText}>تجربة التطبيق بدون حساب</Text>
+              <Text style={styles.guestLinkText}>دخول كزائر</Text>
             </TouchableOpacity>
 
             {/* Privacy Policy Link */}
