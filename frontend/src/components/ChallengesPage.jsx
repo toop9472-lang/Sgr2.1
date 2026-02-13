@@ -49,11 +49,14 @@ const ChallengesPage = ({ user, onNavigate, onPointsEarned }) => {
       return;
     }
 
+    const token = localStorage.getItem('user_token');
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
     try {
       const [challengesRes, rewardsRes, statsRes] = await Promise.all([
-        fetch(`${API_URL}/api/challenges/daily`, { credentials: 'include' }),
-        fetch(`${API_URL}/api/challenges/login-rewards`, { credentials: 'include' }),
-        fetch(`${API_URL}/api/challenges/stats`, { credentials: 'include' }),
+        fetch(`${API_URL}/api/challenges/daily`, { headers, credentials: 'include' }),
+        fetch(`${API_URL}/api/challenges/login-rewards`, { headers, credentials: 'include' }),
+        fetch(`${API_URL}/api/challenges/stats`, { headers, credentials: 'include' }),
       ]);
 
       if (challengesRes.ok) {
