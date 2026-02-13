@@ -87,6 +87,11 @@ const HomePage = ({ user, onNavigateToAds }) => {
       <div className="fixed top-[-200px] left-[-200px] w-[500px] h-[500px] rounded-full bg-[#3b82f6]/20 blur-3xl pointer-events-none"></div>
       <div className="fixed bottom-[-150px] right-[-150px] w-[400px] h-[400px] rounded-full bg-[#3b82f6]/15 blur-3xl pointer-events-none"></div>
       
+      {/* Language Switcher - Fixed Position */}
+      <div className="fixed top-4 left-4 z-50">
+        <LanguageSwitcher />
+      </div>
+      
       <div className="relative z-10 pt-8 px-5 pb-6">
         {/* Logo */}
         <div className="flex items-center justify-center mb-6">
