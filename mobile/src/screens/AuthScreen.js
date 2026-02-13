@@ -480,23 +480,14 @@ const styles = StyleSheet.create({
   registerText: { color: 'rgba(255,255,255,0.5)', fontSize: 14 },
   registerBold: { color: '#60a5fa', fontWeight: 'bold' },
 
-  guestBtn: { 
-    marginTop: 20,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    backgroundColor: 'rgba(251,191,36,0.15)',
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: 'rgba(251,191,36,0.4)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    width: '100%',
+  guestLink: { 
+    marginTop: 16,
   },
-  guestText: { 
-    color: '#fbbf24', 
-    fontSize: 16, 
+  guestLinkText: { 
+    color: 'rgba(255,255,255,0.5)', 
+    fontSize: 13, 
+    textDecorationLine: 'underline',
+  }, 
     fontWeight: '700' 
   },
 
