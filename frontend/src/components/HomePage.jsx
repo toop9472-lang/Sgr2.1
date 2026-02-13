@@ -198,11 +198,17 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
 
             <div className="bg-white/5 border border-white/10 rounded-xl p-3">
               <div className="flex items-center gap-2 mb-2">
-                <Clock className="w-4 h-4 text-[#60a5fa]" />
-                <span className={`${textDimClass} text-xs`}>{t('remaining')}</span>
+                <Trophy className="w-4 h-4 text-amber-400" />
+                <span className={`${textDimClass} text-xs`}>{language === 'ar' ? 'نقاط التحديات' : 'Challenge Points'}</span>
               </div>
-              <p className={`${textClass} text-xl font-bold`}>{Math.max(dailyLimit - watchedToday, 0)}</p>
-              <p className={`${textDimClass} text-xs`}>{t('available')}</p>
+              <p className={`${textClass} text-xl font-bold`}>{challengeStats.earned_today}/{challengeStats.max_daily_points}</p>
+              <p className={`${textDimClass} text-xs`}>{language === 'ar' ? 'اليوم' : 'Today'}</p>
+              <div className="mt-2 bg-white/10 rounded-full h-1.5">
+                <div 
+                  className="bg-amber-400 h-1.5 rounded-full transition-all"
+                  style={{ width: `${Math.min((challengeStats.earned_today / challengeStats.max_daily_points) * 100, 100)}%` }}
+                />
+              </div>
             </div>
 
             <div className="bg-white/5 border border-white/10 rounded-xl p-3">
@@ -216,45 +222,85 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
 
             <div className="bg-white/5 border border-white/10 rounded-xl p-3">
               <div className="flex items-center gap-2 mb-2">
-                <Zap className="w-4 h-4 text-[#a855f7]" />
-                <span className={`${textDimClass} text-xs`}>{t('earnRate')}</span>
+                <Clock className="w-4 h-4 text-[#60a5fa]" />
+                <span className={`${textDimClass} text-xs`}>{t('remaining')}</span>
               </div>
-              <p className={`${textClass} text-xl font-bold`}>{pointsPerAd}</p>
-              <p className={`${textDimClass} text-xs`}>{t('points')}</p>
+              <p className={`${textClass} text-xl font-bold`}>{Math.max(dailyLimit - watchedToday, 0)}</p>
+              <p className={`${textDimClass} text-xs`}>{t('available')}</p>
             </div>
           </div>
         </div>
 
-        {/* Daily Challenge */}
-        {dailyChallenge && dailyChallenge.enabled && (
+        {/* Daily Challenges from API */}
+        {dailyChallenges.length > 0 && (
           <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-2xl p-5 mb-6">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
-                <Trophy className="w-5 h-5 text-amber-400" />
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                  <Trophy className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <p className="text-amber-400 font-bold">{language === 'ar' ? 'التحديات اليومية' : 'Daily Challenges'}</p>
+                  <p className={`${textMutedClass} text-sm`}>{challengeStats.earned_today}/{challengeStats.max_daily_points} {language === 'ar' ? 'نقطة' : 'points'}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-amber-400 font-bold">{dailyChallenge.title}</p>
-                <p className={`${textMutedClass} text-sm`}>{dailyChallenge.desc}</p>
-              </div>
+              <button 
+                onClick={() => onNavigate && onNavigate('challenges')}
+                className="text-amber-400 text-sm flex items-center gap-1 hover:text-amber-300 transition-colors"
+              >
+                {language === 'ar' ? 'عرض الكل' : 'View All'}
+                <ChevronRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
+              </button>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex-1 bg-white/10 rounded-full h-2 mx-4">
-                <div 
-                  className="bg-amber-400 h-2 rounded-full transition-all"
-                  style={{ width: `${Math.min((watchedToday / dailyChallenge.target) * 100, 100)}%` }}
-                />
-              </div>
-              <span className="text-amber-400 text-sm font-bold flex items-center gap-1">
-                <Star className="w-3 h-3" /> +{dailyChallenge.reward}
-              </span>
+            
+            <div className="space-y-3">
+              {dailyChallenges.slice(0, 3).map((challenge) => {
+                const Icon = getChallengeIcon(challenge.icon);
+                const progress = (challenge.current / challenge.target) * 100;
+                
+                return (
+                  <div key={challenge.id} className="bg-black/20 rounded-xl p-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
+                        challenge.completed ? 'bg-green-500/20' : 'bg-white/5'
+                      }`}>
+                        <Icon className={`w-4 h-4 ${challenge.completed ? 'text-green-400' : 'text-gray-400'}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <p className={`${textClass} text-sm font-medium truncate`}>{challenge.title}</p>
+                          <div className="flex items-center gap-1 ml-2">
+                            <Star className="w-3 h-3 text-amber-400" />
+                            <span className="text-amber-400 text-xs font-bold">{challenge.points}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className="flex-1 bg-white/10 rounded-full h-1.5">
+                            <div 
+                              className={`h-1.5 rounded-full transition-all ${challenge.completed ? 'bg-green-400' : 'bg-amber-400'}`}
+                              style={{ width: `${Math.min(progress, 100)}%` }}
+                            />
+                          </div>
+                          <span className={`${textDimClass} text-xs`}>
+                            {challenge.claimed ? (
+                              <span className="text-green-400 flex items-center gap-1">
+                                <CheckCircle className="w-3 h-3" />
+                              </span>
+                            ) : challenge.can_claim ? (
+                              <span className="text-green-400 flex items-center gap-1">
+                                <Gift className="w-3 h-3" />
+                              </span>
+                            ) : (
+                              `${challenge.current}/${challenge.target}`
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <p className={`${textDimClass} text-xs mt-2 text-center flex items-center justify-center gap-1`}>
-              {watchedToday >= dailyChallenge.target ? (
-                <><CheckCircle className="w-3 h-3 text-green-400" /> {t('success')}</>
-              ) : (
-                `${watchedToday}/${dailyChallenge.target}`
-              )}
-            </p>
           </div>
         )}
 
