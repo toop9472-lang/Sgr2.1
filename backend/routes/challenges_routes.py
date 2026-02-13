@@ -159,6 +159,9 @@ async def get_user_challenge_progress(db, user_id: str, challenge_id: str, chall
             start_time = session.get('start_time')
             if start_time:
                 now = datetime.now(timezone.utc)
+                # Ensure start_time is timezone-aware
+                if start_time.tzinfo is None:
+                    start_time = start_time.replace(tzinfo=timezone.utc)
                 elapsed = (now - start_time).total_seconds() / 60
                 return min(int(elapsed), target)
         return 0
