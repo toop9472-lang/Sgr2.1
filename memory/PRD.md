@@ -324,4 +324,54 @@ Arabic (العربية)
 - ✅ Web-Mobile Consistency: Verified
 - ✅ 2FA Email Notifications: Working
 - ✅ Analytics Dashboard: Working
+- ✅ **Daily Challenges**: Working (15/15 tests passed)
+- ✅ **14-Day Login Rewards**: Working
 - 📱 Mobile: Ready for build
+
+---
+
+## Recent Updates (February 2026 - Session 4)
+
+### ✅ التحديات اليومية (Daily Challenges)
+- **Backend:** `/app/backend/routes/challenges_routes.py`
+- **API Endpoints:**
+  - `GET /api/challenges/daily` - عرض التحديات مع التقدم
+  - `POST /api/challenges/daily/claim` - استلام مكافأة التحدي المكتمل
+  - `GET /api/challenges/stats` - إحصائيات شاملة
+- **5 تحديات يومية (69 نقطة كحد أقصى):**
+  - مشاهد نشط (5 إعلانات) = 15 نقطة
+  - مشاهد متفاني (10 إعلانات) = 25 نقطة
+  - الحضور اليومي = 10 نقاط
+  - البداية (أول إعلان) = 5 نقاط
+  - سلسلة النشاط (3 أيام) = 14 نقطة
+
+### ✅ مكافآت تسجيل الدخول (14-Day Login Rewards)
+- **API Endpoints:**
+  - `GET /api/challenges/login-rewards` - عرض حالة المكافآت
+  - `POST /api/challenges/login-rewards/claim` - استلام مكافأة يوم معين
+- **150 نقطة شهرياً موزعة على 14 يوم:**
+  - الأيام 1-2: 5 نقاط لكل يوم
+  - الأيام 3-4: 8 نقاط لكل يوم
+  - الأيام 5-6: 10 نقاط لكل يوم
+  - اليوم 7 (بونص الأسبوع): 15 نقطة
+  - الأيام 8-9: 10 نقاط لكل يوم
+  - الأيام 10-11: 12 نقطة لكل يوم
+  - الأيام 12-14: 15 نقطة لكل يوم
+
+### ✅ شاشة التحديات للموبايل (ChallengesScreen)
+- **الملف:** `/app/mobile/src/screens/ChallengesScreen.js`
+- **الميزات:**
+  - عرض التحديات اليومية مع شريط التقدم
+  - جدول مكافآت الـ 14 يوم (تصميم أنيق)
+  - زر "استلم المكافأة" للتحديات المكتملة
+  - إحصائيات (نقاط اليوم، مكافآت الشهر، أيام متتالية)
+  - رموز احترافية (Ionicons) بدون إيموجي
+- **تم إضافتها إلى BottomNav** (زر "التحديات")
+
+### Files Created/Modified (Session 4)
+- **New:** `/app/backend/routes/challenges_routes.py`
+- **New:** `/app/mobile/src/screens/ChallengesScreen.js`
+- **New:** `/app/backend/tests/test_challenges_api.py`
+- **Modified:** `/app/backend/server.py` - Added challenges_router
+- **Modified:** `/app/mobile/App.js` - Added ChallengesScreen
+- **Modified:** `/app/mobile/src/components/BottomNav.js` - Added challenges tab
