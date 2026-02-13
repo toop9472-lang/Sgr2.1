@@ -13,7 +13,42 @@ const ChallengesPage = ({ user, onNavigate, onPointsEarned }) => {
   const [stats, setStats] = useState({});
   const [claimingId, setClaimingId] = useState(null);
 
+  // Default challenges for display
+  const defaultChallenges = [
+    { id: 'watch_5_ads', title: language === 'ar' ? 'مشاهد نشط' : 'Active Viewer', description: language === 'ar' ? 'شاهد 5 إعلانات' : 'Watch 5 ads', target: 5, current: 0, points: 15, icon: 'play-circle', completed: false, claimed: false, can_claim: false },
+    { id: 'watch_10_ads', title: language === 'ar' ? 'مشاهد متفاني' : 'Dedicated Viewer', description: language === 'ar' ? 'شاهد 10 إعلانات' : 'Watch 10 ads', target: 10, current: 0, points: 25, icon: 'film', completed: false, claimed: false, can_claim: false },
+    { id: 'daily_login', title: language === 'ar' ? 'الحضور اليومي' : 'Daily Login', description: language === 'ar' ? 'سجل دخولك اليوم' : 'Login today', target: 1, current: 0, points: 10, icon: 'log-in', completed: false, claimed: false, can_claim: false },
+    { id: 'first_ad', title: language === 'ar' ? 'البداية' : 'First Step', description: language === 'ar' ? 'شاهد إعلانك الأول اليوم' : 'Watch first ad today', target: 1, current: 0, points: 5, icon: 'rocket', completed: false, claimed: false, can_claim: false },
+    { id: 'streak_bonus', title: language === 'ar' ? 'سلسلة النشاط' : 'Activity Streak', description: language === 'ar' ? 'حافظ على نشاطك 3 أيام متتالية' : '3 days streak', target: 3, current: 0, points: 14, icon: 'flame', completed: false, claimed: false, can_claim: false },
+  ];
+
+  // Default login rewards
+  const defaultLoginRewards = [
+    { day: 1, points: 5, claimed: false, can_claim: false, unlocked: false },
+    { day: 2, points: 5, claimed: false, can_claim: false, unlocked: false },
+    { day: 3, points: 8, claimed: false, can_claim: false, unlocked: false },
+    { day: 4, points: 8, claimed: false, can_claim: false, unlocked: false },
+    { day: 5, points: 10, claimed: false, can_claim: false, unlocked: false },
+    { day: 6, points: 10, claimed: false, can_claim: false, unlocked: false },
+    { day: 7, points: 15, claimed: false, can_claim: false, unlocked: false },
+    { day: 8, points: 10, claimed: false, can_claim: false, unlocked: false },
+    { day: 9, points: 10, claimed: false, can_claim: false, unlocked: false },
+    { day: 10, points: 12, claimed: false, can_claim: false, unlocked: false },
+    { day: 11, points: 12, claimed: false, can_claim: false, unlocked: false },
+    { day: 12, points: 15, claimed: false, can_claim: false, unlocked: false },
+    { day: 13, points: 15, claimed: false, can_claim: false, unlocked: false },
+    { day: 14, points: 15, claimed: false, can_claim: false, unlocked: false },
+  ];
+
   const fetchData = useCallback(async () => {
+    // Skip API calls for guest users
+    if (user?.isGuest) {
+      setChallenges(defaultChallenges);
+      setLoginRewards(defaultLoginRewards);
+      setLoading(false);
+      return;
+    }
+
     try {
       const [challengesRes, rewardsRes, statsRes] = await Promise.all([
         fetch(`${API_URL}/api/challenges/daily`, { credentials: 'include' }),
@@ -23,13 +58,17 @@ const ChallengesPage = ({ user, onNavigate, onPointsEarned }) => {
 
       if (challengesRes.ok) {
         const data = await challengesRes.json();
-        setChallenges(data.challenges || []);
+        setChallenges(data.challenges || defaultChallenges);
+      } else {
+        setChallenges(defaultChallenges);
       }
 
       if (rewardsRes.ok) {
         const data = await rewardsRes.json();
-        setLoginRewards(data.rewards || []);
+        setLoginRewards(data.rewards || defaultLoginRewards);
         setStats(prev => ({ ...prev, loginDays: data.login_days, claimedRewardPoints: data.claimed_points }));
+      } else {
+        setLoginRewards(defaultLoginRewards);
       }
 
       if (statsRes.ok) {
@@ -38,10 +77,12 @@ const ChallengesPage = ({ user, onNavigate, onPointsEarned }) => {
       }
     } catch (error) {
       console.error('Error fetching challenges:', error);
+      setChallenges(defaultChallenges);
+      setLoginRewards(defaultLoginRewards);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.isGuest, language]);
 
   useEffect(() => {
     fetchData();
