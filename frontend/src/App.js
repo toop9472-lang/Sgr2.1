@@ -17,6 +17,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import SupportPage from "./components/SupportPage";
 import SettingsPage from "./components/SettingsPage";
+import ChallengesPage from "./components/ChallengesPage";
 import BottomNav from "./components/BottomNav";
 import { Toaster } from "./components/ui/toaster";
 import { toast } from "./hooks/use-toast";
