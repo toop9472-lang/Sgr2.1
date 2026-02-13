@@ -42,7 +42,7 @@ export const LanguageProvider = ({ children }) => {
     setLanguage(prev => prev === 'ar' ? 'en' : 'ar');
   };
 
-  const availableLanguages = ['ar', 'en'];
+  const availableLanguages = ['ar', 'en', 'fr', 'tr', 'ur', 'hi'];
   const isRTL = RTL_LANGUAGES.includes(language);
 
   return (
