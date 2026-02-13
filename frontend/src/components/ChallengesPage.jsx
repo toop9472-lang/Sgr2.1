@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Trophy, Flame, Calendar, Star, Gift, CheckCircle, Lock, ArrowLeft, Zap, Target, LogIn, Rocket, Film, PlayCircle } from 'lucide-react';
+import { Trophy, Flame, Calendar, Star, Gift, CheckCircle, Lock, ArrowLeft, Zap, Target, LogIn, Rocket, Film, PlayCircle, Timer } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { toast } from '../hooks/use-toast';
 
@@ -12,6 +12,7 @@ const ChallengesPage = ({ user, onNavigate, onPointsEarned }) => {
   const [loginRewards, setLoginRewards] = useState([]);
   const [stats, setStats] = useState({});
   const [claimingId, setClaimingId] = useState(null);
+  const [timerSeconds, setTimerSeconds] = useState(null);
 
   // Default challenges for display
   const defaultChallenges = [
@@ -19,7 +20,7 @@ const ChallengesPage = ({ user, onNavigate, onPointsEarned }) => {
     { id: 'watch_10_ads', title: language === 'ar' ? 'مشاهد متفاني' : 'Dedicated Viewer', description: language === 'ar' ? 'شاهد 10 إعلانات' : 'Watch 10 ads', target: 10, current: 0, points: 25, icon: 'film', completed: false, claimed: false, can_claim: false },
     { id: 'daily_login', title: language === 'ar' ? 'الحضور اليومي' : 'Daily Login', description: language === 'ar' ? 'سجل دخولك اليوم' : 'Login today', target: 1, current: 0, points: 10, icon: 'log-in', completed: false, claimed: false, can_claim: false },
     { id: 'first_ad', title: language === 'ar' ? 'البداية' : 'First Step', description: language === 'ar' ? 'شاهد إعلانك الأول اليوم' : 'Watch first ad today', target: 1, current: 0, points: 5, icon: 'rocket', completed: false, claimed: false, can_claim: false },
-    { id: 'streak_bonus', title: language === 'ar' ? 'سلسلة النشاط' : 'Activity Streak', description: language === 'ar' ? 'حافظ على نشاطك 3 أيام متتالية' : '3 days streak', target: 3, current: 0, points: 14, icon: 'flame', completed: false, claimed: false, can_claim: false },
+    { id: 'stay_online_1hour', title: language === 'ar' ? 'المثابر' : 'Persistent', description: language === 'ar' ? 'ابقَ متصلاً لمدة ساعة واحدة' : 'Stay online for 1 hour', target: 60, current: 0, points: 14, icon: 'timer', completed: false, claimed: false, can_claim: false },
   ];
 
   // Default login rewards
@@ -39,6 +40,25 @@ const ChallengesPage = ({ user, onNavigate, onPointsEarned }) => {
     { day: 13, points: 15, claimed: false, can_claim: false, unlocked: false },
     { day: 14, points: 15, claimed: false, can_claim: false, unlocked: false },
   ];
+
+  // Timer countdown effect
+  useEffect(() => {
+    if (timerSeconds === null || timerSeconds <= 0) return;
+    
+    const interval = setInterval(() => {
+      setTimerSeconds(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          // Refresh challenges to update completed status
+          fetchData();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [timerSeconds]);
 
   const fetchData = useCallback(async () => {
     // Skip API calls for guest users
