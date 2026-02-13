@@ -18,10 +18,24 @@ Arabic (العربية)
 - [x] Mobile-optimized UI
 - [x] Privacy Policy page
 
-### Mobile Builds ✅
-- [x] Android build (.aab)
-- [x] iOS build (.ipa)
-- [x] AdMob configured
+### Daily Challenges System ✅ (February 13, 2026)
+- [x] 5 Daily Challenges (max 69 points/day):
+  - مشاهد نشط (Watch 5 ads) = 15 points
+  - مشاهد متفاني (Watch 10 ads) = 25 points
+  - الحضور اليومي (Daily Login) = 10 points
+  - البداية (First ad) = 5 points
+  - المثابر (Stay online 1 hour) = 14 points with countdown timer
+- [x] API Endpoints:
+  - GET /api/challenges/daily
+  - POST /api/challenges/daily/claim
+  - GET /api/challenges/stats
+
+### 14-Day Login Rewards ✅ (February 13, 2026)
+- [x] 150 points/month distributed over 14 days
+- [x] Progressive rewards (5→15 points)
+- [x] API Endpoints:
+  - GET /api/challenges/login-rewards
+  - POST /api/challenges/login-rewards/claim
 
 ### Security Features ✅
 - [x] CORS policy with allowlist
@@ -32,64 +46,15 @@ Arabic (العربية)
 - [x] Account lockout
 - [x] Change password API
 
-### NEW FEATURES (February 13, 2026) ✅
-
-#### 1. Support Tickets System
-- [x] POST /api/support/tickets - Create ticket
-- [x] GET /api/support/tickets - Get user tickets
-- [x] GET /api/support/tickets/{id} - Get ticket details
-- [x] POST /api/support/tickets/{id}/reply - Reply to ticket
-- [x] POST /api/support/tickets/{id}/close - Close ticket
-- [x] SupportTicketsPage.jsx component
-
-#### 2. Two-Factor Authentication (2FA)
-- [x] POST /api/2fa/enable - Enable 2FA
-- [x] POST /api/2fa/verify - Verify and activate
-- [x] POST /api/2fa/disable - Disable 2FA
-- [x] POST /api/2fa/send-code - Send login code
-- [x] POST /api/2fa/validate - Validate code
-- [x] GET /api/2fa/status - Check status
-- [x] Backup codes support
-- [x] TwoFactorSettings.jsx component
-
-#### 3. Comments System (Social) ✅ FULLY INTEGRATED
-- [x] POST /api/comments/ - Create comment
-- [x] GET /api/comments/ad/{id} - Get ad comments
-- [x] POST /api/comments/like - Like/unlike comment
-- [x] DELETE /api/comments/{id} - Delete comment
-- [x] Replies support
-- [x] CommentsSection.jsx component
-- [x] **زر التعليقات في صفحة الإعلانات** (MessageCircle icon)
-- [x] **نافذة التعليقات المنبثقة** (Modal)
-- [x] **تكامل مع الجوال** (Mobile integration)
-
-#### 4. Dark Mode
-- [x] ThemeContext.js with dark/light/system modes
-- [x] CSS variables for theming
-- [x] Persistent preference in localStorage
-
-#### 5. Multi-Language Support
-- [x] Arabic (ar) - RTL
-- [x] English (en)
-- [x] French (fr)
-- [x] Turkish (tr)
-- [x] Updated translations.js
-- [x] Language selector in settings
-
-#### 6. Settings Page
-- [x] SettingsPage.jsx component
-- [x] Language selection
-- [x] Theme selection
-- [x] 2FA settings link
-- [x] Notifications settings
-
-### UI/UX Updates (February 13, 2026) ✅
-- [x] Slim Bottom Tab Bar
-- [x] Professional icons (Lucide/Ionicons)
-- [x] Clean toasts without emojis
-- [x] Git cleanup completed
-- [x] **استبدال إيموجي الصقر 🦅 بالشعار** في شاشة التحميل
-- [x] **إزالة جميع الإيموجي من الواجهة** واستبدالها بأيقونات Lucide
+### Other Features ✅
+- [x] Support Tickets System
+- [x] Two-Factor Authentication (2FA)
+- [x] Comments System
+- [x] Dark Mode
+- [x] Multi-Language Support (Arabic/English)
+- [x] Settings Page
+- [x] Analytics Dashboard
+- [x] Advertiser Packages System
 
 ---
 
@@ -109,272 +74,91 @@ Arabic (العربية)
 
 ### Backend
 - FastAPI (Python) + MongoDB
-- New routes: support, 2fa, comments
+- Routes: auth, challenges, support, 2fa, comments, ads, payment
 
 ### Mobile
 - React Native + Expo
-- Ionicons
+- Ionicons for icons
 
 ---
 
-## New API Endpoints (v5.0.0)
+## Key API Endpoints
 
-### Support
-- `POST /api/support/tickets` - Create ticket
-- `GET /api/support/tickets` - List tickets
-- `POST /api/support/tickets/{id}/reply` - Reply
+### Challenges
+- `GET /api/challenges/daily` - Get daily challenges with progress
+- `POST /api/challenges/daily/claim` - Claim challenge reward
+- `GET /api/challenges/login-rewards` - Get 14-day rewards status
+- `POST /api/challenges/login-rewards/claim` - Claim login reward
+- `GET /api/challenges/stats` - Get challenge statistics
 
-### 2FA
-- `POST /api/2fa/enable` - Enable
-- `POST /api/2fa/verify` - Verify
-- `GET /api/2fa/status` - Status
-
-### Comments
-- `POST /api/comments/` - Create
-- `GET /api/comments/ad/{ad_id}` - List
-- `POST /api/comments/like` - Like
-
----
-
-## Completed Tasks (This Session)
-
-### ✅ إصلاح ميزة التعليقات
-- تم إضافة زر التعليقات (MessageCircle) في صفحة الإعلانات
-- تم إنشاء نافذة التعليقات المنبثقة
-- تم تكامل CommentsSection مع FullScreenAdsViewer
-
-### ✅ استبدال إيموجي الصقر
-- تم استبدال 🦅 بـ `/logo_saqr.png` في شاشة التحميل (App.js)
-- تم استبدال 🦅 في AuthCallback.jsx
-- تم إزالة جميع الإيموجي من HomePage.jsx
-
-### ✅ إصلاح API التعليقات
-- تم إصلاح prefix في comments_routes.py (من /api/comments إلى /comments)
-
-### ✅ نظام الإعلانات والباقات (P2)
-- تم التحقق من عمل API الباقات: 4 باقات (1000, 2700, 4800, 8400 ريال)
-- تم التحقق من صفحة المعلنين تعرض الباقات بشكل صحيح
-- تم التحقق من نموذج الإعلان والانتقال لصفحة الدفع
-- تم التحقق من صفحة الدفع تعرض خيارات (Stripe, Tap, تحويل بنكي)
-- تم تحديث AdvertiserScreen.js للموبايل ليشمل خطوة الدفع مثل الويب
-
-### ✅ إشعارات البريد للمصادقة الثنائية (2FA)
-- تم إضافة وظيفة `send_2fa_email()` في `two_factor_routes.py`
-- تم إضافة endpoint جديد: `POST /api/2fa/send-login-code`
-- قالب بريد إلكتروني احترافي باللغة العربية
-- يعتمد على إعدادات Resend في لوحة التحكم
-
-### ✅ لوحة التحليلات (Analytics Dashboard)
-- صفحة `AnalyticsPage.jsx` مكتملة
-- تعرض: المستخدمين، الإعلانات، المشاهدات، الإيرادات
-- رسم بياني للمستخدمين النشطين يومياً (30 يوم)
-- قائمة أفضل الإعلانات أداءً
+### Authentication
+- `POST /api/auth/signin` - Login
+- `POST /api/auth/register` - Register
+- `GET /api/auth/me` - Get current user
 
 ---
 
 ## Pending Tasks
 
 ### P0 - Critical
-- [ ] **Server Always-On:** Upgrade hosting plan (سبب رفض Apple) - يجب إبلاغ المستخدم
+- [ ] **Server Always-On:** Upgrade hosting plan (Root cause of Apple rejection)
 
-### P1 - High Priority  
+### P1 - High Priority
 - [ ] Build new iOS version (v5.0.0, build 14)
-- [ ] Submit to Apple App Store
 - [ ] Build new Android version
-- [ ] Update Android SDK target version
+- [ ] Submit to App Store & Google Play
 
 ### P2 - Medium Priority
-- [x] ~~"Add Personal Ad/Packages" feature~~ ✅ تم التحقق والتأكد من عمله
-- [x] ~~Email notifications for 2FA~~ ✅ تم التنفيذ
-- [x] ~~Analytics dashboard~~ ✅ موجود ويعمل
-- [x] ~~لوحة تحكم المعلن~~ ✅ تم إنشاء `AdvertiserDashboardScreen.js`
-- [x] ~~شاشة الدعم الفني~~ ✅ تم إنشاء `SupportScreen.js`
-- [x] ~~README.md~~ ✅ تم كتابة توثيق كامل
+- [ ] Advertiser Dashboard UI (Mobile) - Needs implementation
+- [ ] Support Screen UI Enhancement (Mobile)
+- [ ] Update Android SDK target version
 
 ### P3 - Future
-- [x] ~~Update iOS SDK to v26~~ (يتم عند البناء)
-- [x] ~~Terms of Use page~~ ✅ تم إنشاء `/terms`
-- [x] ~~تنظيف الملفات المؤقتة~~ ✅ تم حذف mobile_backup
+- [ ] Redis caching
+- [ ] General API Rate Limiting
 
 ---
 
-## Recent Updates (February 13, 2026 - Session 3)
+## Files Reference
 
-### ✅ توثيق المشروع (README.md)
-- تم كتابة توثيق كامل للمشروع باللغة العربية
-- يشمل: هيكل المشروع، الميزات، التقنيات، API endpoints، إعدادات البيئة
+### Challenges Feature
+- Backend: `/app/backend/routes/challenges_routes.py`
+- Web: `/app/frontend/src/components/ChallengesPage.jsx`
+- Mobile: `/app/mobile/src/screens/ChallengesScreen.js`
+- Tests: `/app/backend/tests/test_challenges_api.py`
 
-### ✅ لوحة تحكم المعلن (AdvertiserDashboardScreen)
-- شاشة جديدة في `/app/mobile/src/screens/AdvertiserDashboardScreen.js`
-- تسجيل دخول بالبريد الإلكتروني
-- عرض إحصائيات شاملة: إجمالي الإعلانات، المشاهدات، المشاهدين الفريدين، نسبة الإكمال
-- قائمة بجميع إعلانات المعلن مع حالة كل إعلان
-- زر لإنشاء إعلان جديد
-
-### ✅ شاشة الدعم الفني (SupportScreen)
-- شاشة جديدة في `/app/mobile/src/screens/SupportScreen.js`
-- إنشاء تذاكر دعم جديدة (4 فئات: عام، تقني، مدفوعات، الحساب)
-- عرض قائمة التذاكر مع حالتها
-- عرض تفاصيل التذكرة والمحادثة
-- الرد على التذاكر وإغلاقها
-
-### ✅ تنظيف المشروع
-- حذف مجلد `/app/mobile_backup`
-- تحديث `ProfileScreen.js` بروابط الشاشات الجديدة
-
-### ✅ تحسينات إضافية (Session 3 - Part 2)
-- **تنظيف الأكواد والملفات:**
-  - حذف مجلد `contexts` المكرر في frontend و mobile
-  - حذف ملفات `__pycache__` في backend
-  - تنظيف `.gitignore` من التكرار
-  - توحيد استيرادات ThemeContext
-  
-- **تحديث اللغات:**
-  - تقليص اللغات من 4 إلى 2 (العربية والإنجليزية فقط)
-  - تحديث `LanguageContext.js`
-  - تحديث `SettingsPage.jsx`
-  - تحديث `SettingsScreen.js` (موبايل)
-  - حذف الترجمات الفرنسية والتركية من `translations.js`
-
-- **تحسين واجهة تسجيل الدخول:**
-  - تغيير زر "تجربة التطبيق بدون حساب" إلى رابط "دخول كزائر" بنص أبيض صغير
-  - تطبيق نفس التغيير في الويب والموبايل
-
-- **إصلاح URLs في الموبايل:**
-  - توحيد جميع API_URL لتستخدم domain الإنتاج `saqrpointscom.store`
-  - إزالة URLs المؤقتة (preview URLs)
-
----
-
-## Recent Updates (February 13, 2026 - Session 2)
-
-### ✅ تفعيل الوضع الداكن (Dark Mode)
-- تم إضافة `ThemeProvider` في `App.js`
-- تم إضافة صفحة الإعدادات `SettingsPage` في المسار
-- يدعم 3 أوضاع: داكن، فاتح، حسب النظام
-
-### ✅ تفعيل دعم اللغات
-- يدعم 6 لغات: العربية، الإنجليزية، الفرنسية، التركية، الأوردو، الهندية
-- يمكن التبديل من قائمة منسدلة في صفحة تسجيل الدخول والصفحة الرئيسية
-- جميع الصفحات تتغير لغتها عند تغيير اللغة
-- دعم RTL للعربية والأوردو
-
-### ✅ صفحة شروط الاستخدام (Terms of Service)
-- تم إنشاء `/app/frontend/src/pages/TermsOfService.jsx`
-- مسارات: `/terms` و `/terms-of-service`
-- تدعم اللغتين العربية والإنجليزية
-- تم ربطها في صفحة تسجيل الدخول وصفحة الحساب
-
-### ✅ إزالة بيانات الاعتماد من Git
-- تم حذف `CREDENTIALS.md` نهائياً من سجل Git باستخدام `git filter-branch`
-- تم تنظيف `reflog` و `gc`
-
-### ✅ تحديثات الموبايل (Mobile Updates)
-- **SettingsScreen.js** - صفحة إعدادات جديدة تدعم:
-  - تغيير اللغة (العربية/الإنجليزية)
-  - تغيير المظهر (داكن/فاتح/نظام)
-  - التحقق بخطوتين
-  - الإشعارات
-- **ProfileScreen.js** - إضافة روابط:
-  - الإعدادات
-  - شروط الاستخدام
-- **AuthScreen.js** - إضافة رابط شروط الاستخدام
-- **App.js** - دمج صفحة الإعدادات
-
----
-
-## Files Created/Modified
-
-### New Files
-- `/app/backend/routes/support_routes.py`
-- `/app/backend/routes/two_factor_routes.py`
-- `/app/backend/routes/comments_routes.py`
-- `/app/frontend/src/context/ThemeContext.js`
-- `/app/frontend/src/components/SupportTicketsPage.jsx`
-- `/app/frontend/src/components/TwoFactorSettings.jsx`
-- `/app/frontend/src/components/CommentsSection.jsx`
-- `/app/frontend/src/components/SettingsPage.jsx`
-- `/app/backend/tests/test_comments_api.py`
-
-### Modified Files (This Session)
-- `/app/frontend/src/App.js` - استبدال إيموجي بالشعار
-- `/app/frontend/src/components/FullScreenAdsViewer.jsx` - إضافة زر التعليقات
-- `/app/frontend/src/components/HomePage.jsx` - إزالة الإيموجي
-- `/app/frontend/src/components/AdViewer.jsx` - إزالة الإيموجي
-- `/app/frontend/src/components/AuthCallback.jsx` - استبدال إيموجي
-- `/app/backend/routes/comments_routes.py` - إصلاح prefix
-- `/app/mobile/src/screens/AdViewerScreen.js` - إضافة التعليقات للجوال
-- `/app/mobile/src/services/api.js` - إضافة comments API
+### Navigation
+- Web BottomNav: `/app/frontend/src/components/BottomNav.jsx`
+- Mobile BottomNav: `/app/mobile/src/components/BottomNav.js`
 
 ---
 
 ## Credentials
 - **Test User:** demo@saqr.app / Demo123456
-- **Guest Mode:** Click "تجربة التطبيق بدون حساب"
+- **Guest Mode:** Click "دخول كزائر"
 
 ---
 
 ## Testing Status (February 13, 2026)
-- ✅ Backend APIs: 100% (37+ tests passed)
-- ✅ Frontend Components: 100% verified
-- ✅ Comments Feature: Working
-- ✅ Logo Replacement: Working
-- ✅ Advertiser/Packages System: Working
-- ✅ Payment Options (Stripe/Tap/Bank): Working
-- ✅ Web-Mobile Consistency: Verified
-- ✅ 2FA Email Notifications: Working
-- ✅ Analytics Dashboard: Working
-- ✅ **Daily Challenges**: Working (15/15 tests passed)
-- ✅ **14-Day Login Rewards**: Working
+- ✅ Backend APIs: 100% working
+- ✅ Daily Challenges: 15/15 tests passed
+- ✅ 14-Day Login Rewards: Working
+- ✅ Web Frontend: Working
 - 📱 Mobile: Ready for build
 
 ---
 
-## Recent Updates (February 2026 - Session 4)
+## Build Instructions
+See `/app/mobile/BUILD_APK_GUIDE.md` for detailed build instructions.
 
-### ✅ التحديات اليومية (Daily Challenges)
-- **Backend:** `/app/backend/routes/challenges_routes.py`
-- **API Endpoints:**
-  - `GET /api/challenges/daily` - عرض التحديات مع التقدم
-  - `POST /api/challenges/daily/claim` - استلام مكافأة التحدي المكتمل
-  - `GET /api/challenges/stats` - إحصائيات شاملة
-- **5 تحديات يومية (69 نقطة كحد أقصى):**
-  - مشاهد نشط (5 إعلانات) = 15 نقطة
-  - مشاهد متفاني (10 إعلانات) = 25 نقطة
-  - الحضور اليومي = 10 نقاط
-  - البداية (أول إعلان) = 5 نقاط
-  - سلسلة النشاط (3 أيام) = 14 نقطة
+```bash
+# Android
+eas build --platform android --profile preview
 
-### ✅ مكافآت تسجيل الدخول (14-Day Login Rewards)
-- **API Endpoints:**
-  - `GET /api/challenges/login-rewards` - عرض حالة المكافآت
-  - `POST /api/challenges/login-rewards/claim` - استلام مكافأة يوم معين
-- **150 نقطة شهرياً موزعة على 14 يوم:**
-  - الأيام 1-2: 5 نقاط لكل يوم
-  - الأيام 3-4: 8 نقاط لكل يوم
-  - الأيام 5-6: 10 نقاط لكل يوم
-  - اليوم 7 (بونص الأسبوع): 15 نقطة
-  - الأيام 8-9: 10 نقاط لكل يوم
-  - الأيام 10-11: 12 نقطة لكل يوم
-  - الأيام 12-14: 15 نقطة لكل يوم
+# iOS (requires Mac)
+eas build --platform ios --profile production
+```
 
-### ✅ شاشة التحديات للموبايل (ChallengesScreen)
-- **الملف:** `/app/mobile/src/screens/ChallengesScreen.js`
-- **الميزات:**
-  - عرض التحديات اليومية مع شريط التقدم
-  - جدول مكافآت الـ 14 يوم (تصميم أنيق)
-  - زر "استلم المكافأة" للتحديات المكتملة
-  - إحصائيات (نقاط اليوم، مكافآت الشهر، أيام متتالية)
-  - رموز احترافية (Ionicons) بدون إيموجي
-- **تم إضافتها إلى BottomNav** (زر "التحديات")
+---
 
-### Files Created/Modified (Session 4)
-- **New:** `/app/backend/routes/challenges_routes.py`
-- **New:** `/app/mobile/src/screens/ChallengesScreen.js`
-- **New:** `/app/frontend/src/components/ChallengesPage.jsx`
-- **New:** `/app/backend/tests/test_challenges_api.py`
-- **Modified:** `/app/backend/server.py` - Added challenges_router
-- **Modified:** `/app/mobile/App.js` - Added ChallengesScreen
-- **Modified:** `/app/mobile/src/components/BottomNav.js` - Added challenges tab
-- **Modified:** `/app/frontend/src/App.js` - Added ChallengesPage
-- **Modified:** `/app/frontend/src/components/BottomNav.jsx` - Added challenges tab
+**Last Updated:** February 13, 2026
