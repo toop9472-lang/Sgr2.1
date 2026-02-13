@@ -266,12 +266,24 @@ const ChallengesScreen = ({ user, onPointsEarned }) => {
                   </View>
                 </View>
 
+                {/* Timer display for online challenge */}
+                {challenge.id === 'stay_online_1hour' && !challenge.completed && !challenge.claimed && timerSeconds !== null && (
+                  <View style={styles.timerContainer}>
+                    <Ionicons name="timer-outline" size={18} color="#3b82f6" />
+                    <Text style={styles.timerLabel}>الوقت المتبقي:</Text>
+                    <Text style={styles.timerValue}>{formatTime(timerSeconds)}</Text>
+                  </View>
+                )}
+
                 <View style={styles.progressContainer}>
                   <View style={styles.progressBar}>
                     <View style={[styles.progressFill, { width: `${Math.min(progress, 100)}%` }]} />
                   </View>
                   <Text style={styles.progressText}>
-                    {challenge.current}/{challenge.target}
+                    {challenge.id === 'stay_online_1hour' 
+                      ? `${challenge.current}/${challenge.target} دقيقة`
+                      : `${challenge.current}/${challenge.target}`
+                    }
                   </Text>
                 </View>
 
