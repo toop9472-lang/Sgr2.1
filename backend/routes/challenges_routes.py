@@ -247,6 +247,9 @@ async def get_daily_challenges(user_id: str = Depends(get_current_user_id)):
     # Record daily login
     await record_daily_login(db, user_id)
     
+    # Start online session for timer challenge
+    session_start = await start_online_session(db, user_id)
+    
     # Get claimed challenges today
     claimed_today = await db.challenge_claims.find({
         'user_id': user_id,
@@ -271,7 +274,7 @@ async def get_daily_challenges(user_id: str = Depends(get_current_user_id)):
         if is_claimed:
             total_earned_today += challenge['points']
         
-        challenges.append({
+        challenge_data = {
             'id': challenge['id'],
             'title': challenge['title'],
             'description': challenge['description'],
@@ -282,7 +285,21 @@ async def get_daily_challenges(user_id: str = Depends(get_current_user_id)):
             'completed': is_completed,
             'claimed': is_claimed,
             'can_claim': is_completed and not is_claimed
-        })
+        }
+        
+        # Add timer info for online_time challenge
+        if challenge['type'] == 'online_time' and session_start:
+            now = datetime.now(timezone.utc)
+            elapsed_seconds = int((now - session_start).total_seconds())
+            remaining_seconds = max(0, (challenge['target'] * 60) - elapsed_seconds)
+            challenge_data['timer'] = {
+                'elapsed_seconds': elapsed_seconds,
+                'remaining_seconds': remaining_seconds,
+                'target_seconds': challenge['target'] * 60,
+                'start_time': session_start.isoformat()
+            }
+        
+        challenges.append(challenge_data)
     
     return {
         'challenges': challenges,
