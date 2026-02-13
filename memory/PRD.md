@@ -37,6 +37,23 @@ Arabic (العربية)
   - GET /api/challenges/login-rewards
   - POST /api/challenges/login-rewards/claim
 
+### Advertiser Dashboard ✅ (Mobile)
+- [x] Login by email
+- [x] View ad statistics (views, unique viewers, completion rate)
+- [x] List all ads with status
+- [x] Create new ad button
+- [x] File: `/app/mobile/src/screens/AdvertiserDashboardScreen.js`
+- [x] Accessible from ProfileScreen → "لوحة تحكم المعلن"
+
+### Advertiser Packages System ✅
+- [x] 4 packages available:
+  - 1 month: 1000 SAR
+  - 3 months: 2700 SAR (10% discount)
+  - 6 months: 4800 SAR (20% discount)
+  - 12 months: 8400 SAR (30% discount)
+- [x] Stripe payment integration
+- [x] Bank transfer option
+
 ### Security Features ✅
 - [x] CORS policy with allowlist
 - [x] Security headers middleware
@@ -54,7 +71,6 @@ Arabic (العربية)
 - [x] Multi-Language Support (Arabic/English)
 - [x] Settings Page
 - [x] Analytics Dashboard
-- [x] Advertiser Packages System
 
 ---
 
@@ -62,6 +78,7 @@ Arabic (العربية)
 - **Current Version:** 5.0.0
 - **iOS Build Number:** 14
 - **Android Version Code:** 35
+- **Android SDK:** API 35 (Google Play 2025-2026 compliant)
 
 ---
 
@@ -74,11 +91,12 @@ Arabic (العربية)
 
 ### Backend
 - FastAPI (Python) + MongoDB
-- Routes: auth, challenges, support, 2fa, comments, ads, payment
+- Routes: auth, challenges, support, 2fa, comments, ads, payment, analytics
 
 ### Mobile
 - React Native + Expo
 - Ionicons for icons
+- expo-build-properties for SDK configuration
 
 ---
 
@@ -90,6 +108,12 @@ Arabic (العربية)
 - `GET /api/challenges/login-rewards` - Get 14-day rewards status
 - `POST /api/challenges/login-rewards/claim` - Claim login reward
 - `GET /api/challenges/stats` - Get challenge statistics
+
+### Advertiser Analytics
+- `GET /api/analytics/advertiser/{email}` - Get advertiser dashboard data
+- `GET /api/payments/packages` - Get available ad packages
+- `POST /api/advertiser/ads` - Create new ad
+- `GET /api/advertiser/pricing` - Get pricing info
 
 ### Authentication
 - `POST /api/auth/signin` - Login
@@ -105,17 +129,43 @@ Arabic (العربية)
 
 ### P1 - High Priority
 - [ ] Build new iOS version (v5.0.0, build 14)
-- [ ] Build new Android version
+- [ ] Build new Android version (versionCode 35)
 - [ ] Submit to App Store & Google Play
 
 ### P2 - Medium Priority
-- [ ] Advertiser Dashboard UI (Mobile) - Needs implementation
 - [ ] Support Screen UI Enhancement (Mobile)
-- [ ] Update Android SDK target version
 
 ### P3 - Future
 - [ ] Redis caching
 - [ ] General API Rate Limiting
+
+---
+
+## Build Instructions
+
+### Prerequisites
+- Node.js 18+
+- Expo CLI & EAS CLI
+- Expo account (ziyad333)
+
+### Commands
+```bash
+cd /app/mobile
+
+# Install dependencies
+yarn install
+
+# Login to Expo
+eas login
+
+# Build Android APK
+eas build --platform android --profile preview
+
+# Build iOS (requires Mac)
+eas build --platform ios --profile production
+```
+
+See `/app/mobile/BUILD_APK_GUIDE.md` for detailed instructions.
 
 ---
 
@@ -125,7 +175,10 @@ Arabic (العربية)
 - Backend: `/app/backend/routes/challenges_routes.py`
 - Web: `/app/frontend/src/components/ChallengesPage.jsx`
 - Mobile: `/app/mobile/src/screens/ChallengesScreen.js`
-- Tests: `/app/backend/tests/test_challenges_api.py`
+
+### Advertiser Dashboard
+- Mobile: `/app/mobile/src/screens/AdvertiserDashboardScreen.js`
+- Mobile Advertiser Form: `/app/mobile/src/screens/AdvertiserScreen.js`
 
 ### Navigation
 - Web BottomNav: `/app/frontend/src/components/BottomNav.jsx`
@@ -141,23 +194,12 @@ Arabic (العربية)
 
 ## Testing Status (February 13, 2026)
 - ✅ Backend APIs: 100% working
-- ✅ Daily Challenges: 15/15 tests passed
+- ✅ Daily Challenges: Working
 - ✅ 14-Day Login Rewards: Working
+- ✅ Advertiser Dashboard: Working
+- ✅ Packages API: Working (4 packages)
 - ✅ Web Frontend: Working
 - 📱 Mobile: Ready for build
-
----
-
-## Build Instructions
-See `/app/mobile/BUILD_APK_GUIDE.md` for detailed build instructions.
-
-```bash
-# Android
-eas build --platform android --profile preview
-
-# iOS (requires Mac)
-eas build --platform ios --profile production
-```
 
 ---
 
