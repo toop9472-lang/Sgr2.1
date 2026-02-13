@@ -524,6 +524,19 @@ const styles = StyleSheet.create({
   },
   challengePointsText: { color: '#fbbf24', fontSize: 13, fontWeight: 'bold' },
 
+  timerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginTop: 10,
+  },
+  timerLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 13, marginLeft: 8, flex: 1 },
+  timerValue: { color: '#3b82f6', fontSize: 18, fontWeight: 'bold', fontFamily: 'monospace' },
+
   progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
