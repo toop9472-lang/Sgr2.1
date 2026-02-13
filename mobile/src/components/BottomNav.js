@@ -16,6 +16,7 @@ const hasNotch = Platform.OS === 'ios' && SCREEN_HEIGHT >= 812;
 const BottomNav = ({ currentPage, onNavigate, onAdsPress }) => {
   const navItems = [
     { id: 'home', label: 'الرئيسية', icon: 'home', iconOutline: 'home-outline' },
+    { id: 'challenges', label: 'التحديات', icon: 'trophy', iconOutline: 'trophy-outline' },
     { id: 'advertiser', label: 'أعلن', icon: 'megaphone', iconOutline: 'megaphone-outline' },
     { id: 'profile', label: 'حسابي', icon: 'person', iconOutline: 'person-outline' },
   ];
