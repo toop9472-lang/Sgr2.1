@@ -49,6 +49,7 @@ class RewardedAdView(BaseModel):
     ad_id: Optional[str] = None
     completed: bool = False
     watch_duration: int = 0  # seconds
+    points_earned: Optional[int] = None  # Points to award
 
 
 class RewardedAdResponse(BaseModel):
