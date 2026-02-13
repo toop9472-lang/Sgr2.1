@@ -387,16 +387,16 @@ const AuthPage = ({ onLogin, onGuestMode, onAdminLogin }) => {
             <span>{t('loginWithEmail')}</span>
           </Button>
 
-          {/* زر تجربة بدون حساب */}
-          <Button
-            onClick={handleGuestMode}
-            variant="outline"
-            className="w-full h-12 border border-[#FFD700]/50 hover:border-[#FFD700] bg-[#FFD700]/10 hover:bg-[#FFD700]/20 text-[#FFD700] flex items-center justify-center gap-3 transition-all rounded-full font-medium"
-            data-testid="guest-mode-btn"
-          >
-            <span>🎮</span>
-            <span>{isRTL ? 'تجربة التطبيق بدون حساب' : 'Try without account'}</span>
-          </Button>
+          {/* رابط دخول كزائر */}
+          <div className="text-center pt-2">
+            <button
+              onClick={handleGuestMode}
+              className="text-white/50 text-sm hover:text-white/70 underline transition-colors"
+              data-testid="guest-mode-btn"
+            >
+              {isRTL ? 'دخول كزائر' : 'Continue as guest'}
+            </button>
+          </div>
 
           <div className="pt-4">
             <p className="text-center text-xs text-gray-500 leading-relaxed">
