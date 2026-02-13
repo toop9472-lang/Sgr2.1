@@ -81,7 +81,14 @@ const ChallengesPage = ({ user, onNavigate, onPointsEarned }) => {
 
       if (challengesRes.ok) {
         const data = await challengesRes.json();
-        setChallenges(data.challenges || defaultChallenges);
+        const challengesList = data.challenges || defaultChallenges;
+        setChallenges(challengesList);
+        
+        // Set timer for online challenge
+        const onlineChallenge = challengesList.find(c => c.id === 'stay_online_1hour');
+        if (onlineChallenge?.timer && !onlineChallenge.completed) {
+          setTimerSeconds(onlineChallenge.timer.remaining_seconds);
+        }
       } else {
         setChallenges(defaultChallenges);
       }
