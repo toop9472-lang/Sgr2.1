@@ -223,6 +223,83 @@ export const api = {
       body: JSON.stringify({ comment_id: commentId }),
     });
   },
+
+  // ==================== Phone Authentication ====================
+  
+  // Send OTP for registration
+  async sendOTP(phone) {
+    return this.fetch('/api/phone/send-otp', {
+      method: 'POST',
+      body: JSON.stringify({ phone }),
+    });
+  },
+
+  // Verify OTP
+  async verifyOTP(phone, otp) {
+    return this.fetch('/api/phone/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ phone, otp }),
+    });
+  },
+
+  // Register with phone
+  async registerWithPhone(phone, otp, name, password) {
+    const response = await this.fetch('/api/phone/register', {
+      method: 'POST',
+      body: JSON.stringify({ phone, otp, name, password }),
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      this.setTokens(data.token, data.refresh_token);
+    }
+    
+    return response;
+  },
+
+  // Login with phone (Step 1 - sends OTP)
+  async loginWithPhone(phone, password) {
+    return this.fetch('/api/phone/login', {
+      method: 'POST',
+      body: JSON.stringify({ phone, password }),
+    });
+  },
+
+  // Verify login OTP (Step 2 - complete login)
+  async verifyLoginOTP(phone, otp, sessionToken) {
+    const response = await this.fetch('/api/phone/verify-login', {
+      method: 'POST',
+      body: JSON.stringify({ phone, otp, session_token: sessionToken }),
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      this.setTokens(data.token, data.refresh_token);
+    }
+    
+    return response;
+  },
+
+  // Forgot password
+  async forgotPassword(phone) {
+    return this.fetch('/api/phone/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ phone }),
+    });
+  },
+
+  // Reset password
+  async resetPassword(phone, otp, newPassword) {
+    return this.fetch('/api/phone/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ phone, otp, new_password: newPassword }),
+    });
+  },
+
+  // Check if phone exists
+  async checkPhone(phone) {
+    return this.fetch(`/api/phone/check/${encodeURIComponent(phone)}`);
+  },
 };
 
 export default api;
