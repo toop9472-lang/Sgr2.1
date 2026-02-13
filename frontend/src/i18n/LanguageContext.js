@@ -7,7 +7,7 @@ import translations from './translations';
 
 const LanguageContext = createContext();
 
-const RTL_LANGUAGES = ['ar'];
+const RTL_LANGUAGES = ['ar', 'ur'];
 
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
