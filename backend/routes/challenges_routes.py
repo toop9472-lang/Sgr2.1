@@ -208,6 +208,33 @@ async def record_daily_login(db, user_id: str):
     return new_streak
 
 
+async def start_online_session(db, user_id: str):
+    """Start or get existing online session for today"""
+    today = get_today_start()
+    today_str = today.strftime('%Y-%m-%d')
+    
+    # Check if session exists for today
+    existing = await db.user_online_sessions.find_one({
+        'user_id': user_id,
+        'date': today_str
+    })
+    
+    if existing:
+        return existing.get('start_time')
+    
+    # Create new session
+    start_time = datetime.now(timezone.utc)
+    await db.user_online_sessions.insert_one({
+        'id': str(uuid.uuid4()),
+        'user_id': user_id,
+        'date': today_str,
+        'start_time': start_time,
+        'created_at': start_time
+    })
+    
+    return start_time
+
+
 # ============ ROUTES ============
 
 @router.get('/daily')
