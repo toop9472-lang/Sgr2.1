@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, Clock, Play, ChevronRight, BarChart3, Award, Calendar, Zap, Lightbulb, Star, Trophy, CheckCircle } from 'lucide-react';
+import { TrendingUp, Clock, Play, ChevronRight, BarChart3, Award, Calendar, Zap, Lightbulb, Star, Trophy, CheckCircle, Timer, PlayCircle, Film, LogIn, Rocket, Gift } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import LanguageSwitcher from './LanguageSwitcher';
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-const HomePage = ({ user, onNavigateToAds }) => {
-  const { t, isRTL } = useLanguage();
+const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
+  const { t, isRTL, language } = useLanguage();
   const [currentTip, setCurrentTip] = useState(0);
   const [settings, setSettings] = useState(null);
   const [userAnalytics, setUserAnalytics] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [dailyChallenges, setDailyChallenges] = useState([]);
+  const [challengeStats, setChallengeStats] = useState({ earned_today: 0, max_daily_points: 69 });
 
   useEffect(() => {
     loadData();
@@ -26,17 +28,31 @@ const HomePage = ({ user, onNavigateToAds }) => {
       const settingsRes = await axios.get(`${API_URL}/api/settings/public/rewards`);
       setSettings(settingsRes.data);
 
-      if (user?.id || user?.user_id) {
-        const token = localStorage.getItem('token');
-        if (token) {
-          try {
-            const analyticsRes = await axios.get(`${API_URL}/api/users/analytics`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            setUserAnalytics(analyticsRes.data);
-          } catch (e) {
-            console.log('Analytics not available');
-          }
+      const token = localStorage.getItem('user_token');
+      
+      if (token) {
+        // Fetch daily challenges from challenges API
+        try {
+          const challengesRes = await axios.get(`${API_URL}/api/challenges/daily`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setDailyChallenges(challengesRes.data.challenges || []);
+          setChallengeStats({
+            earned_today: challengesRes.data.earned_today || 0,
+            max_daily_points: challengesRes.data.max_daily_points || 69
+          });
+        } catch (e) {
+          console.log('Challenges not available');
+        }
+
+        // Fetch user analytics
+        try {
+          const analyticsRes = await axios.get(`${API_URL}/api/users/analytics`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setUserAnalytics(analyticsRes.data);
+        } catch (e) {
+          console.log('Analytics not available');
         }
       }
     } catch (error) {
