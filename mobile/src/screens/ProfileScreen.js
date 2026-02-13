@@ -142,11 +142,11 @@ const ProfileScreen = ({ user, onLogout, onNavigate }) => {
   };
 
   const handlePrivacy = () => {
-    Linking.openURL('https://mobile-verify-9.preview.emergentagent.com/privacy');
+    Linking.openURL('https://saqrpointscom.store/privacy');
   };
 
   const handleTerms = () => {
-    Linking.openURL('https://mobile-verify-9.preview.emergentagent.com/terms');
+    Linking.openURL('https://saqrpointscom.store/terms');
   };
 
   const handleSettings = () => {
