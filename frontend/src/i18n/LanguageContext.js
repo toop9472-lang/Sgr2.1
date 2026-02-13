@@ -38,6 +38,12 @@ export const LanguageProvider = ({ children }) => {
     return translations[language]?.[key] || translations['en']?.[key] || translations['ar'][key] || key;
   };
 
+  const changeLanguage = (lang) => {
+    if (availableLanguages.includes(lang)) {
+      setLanguage(lang);
+    }
+  };
+
   const toggleLanguage = () => {
     setLanguage(prev => prev === 'ar' ? 'en' : 'ar');
   };
