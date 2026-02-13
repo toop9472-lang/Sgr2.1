@@ -456,6 +456,13 @@ function MainApp() {
                   onNavigate={handleNavigate}
                 />
               )}
+              {currentPage === 'challenges' && !showFullScreenAds && (
+                <ChallengesPage 
+                  user={user}
+                  onNavigate={handleNavigate}
+                  onPointsEarned={handlePointsEarned}
+                />
+              )}
               {currentPage === 'withdraw' && !showFullScreenAds && (
                 <WithdrawPage 
                   user={user}
