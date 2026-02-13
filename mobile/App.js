@@ -209,6 +209,12 @@ export default function App() {
             navigation={{ navigate: setCurrentPage }}
           />
         )}
+        {currentPage === 'challenges' && (
+          <ChallengesScreen 
+            user={user}
+            onPointsEarned={handlePointsEarned}
+          />
+        )}
       </LinearGradient>
 
       {/* AI Floating Button */}
