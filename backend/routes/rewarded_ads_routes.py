@@ -292,25 +292,20 @@ async def complete_rewarded_ad(
     if not view.completed:
         return {'success': False, 'message': 'لم تكتمل المشاهدة'}
     
-    # Validate minimum watch duration (at least 80% of ad)
-    min_duration = 24  # 80% of 30 seconds
+    # Validate minimum watch duration (at least 80% of ad = 24 seconds for 30-sec ad)
+    min_duration = 24
     if view.watch_duration < min_duration:
         return {'success': False, 'message': 'مدة المشاهدة قصيرة جداً'}
     
-    # Check daily limit again
-    can_watch, _ = await check_daily_limit(
+    # Check daily limit
+    can_watch, remaining = await check_daily_limit(
         db, user_id, settings.get('daily_rewarded_limit', 50)
     )
     if not can_watch:
-        return {'success': False, 'message': 'وصلت للحد اليومي'}
+        return {'success': False, 'message': 'وصلت للحد اليومي', 'remaining': 0}
     
-    # Calculate points: 1 point per 60 seconds of watch time
-    minutes_watched = view.watch_duration // 60
-    reward_points = max(1, minutes_watched)  # At least 1 point if completed
-    
-    # Use client-provided points if valid (for custom ads)
-    if view.points_earned and view.points_earned > 0:
-        reward_points = min(view.points_earned, minutes_watched + 1)  # Cap to prevent cheating
+    # Get points per ad from settings (default 5)
+    reward_points = settings.get('points_per_rewarded_ad', 5)
     
     # Record the view
     view_doc = {
@@ -328,7 +323,13 @@ async def complete_rewarded_ad(
     # Grant points to user
     await db.users.update_one(
         {'$or': [{'id': user_id}, {'user_id': user_id}]},
-        {'$inc': {'points': reward_points}}
+        {
+            '$inc': {
+                'points': reward_points,
+                'total_earned': reward_points,
+                'ads_watched': 1
+            }
+        }
     )
     
     # Update ad statistics if personal ad
@@ -338,17 +339,19 @@ async def complete_rewarded_ad(
             {'$inc': {'views': 1, 'completed_views': 1}}
         )
     
-    # Get updated points
+    # Get updated user data
     user = await db.users.find_one(
         {'$or': [{'id': user_id}, {'user_id': user_id}]},
-        {'_id': 0, 'points': 1}
+        {'_id': 0, 'points': 1, 'ads_watched': 1}
     )
     
     return {
         'success': True,
         'points_earned': reward_points,
         'total_points': user.get('points', 0),
-        'message': f'🎉 حصلت على {reward_points} نقاط!'
+        'ads_watched': user.get('ads_watched', 0),
+        'remaining_today': remaining - 1,
+        'message': f'حصلت على {reward_points} نقاط!'
     }
 
 
