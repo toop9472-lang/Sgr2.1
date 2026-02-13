@@ -83,13 +83,13 @@ DAILY_CHALLENGES = [
         "type": "watch_ads"
     },
     {
-        "id": "streak_bonus",
-        "title": "سلسلة النشاط",
-        "description": "حافظ على نشاطك 3 أيام متتالية",
-        "target": 3,
+        "id": "stay_online_1hour",
+        "title": "المثابر",
+        "description": "ابقَ متصلاً لمدة ساعة واحدة",
+        "target": 60,  # 60 minutes
         "points": 14,
-        "icon": "flame",
-        "type": "streak"
+        "icon": "timer",
+        "type": "online_time"
     }
 ]
 # Total: 15 + 25 + 10 + 5 + 14 = 69 points max
