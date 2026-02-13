@@ -44,6 +44,7 @@ from routes.unity_ads_routes import router as unity_ads_router
 from routes.support_routes import router as support_router
 from routes.two_factor_routes import router as two_factor_router
 from routes.comments_routes import router as comments_router
+from routes.challenges_routes import router as challenges_router
 
 
 ROOT_DIR = Path(__file__).parent
