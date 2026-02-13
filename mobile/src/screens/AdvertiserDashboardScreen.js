@@ -14,7 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 
-const API_URL = 'https://mobile-verify-9.preview.emergentagent.com';
+const API_URL = 'https://saqrpointscom.store';
 
 const AdvertiserDashboardScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');

@@ -15,7 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import storage from '../services/storage';
 
-const API_URL = 'https://mobile-verify-9.preview.emergentagent.com';
+const API_URL = 'https://saqrpointscom.store';
 
 const CATEGORIES = [
   { id: 'general', label: 'استفسار عام', icon: 'help-circle-outline' },
