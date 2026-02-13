@@ -225,8 +225,16 @@ const ChallengesPage = ({ user, onNavigate, onPointsEarned }) => {
       'log-in': LogIn,
       'rocket': Rocket,
       'flame': Flame,
+      'timer': Timer,
     };
     return icons[iconName] || Target;
+  };
+
+  // Format seconds to MM:SS
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   const todayPoints = stats?.today?.challenge_points || 0;
