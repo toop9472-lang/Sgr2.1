@@ -169,6 +169,7 @@ const ChallengesScreen = ({ user, onPointsEarned }) => {
       'log-in': 'log-in-outline',
       'rocket': 'rocket-outline',
       'flame': 'flame-outline',
+      'timer': 'timer-outline',
     };
     return iconMap[iconName] || 'star-outline';
   };
