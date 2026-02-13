@@ -188,6 +188,7 @@ api_router.include_router(unity_ads_router)
 api_router.include_router(support_router)
 api_router.include_router(two_factor_router)
 api_router.include_router(comments_router)
+api_router.include_router(challenges_router)
 
 # Include the router in the main app
 app.include_router(api_router)
