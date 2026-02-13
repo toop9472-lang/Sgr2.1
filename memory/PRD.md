@@ -371,7 +371,10 @@ Arabic (العربية)
 ### Files Created/Modified (Session 4)
 - **New:** `/app/backend/routes/challenges_routes.py`
 - **New:** `/app/mobile/src/screens/ChallengesScreen.js`
+- **New:** `/app/frontend/src/components/ChallengesPage.jsx`
 - **New:** `/app/backend/tests/test_challenges_api.py`
 - **Modified:** `/app/backend/server.py` - Added challenges_router
 - **Modified:** `/app/mobile/App.js` - Added ChallengesScreen
 - **Modified:** `/app/mobile/src/components/BottomNav.js` - Added challenges tab
+- **Modified:** `/app/frontend/src/App.js` - Added ChallengesPage
+- **Modified:** `/app/frontend/src/components/BottomNav.jsx` - Added challenges tab
