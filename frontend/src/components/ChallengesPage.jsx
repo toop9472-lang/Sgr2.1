@@ -152,10 +152,14 @@ const ChallengesPage = ({ user, onNavigate, onPointsEarned }) => {
     }
 
     setClaimingId(`day-${day}`);
+    const token = localStorage.getItem('user_token');
     try {
       const response = await fetch(`${API_URL}/api/challenges/login-rewards/claim`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         credentials: 'include',
         body: JSON.stringify({ day }),
       });
