@@ -28,11 +28,6 @@ next-env.d.ts
 # Production builds
 /build
 dist/
-dist
-
-
-*token.json*
-*credentials.json*
 
 # Logs and debug files
 npm-debug.log*
@@ -40,16 +35,23 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 dump.rdb
+*.log
 
 # System files
 .DS_Store
 *.pem
+Thumbs.db
 
 # Python
 __pycache__/
-*pyc*
+*.pyc
+*.pyo
+*.pyd
+.Python
 venv/
 .venv/
+env/
+.env.local
 
 # Development tools
 chainlit.md
@@ -74,70 +76,31 @@ agenthub/agents/youtube/db
 
 # Build caches
 .cache/
+*.pack_
 
 # Mobile development
 android-sdk/
-frontend/node_modules/.cache/default-development/4.pack
-frontend/node_modules/.cache/default-development/0.pack
-frontend/node_modules/.cache/default-development/3.pack
-frontend/node_modules/.cache/default-development/1.pack
-frontend/node_modules/.cache/default-development/5.pack
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
 
 # Sensitive files
 CREDENTIALS.md
 *.credentials
 *.secrets
 .gitconfig
+*token.json*
+*credentials.json*
+
+# Backup files
+*_backup/
+*.backup
+*.bak
+*.old
+*~
+*.swp
+*.tmp
+
+# Test results
 test_result.md
-mobile_backup/
-frontend/node_modules/.cache/default-development/6.pack
-frontend/node_modules/.cache/default-development/8.pack
-frontend/node_modules/.cache/default-development/10.pack
-frontend/node_modules/.cache/default-development/12.pack
+test_reports/
 frontend/node_modules/.cache/default-development/2.pack
--e 
-# Environment files
-*.env
-*.env.*
+frontend/node_modules/.cache/default-development/12.pack
 frontend/node_modules/.cache/default-development/7.pack
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
-frontend/node_modules/.cache/default-development/2.pack_
