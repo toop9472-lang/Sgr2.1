@@ -222,6 +222,28 @@ Arabic (العربية)
 - حذف مجلد `/app/mobile_backup`
 - تحديث `ProfileScreen.js` بروابط الشاشات الجديدة
 
+### ✅ تحسينات إضافية (Session 3 - Part 2)
+- **تنظيف الأكواد والملفات:**
+  - حذف مجلد `contexts` المكرر في frontend و mobile
+  - حذف ملفات `__pycache__` في backend
+  - تنظيف `.gitignore` من التكرار
+  - توحيد استيرادات ThemeContext
+  
+- **تحديث اللغات:**
+  - تقليص اللغات من 4 إلى 2 (العربية والإنجليزية فقط)
+  - تحديث `LanguageContext.js`
+  - تحديث `SettingsPage.jsx`
+  - تحديث `SettingsScreen.js` (موبايل)
+  - حذف الترجمات الفرنسية والتركية من `translations.js`
+
+- **تحسين واجهة تسجيل الدخول:**
+  - تغيير زر "تجربة التطبيق بدون حساب" إلى رابط "دخول كزائر" بنص أبيض صغير
+  - تطبيق نفس التغيير في الويب والموبايل
+
+- **إصلاح URLs في الموبايل:**
+  - توحيد جميع API_URL لتستخدم domain الإنتاج `saqrpointscom.store`
+  - إزالة URLs المؤقتة (preview URLs)
+
 ---
 
 ## Recent Updates (February 13, 2026 - Session 2)
