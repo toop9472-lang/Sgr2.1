@@ -67,13 +67,18 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
   const userBalance = (userPoints / pointsPerDollar).toFixed(2);
   const watchedToday = user?.watched_today || userAnalytics?.today_watches || 0;
   const dailyLimit = settings?.daily_limit || 50;
-  const pointsPerAd = settings?.points_per_ad || 5;
 
-  const challenges = settings?.daily_challenges || [
-    { title: t('watchedAds'), target: 5, reward: 25, icon: 'eye', desc: t('earnPerAd'), enabled: true },
-  ];
-  const today = new Date().getDate();
-  const dailyChallenge = challenges[today % challenges.length];
+  // Get icon component for challenge
+  const getChallengeIcon = (iconName) => {
+    const icons = {
+      'play-circle': PlayCircle,
+      'film': Film,
+      'log-in': LogIn,
+      'rocket': Rocket,
+      'timer': Timer,
+    };
+    return icons[iconName] || Trophy;
+  };
 
   const tips = settings?.tips || [
     { icon: 'bulb', text: t('watchAdsEarnPoints'), enabled: true },
