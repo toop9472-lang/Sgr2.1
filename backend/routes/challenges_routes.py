@@ -148,10 +148,20 @@ async def get_user_challenge_progress(db, user_id: str, challenge_id: str, chall
         })
         return 1 if login_record else 0
     
-    elif challenge_type == "streak":
-        # Get user's current streak
-        user = await db.users.find_one({'$or': [{'id': user_id}, {'user_id': user_id}]})
-        return min(user.get('streak_days', 0), target) if user else 0
+    elif challenge_type == "online_time":
+        # Get user's online time today in minutes
+        session = await db.user_online_sessions.find_one({
+            'user_id': user_id,
+            'date': today_start.strftime('%Y-%m-%d')
+        })
+        if session:
+            # Calculate minutes from start time to now
+            start_time = session.get('start_time')
+            if start_time:
+                now = datetime.now(timezone.utc)
+                elapsed = (now - start_time).total_seconds() / 60
+                return min(int(elapsed), target)
+        return 0
     
     return 0
 
