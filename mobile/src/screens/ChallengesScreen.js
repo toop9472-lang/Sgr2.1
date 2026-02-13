@@ -1,6 +1,6 @@
 // Challenges & Rewards Screen
 // Daily Challenges (69 points max) + 14-day Login Rewards (150 points/month)
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -26,6 +26,38 @@ const ChallengesScreen = ({ user, onPointsEarned }) => {
   const [loginRewards, setLoginRewards] = useState([]);
   const [stats, setStats] = useState({});
   const [claimingId, setClaimingId] = useState(null);
+  const [timerSeconds, setTimerSeconds] = useState(null);
+  const timerRef = useRef(null);
+
+  // Timer countdown effect
+  useEffect(() => {
+    if (timerSeconds === null || timerSeconds <= 0) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      return;
+    }
+    
+    timerRef.current = setInterval(() => {
+      setTimerSeconds(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          fetchData(); // Refresh when timer completes
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [timerSeconds !== null]);
+
+  // Format seconds to MM:SS
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -41,7 +73,14 @@ const ChallengesScreen = ({ user, onPointsEarned }) => {
 
       if (challengesRes.ok) {
         const data = await challengesRes.json();
-        setChallenges(data.challenges || []);
+        const challengesList = data.challenges || [];
+        setChallenges(challengesList);
+        
+        // Set timer for online challenge
+        const onlineChallenge = challengesList.find(c => c.id === 'stay_online_1hour');
+        if (onlineChallenge?.timer && !onlineChallenge.completed && timerSeconds === null) {
+          setTimerSeconds(onlineChallenge.timer.remaining_seconds);
+        }
       }
 
       if (rewardsRes.ok) {
