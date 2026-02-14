@@ -466,6 +466,16 @@ function MainApp() {
                   onPointsEarned={handlePointsEarned}
                 />
               )}
+              {currentPage === 'my-ads' && !showFullScreenAds && (
+                <MyAdsPage 
+                  onNavigate={handleNavigate}
+                />
+              )}
+              {currentPage === 'admin-withdrawals' && !showFullScreenAds && (
+                <AdminWithdrawalsPage 
+                  onNavigate={handleNavigate}
+                />
+              )}
               {currentPage === 'withdraw' && !showFullScreenAds && (
                 <WithdrawPage 
                   user={user}
