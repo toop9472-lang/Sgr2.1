@@ -191,3 +191,17 @@ STRIPE_API_KEY=sk_test_...
 ---
 
 **Last Updated:** February 14, 2026
+
+---
+
+## Change Log
+
+### February 14, 2026 - Mobile UI Sync
+- Updated `/app/mobile/src/screens/AdViewerScreen.js` to match web design
+- Key changes:
+  - Removed complex bottom info panel (advertiser avatar, description, etc.)
+  - Added minimal top bar with: back button, info stats, close button
+  - Added "المس للتحكم" hint at bottom
+  - Controls show on tap: play/pause center, navigation
+  - Points animation on earning minute
+  - Clean black background with transparent overlays
