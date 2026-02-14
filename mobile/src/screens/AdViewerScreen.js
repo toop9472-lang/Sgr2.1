@@ -56,7 +56,7 @@ const DEMO_ADS = [
   },
 ];
 
-const AdViewerScreen = ({ onClose, onPointsEarned, user }) => {
+const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) => {
   const [ads, setAds] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
