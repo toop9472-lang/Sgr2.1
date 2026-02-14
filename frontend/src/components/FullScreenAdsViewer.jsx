@@ -138,6 +138,88 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
     }
   };
 
+  // Fetch comments for current ad
+  const fetchComments = useCallback(async () => {
+    const currentAd = ads[currentIndex];
+    if (!currentAd) return;
+    setLoadingComments(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/comments/ad/${currentAd.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setComments(data || []);
+      }
+    } catch (e) {
+      console.log('Error fetching comments');
+    } finally {
+      setLoadingComments(false);
+    }
+  }, [ads, currentIndex]);
+
+  // Load comments when opening panel
+  useEffect(() => {
+    if (showComments && ads[currentIndex]) {
+      fetchComments();
+    }
+  }, [showComments, currentIndex, fetchComments]);
+
+  // Reset comments when changing ad
+  useEffect(() => {
+    setComments([]);
+    setNewComment('');
+  }, [currentIndex]);
+
+  // Submit new comment
+  const handleSubmitComment = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!newComment.trim() || !user || submittingComment) return;
+    
+    setSubmittingComment(true);
+    try {
+      const token = localStorage.getItem('session_token');
+      const res = await fetch(`${BACKEND_URL}/api/comments/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          ad_id: ads[currentIndex].id,
+          content: newComment.trim()
+        })
+      });
+      
+      if (res.ok) {
+        setNewComment('');
+        fetchComments();
+      }
+    } catch (e) {
+      console.log('Error submitting comment');
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  // Like comment
+  const handleLikeComment = async (commentId) => {
+    if (!user) return;
+    try {
+      const token = localStorage.getItem('session_token');
+      await fetch(`${BACKEND_URL}/api/comments/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ comment_id: commentId })
+      });
+      fetchComments();
+    } catch (e) {
+      console.log('Error liking comment');
+    }
+  };
+
   const startAdTimer = () => {
     setCurrentAdTime(0);
     if (watchTimerRef.current) clearInterval(watchTimerRef.current);
