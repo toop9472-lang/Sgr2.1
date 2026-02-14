@@ -184,13 +184,22 @@ async def get_my_advertiser_ads(email: str = Query(..., description="Advertiser 
         remaining_seconds = 0
         
         if expires_at and ad.get('is_active'):
+            expires_dt = None
             if isinstance(expires_at, str):
                 try:
                     expires_dt = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
-                    remaining = expires_dt - current_time
-                    remaining_seconds = max(0, int(remaining.total_seconds()))
+                    if expires_dt.tzinfo is None:
+                        expires_dt = expires_dt.replace(tzinfo=timezone.utc)
                 except (ValueError, TypeError):
                     pass
+            elif isinstance(expires_at, datetime):
+                expires_dt = expires_at
+                if expires_dt.tzinfo is None:
+                    expires_dt = expires_dt.replace(tzinfo=timezone.utc)
+            
+            if expires_dt:
+                remaining = expires_dt - current_time
+                remaining_seconds = max(0, int(remaining.total_seconds()))
         
         result.append({
             'id': ad.get('id'),
