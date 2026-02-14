@@ -14,6 +14,7 @@ class Ad(BaseModel):
     duration: int  # seconds
     points_per_minute: int = 1
     is_active: bool = True
+    ad_type: str = 'global'  # 'local' for personal ads, 'global' for wide reach
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:
@@ -30,6 +31,7 @@ class AdCreate(BaseModel):
     website_url: Optional[str] = None
     duration: int
     points_per_minute: int = 1
+    ad_type: str = 'global'
 
 class AdResponse(BaseModel):
     id: str
@@ -41,6 +43,7 @@ class AdResponse(BaseModel):
     website_url: Optional[str] = None
     duration: int
     points: int
+    ad_type: str = 'global'
 
     class Config:
         json_encoders = {
