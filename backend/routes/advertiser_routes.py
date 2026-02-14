@@ -8,7 +8,16 @@ import os
 
 router = APIRouter(prefix='/advertiser', tags=['Advertiser'])
 
-AD_PRICE_SAR = 500.0  # 500 SAR per month
+# Hourly pricing packages
+HOURLY_PACKAGES = {
+    1: 79.0,    # 1 hour
+    3: 119.0,   # 3 hours
+    6: 149.0,   # 6 hours
+    12: 199.0,  # 12 hours
+    24: 275.0,  # 24 hours (1 day)
+    48: 399.0,  # 48 hours (2 days)
+    168: 999.0  # 7 days
+}
 
 def get_db():
     """Get database connection"""
@@ -24,8 +33,9 @@ async def create_advertiser_ad(ad_data: AdvertiserAdCreate):
     db = get_db()
     
     try:
-        # Calculate total price
-        total_price = AD_PRICE_SAR * ad_data.duration_months
+        # Get price based on duration_hours
+        duration_hours = ad_data.duration_hours
+        total_price = HOURLY_PACKAGES.get(duration_hours, 79.0)
         
         # Create ad
         ad = AdvertiserAd(
@@ -39,7 +49,8 @@ async def create_advertiser_ad(ad_data: AdvertiserAdCreate):
             thumbnail_url=ad_data.thumbnail_url,
             duration=ad_data.duration,
             price=total_price,
-            duration_months=ad_data.duration_months,
+            duration_hours=duration_hours,
+            ad_type=ad_data.ad_type,
             status='pending',
             payment_status='pending'
         )
@@ -75,11 +86,12 @@ async def create_advertiser_ad(ad_data: AdvertiserAdCreate):
                 thumbnail_url=ad.thumbnail_url,
                 duration=ad.duration,
                 price=ad.price,
-                duration_months=ad.duration_months,
+                duration_hours=ad.duration_hours,
                 status=ad.status,
                 payment_status=ad.payment_status,
                 created_at=ad.created_at,
-                expires_at=ad.expires_at
+                expires_at=ad.expires_at,
+                ad_type=ad.ad_type
             ),
             'payment': {
                 'id': payment.id,
