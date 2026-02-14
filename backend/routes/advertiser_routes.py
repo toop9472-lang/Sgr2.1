@@ -190,20 +190,28 @@ async def submit_payment_proof(ad_id: str, data: dict):
 @router.get('/pricing', response_model=dict)
 async def get_pricing():
     """
-    Get advertiser pricing information
+    Get advertiser pricing information - hourly packages
     """
     return {
-        'price_per_month': AD_PRICE_SAR,
+        'packages': [
+            {'hours': 1, 'price': 79, 'description': 'ساعة واحدة'},
+            {'hours': 3, 'price': 119, 'description': '3 ساعات'},
+            {'hours': 6, 'price': 149, 'description': '6 ساعات'},
+            {'hours': 12, 'price': 199, 'description': '12 ساعة'},
+            {'hours': 24, 'price': 275, 'description': '24 ساعة (يوم كامل)'},
+            {'hours': 48, 'price': 399, 'description': '48 ساعة (يومين)'},
+            {'hours': 168, 'price': 999, 'description': 'أسبوع كامل'}
+        ],
         'currency': 'SAR',
         'features': [
             'عرض إعلانك لجميع المستخدمين',
+            'مؤقت عد تنازلي على صورتك',
             'إحصائيات مشاهدة مفصلة',
-            'مدة شهر كامل',
             'دعم فني كامل'
         ],
         'payment_methods': [
+            {'id': 'stripe', 'name': 'بطاقة ائتمان', 'icon': '💳'},
             {'id': 'bank', 'name': 'تحويل بنكي', 'icon': '🏦'},
-            {'id': 'stcpay', 'name': 'STC Pay', 'icon': '📱'},
-            {'id': 'cash', 'name': 'نقدي', 'icon': '💵'}
+            {'id': 'stcpay', 'name': 'STC Pay', 'icon': '📱'}
         ]
     }
