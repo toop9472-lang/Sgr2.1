@@ -714,8 +714,15 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
             transform: translateY(-30px) scale(1);
           }
         }
+        @keyframes slide-up {
+          0% { transform: translateY(100%); }
+          100% { transform: translateY(0); }
+        }
         .animate-fade-in-up {
           animation: fade-in-up 2s ease-out forwards;
+        }
+        .animate-slide-up {
+          animation: slide-up 0.3s ease-out;
         }
       `}</style>
     </div>
