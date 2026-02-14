@@ -309,22 +309,22 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
 
       {/* =================== الأزرار العلوية =================== */}
       <div className="absolute top-4 left-0 right-0 z-40 px-4 flex items-center justify-between">
-        {/* سهم للخلف - يذهب للصفحة الشخصية */}
-        <button
-          onClick={handleGoToProfile}
-          className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center transition-all hover:bg-black/50"
-          data-testid="back-to-profile-btn"
-        >
-          <ArrowLeft className="w-5 h-5 text-white/80" />
-        </button>
-        
-        {/* زر X للخروج - يعود للرئيسية */}
+        {/* زر X للخروج - يعود للرئيسية (يسار) */}
         <button
           onClick={(e) => { e.stopPropagation(); onClose(); }}
           className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center transition-all hover:bg-black/50"
           data-testid="close-ads-btn"
         >
           <X className="w-5 h-5 text-white/80" />
+        </button>
+        
+        {/* سهم للخلف - يذهب للصفحة الشخصية (يمين) */}
+        <button
+          onClick={handleGoToProfile}
+          className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center transition-all hover:bg-black/50"
+          data-testid="back-to-profile-btn"
+        >
+          <ArrowLeft className="w-5 h-5 text-white/80 rotate-180" />
         </button>
       </div>
 
