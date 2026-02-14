@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Check, AlertCircle, CreditCard, Building2, Smartphone } from 'lucide-react';
+import { ArrowRight, Check, AlertCircle, CreditCard, Building2, Smartphone, Clock, Timer, Globe, MapPin } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
@@ -11,7 +11,7 @@ import { toast } from '../hooks/use-toast';
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const AdvertiserPage = ({ onNavigate }) => {
-  const [step, setStep] = useState(1); // 1: form, 2: payment method, 3: processing, 4: success
+  const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [adData, setAdData] = useState({
     advertiser_name: '',
@@ -23,7 +23,8 @@ const AdvertiserPage = ({ onNavigate }) => {
     video_url: '',
     thumbnail_url: '',
     duration: 60,
-    duration_months: 1
+    duration_hours: 1,
+    ad_type: 'local'
   });
   const [createdAd, setCreatedAd] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('');
@@ -37,9 +38,8 @@ const AdvertiserPage = ({ onNavigate }) => {
     stcpay: false,
     paypal: false
   });
-  const [selectedPackage, setSelectedPackage] = useState('ad_1_month');
+  const [selectedPackage, setSelectedPackage] = useState('ad_1_hour');
 
-  // Load pricing packages and enabled payment gateways on mount
   useEffect(() => {
     const loadPackages = async () => {
       try {
@@ -65,7 +65,6 @@ const AdvertiserPage = ({ onNavigate }) => {
     loadEnabledGateways();
   }, []);
 
-  // Check for payment return
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get('session_id');
@@ -73,10 +72,8 @@ const AdvertiserPage = ({ onNavigate }) => {
     const provider = urlParams.get('provider');
     
     if (sessionId) {
-      // Stripe payment
       pollPaymentStatus(sessionId);
     } else if (chargeId && provider === 'tap') {
-      // Tap payment
       pollTapPaymentStatus(chargeId);
     }
   }, []);
@@ -103,9 +100,8 @@ const AdvertiserPage = ({ onNavigate }) => {
         setCreatedAd({ ad: { id: data.ad_id } });
         toast({
           title: 'تم الدفع بنجاح!',
-          description: 'سيتم مراجعة إعلانك وتفعيله قريباً',
+          description: 'إعلانك نشط الآن! المؤقت بدأ.',
         });
-        // Clear URL params
         window.history.replaceState({}, document.title, window.location.pathname);
         return;
       } else if (data.status === 'expired') {
@@ -118,7 +114,6 @@ const AdvertiserPage = ({ onNavigate }) => {
         return;
       }
 
-      // Continue polling
       setStep(3);
       setTimeout(() => pollPaymentStatus(sessionId, attempts + 1), pollInterval);
     } catch (error) {
@@ -126,7 +121,6 @@ const AdvertiserPage = ({ onNavigate }) => {
     }
   };
 
-  // Poll Tap payment status
   const pollTapPaymentStatus = async (chargeId, attempts = 0) => {
     const maxAttempts = 10;
     const pollInterval = 2000;
@@ -148,14 +142,14 @@ const AdvertiserPage = ({ onNavigate }) => {
         setStep(4);
         setCreatedAd({ ad: { id: data.ad_id } });
         toast({
-          title: '✅ تم الدفع بنجاح!',
-          description: 'سيتم مراجعة إعلانك وتفعيله قريباً',
+          title: 'تم الدفع بنجاح!',
+          description: 'إعلانك نشط الآن!',
         });
         window.history.replaceState({}, document.title, window.location.pathname);
         return;
       } else if (data.payment_status === 'failed') {
         toast({
-          title: '❌ فشل الدفع',
+          title: 'فشل الدفع',
           description: 'يرجى المحاولة مرة أخرى',
           variant: 'destructive'
         });
@@ -182,10 +176,14 @@ const AdvertiserPage = ({ onNavigate }) => {
     setIsSubmitting(true);
 
     try {
+      const pkg = getCurrentPackage();
       const response = await fetch(`${API_URL}/api/advertiser/ads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(adData)
+        body: JSON.stringify({
+          ...adData,
+          duration_hours: pkg?.duration_hours || 1
+        })
       });
 
       if (!response.ok) {
@@ -197,13 +195,13 @@ const AdvertiserPage = ({ onNavigate }) => {
       setStep(2);
       
       toast({
-        title: '✅ تم إنشاء الإعلان',
+        title: 'تم إنشاء الإعلان',
         description: 'الآن اختر طريقة الدفع',
       });
     } catch (error) {
       console.error('Failed to create ad:', error);
       toast({
-        title: '❌ خطأ',
+        title: 'خطأ',
         description: 'فشل إنشاء الإعلان. يرجى المحاولة مرة أخرى',
         variant: 'destructive'
       });
@@ -215,7 +213,7 @@ const AdvertiserPage = ({ onNavigate }) => {
   const handleStripePayment = async () => {
     if (!createdAd?.ad?.id) {
       toast({
-        title: '❌ خطأ',
+        title: 'خطأ',
         description: 'يرجى إنشاء الإعلان أولاً',
         variant: 'destructive'
       });
@@ -241,13 +239,11 @@ const AdvertiserPage = ({ onNavigate }) => {
       }
 
       const data = await response.json();
-      
-      // Redirect to Stripe Checkout
       window.location.href = data.checkout_url;
     } catch (error) {
       console.error('Payment error:', error);
       toast({
-        title: '❌ خطأ في الدفع',
+        title: 'خطأ في الدفع',
         description: 'فشل إنشاء جلسة الدفع',
         variant: 'destructive'
       });
@@ -259,7 +255,7 @@ const AdvertiserPage = ({ onNavigate }) => {
   const handleTapPayment = async () => {
     if (!createdAd?.ad?.id) {
       toast({
-        title: '❌ خطأ',
+        title: 'خطأ',
         description: 'يرجى إنشاء الإعلان أولاً',
         variant: 'destructive'
       });
@@ -288,13 +284,11 @@ const AdvertiserPage = ({ onNavigate }) => {
       }
 
       const data = await response.json();
-      
-      // Redirect to Tap Checkout
       window.location.href = data.checkout_url;
     } catch (error) {
       console.error('Tap payment error:', error);
       toast({
-        title: '❌ خطأ في الدفع',
+        title: 'خطأ في الدفع',
         description: error.message || 'فشل إنشاء جلسة الدفع',
         variant: 'destructive'
       });
@@ -320,13 +314,13 @@ const AdvertiserPage = ({ onNavigate }) => {
       setStep(4);
       
       toast({
-        title: '✅ تم إرسال إثبات الدفع',
+        title: 'تم إرسال إثبات الدفع',
         description: 'سيتم مراجعة إعلانك والموافقة عليه قريباً',
       });
     } catch (error) {
       console.error('Failed to submit payment:', error);
       toast({
-        title: '❌ خطأ',
+        title: 'خطأ',
         description: 'فشل إرسال إثبات الدفع',
         variant: 'destructive'
       });
@@ -339,13 +333,19 @@ const AdvertiserPage = ({ onNavigate }) => {
     return packages.find(p => p.id === selectedPackage) || packages[0];
   };
 
+  const formatDuration = (hours) => {
+    if (hours < 24) return `${hours} ساعة`;
+    if (hours === 24) return 'يوم كامل';
+    if (hours === 48) return 'يومين';
+    if (hours === 168) return 'أسبوع كامل';
+    return `${hours} ساعة`;
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0f] pb-20 relative overflow-hidden">
-      {/* Decorative Blue Circles */}
       <div className="absolute top-[-200px] left-[-200px] w-[500px] h-[500px] rounded-full bg-[#3b82f6]/20 blur-3xl"></div>
       <div className="absolute bottom-[-150px] right-[-150px] w-[400px] h-[400px] rounded-full bg-[#3b82f6]/15 blur-3xl"></div>
       
-      {/* Header */}
       <div className="relative px-4 pt-8 pb-12">
         <button
           onClick={() => onNavigate('home')}
@@ -360,78 +360,82 @@ const AdvertiserPage = ({ onNavigate }) => {
       </div>
 
       <div className="px-4 space-y-6">
-        {/* Pricing Packages - New Professional Design */}
+        {/* New Hourly Pricing Packages */}
         {packages.length > 0 && step === 1 && (
           <div className="mb-8">
-            <h3 className="text-xl font-bold text-white mb-6 text-center">اختر باقتك</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <h3 className="text-xl font-bold text-white mb-2 text-center">اختر مدة الإعلان</h3>
+            <p className="text-gray-400 text-sm text-center mb-6">الإعلان يبدأ فوراً بعد الدفع مع مؤقت عد تنازلي</p>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {packages.map((pkg, index) => (
                 <div
                   key={pkg.id}
                   onClick={() => {
                     setSelectedPackage(pkg.id);
-                    setAdData({ ...adData, duration_months: pkg.duration_months });
+                    setAdData({ ...adData, duration_hours: pkg.duration_hours });
                   }}
-                  className={`relative p-6 rounded-2xl border cursor-pointer transition-all duration-300 ${
+                  className={`relative p-4 rounded-xl border cursor-pointer transition-all duration-300 ${
                     selectedPackage === pkg.id
-                      ? 'border-[#3b82f6] bg-[#3b82f6]/10 shadow-lg shadow-[#3b82f6]/20'
+                      ? 'border-[#3b82f6] bg-[#3b82f6]/10 shadow-lg shadow-[#3b82f6]/20 scale-105'
                       : 'border-white/10 bg-[#111118]/80 hover:border-white/30'
                   }`}
                 >
-                  {/* Popular Badge */}
-                  {index === 1 && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-[#3b82f6] text-white text-xs font-bold rounded-full">
-                      الأكثر شعبية
+                  {/* Best Value Badge */}
+                  {pkg.duration_hours === 24 && (
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full">
+                      الأفضل قيمة
                     </div>
                   )}
                   
-                  {/* Package Icon */}
-                  <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                    <svg className="w-7 h-7 text-[#60a5fa]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  
                   <div className="text-center">
-                    <p className="text-sm text-gray-400 mb-2">{pkg.description}</p>
-                    <p className="text-3xl font-bold text-[#3b82f6]">{pkg.amount} ﷼</p>
-                    <p className="text-sm text-gray-500 mt-1">ريال سعودي</p>
+                    <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-[#3b82f6]/20 flex items-center justify-center">
+                      <Timer className="w-5 h-5 text-[#60a5fa]" />
+                    </div>
+                    <p className="text-white font-bold text-lg">{formatDuration(pkg.duration_hours)}</p>
+                    <p className="text-2xl font-bold text-[#3b82f6] mt-1">{pkg.amount} ﷼</p>
                   </div>
                   
-                  {/* Features */}
-                  <div className="mt-6 space-y-3">
-                    <div className="flex items-center gap-2 text-sm text-gray-400">
-                      <div className="w-5 h-5 rounded-full bg-[#3b82f6]/20 flex items-center justify-center">
-                        <Check size={12} className="text-[#3b82f6]" />
-                      </div>
-                      <span>{pkg.duration_months} شهر عرض</span>
+                  {selectedPackage === pkg.id && (
+                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[#3b82f6] flex items-center justify-center">
+                      <Check size={12} className="text-white" />
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-400">
-                      <div className="w-5 h-5 rounded-full bg-[#3b82f6]/20 flex items-center justify-center">
-                        <Check size={12} className="text-[#3b82f6]" />
-                      </div>
-                      <span>تقارير الأداء</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-400">
-                      <div className="w-5 h-5 rounded-full bg-[#3b82f6]/20 flex items-center justify-center">
-                        <Check size={12} className="text-[#3b82f6]" />
-                      </div>
-                      <span>دعم فني</span>
-                    </div>
-                  </div>
-                  
-                  {/* Select Button */}
-                  <button
-                    className={`w-full mt-6 py-3 rounded-full font-medium transition-all ${
-                      selectedPackage === pkg.id
-                        ? 'bg-[#3b82f6] text-white'
-                        : 'bg-white/5 text-gray-400 hover:bg-white/10'
-                    }`}
-                  >
-                    {selectedPackage === pkg.id ? 'تم الاختيار ✓' : 'اختر الباقة'}
-                  </button>
+                  )}
                 </div>
               ))}
+            </div>
+
+            {/* Ad Type Selection */}
+            <div className="mt-6 bg-[#111118]/80 border border-white/10 rounded-xl p-4">
+              <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                <Globe className="w-4 h-4 text-[#60a5fa]" />
+                نوع الإعلان
+              </h4>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setAdData({ ...adData, ad_type: 'local' })}
+                  className={`p-3 rounded-lg border transition-all ${
+                    adData.ad_type === 'local'
+                      ? 'border-[#3b82f6] bg-[#3b82f6]/10'
+                      : 'border-white/10 hover:border-white/30'
+                  }`}
+                >
+                  <MapPin className={`w-5 h-5 mx-auto mb-1 ${adData.ad_type === 'local' ? 'text-[#60a5fa]' : 'text-gray-400'}`} />
+                  <p className={`text-sm font-medium ${adData.ad_type === 'local' ? 'text-white' : 'text-gray-400'}`}>محلي</p>
+                  <p className="text-xs text-gray-500">إعلان شخصي</p>
+                </button>
+                <button
+                  onClick={() => setAdData({ ...adData, ad_type: 'global' })}
+                  className={`p-3 rounded-lg border transition-all ${
+                    adData.ad_type === 'global'
+                      ? 'border-[#3b82f6] bg-[#3b82f6]/10'
+                      : 'border-white/10 hover:border-white/30'
+                  }`}
+                >
+                  <Globe className={`w-5 h-5 mx-auto mb-1 ${adData.ad_type === 'global' ? 'text-[#60a5fa]' : 'text-gray-400'}`} />
+                  <p className={`text-sm font-medium ${adData.ad_type === 'global' ? 'text-white' : 'text-gray-400'}`}>عالمي</p>
+                  <p className="text-xs text-gray-500">وصول أوسع</p>
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -500,9 +504,6 @@ const AdvertiserPage = ({ onNavigate }) => {
                     className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[#3b82f6]"
                     data-testid="website-url-input"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    سيظهر زر "زيارة" للمستخدمين عند مشاهدة إعلانك
-                  </p>
                 </div>
 
                 <div>
@@ -547,9 +548,6 @@ const AdvertiserPage = ({ onNavigate }) => {
                     className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[#3b82f6]"
                     data-testid="video-url-input"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    رابط مباشر للفيديو (MP4 أو رابط YouTube)
-                  </p>
                 </div>
 
                 <div>
@@ -566,10 +564,26 @@ const AdvertiserPage = ({ onNavigate }) => {
                   />
                 </div>
 
-                <div className="bg-[#3b82f6]/10 border border-[#3b82f6]/30 rounded-xl p-4">
-                  <p className="text-sm text-[#60a5fa]">
-                    <strong>المبلغ الإجمالي:</strong> {getCurrentPackage()?.amount || 500} ﷼
-                  </p>
+                {/* Summary */}
+                <div className="bg-gradient-to-r from-[#3b82f6]/20 to-[#6366f1]/20 border border-[#3b82f6]/30 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Timer className="w-5 h-5 text-[#60a5fa]" />
+                    <span className="text-white font-medium">ملخص الطلب</span>
+                  </div>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">المدة:</span>
+                      <span className="text-white font-medium">{formatDuration(getCurrentPackage()?.duration_hours || 1)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">النوع:</span>
+                      <span className="text-white font-medium">{adData.ad_type === 'local' ? 'محلي' : 'عالمي'}</span>
+                    </div>
+                    <div className="flex justify-between border-t border-white/10 pt-2 mt-2">
+                      <span className="text-gray-400">المبلغ الإجمالي:</span>
+                      <span className="text-[#60a5fa] font-bold text-lg">{getCurrentPackage()?.amount || 79} ﷼</span>
+                    </div>
+                  </div>
                 </div>
 
                 <Button
@@ -592,45 +606,47 @@ const AdvertiserPage = ({ onNavigate }) => {
               <CardTitle className="text-white">اختر طريقة الدفع</CardTitle>
               <CardDescription className="text-gray-400">
                 المبلغ المطلوب: <strong className="text-[#3b82f6]">{getCurrentPackage()?.amount || createdAd.payment.amount} ﷼</strong>
-                {getCurrentPackage()?.duration_months > 1 && (
-                  <span className="text-green-400 text-sm mr-2">
-                    (خصم {getCurrentPackage()?.duration_months === 3 ? '10%' : 
-                           getCurrentPackage()?.duration_months === 6 ? '20%' : 
-                           getCurrentPackage()?.duration_months === 12 ? '30%' : ''})
-                  </span>
-                )}
+                <span className="text-gray-500 text-sm mr-2">({formatDuration(getCurrentPackage()?.duration_hours || 1)})</span>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Important Notice */}
+              <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 flex items-start gap-2">
+                <Clock className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-green-300">
+                  بعد الدفع، سيبدأ إعلانك فوراً مع مؤقت عد تنازلي على صورة ملفك الشخصي!
+                </p>
+              </div>
+
               {/* Stripe Payment Option */}
               <div 
-                className="p-4 rounded-lg border-2 border-indigo-200 bg-indigo-50 cursor-pointer hover:border-indigo-400 transition-all"
+                className="p-4 rounded-lg border-2 border-[#3b82f6]/30 bg-[#3b82f6]/5 cursor-pointer hover:border-[#3b82f6] transition-all"
                 onClick={handleStripePayment}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-[#3b82f6] flex items-center justify-center">
                     <CreditCard className="text-white" size={24} />
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-bold text-gray-800">الدفع ببطاقة الائتمان (عالمي)</h4>
-                    <p className="text-sm text-gray-600">Visa, Mastercard, Apple Pay, Google Pay</p>
+                    <h4 className="font-bold text-white">الدفع ببطاقة الائتمان</h4>
+                    <p className="text-sm text-gray-400">Visa, Mastercard, Apple Pay, Google Pay</p>
                   </div>
-                  <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">فوري</span>
+                  <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">فوري</span>
                 </div>
                 <Button
                   onClick={handleStripePayment}
                   disabled={isSubmitting}
-                  className="w-full mt-3 bg-indigo-600 hover:bg-indigo-700 text-white"
+                  className="w-full mt-3 bg-[#3b82f6] hover:bg-[#2563eb] text-white"
                   data-testid="stripe-pay-btn"
                 >
                   {isSubmitting ? 'جاري التحويل...' : 'ادفع الآن عبر Stripe'}
                 </Button>
               </div>
 
-              {/* Tap Payment Option - Saudi Local */}
+              {/* Tap Payment Option */}
               {enabledGateways.tap && (
                 <div 
-                  className="p-4 rounded-lg border-2 border-green-200 bg-green-50 cursor-pointer hover:border-green-400 transition-all"
+                  className="p-4 rounded-lg border-2 border-green-500/30 bg-green-500/5 cursor-pointer hover:border-green-500 transition-all"
                   onClick={handleTapPayment}
                 >
                   <div className="flex items-center gap-3">
@@ -638,10 +654,10 @@ const AdvertiserPage = ({ onNavigate }) => {
                       <Smartphone className="text-white" size={24} />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-bold text-gray-800">الدفع المحلي (السعودية)</h4>
-                      <p className="text-sm text-gray-600">mada, Apple Pay, STC Pay</p>
+                      <h4 className="font-bold text-white">الدفع المحلي (السعودية)</h4>
+                      <p className="text-sm text-gray-400">mada, Apple Pay, STC Pay</p>
                     </div>
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">محلي</span>
+                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">محلي</span>
                   </div>
                   <Button
                     onClick={handleTapPayment}
@@ -656,43 +672,42 @@ const AdvertiserPage = ({ onNavigate }) => {
 
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200"></div>
+                  <div className="w-full border-t border-white/10"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">أو</span>
+                  <span className="px-2 bg-[#111118] text-gray-500">أو</span>
                 </div>
               </div>
 
               {/* Manual Payment Options */}
               <form onSubmit={handleManualPayment} className="space-y-4">
-                <div className="p-4 rounded-lg border border-gray-200">
+                <div className="p-4 rounded-lg border border-white/10 bg-white/5">
                   <div className="flex items-center gap-3 mb-4">
-                    <Building2 className="text-gray-600" size={24} />
-                    <h4 className="font-bold text-gray-800">التحويل البنكي أو STC Pay</h4>
+                    <Building2 className="text-gray-400" size={24} />
+                    <h4 className="font-bold text-white">التحويل البنكي أو STC Pay</h4>
                   </div>
                   
                   <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
                     <div className="space-y-3">
                       {[
-                        { id: 'bank', name: 'تحويل بنكي', icon: 'bank' },
-                        { id: 'stcpay', name: 'STC Pay', icon: 'phone' }
+                        { id: 'bank', name: 'تحويل بنكي' },
+                        { id: 'stcpay', name: 'STC Pay' }
                       ].map((method) => (
                         <div
                           key={method.id}
                           className={`flex items-center space-x-reverse space-x-3 p-3 rounded-lg border transition-all cursor-pointer ${
                             paymentMethod === method.id
-                              ? 'border-indigo-600 bg-indigo-50'
-                              : 'border-gray-200 hover:border-gray-300'
+                              ? 'border-[#3b82f6] bg-[#3b82f6]/10'
+                              : 'border-white/10 hover:border-white/30'
                           }`}
                           onClick={() => setPaymentMethod(method.id)}
                         >
                           <RadioGroupItem value={method.id} id={method.id} />
                           <Label
                             htmlFor={method.id}
-                            className="flex-1 cursor-pointer flex items-center gap-3"
+                            className="flex-1 cursor-pointer text-white"
                           >
-                            <span className="text-xl">{method.icon}</span>
-                            <span className="font-medium">{method.name}</span>
+                            {method.name}
                           </Label>
                         </div>
                       ))}
@@ -702,20 +717,21 @@ const AdvertiserPage = ({ onNavigate }) => {
                   {paymentMethod && (
                     <>
                       <div className="mt-4">
-                        <Label htmlFor="payment_proof">رقم التحويل أو إثبات الدفع</Label>
+                        <Label htmlFor="payment_proof" className="text-gray-300">رقم التحويل أو إثبات الدفع</Label>
                         <Input
                           id="payment_proof"
                           value={paymentProof}
                           onChange={(e) => setPaymentProof(e.target.value)}
                           required
                           placeholder="أدخل رقم التحويل أو رابط إثبات الدفع"
+                          className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
                           data-testid="payment-proof-input"
                         />
                       </div>
 
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4 flex items-start gap-3">
-                        <AlertCircle className="text-yellow-600 flex-shrink-0 mt-0.5" size={18} />
-                        <div className="text-xs text-yellow-900">
+                      <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mt-4 flex items-start gap-3">
+                        <AlertCircle className="text-yellow-400 flex-shrink-0 mt-0.5" size={18} />
+                        <div className="text-xs text-yellow-300">
                           <p className="font-semibold mb-1">معلومات التحويل:</p>
                           <p>البنك: الراجحي</p>
                           <p>رقم الحساب: SA1234567890</p>
@@ -726,7 +742,7 @@ const AdvertiserPage = ({ onNavigate }) => {
                       <Button
                         type="submit"
                         disabled={isSubmitting || !paymentProof}
-                        className="w-full mt-4 bg-gray-800 hover:bg-gray-900 text-white"
+                        className="w-full mt-4 bg-gray-700 hover:bg-gray-600 text-white"
                         data-testid="manual-pay-btn"
                       >
                         {isSubmitting ? 'جاري الإرسال...' : 'إرسال إثبات الدفع'}
@@ -741,37 +757,38 @@ const AdvertiserPage = ({ onNavigate }) => {
 
         {/* Step 3: Processing */}
         {step === 3 && (
-          <Card className="shadow-lg border-0">
+          <Card className="shadow-xl border border-white/10 bg-[#111118]/80 backdrop-blur-xl rounded-2xl">
             <CardContent className="pt-6 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-indigo-100 flex items-center justify-center animate-pulse">
-                <CreditCard className="text-indigo-600" size={32} />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#3b82f6]/20 flex items-center justify-center animate-pulse">
+                <CreditCard className="text-[#60a5fa]" size={32} />
               </div>
-              <h2 className="text-xl font-bold text-gray-800 mb-2">جاري معالجة الدفع...</h2>
-              <p className="text-gray-600">يرجى الانتظار</p>
+              <h2 className="text-xl font-bold text-white mb-2">جاري معالجة الدفع...</h2>
+              <p className="text-gray-400">يرجى الانتظار</p>
             </CardContent>
           </Card>
         )}
 
         {/* Step 4: Success */}
         {step === 4 && (
-          <Card className="shadow-lg border-0 bg-gradient-to-br from-green-50 to-emerald-50">
+          <Card className="shadow-xl border border-green-500/30 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-2xl">
             <CardContent className="pt-6 text-center">
-              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
-                <Check className="text-green-600" size={40} />
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
+                <Check className="text-green-400" size={40} />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">تم بنجاح!</h2>
-              <p className="text-gray-600 mb-6">
-                تم إرسال طلب إعلانك بنجاح. سيتم مراجعته والموافقة عليه خلال 24 ساعة.
+              <h2 className="text-2xl font-bold text-white mb-2">تم بنجاح!</h2>
+              <p className="text-gray-400 mb-6">
+                إعلانك نشط الآن مع مؤقت عد تنازلي!
               </p>
-              <div className="space-y-2 text-sm text-gray-700 text-right bg-white rounded-lg p-4 mb-6">
-                <p><strong>رقم الطلب:</strong> {createdAd?.ad?.id}</p>
-                <p><strong>العنوان:</strong> {adData.title}</p>
-                <p><strong>المبلغ:</strong> {createdAd?.payment?.amount || getCurrentPackage()?.amount} ﷼</p>
-                <p><strong>الحالة:</strong> قيد المراجعة</p>
+              <div className="space-y-2 text-sm text-right bg-black/20 rounded-lg p-4 mb-6">
+                <p className="flex justify-between"><span className="text-gray-400">رقم الطلب:</span> <span className="text-white">{createdAd?.ad?.id}</span></p>
+                <p className="flex justify-between"><span className="text-gray-400">العنوان:</span> <span className="text-white">{adData.title}</span></p>
+                <p className="flex justify-between"><span className="text-gray-400">المدة:</span> <span className="text-white">{formatDuration(getCurrentPackage()?.duration_hours || 1)}</span></p>
+                <p className="flex justify-between"><span className="text-gray-400">المبلغ:</span> <span className="text-[#60a5fa]">{createdAd?.payment?.amount || getCurrentPackage()?.amount} ﷼</span></p>
+                <p className="flex justify-between"><span className="text-gray-400">الحالة:</span> <span className="text-green-400">نشط</span></p>
               </div>
               <Button
                 onClick={() => onNavigate('home')}
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white h-12"
+                className="w-full bg-gradient-to-r from-[#3b82f6] to-[#6366f1] hover:from-[#2563eb] hover:to-[#4f46e5] text-white h-12 rounded-full"
                 data-testid="go-home-btn"
               >
                 العودة للرئيسية
