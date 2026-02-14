@@ -1,10 +1,10 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Query
 from motor.motor_asyncio import AsyncIOMotorClient
 from models.ad import Ad, AdCreate, AdResponse
 from models.user import WatchedAd
 from auth.dependencies import get_current_user_id
-from typing import List
-from datetime import datetime
+from typing import List, Optional
+from datetime import datetime, timezone
 import os
 
 router = APIRouter(prefix='/ads', tags=['Advertisements'])
@@ -16,18 +16,33 @@ def get_db():
     return client[os.environ['DB_NAME']]
 
 @router.get('', response_model=List[AdResponse])
-async def get_ads():
+async def get_ads(ad_type: Optional[str] = Query(None, description="Filter by type: 'local' or 'global'")):
     """
     Get all active ads (public - no auth required)
     Combines ads from both 'ads' and 'advertiser_ads' collections
+    Supports filtering by ad_type: 'local' (personal ads) or 'global'
     """
     db = get_db()
+    current_time = datetime.now(timezone.utc)
     
-    # Get ads from main ads collection
-    main_ads = await db.ads.find({'is_active': True}, {'_id': 0}).to_list(100)
+    # Build query for advertiser ads
+    advertiser_query = {'status': 'active', 'is_active': True}
     
-    # Get active ads from advertiser_ads collection
-    advertiser_ads = await db.advertiser_ads.find({'status': 'active'}, {'_id': 0}).to_list(100)
+    # Add type filter if provided
+    if ad_type:
+        advertiser_query['ad_type'] = ad_type
+    
+    # Get ads from main ads collection (these are global/system ads)
+    main_ads_query = {'is_active': True}
+    if ad_type == 'local':
+        main_ads_query = {'is_active': True, 'ad_type': 'local'}
+    elif ad_type == 'global':
+        main_ads_query = {'is_active': True}  # Main ads are global by default
+    
+    main_ads = await db.ads.find(main_ads_query, {'_id': 0}).to_list(100)
+    
+    # Get active ads from advertiser_ads collection (filter expired ones)
+    advertiser_ads = await db.advertiser_ads.find(advertiser_query, {'_id': 0}).to_list(100)
     
     all_ads = []
     
@@ -42,11 +57,32 @@ async def get_ads():
             advertiser=ad['advertiser'],
             website_url=ad.get('website_url'),
             duration=ad['duration'],
-            points=ad['points_per_minute']
+            points=ad['points_per_minute'],
+            ad_type=ad.get('ad_type', 'global')
         ))
     
-    # Process advertiser ads
+    # Process advertiser ads - check expiration
     for ad in advertiser_ads:
+        expires_at = ad.get('expires_at')
+        if expires_at:
+            # Parse expiration time
+            if isinstance(expires_at, str):
+                try:
+                    expires_dt = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+                except:
+                    expires_dt = None
+            else:
+                expires_dt = expires_at
+            
+            # Skip expired ads
+            if expires_dt and expires_dt < current_time:
+                # Mark as expired in DB
+                await db.advertiser_ads.update_one(
+                    {'id': ad.get('id')},
+                    {'$set': {'status': 'expired', 'is_active': False}}
+                )
+                continue
+        
         all_ads.append(AdResponse(
             id=ad.get('id', ''),
             title=ad.get('title', ''),
@@ -56,10 +92,109 @@ async def get_ads():
             advertiser=ad.get('advertiser', ad.get('advertiser_name', '')),
             website_url=ad.get('website_url'),
             duration=ad.get('duration', 30),
-            points=ad.get('points', 1)
+            points=ad.get('points', 1),
+            ad_type=ad.get('ad_type', 'local')
         ))
     
     return all_ads
+
+
+@router.get('/advertiser/status/{ad_id}')
+async def get_advertiser_ad_status(ad_id: str):
+    """
+    Get advertiser ad status including countdown timer info
+    Returns remaining time for active ads
+    """
+    db = get_db()
+    ad = await db.advertiser_ads.find_one({'id': ad_id}, {'_id': 0})
+    
+    if not ad:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Ad not found'
+        )
+    
+    current_time = datetime.now(timezone.utc)
+    expires_at = ad.get('expires_at')
+    remaining_seconds = 0
+    is_active = ad.get('is_active', False)
+    
+    if expires_at and is_active:
+        if isinstance(expires_at, str):
+            try:
+                expires_dt = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+            except:
+                expires_dt = None
+        else:
+            expires_dt = expires_at
+        
+        if expires_dt:
+            remaining = expires_dt - current_time
+            remaining_seconds = max(0, int(remaining.total_seconds()))
+            
+            # If expired, update status
+            if remaining_seconds <= 0:
+                await db.advertiser_ads.update_one(
+                    {'id': ad_id},
+                    {'$set': {'status': 'expired', 'is_active': False}}
+                )
+                is_active = False
+    
+    return {
+        'ad_id': ad_id,
+        'status': ad.get('status'),
+        'is_active': is_active,
+        'payment_status': ad.get('payment_status'),
+        'expires_at': expires_at,
+        'remaining_seconds': remaining_seconds,
+        'duration_hours': ad.get('duration_hours'),
+        'activated_at': ad.get('activated_at'),
+        'advertiser_name': ad.get('advertiser_name'),
+        'title': ad.get('title')
+    }
+
+
+@router.get('/advertiser/my-ads')
+async def get_my_advertiser_ads(email: str = Query(..., description="Advertiser email")):
+    """
+    Get all ads for an advertiser by email
+    """
+    db = get_db()
+    ads = await db.advertiser_ads.find(
+        {'advertiser_email': email},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(50)
+    
+    current_time = datetime.now(timezone.utc)
+    result = []
+    
+    for ad in ads:
+        expires_at = ad.get('expires_at')
+        remaining_seconds = 0
+        
+        if expires_at and ad.get('is_active'):
+            if isinstance(expires_at, str):
+                try:
+                    expires_dt = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+                    remaining = expires_dt - current_time
+                    remaining_seconds = max(0, int(remaining.total_seconds()))
+                except:
+                    pass
+        
+        result.append({
+            'id': ad.get('id'),
+            'title': ad.get('title'),
+            'status': ad.get('status'),
+            'is_active': ad.get('is_active', False),
+            'payment_status': ad.get('payment_status'),
+            'expires_at': expires_at,
+            'remaining_seconds': remaining_seconds,
+            'duration_hours': ad.get('duration_hours'),
+            'created_at': ad.get('created_at'),
+            'ad_type': ad.get('ad_type', 'local')
+        })
+    
+    return {'ads': result}
 
 @router.get('/{ad_id}', response_model=AdResponse)
 async def get_ad(ad_id: str, user_id: str = Depends(get_current_user_id)):
