@@ -1,4 +1,4 @@
-// Ad Viewer Screen - Clean Design matching Web version
+// Ad Viewer Screen - Clean Design with Comments (matching Web)
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import {
   View,
@@ -9,8 +9,13 @@ import {
   ActivityIndicator,
   Linking,
   Vibration,
+  TextInput,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Video } from 'expo-av';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import storage from '../services/storage';
@@ -64,6 +69,13 @@ const AdViewerScreen = ({ onClose, onPointsEarned, user }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [videoLoading, setVideoLoading] = useState(true);
   
+  // Comments state
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [submittingComment, setSubmittingComment] = useState(false);
+  
   const videoRef = useRef(null);
   const watchTimerRef = useRef(null);
   const controlsTimerRef = useRef(null);
@@ -102,6 +114,67 @@ const AdViewerScreen = ({ onClose, onPointsEarned, user }) => {
     }
   };
 
+  // Fetch comments for current ad
+  const fetchComments = useCallback(async () => {
+    if (!currentAd) return;
+    setLoadingComments(true);
+    try {
+      const response = await api.getComments(currentAd.id);
+      if (response.ok) {
+        const data = await response.json();
+        setComments(data || []);
+      }
+    } catch (e) {
+      console.log('Error fetching comments');
+    } finally {
+      setLoadingComments(false);
+    }
+  }, [currentAd]);
+
+  // Load comments when opening panel or changing ad
+  useEffect(() => {
+    if (showComments && currentAd) {
+      fetchComments();
+    }
+  }, [showComments, currentAd, fetchComments]);
+
+  // Reset comments when changing ad
+  useEffect(() => {
+    setComments([]);
+    setNewComment('');
+  }, [currentIndex]);
+
+  // Submit comment
+  const handleSubmitComment = async () => {
+    if (!newComment.trim() || !user || user.is_guest || submittingComment) return;
+    
+    setSubmittingComment(true);
+    try {
+      const token = await storage.getToken();
+      const response = await api.createComment(currentAd.id, newComment.trim(), token);
+      if (response.ok) {
+        setNewComment('');
+        fetchComments();
+      }
+    } catch (e) {
+      console.log('Error submitting comment');
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  // Like comment
+  const handleLikeComment = async (commentId) => {
+    if (!user || user.is_guest) return;
+    try {
+      const token = await storage.getToken();
+      await api.likeComment(commentId, token);
+      fetchComments();
+    } catch (e) {
+      console.log('Error liking comment');
+    }
+  };
+
   // Watch timer with points
   useEffect(() => {
     if (isPlaying && currentAd) {
@@ -109,7 +182,6 @@ const AdViewerScreen = ({ onClose, onPointsEarned, user }) => {
         setWatchTime((prev) => {
           const newTime = prev + 1;
           
-          // Every 60 seconds = 1 point
           const currentMinute = Math.floor(newTime / 60);
           const lastRewardedMinute = Math.floor(lastRewardedTimeRef.current / 60);
           
@@ -138,14 +210,14 @@ const AdViewerScreen = ({ onClose, onPointsEarned, user }) => {
 
   // Auto-hide controls
   useEffect(() => {
-    if (showControls && isPlaying) {
+    if (showControls && isPlaying && !showComments) {
       if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
       controlsTimerRef.current = setTimeout(() => {
         setShowControls(false);
       }, 3000);
     }
     return () => clearTimeout(controlsTimerRef.current);
-  }, [showControls, isPlaying]);
+  }, [showControls, isPlaying, showComments]);
 
   const handlePointsEarned = async (points) => {
     setEarnedPoints(points);
@@ -157,7 +229,6 @@ const AdViewerScreen = ({ onClose, onPointsEarned, user }) => {
     
     if (onPointsEarned) onPointsEarned(points);
     
-    // Record to server
     const token = await storage.getToken();
     if (token && currentAd) {
       try {
@@ -169,6 +240,7 @@ const AdViewerScreen = ({ onClose, onPointsEarned, user }) => {
   };
 
   const navigateAd = (direction) => {
+    setShowComments(false);
     if (direction === 'next' && currentIndex < ads.length - 1) {
       setCurrentIndex(prev => prev + 1);
     } else if (direction === 'prev' && currentIndex > 0) {
@@ -177,6 +249,7 @@ const AdViewerScreen = ({ onClose, onPointsEarned, user }) => {
   };
 
   const handleTap = () => {
+    if (showComments) return;
     setShowControls(prev => !prev);
   };
 
@@ -189,11 +262,11 @@ const AdViewerScreen = ({ onClose, onPointsEarned, user }) => {
   };
 
   const handleTouchEnd = (e) => {
+    if (showComments) return;
     const dy = e.nativeEvent.pageY - touchStartRef.current.y;
     const dx = e.nativeEvent.pageX - touchStartRef.current.x;
     const timeDiff = Date.now() - touchStartRef.current.time;
 
-    // Swipe detection
     if (Math.abs(dy) > 80 && timeDiff < 300) {
       if (dy < 0) navigateAd('next');
       else navigateAd('prev');
@@ -269,7 +342,7 @@ const AdViewerScreen = ({ onClose, onPointsEarned, user }) => {
         </View>
       )}
 
-      {/* Points Animation - Center */}
+      {/* Points Animation */}
       {showPointsAnimation && (
         <View style={styles.pointsAnimContainer}>
           <View style={styles.pointsAnimCard}>
@@ -289,12 +362,10 @@ const AdViewerScreen = ({ onClose, onPointsEarned, user }) => {
 
       {/* Top Bar - Always visible */}
       <View style={styles.topBar}>
-        {/* Back Button */}
         <TouchableOpacity style={styles.topBtn} onPress={onClose}>
           <Ionicons name="arrow-forward" size={22} color="#fff" />
         </TouchableOpacity>
 
-        {/* Info Bar */}
         <View style={styles.infoBar}>
           <Text style={styles.infoText}>{totalEarnedSession}</Text>
           <Ionicons name="star" size={14} color="#fbbf24" />
@@ -304,35 +375,45 @@ const AdViewerScreen = ({ onClose, onPointsEarned, user }) => {
           <Text style={styles.infoText}>{formatTime(watchTime)}</Text>
         </View>
 
-        {/* Close Button */}
         <TouchableOpacity style={styles.topBtn} onPress={onClose}>
           <Ionicons name="close" size={22} color="#fff" />
         </TouchableOpacity>
       </View>
 
-      {/* Sound Button - Bottom Right - Always visible */}
-      <TouchableOpacity 
-        style={styles.soundBtn}
-        onPress={() => setIsMuted(!isMuted)}
-      >
-        <Ionicons 
-          name={isMuted ? 'volume-mute' : 'volume-high'} 
-          size={20} 
-          color="rgba(255,255,255,0.7)" 
-        />
-      </TouchableOpacity>
+      {/* Right Side Actions - Always visible */}
+      <View style={styles.rightActions}>
+        {/* Comments Button */}
+        <TouchableOpacity 
+          style={styles.actionBtn}
+          onPress={() => setShowComments(true)}
+        >
+          <Ionicons name="chatbubble-outline" size={24} color="#fff" />
+          <Text style={styles.actionCount}>{comments.length}</Text>
+        </TouchableOpacity>
 
-      {/* Tap hint when controls hidden */}
-      {!showControls && (
+        {/* Sound Button */}
+        <TouchableOpacity 
+          style={styles.actionBtn}
+          onPress={() => setIsMuted(!isMuted)}
+        >
+          <Ionicons 
+            name={isMuted ? 'volume-mute' : 'volume-high'} 
+            size={24} 
+            color="#fff" 
+          />
+        </TouchableOpacity>
+      </View>
+
+      {/* Tap hint */}
+      {!showControls && !showComments && (
         <View style={styles.tapHint}>
           <Text style={styles.tapHintText}>المس للتحكم</Text>
         </View>
       )}
 
-      {/* Controls - Shown on tap */}
-      {showControls && (
+      {/* Controls on tap */}
+      {showControls && !showComments && (
         <>
-          {/* Play/Pause - Center */}
           <TouchableOpacity 
             style={styles.playPauseBtn}
             onPress={togglePlayPause}
@@ -347,7 +428,6 @@ const AdViewerScreen = ({ onClose, onPointsEarned, user }) => {
             )}
           </TouchableOpacity>
 
-          {/* Navigation - Bottom Center */}
           <View style={styles.navContainer}>
             <TouchableOpacity 
               style={[styles.navBtn, currentIndex === 0 && styles.navBtnDisabled]}
@@ -383,6 +463,120 @@ const AdViewerScreen = ({ onClose, onPointsEarned, user }) => {
             </TouchableOpacity>
           </View>
         </>
+      )}
+
+      {/* Comments Panel */}
+      {showComments && (
+        <KeyboardAvoidingView 
+          style={styles.commentsOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <TouchableOpacity 
+            style={styles.commentsBackdrop} 
+            onPress={() => setShowComments(false)}
+            activeOpacity={1}
+          />
+          
+          <View style={styles.commentsSheet}>
+            {/* Handle */}
+            <View style={styles.commentsHandle}>
+              <View style={styles.handleBar} />
+            </View>
+
+            {/* Header */}
+            <View style={styles.commentsHeader}>
+              <Text style={styles.commentsTitle}>
+                التعليقات <Text style={styles.commentsCount}>({comments.length})</Text>
+              </Text>
+              <TouchableOpacity 
+                style={styles.commentsCloseBtn}
+                onPress={() => setShowComments(false)}
+              >
+                <Ionicons name="close" size={20} color="#fff" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Comments List */}
+            <ScrollView 
+              style={styles.commentsList}
+              showsVerticalScrollIndicator={false}
+            >
+              {loadingComments ? (
+                <View style={styles.commentsLoading}>
+                  <ActivityIndicator size="large" color="#6366f1" />
+                </View>
+              ) : comments.length === 0 ? (
+                <View style={styles.commentsEmpty}>
+                  <Ionicons name="chatbubble-outline" size={48} color="rgba(255,255,255,0.2)" />
+                  <Text style={styles.emptyTitle}>لا توجد تعليقات بعد</Text>
+                  <Text style={styles.emptySubtitle}>كن أول من يعلق!</Text>
+                </View>
+              ) : (
+                comments.map((comment) => (
+                  <View key={comment.comment_id} style={styles.commentItem}>
+                    <View style={styles.commentAvatar}>
+                      <Text style={styles.avatarText}>
+                        {(comment.user_name || 'U')[0].toUpperCase()}
+                      </Text>
+                    </View>
+                    <View style={styles.commentContent}>
+                      <View style={styles.commentHeader}>
+                        <Text style={styles.commentName}>{comment.user_name || 'مستخدم'}</Text>
+                        <Text style={styles.commentDate}>
+                          {new Date(comment.created_at).toLocaleDateString('ar-SA')}
+                        </Text>
+                      </View>
+                      <Text style={styles.commentText}>{comment.content}</Text>
+                      <TouchableOpacity 
+                        style={styles.likeBtn}
+                        onPress={() => handleLikeComment(comment.comment_id)}
+                      >
+                        <Ionicons 
+                          name={comment.likes?.includes(user?.user_id) ? 'heart' : 'heart-outline'} 
+                          size={16} 
+                          color={comment.likes?.includes(user?.user_id) ? '#ef4444' : 'rgba(255,255,255,0.5)'} 
+                        />
+                        <Text style={styles.likeCount}>{comment.likes_count || 0}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+
+            {/* Comment Input */}
+            <View style={styles.commentInputContainer}>
+              {user && !user.is_guest ? (
+                <View style={styles.commentInputRow}>
+                  <TextInput
+                    style={styles.commentInput}
+                    value={newComment}
+                    onChangeText={setNewComment}
+                    placeholder="اكتب تعليقك..."
+                    placeholderTextColor="rgba(255,255,255,0.4)"
+                    multiline={false}
+                  />
+                  <TouchableOpacity 
+                    style={[
+                      styles.sendBtn,
+                      (!newComment.trim() || submittingComment) && styles.sendBtnDisabled
+                    ]}
+                    onPress={handleSubmitComment}
+                    disabled={!newComment.trim() || submittingComment}
+                  >
+                    {submittingComment ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Ionicons name="send" size={20} color="#fff" />
+                    )}
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <Text style={styles.guestText}>سجل دخولك للتعليق</Text>
+              )}
+            </View>
+          </View>
+        </KeyboardAvoidingView>
       )}
     </View>
   );
@@ -518,18 +712,31 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
 
-  // Sound Button
-  soundBtn: {
+  // Right Actions
+  rightActions: {
     position: 'absolute',
-    bottom: 100,
     right: 16,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'transparent',
+    bottom: 120,
+    alignItems: 'center',
+    gap: 16,
+    zIndex: 20,
+  },
+  actionBtn: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  actionCount: {
+    color: '#fff',
+    fontSize: 10,
+    marginTop: 2,
+    position: 'absolute',
+    bottom: -16,
   },
 
   // Tap Hint
@@ -590,8 +797,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
     fontSize: 12,
   },
-
-  // Ad Counter
   adCounter: {
     flexDirection: 'row',
     gap: 4,
@@ -606,6 +811,177 @@ const styles = StyleSheet.create({
   counterDotActive: {
     width: 24,
     backgroundColor: '#fff',
+  },
+
+  // Comments Panel
+  commentsOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 100,
+  },
+  commentsBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  commentsSheet: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#0f0f14',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '70%',
+  },
+  commentsHandle: {
+    alignItems: 'center',
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  handleBar: {
+    width: 48,
+    height: 4,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 2,
+  },
+  commentsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  commentsTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  commentsCount: {
+    color: 'rgba(255,255,255,0.5)',
+    fontWeight: 'normal',
+    fontSize: 14,
+  },
+  commentsCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  commentsList: {
+    maxHeight: 300,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+  },
+  commentsLoading: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
+  commentsEmpty: {
+    alignItems: 'center',
+    paddingVertical: 48,
+  },
+  emptyTitle: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 16,
+    marginTop: 16,
+  },
+  emptySubtitle: {
+    color: 'rgba(255,255,255,0.3)',
+    fontSize: 14,
+    marginTop: 4,
+  },
+  commentItem: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  commentAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#6366f1',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  commentContent: {
+    flex: 1,
+  },
+  commentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  commentName: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  commentDate: {
+    color: 'rgba(255,255,255,0.3)',
+    fontSize: 12,
+  },
+  commentText: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  likeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 8,
+  },
+  likeCount: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 12,
+  },
+  commentInputContainer: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  commentInputRow: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'center',
+  },
+  commentInput: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    color: '#fff',
+    fontSize: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    textAlign: 'right',
+  },
+  sendBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#6366f1',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sendBtnDisabled: {
+    opacity: 0.5,
+  },
+  guestText: {
+    color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center',
+    fontSize: 14,
   },
 });
 
