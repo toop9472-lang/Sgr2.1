@@ -397,6 +397,37 @@ const AdViewer = ({ ads, onAdWatched, user }) => {
         </div>
       )}
 
+      {/* Always Visible - Right Side Actions (Comments & Sound) */}
+      <div className="absolute right-4 bottom-32 flex flex-col items-center gap-4 z-30">
+        {/* Comments Button */}
+        <button 
+          onClick={(e) => { 
+            e.stopPropagation(); 
+            setShowComments(true);
+          }}
+          className="group"
+        >
+          <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10 group-hover:bg-black/60 transition-all">
+            <MessageCircle className="w-5 h-5 text-white" />
+          </div>
+          <span className="text-white/70 text-xs mt-1 block text-center">{comments.length || 0}</span>
+        </button>
+
+        {/* Mute Toggle */}
+        <button 
+          onClick={(e) => { 
+            e.stopPropagation(); 
+            if (videoRef.current) videoRef.current.muted = !isMuted;
+            setIsMuted(!isMuted); 
+          }}
+          className="group"
+        >
+          <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10 group-hover:bg-black/60 transition-all">
+            {isMuted ? <VolumeX className="w-5 h-5 text-white" /> : <Volume2 className="w-5 h-5 text-white" />}
+          </div>
+        </button>
+      </div>
+
       {/* Controls - Animated show/hide */}
       <div className={`transition-all duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         
@@ -438,26 +469,40 @@ const AdViewer = ({ ads, onAdWatched, user }) => {
           </div>
         )}
 
-        {/* Right Side Actions */}
-        <div className="absolute right-4 bottom-40 flex flex-col items-center gap-4 z-20">
-          {/* Comments Button */}
-          <button 
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              setShowComments(true);
-            }}
-            className="group"
-          >
+        {/* Right Side Actions - Play/Pause & Navigation */}
+        <div className="absolute right-4 bottom-56 flex flex-col items-center gap-4 z-20">
+          {/* Play/Pause */}
+          <button onClick={togglePlayPause} className="group">
             <div className="w-14 h-14 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 group-hover:bg-white/20 transition-all shadow-lg">
-              <MessageCircle className="w-6 h-6 text-white" />
+              {isPlaying ? (
+                <div className="flex gap-1">
+                  <div className="w-1.5 h-5 bg-white rounded-full" />
+                  <div className="w-1.5 h-5 bg-white rounded-full" />
+                </div>
+              ) : (
+                <Play className="w-6 h-6 text-white ml-1" fill="white" />
+              )}
             </div>
-            <span className="text-white text-xs mt-1 block text-center">{comments.length || 0}</span>
           </button>
 
-          {/* Mute Toggle */}
-          <button 
-            onClick={(e) => { 
-              e.stopPropagation(); 
+          {/* Navigation Arrows */}
+          <div className="flex flex-col gap-2">
+            <button 
+              onClick={(e) => { e.stopPropagation(); navigateAd('prev'); }}
+              disabled={currentIndex === 0}
+              className={`w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center ${currentIndex === 0 ? 'opacity-30' : 'hover:bg-white/20'} transition-all`}
+            >
+              <ChevronUp className="w-5 h-5 text-white" />
+            </button>
+            <button 
+              onClick={(e) => { e.stopPropagation(); navigateAd('next'); }}
+              disabled={currentIndex === ads.length - 1}
+              className={`w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center ${currentIndex === ads.length - 1 ? 'opacity-30' : 'hover:bg-white/20'} transition-all`}
+            >
+              <ChevronDown className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        </div> 
               if (videoRef.current) videoRef.current.muted = !isMuted;
               setIsMuted(!isMuted); 
             }}
