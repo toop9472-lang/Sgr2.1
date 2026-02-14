@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, lazy, Suspense, useMemo } from 'react';
-import { Volume2, VolumeX, X, ArrowLeft, Star } from 'lucide-react';
+import { Volume2, VolumeX, X, ArrowRight, Star } from 'lucide-react';
 
 const CommentsSection = lazy(() => import('./CommentsSection'));
 
