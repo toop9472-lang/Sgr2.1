@@ -123,7 +123,7 @@ async def get_advertiser_ad_status(ad_id: str):
         if isinstance(expires_at, str):
             try:
                 expires_dt = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
-            except:
+            except (ValueError, TypeError):
                 expires_dt = None
         else:
             expires_dt = expires_at
