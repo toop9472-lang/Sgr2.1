@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Volume2, VolumeX, X, ArrowRight, Star } from 'lucide-react';
+import { Volume2, VolumeX, X, ArrowRight, Star, MessageCircle, Heart, Send } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
