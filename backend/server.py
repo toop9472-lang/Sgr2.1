@@ -78,7 +78,7 @@ ALLOWED_ORIGINS = [origin.strip() for origin in _cors_env.split(",") if origin.s
 # Fallback to secure defaults if empty or contains wildcard
 if not ALLOWED_ORIGINS:
     ALLOWED_ORIGINS = [
-        "https://app-store-launch-6.preview.emergentagent.com",
+        "https://saqr-ads-system.preview.emergentagent.com",
         "https://saqrpointscom.store",
         "http://localhost:3000",
         "http://localhost:19006",

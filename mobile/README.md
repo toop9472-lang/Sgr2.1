@@ -209,8 +209,8 @@ eas submit -p android
 
 ## 📞 الدعم والمساعدة
 
-- **الموقع:** https://app-store-launch-6.preview.emergentagent.com
-- **API Docs:** https://app-store-launch-6.preview.emergentagent.com/docs
+- **الموقع:** https://saqr-ads-system.preview.emergentagent.com
+- **API Docs:** https://saqr-ads-system.preview.emergentagent.com/docs
 
 ---
 

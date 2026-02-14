@@ -177,7 +177,7 @@ eas build --platform ios --profile production
 
 ### API URL:
 ```
-https://app-store-launch-6.preview.emergentagent.com
+https://saqr-ads-system.preview.emergentagent.com
 ```
 
 ---
