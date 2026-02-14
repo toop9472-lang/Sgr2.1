@@ -591,6 +591,114 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
         </div>
       )}
 
+      {/* لوحة التعليقات */}
+      {showComments && (
+        <div 
+          className="absolute inset-0 z-50"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* خلفية شفافة */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowComments(false)}
+          />
+          
+          {/* محتوى التعليقات */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-b from-gray-900 to-black rounded-t-3xl max-h-[70vh] flex flex-col animate-slide-up">
+            {/* المقبض */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-12 h-1 bg-white/20 rounded-full" />
+            </div>
+            
+            {/* العنوان */}
+            <div className="flex items-center justify-between px-5 pb-4 border-b border-white/10">
+              <h3 className="text-white font-bold text-lg">
+                التعليقات
+                <span className="text-white/50 font-normal text-sm mr-2">({comments.length})</span>
+              </h3>
+              <button 
+                onClick={() => setShowComments(false)}
+                className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all"
+              >
+                <X className="w-5 h-5 text-white" />
+              </button>
+            </div>
+
+            {/* قائمة التعليقات */}
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 max-h-64">
+              {loadingComments ? (
+                <div className="flex justify-center py-8">
+                  <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                </div>
+              ) : comments.length === 0 ? (
+                <div className="text-center py-12">
+                  <MessageCircle className="w-12 h-12 text-white/20 mx-auto mb-3" />
+                  <p className="text-white/50">لا توجد تعليقات بعد</p>
+                  <p className="text-white/30 text-sm mt-1">كن أول من يعلق!</p>
+                </div>
+              ) : (
+                comments.map((comment) => (
+                  <div key={comment.comment_id} className="flex gap-3">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-sm font-bold">
+                        {(comment.user_name || 'U')[0].toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-white font-semibold text-sm">{comment.user_name || 'مستخدم'}</span>
+                        <span className="text-white/30 text-xs">
+                          {new Date(comment.created_at).toLocaleDateString('ar-SA')}
+                        </span>
+                      </div>
+                      <p className="text-white/80 text-sm leading-relaxed">{comment.content}</p>
+                      <button 
+                        onClick={() => handleLikeComment(comment.comment_id)}
+                        className="flex items-center gap-1 text-white/50 hover:text-red-400 transition-colors mt-2"
+                      >
+                        <Heart 
+                          className={`w-4 h-4 ${comment.likes?.includes(user?.user_id) ? 'fill-red-400 text-red-400' : ''}`} 
+                        />
+                        <span className="text-xs">{comment.likes_count || 0}</span>
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* إدخال التعليق */}
+            <div className="p-4 border-t border-white/10 bg-black/50">
+              {user ? (
+                <form onSubmit={handleSubmitComment} className="flex gap-3">
+                  <input
+                    type="text"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="اكتب تعليقك..."
+                    className="flex-1 bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-indigo-500 transition-colors text-right"
+                    dir="rtl"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!newComment.trim() || submittingComment}
+                    className="w-12 h-12 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-all"
+                  >
+                    {submittingComment ? (
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <Send className="w-5 h-5 text-white" />
+                    )}
+                  </button>
+                </form>
+              ) : (
+                <p className="text-center text-white/50 py-2">سجل دخولك للتعليق</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <style jsx>{`
         @keyframes fade-in-up {
           0% {
