@@ -209,8 +209,8 @@ eas submit -p android
 
 ## 📞 الدعم والمساعدة
 
-- **الموقع:** https://mobile-ui-sync.preview.emergentagent.com
-- **API Docs:** https://mobile-ui-sync.preview.emergentagent.com/docs
+- **الموقع:** https://ui-overhaul-web.preview.emergentagent.com
+- **API Docs:** https://ui-overhaul-web.preview.emergentagent.com/docs
 
 ---
 

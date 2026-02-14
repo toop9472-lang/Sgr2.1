@@ -177,7 +177,7 @@ eas build --platform ios --profile production
 
 ### API URL:
 ```
-https://mobile-ui-sync.preview.emergentagent.com
+https://ui-overhaul-web.preview.emergentagent.com
 ```
 
 ---
