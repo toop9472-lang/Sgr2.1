@@ -508,17 +508,32 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
         <p className="text-white/40 text-xs font-light">أكمل المشاهدة لكسب النقاط</p>
       </div>
 
-      {/* زر كتم الصوت */}
-      <button 
-        onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
-        className="absolute bottom-32 right-4 z-30 w-9 h-9 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center transition-all hover:bg-black/40"
-        data-testid="mute-btn"
-      >
-        {isMuted ? 
-          <VolumeX className="w-4 h-4 text-white/60" /> : 
-          <Volume2 className="w-4 h-4 text-white/60" />
-        }
-      </button>
+      {/* الأزرار الجانبية - التعليقات والصوت */}
+      <div className="absolute bottom-28 right-4 z-30 flex flex-col items-center gap-3">
+        {/* زر التعليقات */}
+        <button 
+          onClick={(e) => { e.stopPropagation(); setShowComments(true); }}
+          className="flex flex-col items-center"
+          data-testid="comments-btn"
+        >
+          <div className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center transition-all hover:bg-black/50">
+            <MessageCircle className="w-5 h-5 text-white/70" />
+          </div>
+          <span className="text-white/50 text-[10px] mt-1">{comments.length}</span>
+        </button>
+
+        {/* زر كتم الصوت */}
+        <button 
+          onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
+          className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center transition-all hover:bg-black/50"
+          data-testid="mute-btn"
+        >
+          {isMuted ? 
+            <VolumeX className="w-5 h-5 text-white/70" /> : 
+            <Volume2 className="w-5 h-5 text-white/70" />
+          }
+        </button>
+      </div>
 
       {/* معلومات الإعلان - تظهر لثانيتين ثم تختفي - تظهر عند اللمس */}
       <div 
