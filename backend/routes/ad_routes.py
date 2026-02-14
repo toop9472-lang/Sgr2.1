@@ -66,13 +66,19 @@ async def get_ads(ad_type: Optional[str] = Query(None, description="Filter by ty
         expires_at = ad.get('expires_at')
         if expires_at:
             # Parse expiration time
+            expires_dt = None
             if isinstance(expires_at, str):
                 try:
                     expires_dt = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+                    # Ensure timezone aware
+                    if expires_dt.tzinfo is None:
+                        expires_dt = expires_dt.replace(tzinfo=timezone.utc)
                 except (ValueError, TypeError):
                     expires_dt = None
-            else:
+            elif isinstance(expires_at, datetime):
                 expires_dt = expires_at
+                if expires_dt.tzinfo is None:
+                    expires_dt = expires_dt.replace(tzinfo=timezone.utc)
             
             # Skip expired ads
             if expires_dt and expires_dt < current_time:
