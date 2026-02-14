@@ -1,12 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback, lazy, Suspense, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Volume2, VolumeX, X, ArrowRight, Star } from 'lucide-react';
-
-const CommentsSection = lazy(() => import('./CommentsSection'));
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfile }) => {
-  // تحميل الإعلانات بشكل افتراضي - سيتم تحميل المزيد عند الحاجة
   const [ads, setAds] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,17 +20,65 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
   // التحكم في اللمس
   const [touchStartY, setTouchStartY] = useState(null);
   
+  // إظهار/إخفاء العناصر
+  const [showInfo, setShowInfo] = useState(true);
+  const [showHint, setShowHint] = useState(true);
+  const [isTouching, setIsTouching] = useState(false);
+  
   const videoRef = useRef(null);
   const watchTimerRef = useRef(null);
   const adDurationRef = useRef(30);
   const loadedPagesRef = useRef(1);
   const isLoadingMoreRef = useRef(false);
+  const hideInfoTimeoutRef = useRef(null);
+  const hideHintTimeoutRef = useRef(null);
 
   const SECONDS_PER_POINT = 60;
   const MIN_SWIPE_DISTANCE = 50;
-  const ADS_PER_PAGE = 20; // تحميل 20 إعلان في كل مرة
 
-  // تحميل الإعلانات مع pagination للتعامل مع آلاف الإعلانات
+  // إخفاء المعلومات والرسالة بعد ثانيتين
+  useEffect(() => {
+    // إخفاء الرسالة التوضيحية
+    hideHintTimeoutRef.current = setTimeout(() => {
+      setShowHint(false);
+    }, 2000);
+    
+    // إخفاء معلومات الإعلان
+    hideInfoTimeoutRef.current = setTimeout(() => {
+      if (!isTouching) {
+        setShowInfo(false);
+      }
+    }, 2000);
+    
+    return () => {
+      if (hideInfoTimeoutRef.current) clearTimeout(hideInfoTimeoutRef.current);
+      if (hideHintTimeoutRef.current) clearTimeout(hideHintTimeoutRef.current);
+    };
+  }, []);
+
+  // إعادة إظهار المعلومات عند تغيير الإعلان
+  useEffect(() => {
+    if (ads.length > 0) {
+      setShowInfo(true);
+      setShowHint(true);
+      
+      // إخفاء بعد ثانيتين
+      if (hideInfoTimeoutRef.current) clearTimeout(hideInfoTimeoutRef.current);
+      if (hideHintTimeoutRef.current) clearTimeout(hideHintTimeoutRef.current);
+      
+      hideHintTimeoutRef.current = setTimeout(() => {
+        setShowHint(false);
+      }, 2000);
+      
+      hideInfoTimeoutRef.current = setTimeout(() => {
+        if (!isTouching) {
+          setShowInfo(false);
+        }
+      }, 2000);
+    }
+  }, [currentIndex]);
+
+  // تحميل الإعلانات
   useEffect(() => {
     loadAds();
     return () => {
@@ -46,7 +91,6 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
     if (ads.length > 0) {
       startAdTimer();
       
-      // تحميل المزيد من الإعلانات إذا اقتربنا من النهاية
       if (currentIndex >= ads.length - 5 && !isLoadingMoreRef.current) {
         loadMoreAds();
       }
@@ -58,7 +102,6 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
       const response = await fetch(`${BACKEND_URL}/api/ads`);
       const data = await response.json();
       if (data && data.length > 0) {
-        // خلط الإعلانات عشوائياً
         const shuffled = [...data].sort(() => Math.random() - 0.5);
         setAds(shuffled);
       }
@@ -132,7 +175,6 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
       await recordPointsToServer(pointsEarned, completedAdId, completedAdDuration);
     }
     
-    // الانتقال للإعلان التالي تلقائياً
     setTimeout(() => {
       if (currentIndex < ads.length - 1) {
         setTransitioning(true);
@@ -192,13 +234,25 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
     }, 200);
   }, [transitioning, currentIndex]);
 
-  // Touch handlers
+  // Touch handlers - إظهار المعلومات عند اللمس
   const handleTouchStart = (e) => {
     if (!e.targetTouches?.[0]) return;
     setTouchStartY(e.targetTouches[0].clientY);
+    setIsTouching(true);
+    setShowInfo(true);
+    
+    // إلغاء أي timeout للإخفاء
+    if (hideInfoTimeoutRef.current) {
+      clearTimeout(hideInfoTimeoutRef.current);
+    }
   };
 
   const handleTouchEnd = (e) => {
+    setIsTouching(false);
+    
+    // إخفاء المعلومات بعد رفع الإصبع
+    setShowInfo(false);
+    
     if (!touchStartY) return;
     const touchEndY = e.changedTouches?.[0]?.clientY || touchStartY;
     const distance = touchStartY - touchEndY;
@@ -207,6 +261,20 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
     else if (distance < -MIN_SWIPE_DISTANCE) goToPrevious();
     
     setTouchStartY(null);
+  };
+
+  // Mouse handlers للديسكتوب
+  const handleMouseDown = () => {
+    setIsTouching(true);
+    setShowInfo(true);
+    if (hideInfoTimeoutRef.current) {
+      clearTimeout(hideInfoTimeoutRef.current);
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsTouching(false);
+    setShowInfo(false);
   };
 
   const handleKeyDown = useCallback((e) => {
@@ -226,7 +294,6 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
     else if (e.deltaY < -50) goToPrevious();
   }, [goToNext, goToPrevious]);
 
-  // الذهاب للصفحة الشخصية
   const handleGoToProfile = (e) => {
     e.stopPropagation();
     if (onNavigateToProfile) {
@@ -236,13 +303,11 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
     }
   };
 
-  // حساب الأرقام للعرض
   const adDuration = adDurationRef.current;
   const adProgress = Math.min((currentAdTime / adDuration) * 100, 100);
   const timeToNextPoint = SECONDS_PER_POINT - (totalValidTime % SECONDS_PER_POINT);
   const isAdComplete = currentAdTime >= adDuration;
 
-  // الإعلان الحالي مع useMemo لتحسين الأداء
   const currentAd = useMemo(() => ads[currentIndex] || {}, [ads, currentIndex]);
 
   if (isLoading) {
@@ -272,6 +337,9 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
       className="fixed inset-0 bg-black z-50 select-none overflow-hidden"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
       onWheel={handleWheel}
     >
       {/* محتوى الإعلان */}
@@ -307,9 +375,8 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
         />
       </div>
 
-      {/* =================== الأزرار العلوية =================== */}
+      {/* الأزرار العلوية */}
       <div className="absolute top-4 left-0 right-0 z-40 px-4 flex items-center justify-between">
-        {/* زر X للخروج - يعود للرئيسية (يسار) */}
         <button
           onClick={(e) => { e.stopPropagation(); onClose(); }}
           className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center transition-all hover:bg-black/50"
@@ -318,7 +385,6 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
           <X className="w-5 h-5 text-white/80" />
         </button>
         
-        {/* سهم للخلف - يذهب للصفحة الشخصية (يمين) */}
         <button
           onClick={handleGoToProfile}
           className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center transition-all hover:bg-black/50"
@@ -328,26 +394,15 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
         </button>
       </div>
 
-      {/* =================== العداد المختصر - راقي وهادئ =================== */}
+      {/* العداد المختصر */}
       <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30">
         <div className="flex items-center gap-3 bg-black/20 backdrop-blur-sm rounded-full px-4 py-1.5">
-          {/* الوقت الحالي */}
           <span className={`text-xs font-light tracking-wider ${isAdComplete ? 'text-emerald-400' : 'text-white/50'}`}>
             {Math.floor(currentAdTime / 60)}:{(currentAdTime % 60).toString().padStart(2, '0')}
           </span>
-          
-          {/* فاصل */}
           <span className="text-white/20">·</span>
-          
-          {/* للنقطة */}
-          <span className="text-xs font-light text-white/40">
-            {timeToNextPoint}s
-          </span>
-          
-          {/* فاصل */}
+          <span className="text-xs font-light text-white/40">{timeToNextPoint}s</span>
           <span className="text-white/20">·</span>
-          
-          {/* النقاط */}
           <div className="flex items-center gap-1">
             <Star className="w-3 h-3 text-amber-400/70 fill-amber-400/70" />
             <span className="text-xs font-light text-amber-400/80">{earnedPoints}</span>
@@ -355,7 +410,16 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
         </div>
       </div>
 
-      {/* زر كتم الصوت - في الجانب */}
+      {/* رسالة توضيحية - نص فقط - تختفي بعد ثانيتين */}
+      <div 
+        className={`absolute top-28 left-1/2 -translate-x-1/2 z-30 transition-opacity duration-500 ${
+          showHint ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        <p className="text-white/40 text-xs font-light">أكمل المشاهدة لكسب النقاط</p>
+      </div>
+
+      {/* زر كتم الصوت */}
       <button 
         onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
         className="absolute bottom-32 right-4 z-30 w-9 h-9 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center transition-all hover:bg-black/40"
@@ -367,26 +431,23 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
         }
       </button>
 
-      {/* =================== معلومات الإعلان - مصغرة ومائلة لليمين =================== */}
-      <div className="absolute bottom-0 left-0 right-0 z-20">
+      {/* معلومات الإعلان - تظهر لثانيتين ثم تختفي - تظهر عند اللمس */}
+      <div 
+        className={`absolute bottom-0 left-0 right-0 z-20 transition-all duration-300 ${
+          showInfo ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+        }`}
+      >
         <div className="bg-gradient-to-t from-black/80 via-black/40 to-transparent pt-16 pb-6 px-4">
           <div className="text-right" dir="rtl">
-            {/* اسم المعلن - نص صغير */}
             <p className="text-white/40 text-xs font-light mb-1">
               {currentAd.advertiser || 'معلن'}
             </p>
-            
-            {/* عنوان الإعلان - متوسط */}
             <h3 className="text-white/90 text-sm font-normal mb-1.5 line-clamp-1">
               {currentAd.title}
             </h3>
-            
-            {/* الوصف - صغير جداً */}
             <p className="text-white/30 text-xs font-light line-clamp-1 mb-3">
               {currentAd.description}
             </p>
-            
-            {/* رابط الموقع - نص فقط */}
             {currentAd.website_url && (
               <a
                 href={currentAd.website_url}
@@ -402,7 +463,7 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
         </div>
       </div>
 
-      {/* مؤشر التقدم الجانبي - شريط رفيع جداً */}
+      {/* مؤشر التقدم الجانبي */}
       <div className="absolute right-2 top-1/2 -translate-y-1/2 z-10">
         <div className="w-px h-16 bg-white/10 rounded-full overflow-hidden">
           <div 
@@ -412,7 +473,7 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
         </div>
       </div>
 
-      {/* نقاط مكتسبة - Animation هادئة */}
+      {/* نقاط مكتسبة - Animation */}
       {showPointsAnimation && (
         <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
           <div className="animate-fade-in-up">
@@ -426,7 +487,6 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
         </div>
       )}
 
-      {/* Style للـ animation */}
       <style jsx>{`
         @keyframes fade-in-up {
           0% {
