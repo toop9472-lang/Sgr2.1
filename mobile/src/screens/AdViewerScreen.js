@@ -1,4 +1,4 @@
-// Ad Viewer Screen - مطابق للويب
+// Ad Viewer Screen - Clean Design matching Web version
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import {
   View,
@@ -9,10 +9,8 @@ import {
   ActivityIndicator,
   Linking,
   Vibration,
-  Platform,
 } from 'react-native';
 import { Video } from 'expo-av';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import storage from '../services/storage';
@@ -24,7 +22,7 @@ const DEMO_ADS = [
   {
     id: 'demo1',
     title: 'Samsung Galaxy S24',
-    description: 'اكتشف هاتف سامسونج الجديد بتقنيات متطورة',
+    description: 'اكتشف هاتف سامسونج الجديد',
     video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
     advertiser: 'Samsung',
     website_url: 'https://www.samsung.com/sa/',
@@ -34,7 +32,7 @@ const DEMO_ADS = [
   {
     id: 'demo2',
     title: 'عروض أمازون',
-    description: 'تخفيضات حتى 50% على جميع المنتجات',
+    description: 'تخفيضات حتى 50%',
     video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
     advertiser: 'Amazon',
     website_url: 'https://www.amazon.sa/',
@@ -44,7 +42,7 @@ const DEMO_ADS = [
   {
     id: 'demo3',
     title: 'مطعم الذواقة',
-    description: 'وجبات شهية بأسعار مناسبة',
+    description: 'وجبات شهية',
     video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
     advertiser: 'Gourmet',
     website_url: 'https://example.com',
@@ -59,14 +57,12 @@ const AdViewerScreen = ({ onClose, onPointsEarned, user }) => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [watchTime, setWatchTime] = useState(0);
-  const [showControls, setShowControls] = useState(true);
+  const [showControls, setShowControls] = useState(false);
   const [showPointsAnimation, setShowPointsAnimation] = useState(false);
   const [earnedPoints, setEarnedPoints] = useState(0);
   const [totalEarnedSession, setTotalEarnedSession] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [videoLoading, setVideoLoading] = useState(true);
-  const [viewersCount, setViewersCount] = useState(0);
-  const [totalViews, setTotalViews] = useState(0);
   
   const videoRef = useRef(null);
   const watchTimerRef = useRef(null);
@@ -217,20 +213,11 @@ const AdViewerScreen = ({ onClose, onPointsEarned, user }) => {
     }
   };
 
-  const visitWebsite = () => {
-    if (currentAd?.website_url) {
-      Linking.openURL(currentAd.website_url);
-    }
-  };
-
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
-
-  const progressPercent = currentAd ? (watchTime / currentAd.duration) * 100 : 0;
-  const minutesWatched = Math.floor(watchTime / 60);
 
   if (isLoading) {
     return (
@@ -286,185 +273,116 @@ const AdViewerScreen = ({ onClose, onPointsEarned, user }) => {
       {showPointsAnimation && (
         <View style={styles.pointsAnimContainer}>
           <View style={styles.pointsAnimCard}>
-            <View style={styles.pointsAnimGlow} />
-            <View style={styles.pointsAnimInner}>
-              <View style={styles.pointsAnimIcon}>
-                <Ionicons name="sparkles" size={32} color="#fff" />
-              </View>
-              <Text style={styles.pointsAnimTitle}>مبروك! أكملت دقيقة</Text>
-              <View style={styles.pointsAnimRow}>
-                <Ionicons name="sparkles" size={28} color="#fbbf24" />
-                <Text style={styles.pointsAnimValue}>+{earnedPoints}</Text>
-                <Ionicons name="gift" size={28} color="#fbbf24" />
-              </View>
-              <Text style={styles.pointsAnimSubtext}>نقطة مضافة لرصيدك</Text>
+            <View style={styles.pointsAnimIcon}>
+              <Ionicons name="sparkles" size={32} color="#fff" />
             </View>
+            <Text style={styles.pointsAnimTitle}>مبروك! أكملت دقيقة</Text>
+            <View style={styles.pointsAnimRow}>
+              <Ionicons name="sparkles" size={28} color="#fbbf24" />
+              <Text style={styles.pointsAnimValue}>+{earnedPoints}</Text>
+              <Ionicons name="gift" size={28} color="#fbbf24" />
+            </View>
+            <Text style={styles.pointsAnimSubtext}>نقطة مضافة لرصيدك</Text>
           </View>
         </View>
       )}
 
-      {/* Session Earnings - Top Center (Always visible) */}
-      {totalEarnedSession > 0 && (
-        <View style={styles.sessionBadge}>
-          <Ionicons name="flash" size={14} color="#000" />
-          <Text style={styles.sessionBadgeText}>ربحت اليوم: +{totalEarnedSession}</Text>
+      {/* Top Bar - Always visible */}
+      <View style={styles.topBar}>
+        {/* Back Button */}
+        <TouchableOpacity style={styles.topBtn} onPress={onClose}>
+          <Ionicons name="arrow-forward" size={22} color="#fff" />
+        </TouchableOpacity>
+
+        {/* Info Bar */}
+        <View style={styles.infoBar}>
+          <Text style={styles.infoText}>{totalEarnedSession}</Text>
+          <Ionicons name="star" size={14} color="#fbbf24" />
+          <Text style={styles.infoDivider}>·</Text>
+          <Text style={styles.infoText}>{currentAd?.duration || 60}s</Text>
+          <Text style={styles.infoDivider}>·</Text>
+          <Text style={styles.infoText}>{formatTime(watchTime)}</Text>
         </View>
-      )}
 
-      {/* Controls - Animated */}
-      {showControls && (
-        <>
-          {/* Top Gradient */}
-          <LinearGradient
-            colors={['rgba(0,0,0,0.7)', 'transparent']}
-            style={styles.topGradient}
-            pointerEvents="none"
-          />
+        {/* Close Button */}
+        <TouchableOpacity style={styles.topBtn} onPress={onClose}>
+          <Ionicons name="close" size={22} color="#fff" />
+        </TouchableOpacity>
+      </View>
 
-          {/* Bottom Gradient */}
-          <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.9)']}
-            style={styles.bottomGradient}
-            pointerEvents="none"
-          />
-
-          {/* Close Button - Top Left */}
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <Ionicons name="close" size={24} color="#fff" />
-          </TouchableOpacity>
-
-          {/* Watching Now - Top Right */}
-          <View style={styles.viewersBadge}>
-            <View style={styles.liveDot} />
-            <Ionicons name="eye" size={14} color="#fff" />
-            <Text style={styles.viewersText}>{viewersCount || 1}</Text>
-          </View>
-
-          {/* Points per minute - Top Left below close */}
-          <View style={styles.pointsBadge}>
-            <Ionicons name="sparkles" size={14} color="#fff" />
-            <Text style={styles.pointsBadgeText}>+{currentAd?.points_per_minute || 1} نقطة/دقيقة</Text>
-          </View>
-
-          {/* Right Side Actions */}
-          <View style={styles.rightActions}>
-            {/* Mute */}
-            <TouchableOpacity 
-              style={styles.actionBtn}
-              onPress={() => setIsMuted(!isMuted)}
-            >
-              <Ionicons 
-                name={isMuted ? 'volume-mute' : 'volume-high'} 
-                size={24} 
-                color="#fff" 
-              />
-            </TouchableOpacity>
-
-            {/* Play/Pause */}
-            <TouchableOpacity 
-              style={styles.actionBtn}
-              onPress={togglePlayPause}
-            >
-              {isPlaying ? (
-                <View style={styles.pauseIcon}>
-                  <View style={styles.pauseBar} />
-                  <View style={styles.pauseBar} />
-                </View>
-              ) : (
-                <Ionicons name="play" size={24} color="#fff" />
-              )}
-            </TouchableOpacity>
-
-            {/* Navigation */}
-            <TouchableOpacity 
-              style={[styles.navBtn, currentIndex === 0 && styles.navBtnDisabled]}
-              onPress={() => navigateAd('prev')}
-              disabled={currentIndex === 0}
-            >
-              <Ionicons name="chevron-up" size={20} color="#fff" />
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.navBtn, currentIndex === ads.length - 1 && styles.navBtnDisabled]}
-              onPress={() => navigateAd('next')}
-              disabled={currentIndex === ads.length - 1}
-            >
-              <Ionicons name="chevron-down" size={20} color="#fff" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Bottom Content */}
-          <View style={styles.bottomContent}>
-            {/* Advertiser */}
-            <View style={styles.advertiserRow}>
-              <View style={styles.advertiserAvatar}>
-                <Text style={styles.avatarText}>
-                  {(currentAd?.advertiser || 'A')[0].toUpperCase()}
-                </Text>
-              </View>
-              <View style={styles.advertiserInfo}>
-                <View style={styles.advertiserNameRow}>
-                  <Text style={styles.advertiserName}>@{currentAd?.advertiser || 'advertiser'}</Text>
-                  <View style={styles.verifiedBadge}>
-                    <Ionicons name="checkmark" size={10} color="#fff" />
-                  </View>
-                </View>
-                <Text style={styles.viewsText}>{(totalViews || 0).toLocaleString()} مشاهدة</Text>
-              </View>
-            </View>
-
-            {/* Title & Description */}
-            <Text style={styles.adTitle}>{currentAd?.title}</Text>
-            <Text style={styles.adDescription} numberOfLines={2}>{currentAd?.description}</Text>
-
-            {/* Visit Website */}
-            {currentAd?.website_url && (
-              <TouchableOpacity style={styles.visitBtn} onPress={visitWebsite}>
-                <Ionicons name="open-outline" size={16} color="#000" />
-                <Text style={styles.visitBtnText}>زيارة الموقع</Text>
-              </TouchableOpacity>
-            )}
-
-            {/* Progress */}
-            <View style={styles.progressContainer}>
-              <View style={styles.progressInfo}>
-                <Text style={styles.progressTime}>⏱ {formatTime(watchTime)}</Text>
-                <View style={styles.progressRight}>
-                  <View style={styles.minutesBadge}>
-                    <Text style={styles.minutesText}>{minutesWatched} دقيقة</Text>
-                  </View>
-                  <Text style={styles.progressTotal}>{formatTime(currentAd?.duration || 0)}</Text>
-                </View>
-              </View>
-              <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
-              </View>
-            </View>
-          </View>
-
-          {/* Ad Counter - Bottom Center */}
-          <View style={styles.adCounter}>
-            {ads.slice(Math.max(0, currentIndex - 2), Math.min(ads.length, currentIndex + 3)).map((_, idx) => {
-              const actualIdx = Math.max(0, currentIndex - 2) + idx;
-              return (
-                <View 
-                  key={actualIdx}
-                  style={[
-                    styles.counterDot,
-                    actualIdx === currentIndex && styles.counterDotActive
-                  ]}
-                />
-              );
-            })}
-          </View>
-        </>
-      )}
+      {/* Sound Button - Bottom Right - Always visible */}
+      <TouchableOpacity 
+        style={styles.soundBtn}
+        onPress={() => setIsMuted(!isMuted)}
+      >
+        <Ionicons 
+          name={isMuted ? 'volume-mute' : 'volume-high'} 
+          size={20} 
+          color="rgba(255,255,255,0.7)" 
+        />
+      </TouchableOpacity>
 
       {/* Tap hint when controls hidden */}
       {!showControls && (
         <View style={styles.tapHint}>
           <Text style={styles.tapHintText}>المس للتحكم</Text>
         </View>
+      )}
+
+      {/* Controls - Shown on tap */}
+      {showControls && (
+        <>
+          {/* Play/Pause - Center */}
+          <TouchableOpacity 
+            style={styles.playPauseBtn}
+            onPress={togglePlayPause}
+          >
+            {isPlaying ? (
+              <View style={styles.pauseIcon}>
+                <View style={styles.pauseBar} />
+                <View style={styles.pauseBar} />
+              </View>
+            ) : (
+              <Ionicons name="play" size={32} color="#fff" />
+            )}
+          </TouchableOpacity>
+
+          {/* Navigation - Bottom Center */}
+          <View style={styles.navContainer}>
+            <TouchableOpacity 
+              style={[styles.navBtn, currentIndex === 0 && styles.navBtnDisabled]}
+              onPress={() => navigateAd('prev')}
+              disabled={currentIndex === 0}
+            >
+              <Ionicons name="chevron-up" size={24} color="#fff" />
+              <Text style={styles.navText}>السابق</Text>
+            </TouchableOpacity>
+
+            <View style={styles.adCounter}>
+              {ads.slice(Math.max(0, currentIndex - 2), Math.min(ads.length, currentIndex + 3)).map((_, idx) => {
+                const actualIdx = Math.max(0, currentIndex - 2) + idx;
+                return (
+                  <View 
+                    key={actualIdx}
+                    style={[
+                      styles.counterDot,
+                      actualIdx === currentIndex && styles.counterDotActive
+                    ]}
+                  />
+                );
+              })}
+            </View>
+
+            <TouchableOpacity 
+              style={[styles.navBtn, currentIndex === ads.length - 1 && styles.navBtnDisabled]}
+              onPress={() => navigateAd('next')}
+              disabled={currentIndex === ads.length - 1}
+            >
+              <Text style={styles.navText}>التالي</Text>
+              <Ionicons name="chevron-down" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </>
       )}
     </View>
   );
@@ -525,18 +443,6 @@ const styles = StyleSheet.create({
     zIndex: 50,
   },
   pointsAnimCard: {
-    position: 'relative',
-  },
-  pointsAnimGlow: {
-    position: 'absolute',
-    top: -20,
-    left: -20,
-    right: -20,
-    bottom: -20,
-    backgroundColor: 'rgba(251,191,36,0.3)',
-    borderRadius: 40,
-  },
-  pointsAnimInner: {
     backgroundColor: 'rgba(0,0,0,0.9)',
     borderRadius: 24,
     paddingHorizontal: 32,
@@ -576,282 +482,120 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
 
-  // Session Badge
-  sessionBadge: {
-    position: 'absolute',
-    top: 16,
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#f59e0b',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    zIndex: 30,
-  },
-  sessionBadgeText: {
-    color: '#000',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-
-  // Gradients
-  topGradient: {
+  // Top Bar
+  topBar: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: 160,
-    zIndex: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 50,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    zIndex: 30,
   },
-  bottomGradient: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 280,
-    zIndex: 10,
+  topBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  infoBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  infoText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 13,
+  },
+  infoDivider: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 13,
   },
 
-  // Close Button
-  closeBtn: {
+  // Sound Button
+  soundBtn: {
     position: 'absolute',
-    top: 50,
-    left: 16,
+    bottom: 100,
+    right: 16,
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
     zIndex: 20,
   },
 
-  // Viewers Badge
-  viewersBadge: {
+  // Tap Hint
+  tapHint: {
     position: 'absolute',
-    top: 60,
-    right: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(239,68,68,0.9)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    zIndex: 20,
+    bottom: 50,
+    alignSelf: 'center',
+    zIndex: 10,
   },
-  liveDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#fff',
-  },
-  viewersText: {
-    color: '#fff',
+  tapHintText: {
+    color: 'rgba(255,255,255,0.4)',
     fontSize: 12,
-    fontWeight: 'bold',
   },
 
-  // Points Badge
-  pointsBadge: {
+  // Play/Pause
+  playPauseBtn: {
     position: 'absolute',
-    top: 110,
-    left: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(99,102,241,0.9)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    zIndex: 20,
-  },
-  pointsBadgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-
-  // Right Actions
-  rightActions: {
-    position: 'absolute',
-    right: 16,
-    bottom: 160,
-    alignItems: 'center',
-    gap: 12,
-    zIndex: 20,
-  },
-  actionBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    top: '50%',
+    left: '50%',
+    marginTop: -32,
+    marginLeft: -32,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    zIndex: 20,
   },
   pauseIcon: {
     flexDirection: 'row',
-    gap: 4,
+    gap: 6,
   },
   pauseBar: {
-    width: 4,
-    height: 18,
+    width: 6,
+    height: 24,
     backgroundColor: '#fff',
-    borderRadius: 2,
+    borderRadius: 3,
+  },
+
+  // Navigation
+  navContainer: {
+    position: 'absolute',
+    bottom: 40,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 20,
   },
   navBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 8,
   },
   navBtnDisabled: {
     opacity: 0.3,
   },
-
-  // Bottom Content
-  bottomContent: {
-    position: 'absolute',
-    bottom: 32,
-    left: 16,
-    right: 80,
-    zIndex: 20,
-  },
-  advertiserRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
-  },
-  advertiserAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#6366f1',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  advertiserInfo: {
-    flex: 1,
-  },
-  advertiserNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  advertiserName: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  verifiedBadge: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#3b82f6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  viewsText: {
-    color: 'rgba(255,255,255,0.5)',
-    fontSize: 12,
-  },
-  adTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  adDescription: {
+  navText: {
     color: 'rgba(255,255,255,0.7)',
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  visitBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#fff',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-    marginBottom: 16,
-  },
-  visitBtnText: {
-    color: '#000',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-
-  // Progress
-  progressContainer: {
-    marginTop: 8,
-  },
-  progressInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  progressTime: {
-    color: 'rgba(255,255,255,0.6)',
     fontSize: 12,
-  },
-  progressRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  minutesBadge: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  minutesText: {
-    color: '#fff',
-    fontSize: 11,
-  },
-  progressTotal: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 12,
-  },
-  progressBar: {
-    height: 6,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#6366f1',
-    borderRadius: 3,
   },
 
   // Ad Counter
   adCounter: {
-    position: 'absolute',
-    bottom: 8,
-    alignSelf: 'center',
     flexDirection: 'row',
     gap: 4,
-    zIndex: 20,
+    marginVertical: 12,
   },
   counterDot: {
     width: 8,
@@ -862,18 +606,6 @@ const styles = StyleSheet.create({
   counterDotActive: {
     width: 24,
     backgroundColor: '#fff',
-  },
-
-  // Tap Hint
-  tapHint: {
-    position: 'absolute',
-    bottom: 16,
-    alignSelf: 'center',
-    zIndex: 10,
-  },
-  tapHintText: {
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: 12,
   },
 });
 
