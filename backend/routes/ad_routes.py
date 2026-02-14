@@ -178,7 +178,7 @@ async def get_my_advertiser_ads(email: str = Query(..., description="Advertiser 
                     expires_dt = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
                     remaining = expires_dt - current_time
                     remaining_seconds = max(0, int(remaining.total_seconds()))
-                except:
+                except (ValueError, TypeError):
                     pass
         
         result.append({
