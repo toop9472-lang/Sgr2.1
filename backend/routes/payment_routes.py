@@ -116,7 +116,7 @@ async def create_checkout_session(request: Request, data: CreateCheckoutRequest)
     metadata = {
         "ad_id": data.ad_id,
         "package_id": data.package_id,
-        "duration_months": str(package["duration_months"]),
+        "duration_hours": str(package["duration_hours"]),
         "advertiser_email": data.advertiser_email or ad.get('advertiser_email', ''),
         "source": "saqr_advertiser"
     }
