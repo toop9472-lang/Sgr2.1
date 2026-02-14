@@ -599,22 +599,22 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
         >
           {/* خلفية شفافة */}
           <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/50"
             onClick={() => setShowComments(false)}
           />
           
           {/* محتوى التعليقات */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-b from-gray-900 to-black rounded-t-3xl max-h-[70vh] flex flex-col animate-slide-up">
+          <div className="absolute bottom-0 left-0 right-0 bg-gray-900/95 backdrop-blur-md rounded-t-2xl max-h-[50vh] flex flex-col animate-slide-up">
             {/* المقبض */}
-            <div className="flex justify-center pt-3 pb-2">
-              <div className="w-12 h-1 bg-white/20 rounded-full" />
+            <div className="flex justify-center pt-2 pb-1">
+              <div className="w-10 h-1 bg-white/20 rounded-full" />
             </div>
             
             {/* العنوان */}
-            <div className="flex items-center justify-between px-5 pb-4 border-b border-white/10">
-              <h3 className="text-white font-bold text-lg">
+            <div className="flex items-center justify-between px-4 pb-3 border-b border-white/10">
+              <h3 className="text-white font-medium text-sm">
                 التعليقات
-                <span className="text-white/50 font-normal text-sm mr-2">({comments.length})</span>
+                <span className="text-white/40 font-normal text-xs mr-1">({comments.length})</span>
               </h3>
               <button 
                 onClick={() => setShowComments(false)}
