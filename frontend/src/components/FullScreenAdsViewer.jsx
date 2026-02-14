@@ -25,6 +25,13 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
   const [showHint, setShowHint] = useState(true);
   const [isTouching, setIsTouching] = useState(false);
   
+  // التعليقات
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [submittingComment, setSubmittingComment] = useState(false);
+  
   const videoRef = useRef(null);
   const watchTimerRef = useRef(null);
   const adDurationRef = useRef(30);
