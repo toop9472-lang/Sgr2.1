@@ -421,7 +421,10 @@ function MainApp() {
               {showFullScreenAds && (
                 <FullScreenAdsViewer
                   user={user}
-                  onClose={() => setShowFullScreenAds(false)}
+                  onClose={() => {
+                    setShowFullScreenAds(false);
+                    setCurrentPage('home');
+                  }}
                   onPointsEarned={handlePointsEarned}
                   onNavigateToProfile={() => {
                     setShowFullScreenAds(false);
