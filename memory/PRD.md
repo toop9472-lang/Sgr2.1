@@ -10,6 +10,30 @@ Arabic (العربية)
 
 ## What's Been Implemented
 
+### New Hourly Ad Packages System ✅ (February 14, 2026)
+- [x] 7 hourly pricing packages:
+  - 1 hour: 79 SAR
+  - 3 hours: 119 SAR
+  - 6 hours: 149 SAR
+  - 12 hours: 199 SAR
+  - 24 hours: 275 SAR
+  - 48 hours: 399 SAR
+  - 7 days: 999 SAR
+- [x] Countdown timer for active ads
+- [x] Ad auto-activation after payment
+- [x] Ad expiration tracking
+
+### Ad Filtering System ✅ (February 14, 2026)
+- [x] Local ads (personal ads) filter
+- [x] Global ads filter
+- [x] Type selection on advertiser page
+
+### Manual Payout Approval System ✅ (February 14, 2026)
+- [x] Automatic approval for payouts < 10 points
+- [x] Manual admin approval required for payouts >= 10 points
+- [x] Admin withdrawal management page
+- [x] Points refund on rejection
+
 ### Phone Authentication System ✅ (February 13, 2026)
 - [x] SMS OTP verification for registration
 - [x] Phone number registration with password validation
@@ -33,8 +57,10 @@ Arabic (العربية)
 
 ### Advertiser System ✅
 - [x] Advertiser Dashboard
-- [x] 4 Ad Packages (1000-8400 SAR)
+- [x] Hourly Ad Packages
 - [x] Stripe payment integration
+- [x] My Ads Page with countdown timer
+- [x] Ad countdown timer component
 
 ### Security Features ✅
 - [x] CORS policy with allowlist
@@ -46,7 +72,22 @@ Arabic (العربية)
 
 ## API Endpoints
 
-### Phone Authentication (NEW)
+### Payment Packages
+- `GET /api/payments/packages` - Get hourly pricing packages
+- `POST /api/payments/checkout` - Create Stripe checkout session
+- `GET /api/payments/status/{session_id}` - Check payment status
+
+### Ads
+- `GET /api/ads` - Get all active ads (supports ?ad_type=local|global filter)
+- `GET /api/ads/advertiser/status/{ad_id}` - Get ad status with countdown
+- `GET /api/ads/advertiser/my-ads?email={email}` - Get advertiser's ads
+
+### Withdrawals (Admin)
+- `GET /api/withdrawals/admin/pending` - Get pending withdrawal requests
+- `POST /api/withdrawals/admin/{id}/approve` - Approve withdrawal
+- `POST /api/withdrawals/admin/{id}/reject` - Reject withdrawal
+
+### Phone Authentication
 - `POST /api/phone/send-otp` - Send verification OTP
 - `POST /api/phone/verify-otp` - Verify OTP code
 - `POST /api/phone/register` - Register with phone
@@ -54,7 +95,6 @@ Arabic (العربية)
 - `POST /api/phone/verify-login` - Login step 2 (2FA OTP)
 - `POST /api/phone/forgot-password` - Request password reset
 - `POST /api/phone/reset-password` - Reset password with OTP
-- `GET /api/phone/check/{phone}` - Check if phone exists
 
 ---
 
@@ -67,50 +107,67 @@ TWILIO_AUTH_TOKEN=your_auth_token
 TWILIO_PHONE_NUMBER=+1xxxxxxxxxx
 ```
 
-**To get Twilio credentials:**
-1. Go to https://www.twilio.com
-2. Create account and verify
-3. Go to Console > Account Info
-4. Copy Account SID and Auth Token
-5. Buy a phone number with SMS capability
+### Stripe (Already configured)
+```
+STRIPE_API_KEY=sk_test_...
+```
 
 ---
 
-## App Versions
-- **Current Version:** 5.0.0
-- **Android SDK:** API 35
+## New Components Created
 
----
+### Backend
+- `/app/backend/routes/payment_routes.py` - Updated with hourly packages
+- `/app/backend/routes/ad_routes.py` - Updated with ad filtering and countdown
+- `/app/backend/routes/withdrawal_routes.py` - Updated with manual approval
+- `/app/backend/routes/advertiser_routes.py` - Updated with hourly packages
 
-## Pending Tasks
-
-### P0 - Critical
-- [ ] Add phone auth UI to web and mobile apps
-- [ ] Configure Twilio with real credentials
-- [ ] Build iOS and Android apps
-
-### P1 - High Priority
-- [ ] Server always-on (hosting upgrade needed)
-
----
-
-## Files Reference
-
-### Phone Auth (NEW)
-- Service: `/app/backend/services/sms_service.py`
-- Routes: `/app/backend/routes/phone_auth_routes.py`
-
-### Other Key Files
-- Backend: `/app/backend/server.py`
-- Challenges: `/app/backend/routes/challenges_routes.py`
+### Frontend
+- `/app/frontend/src/components/AdvertiserPage.jsx` - Updated with hourly packages
+- `/app/frontend/src/components/AdCountdownTimer.jsx` - NEW - Countdown timer component
+- `/app/frontend/src/components/AdTypeFilter.jsx` - NEW - Ad type filter component
+- `/app/frontend/src/components/MyAdsPage.jsx` - NEW - Advertiser's ads page
+- `/app/frontend/src/components/AdminWithdrawalsPage.jsx` - NEW - Admin withdrawals management
 
 ---
 
 ## Credentials
 - **Admin:** sky-321@hotmail.com / Talal12@
 - **Test User:** demo@saqr.app / Demo123456
-- **Phone Test:** +966551234567 / NewPass123@
 
 ---
 
-**Last Updated:** February 13, 2026
+## Pending Tasks
+
+### P0 - Critical
+- [ ] Integrate SMS/2FA into mobile app UI
+- [ ] Fix mobile app build process
+
+### P1 - High Priority
+- [ ] Server always-on (hosting upgrade needed)
+- [ ] Test full payment flow with real Stripe
+- [ ] Add countdown timer to user profile picture
+
+---
+
+## Files Reference
+
+### New Ads System
+- Packages: `/app/backend/routes/payment_routes.py` (PRICING_PACKAGES)
+- Ad filtering: `/app/backend/routes/ad_routes.py` (ad_type parameter)
+- Withdrawal approval: `/app/backend/routes/withdrawal_routes.py` (MANUAL_APPROVAL_THRESHOLD)
+- Advertiser pricing: `/app/backend/routes/advertiser_routes.py` (HOURLY_PACKAGES)
+
+### Phone Auth
+- Service: `/app/backend/services/sms_service.py`
+- Routes: `/app/backend/routes/phone_auth_routes.py`
+
+---
+
+## Test Reports
+- Latest: `/app/test_reports/iteration_16.json`
+- Backend tests: `/app/backend/tests/test_new_ads_system.py`
+
+---
+
+**Last Updated:** February 14, 2026
