@@ -502,48 +502,6 @@ const AdViewer = ({ ads, onAdWatched, user }) => {
               <ChevronDown className="w-5 h-5 text-white" />
             </button>
           </div>
-        </div> 
-              if (videoRef.current) videoRef.current.muted = !isMuted;
-              setIsMuted(!isMuted); 
-            }}
-            className="group"
-          >
-            <div className="w-14 h-14 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 group-hover:bg-white/20 transition-all shadow-lg">
-              {isMuted ? <VolumeX className="w-6 h-6 text-white" /> : <Volume2 className="w-6 h-6 text-white" />}
-            </div>
-          </button>
-
-          {/* Play/Pause */}
-          <button onClick={togglePlayPause} className="group">
-            <div className="w-14 h-14 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 group-hover:bg-white/20 transition-all shadow-lg">
-              {isPlaying ? (
-                <div className="flex gap-1">
-                  <div className="w-1.5 h-5 bg-white rounded-full" />
-                  <div className="w-1.5 h-5 bg-white rounded-full" />
-                </div>
-              ) : (
-                <Play className="w-6 h-6 text-white ml-1" fill="white" />
-              )}
-            </div>
-          </button>
-
-          {/* Navigation Arrows */}
-          <div className="flex flex-col gap-2">
-            <button 
-              onClick={(e) => { e.stopPropagation(); navigateAd('prev'); }}
-              disabled={currentIndex === 0}
-              className={`w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center ${currentIndex === 0 ? 'opacity-30' : 'hover:bg-white/20'} transition-all`}
-            >
-              <ChevronUp className="w-5 h-5 text-white" />
-            </button>
-            <button 
-              onClick={(e) => { e.stopPropagation(); navigateAd('next'); }}
-              disabled={currentIndex === ads.length - 1}
-              className={`w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center ${currentIndex === ads.length - 1 ? 'opacity-30' : 'hover:bg-white/20'} transition-all`}
-            >
-              <ChevronDown className="w-5 h-5 text-white" />
-            </button>
-          </div>
         </div>
 
         {/* Bottom Content */}
