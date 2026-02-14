@@ -398,19 +398,20 @@ const AdViewer = ({ ads, onAdWatched, user }) => {
       )}
 
       {/* Always Visible - Right Side Actions (Comments & Sound) */}
-      <div className="absolute right-4 bottom-32 flex flex-col items-center gap-4 z-30">
+      <div className="absolute right-4 bottom-24 flex flex-col items-center gap-3 z-40">
         {/* Comments Button */}
         <button 
           onClick={(e) => { 
             e.stopPropagation(); 
             setShowComments(true);
           }}
-          className="group"
+          className="group flex flex-col items-center"
+          data-testid="comments-btn"
         >
-          <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10 group-hover:bg-black/60 transition-all">
+          <div className="w-11 h-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/20 group-hover:bg-black/70 transition-all shadow-lg">
             <MessageCircle className="w-5 h-5 text-white" />
           </div>
-          <span className="text-white/70 text-xs mt-1 block text-center">{comments.length || 0}</span>
+          <span className="text-white text-[10px] mt-1">{comments.length || 0}</span>
         </button>
 
         {/* Mute Toggle */}
@@ -421,8 +422,9 @@ const AdViewer = ({ ads, onAdWatched, user }) => {
             setIsMuted(!isMuted); 
           }}
           className="group"
+          data-testid="mute-btn"
         >
-          <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10 group-hover:bg-black/60 transition-all">
+          <div className="w-11 h-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/20 group-hover:bg-black/70 transition-all shadow-lg">
             {isMuted ? <VolumeX className="w-5 h-5 text-white" /> : <Volume2 className="w-5 h-5 text-white" />}
           </div>
         </button>
