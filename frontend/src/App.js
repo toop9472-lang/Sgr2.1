@@ -423,6 +423,10 @@ function MainApp() {
                   user={user}
                   onClose={() => setShowFullScreenAds(false)}
                   onPointsEarned={handlePointsEarned}
+                  onNavigateToProfile={() => {
+                    setShowFullScreenAds(false);
+                    setCurrentPage('profile');
+                  }}
                 />
               )}
               
