@@ -144,6 +144,7 @@ const SwipeableApp = ({
         user={user}
         onClose={handleExitAdsViewer}
         onPointsEarned={handlePointsEarned}
+        onNavigateToProfile={handleGoToProfile}
       />
     );
   }
