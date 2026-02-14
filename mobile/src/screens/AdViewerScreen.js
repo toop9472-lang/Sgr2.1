@@ -362,7 +362,14 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
 
       {/* Top Bar - Always visible */}
       <View style={styles.topBar}>
-        <TouchableOpacity style={styles.topBtn} onPress={onClose}>
+        <TouchableOpacity style={styles.topBtn} onPress={() => {
+          // السهم يرجع للملف الشخصي
+          if (onNavigateToProfile) {
+            onNavigateToProfile();
+          } else {
+            onClose();
+          }
+        }}>
           <Ionicons name="arrow-forward" size={22} color="#fff" />
         </TouchableOpacity>
 
