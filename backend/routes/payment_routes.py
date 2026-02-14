@@ -237,15 +237,23 @@ async def get_payment_status(request: Request, session_id: str):
         # If payment successful, activate the ad
         if new_payment_status == 'paid' and transaction.get('status') != 'completed':
             ad_id = transaction.get('ad_id')
-            duration_months = transaction.get('duration_months', 1)
+            duration_hours = transaction.get('duration_hours', 1)
             
-            # Update ad status
+            # Calculate expiration time based on hours
+            from datetime import timedelta
+            ad_expiration = datetime.now(timezone.utc) + timedelta(hours=duration_hours)
+            
+            # Update ad status - Auto activate after payment
             await db.advertiser_ads.update_one(
                 {'id': ad_id},
                 {'$set': {
                     'payment_status': 'paid',
-                    'status': 'pending',  # Still needs admin approval
+                    'status': 'active',  # Auto-activate after payment
+                    'is_active': True,
                     'payment_verified_at': datetime.now(timezone.utc),
+                    'activated_at': datetime.now(timezone.utc),
+                    'expires_at': ad_expiration.isoformat(),
+                    'duration_hours': duration_hours,
                     'updated_at': datetime.now(timezone.utc)
                 }}
             )
