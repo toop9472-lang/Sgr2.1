@@ -324,7 +324,7 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
           className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center transition-all hover:bg-black/50"
           data-testid="back-to-profile-btn"
         >
-          <ArrowLeft className="w-5 h-5 text-white/80 rotate-180" />
+          <ArrowRight className="w-5 h-5 text-white/80" />
         </button>
       </div>
 
