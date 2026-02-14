@@ -126,13 +126,18 @@ async def get_advertiser_ad_status(ad_id: str):
     is_active = ad.get('is_active', False)
     
     if expires_at and is_active:
+        expires_dt = None
         if isinstance(expires_at, str):
             try:
                 expires_dt = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+                if expires_dt.tzinfo is None:
+                    expires_dt = expires_dt.replace(tzinfo=timezone.utc)
             except (ValueError, TypeError):
                 expires_dt = None
-        else:
+        elif isinstance(expires_at, datetime):
             expires_dt = expires_at
+            if expires_dt.tzinfo is None:
+                expires_dt = expires_dt.replace(tzinfo=timezone.utc)
         
         if expires_dt:
             remaining = expires_dt - current_time
