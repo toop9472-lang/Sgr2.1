@@ -33,10 +33,11 @@ class AdvertiserAd(BaseModel):
     video_url: str
     thumbnail_url: Optional[str] = None
     duration: int = 60  # seconds
+    ad_type: str = 'local'  # 'local' for personal ads, 'global' for wide reach
     
-    # Pricing
-    price: float = 500.0  # SAR per month
-    duration_months: int = 1
+    # Pricing - Hourly based
+    price: float = 79.0  # SAR
+    duration_hours: int = 1  # Default 1 hour
     
     # Status
     status: str = 'pending'  # 'pending', 'approved', 'rejected', 'active', 'expired'
@@ -46,7 +47,8 @@ class AdvertiserAd(BaseModel):
     # Dates
     created_at: datetime = Field(default_factory=datetime.utcnow)
     approved_at: Optional[datetime] = None
-    expires_at: Optional[datetime] = None
+    activated_at: Optional[datetime] = None
+    expires_at: Optional[str] = None  # ISO string for countdown timer
     
     # Payment
     payment_id: Optional[str] = None
@@ -66,7 +68,8 @@ class AdvertiserAdCreate(BaseModel):
     video_url: str
     thumbnail_url: Optional[str] = None
     duration: int = 60
-    duration_months: int = 1
+    duration_hours: int = 1
+    ad_type: str = 'local'
 
 class AdvertiserAdResponse(BaseModel):
     id: str
@@ -77,11 +80,12 @@ class AdvertiserAdResponse(BaseModel):
     thumbnail_url: Optional[str]
     duration: int
     price: float
-    duration_months: int
+    duration_hours: int
     status: str
     payment_status: str
     created_at: datetime
-    expires_at: Optional[datetime]
+    expires_at: Optional[str]
+    ad_type: str = 'local'
 
     class Config:
         json_encoders = {
