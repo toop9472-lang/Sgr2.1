@@ -150,13 +150,23 @@ STRIPE_API_KEY=sk_test_...
 ## Pending Tasks
 
 ### P0 - Critical
+- [ ] Test mobile app build (eas build --local)
 - [ ] Integrate SMS/2FA into mobile app UI
-- [ ] Fix mobile app build process
 
 ### P1 - High Priority
-- [ ] Server always-on (hosting upgrade needed)
+- [x] Server always-on (User upgraded hosting plan)
 - [ ] Test full payment flow with real Stripe
 - [ ] Add countdown timer to user profile picture
+
+### Completed This Session
+- [x] Mobile AdViewerScreen redesigned to match Web version
+  - Clean minimal design
+  - Top bar with back/close buttons and info (points, duration, time)
+  - Sound button bottom right
+  - "المس للتحكم" (Tap for controls) hint
+  - Play/pause controls on tap
+  - Navigation between ads
+  - Points animation on earning
 
 ---
 
