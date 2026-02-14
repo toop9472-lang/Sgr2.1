@@ -95,12 +95,12 @@ rewards,earn,points,ads,money,cashback,gift,withdraw,wallet,saqr
 
 ### رابط سياسة الخصوصية
 ```
-https://saqr-ads-system.preview.emergentagent.com/privacy
+https://mobile-ui-sync.preview.emergentagent.com/privacy
 ```
 
 ### رابط الدعم
 ```
-https://saqr-ads-system.preview.emergentagent.com
+https://mobile-ui-sync.preview.emergentagent.com
 ```
 
 ### البريد الإلكتروني للدعم
