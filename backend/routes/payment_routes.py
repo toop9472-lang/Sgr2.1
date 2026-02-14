@@ -55,14 +55,14 @@ class CheckoutResponse(BaseModel):
 
 @router.get('/packages')
 async def get_pricing_packages():
-    """Get available pricing packages"""
+    """Get available pricing packages - hourly based"""
     return {
         "packages": [
             {
                 "id": pkg_id,
                 "amount": pkg["amount"],
                 "currency": pkg["currency"],
-                "duration_months": pkg["duration_months"],
+                "duration_hours": pkg["duration_hours"],
                 "description": pkg["description"]
             }
             for pkg_id, pkg in PRICING_PACKAGES.items()
