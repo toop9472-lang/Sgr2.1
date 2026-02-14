@@ -142,7 +142,7 @@ async def create_checkout_session(request: Request, data: CreateCheckoutRequest)
             "package_id": data.package_id,
             "amount": package["amount"],
             "currency": package["currency"],
-            "duration_months": package["duration_months"],
+            "duration_hours": package["duration_hours"],
             "advertiser_email": metadata["advertiser_email"],
             "payment_status": "pending",
             "status": "initiated",
