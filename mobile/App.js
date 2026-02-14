@@ -161,7 +161,14 @@ export default function App() {
   if (showAdsViewer) {
     return (
       <AdViewerScreen
-        onClose={() => setShowAdsViewer(false)}
+        onClose={() => {
+          setShowAdsViewer(false);
+          setCurrentPage('home');
+        }}
+        onNavigateToProfile={() => {
+          setShowAdsViewer(false);
+          setCurrentPage('profile');
+        }}
         onPointsEarned={handlePointsEarned}
         user={user}
       />
