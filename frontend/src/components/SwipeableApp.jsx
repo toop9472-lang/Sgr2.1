@@ -92,6 +92,12 @@ const SwipeableApp = ({
   // الخروج من عارض الإعلانات
   const handleExitAdsViewer = () => {
     setIsInAdsViewer(false);
+    setCurrentPageIndex(0); // العودة للصفحة الرئيسية
+  };
+
+  const handleGoToProfile = () => {
+    setIsInAdsViewer(false);
+    setCurrentPageIndex(1); // الانتقال للصفحة الشخصية
   };
 
   // معالجة النقاط المكتسبة
