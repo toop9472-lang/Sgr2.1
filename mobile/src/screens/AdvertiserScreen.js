@@ -20,11 +20,15 @@ import colors from '../styles/colors';
 
 const API_URL = 'https://saqrpointscom.store';
 
-// سيتم استبدالها بالباقات من السيرفر
-const FALLBACK_PACKAGES = [
-  { id: 'ad_1_month', description: 'شهر واحد', duration_months: 1, amount: 1000, features: ['1000 مشاهدة مضمونة', 'تقرير أسبوعي'] },
-  { id: 'ad_3_months', description: '3 أشهر (خصم 10%)', duration_months: 3, amount: 2700, features: ['5000 مشاهدة مضمونة', 'تقرير يومي', 'أولوية'], popular: true },
-  { id: 'ad_6_months', description: '6 أشهر (خصم 20%)', duration_months: 6, amount: 4800, features: ['15000 مشاهدة مضمونة', 'تقرير مفصل', 'دعم مخصص'] },
+// الباقات الساعية الجديدة (تطابق الويب)
+const HOURLY_PACKAGES = [
+  { id: 'ad_1_hour', amount: 79, currency: 'sar', duration_hours: 1, description: 'ساعة واحدة', features: ['مشاهدة فورية', 'بدء فوري'] },
+  { id: 'ad_3_hours', amount: 119, currency: 'sar', duration_hours: 3, description: '3 ساعات', features: ['مشاهدة فورية', 'بدء فوري'], popular: true },
+  { id: 'ad_6_hours', amount: 149, currency: 'sar', duration_hours: 6, description: '6 ساعات', features: ['مشاهدة فورية', 'بدء فوري'] },
+  { id: 'ad_12_hours', amount: 199, currency: 'sar', duration_hours: 12, description: '12 ساعة', features: ['مشاهدة فورية', 'بدء فوري'] },
+  { id: 'ad_24_hours', amount: 275, currency: 'sar', duration_hours: 24, description: 'يوم كامل', features: ['الأفضل قيمة', 'مشاهدة فورية', 'بدء فوري'] },
+  { id: 'ad_48_hours', amount: 399, currency: 'sar', duration_hours: 48, description: 'يومين', features: ['مشاهدة فورية', 'بدء فوري'] },
+  { id: 'ad_7_days', amount: 999, currency: 'sar', duration_hours: 168, description: 'أسبوع كامل', features: ['أقصى وصول', 'مشاهدة فورية', 'بدء فوري'] },
 ];
 
 const AdvertiserScreen = () => {
