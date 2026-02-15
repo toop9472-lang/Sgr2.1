@@ -19,7 +19,14 @@
           "android": {
             "compileSdkVersion": 35,
             "targetSdkVersion": 35,
-            "minSdkVersion": 24
+            "minSdkVersion": 24,
+            "extraProguardRules": "-keep class ** { *; }",
+            "enableProguardInReleaseBuilds": false,
+            "packagingOptions": {
+              "jniLibs": {
+                "useLegacyPackaging": true
+              }
+            }
           },
           "ios": {
             "deploymentTarget": "15.1",
