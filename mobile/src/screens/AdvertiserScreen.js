@@ -671,6 +671,23 @@ const styles = StyleSheet.create({
     fontSize: 10, 
     fontWeight: 'bold' 
   },
+  bestValueBadge: { 
+    position: 'absolute', 
+    top: -12, 
+    right: 16, 
+    backgroundColor: '#22c55e', 
+    paddingHorizontal: 12, 
+    paddingVertical: 4, 
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  bestValueText: { 
+    color: '#000', 
+    fontSize: 10, 
+    fontWeight: 'bold' 
+  },
   packageIcon: {
     width: 50,
     height: 50,
