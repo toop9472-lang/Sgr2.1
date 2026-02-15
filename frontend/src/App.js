@@ -395,6 +395,9 @@ function MainApp() {
       {/* Support Page */}
       <Route path="/support" element={<SupportPage />} />
       
+      {/* Download Page */}
+      <Route path="/download" element={<DownloadPage />} />
+      
       {/* User Routes */}
       <Route path="/*" element={
         <>
