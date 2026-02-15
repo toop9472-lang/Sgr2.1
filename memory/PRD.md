@@ -220,7 +220,23 @@ STRIPE_API_KEY=sk_test_...
 
 ---
 
-**Last Updated:** February 14, 2026
+**Last Updated:** February 15, 2026
+
+---
+
+## Change Log
+
+### February 15, 2026 - iOS & Android Builds
+- ✅ Built iOS IPA for App Store (v5.2.0, Build #16)
+  - Expo SDK 53.0.0
+  - Bundle ID: com.saqr.rewards
+  - IPA: https://expo.dev/artifacts/eas/kyYTXa9nbWCvRJ5YGmKRLh.ipa
+- ✅ Android AAB uploaded to Play Store by user
+- ✅ Server stability verified (UptimeRobot active)
+- ✅ Feature parity between Web and Mobile verified
+  - AdViewerScreen matches FullScreenAdsViewer
+  - Comments system works on both platforms
+  - 2-second ad info display timeout on both platforms
 
 ---
 
