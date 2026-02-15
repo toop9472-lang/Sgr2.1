@@ -587,8 +587,58 @@ const styles = StyleSheet.create({
     color: '#FFF', 
     fontSize: 18, 
     fontWeight: 'bold', 
-    marginBottom: 16,
+    marginBottom: 8,
     textAlign: 'center',
+  },
+  sectionSubtitle: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 13,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+
+  // Ad Type Selection
+  adTypeContainer: {
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  adTypeLabel: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 14,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  adTypeButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  adTypeBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  adTypeBtnActive: {
+    backgroundColor: '#3b82f6',
+    borderColor: '#3b82f6',
+  },
+  adTypeBtnText: {
+    color: '#888',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  adTypeBtnTextActive: {
+    color: '#FFF',
   },
 
   packageCard: { 
