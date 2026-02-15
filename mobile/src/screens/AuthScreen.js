@@ -1203,6 +1203,42 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
 
+  // Apple Button
+  appleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: '#000',
+    paddingVertical: 16,
+    borderRadius: 14,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  appleBtnText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  // Google Button
+  googleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: '#4285F4',
+    paddingVertical: 16,
+    borderRadius: 14,
+    marginBottom: 12,
+  },
+  googleBtnText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
   // Buttons
   primaryBtn: {
     flexDirection: 'row',
@@ -1246,10 +1282,46 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderColor: '#333',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   emailText: {
     color: '#60a5fa',
+    fontSize: 15,
+  },
+
+  // Phone Button
+  phoneBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: 'transparent',
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#333',
+    marginBottom: 12,
+  },
+  phoneBtnText: {
+    color: '#888',
+    fontSize: 15,
+  },
+
+  // Guest Button
+  guestBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#222',
+    marginBottom: 20,
+  },
+  guestBtnText: {
+    color: '#888',
     fontSize: 15,
   },
 
