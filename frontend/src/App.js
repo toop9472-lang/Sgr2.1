@@ -17,6 +17,7 @@ import PaymentSuccess from "./components/PaymentSuccess";
 import PaymentCancel from "./components/PaymentCancel";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import DownloadPage from "./pages/DownloadPage";
 import SupportPage from "./components/SupportPage";
 import SettingsPage from "./components/SettingsPage";
 import ChallengesPage from "./components/ChallengesPage";
