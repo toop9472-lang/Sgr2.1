@@ -20,14 +20,16 @@
     "production": {
       "android": {
         "buildType": "app-bundle",
-        "gradleCommand": ":app:bundleRelease"
+        "gradleCommand": ":app:bundleRelease",
+        "config": "eas-16kb.gradle"
       },
       "ios": {
         "distribution": "store",
         "credentialsSource": "remote"
       },
       "env": {
-        "EAS_BUILD_NO_EXPO_GO_WARNING": "1"
+        "EAS_BUILD_NO_EXPO_GO_WARNING": "1",
+        "EX_UPDATES_NATIVE_DEBUG": "0"
       }
     }
   },
