@@ -339,8 +339,11 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
   const handleTouchEnd = (e) => {
     setIsTouching(false);
     
-    // إخفاء المعلومات بعد رفع الإصبع
-    setShowInfo(false);
+    // إخفاء المعلومات بعد ثانيتين من رفع الإصبع
+    if (hideInfoTimeoutRef.current) clearTimeout(hideInfoTimeoutRef.current);
+    hideInfoTimeoutRef.current = setTimeout(() => {
+      setShowInfo(false);
+    }, 2000);
     
     if (!touchStartY) return;
     const touchEndY = e.changedTouches?.[0]?.clientY || touchStartY;
@@ -363,7 +366,11 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
 
   const handleMouseUp = () => {
     setIsTouching(false);
-    setShowInfo(false);
+    // إخفاء المعلومات بعد ثانيتين من رفع الإصبع
+    if (hideInfoTimeoutRef.current) clearTimeout(hideInfoTimeoutRef.current);
+    hideInfoTimeoutRef.current = setTimeout(() => {
+      setShowInfo(false);
+    }, 2000);
   };
 
   const handleKeyDown = useCallback((e) => {
