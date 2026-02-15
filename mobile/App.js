@@ -1,8 +1,12 @@
 // Saqr Mobile App - Main Entry Point
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ActivityIndicator, Text, BackHandler, Alert, Image } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Text, BackHandler, Alert, Image, I18nManager } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+
+// Force RTL for Arabic
+I18nManager.allowRTL(true);
+I18nManager.forceRTL(true);
 
 // Screens
 import AuthScreen from './src/screens/AuthScreen';
