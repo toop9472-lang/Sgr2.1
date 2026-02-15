@@ -431,8 +431,8 @@ const AdvertiserScreen = () => {
             {/* Payment Summary */}
             <View style={styles.paymentSummary}>
               <View style={styles.paymentSummaryRow}>
-                <Text style={styles.paymentSummaryLabel}>الباقة</Text>
-                <Text style={styles.paymentSummaryValue}>{selectedPackage?.description}</Text>
+                <Text style={styles.paymentSummaryLabel}>المدة</Text>
+                <Text style={styles.paymentSummaryValue}>{formatDuration(selectedPackage?.duration_hours)}</Text>
               </View>
               <View style={styles.paymentSummaryRow}>
                 <Text style={styles.paymentSummaryLabel}>المبلغ</Text>
