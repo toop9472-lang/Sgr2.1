@@ -87,7 +87,8 @@ const AdvertiserScreen = () => {
           title: formData.title,
           description: formData.description,
           video_url: formData.video_url,
-          duration_months: selectedPackage.duration_months,
+          duration_hours: selectedPackage.duration_hours,
+          ad_type: adType,
         }),
       });
 
