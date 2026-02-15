@@ -164,8 +164,9 @@ STRIPE_API_KEY=sk_test_...
 ## Pending Tasks
 
 ### P0 - Critical
-- [x] ✅ iOS App Build for App Store (February 15, 2026)
-- [x] ✅ Android App Build for Play Store (February 15, 2026)
+- [x] ✅ iOS App Build for App Store (February 15, 2026) - Build #17
+- [x] ✅ Android App Build for Play Store (February 15, 2026) - Version Code 46
+- [x] ✅ Add Social Login Options (Google, Apple, Email, Guest)
 - [ ] Integrate SMS/2FA into mobile app UI
 
 ### P1 - High Priority
