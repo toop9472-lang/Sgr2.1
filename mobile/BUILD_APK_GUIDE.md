@@ -177,7 +177,7 @@ eas build --platform ios --profile production
 
 ### API URL:
 ```
-https://mobile-build-fix-1.preview.emergentagent.com
+https://ios-submission-1.preview.emergentagent.com
 ```
 
 ---
