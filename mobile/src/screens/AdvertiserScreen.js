@@ -35,9 +35,10 @@ const AdvertiserScreen = () => {
   const [step, setStep] = useState(1); // 1: package, 2: form, 3: payment, 4: success
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingPackages, setIsLoadingPackages] = useState(true);
-  const [packages, setPackages] = useState(FALLBACK_PACKAGES);
+  const [isLoadingPackages, setIsLoadingPackages] = useState(false);
+  const [packages, setPackages] = useState(HOURLY_PACKAGES);
   const [createdAd, setCreatedAd] = useState(null);
+  const [adType, setAdType] = useState('local'); // local or global
   const [formData, setFormData] = useState({
     name: '',
     email: '',
