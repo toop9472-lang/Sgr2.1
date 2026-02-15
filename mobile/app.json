@@ -95,7 +95,7 @@
         "backgroundColor": "#0a0a0f"
       },
       "package": "com.saqr.rewards",
-      "versionCode": 42,
+      "versionCode": 43,
       "permissions": [
         "INTERNET",
         "VIBRATE",
