@@ -208,13 +208,13 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
     setVideoLoading(true);
   }, [currentIndex]);
 
-  // Auto-hide controls
+  // Auto-hide controls after 2 seconds (matching web behavior)
   useEffect(() => {
     if (showControls && isPlaying && !showComments) {
       if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
       controlsTimerRef.current = setTimeout(() => {
         setShowControls(false);
-      }, 3000);
+      }, 2000);
     }
     return () => clearTimeout(controlsTimerRef.current);
   }, [showControls, isPlaying, showComments]);
