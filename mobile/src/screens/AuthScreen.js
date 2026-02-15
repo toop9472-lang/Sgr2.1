@@ -493,6 +493,44 @@ const AuthScreen = ({ onLogin }) => {
     );
   };
 
+  // Google Sign In
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    try {
+      // Open Google OAuth URL
+      const authUrl = `${api.BASE_URL}/api/auth/google`;
+      const supported = await Linking.canOpenURL(authUrl);
+      if (supported) {
+        await Linking.openURL(authUrl);
+      } else {
+        Alert.alert('خطأ', 'لا يمكن فتح صفحة تسجيل الدخول بـ Google');
+      }
+    } catch (error) {
+      Alert.alert('خطأ', 'حدث خطأ أثناء تسجيل الدخول بـ Google');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Apple Sign In
+  const handleAppleSignIn = async () => {
+    setIsLoading(true);
+    try {
+      // Open Apple OAuth URL  
+      const authUrl = `${api.BASE_URL}/api/auth/apple`;
+      const supported = await Linking.canOpenURL(authUrl);
+      if (supported) {
+        await Linking.openURL(authUrl);
+      } else {
+        Alert.alert('خطأ', 'لا يمكن فتح صفحة تسجيل الدخول بـ Apple');
+      }
+    } catch (error) {
+      Alert.alert('خطأ', 'حدث خطأ أثناء تسجيل الدخول بـ Apple');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // ==================== MAIN SCREEN ====================
   if (mode === 'main') {
     return (
@@ -510,32 +548,27 @@ const AuthScreen = ({ onLogin }) => {
             <Text style={styles.appName}>صقر</Text>
             <Text style={styles.tagline}>شاهد الإعلانات واكسب المال</Text>
 
-            {/* Phone Login - Primary */}
+            {/* Apple Sign In */}
+            {Platform.OS === 'ios' && (
+              <TouchableOpacity 
+                style={styles.appleBtn} 
+                onPress={handleAppleSignIn}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="logo-apple" size={22} color="#FFF" />
+                <Text style={styles.appleBtnText}>الدخول بحساب Apple</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Google Sign In */}
             <TouchableOpacity 
-              style={styles.primaryBtn} 
-              onPress={() => setMode('phone_login')}
+              style={styles.googleBtn} 
+              onPress={handleGoogleSignIn}
               activeOpacity={0.8}
             >
-              <Ionicons name="phone-portrait-outline" size={22} color="#FFF" />
-              <Text style={styles.primaryBtnText}>الدخول برقم الجوال</Text>
+              <Ionicons name="logo-google" size={20} color="#FFF" />
+              <Text style={styles.googleBtnText}>الدخول بحساب Google</Text>
             </TouchableOpacity>
-
-            {/* Phone Register */}
-            <TouchableOpacity 
-              style={styles.secondaryBtn} 
-              onPress={() => setMode('phone_register')}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="person-add-outline" size={20} color="#60a5fa" />
-              <Text style={styles.secondaryBtnText}>حساب جديد برقم الجوال</Text>
-            </TouchableOpacity>
-
-            {/* Divider */}
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>أو</Text>
-              <View style={styles.dividerLine} />
-            </View>
 
             {/* Email Login */}
             <TouchableOpacity 
@@ -547,17 +580,37 @@ const AuthScreen = ({ onLogin }) => {
               <Text style={styles.emailText}>الدخول بالبريد الإلكتروني</Text>
             </TouchableOpacity>
 
+            {/* Divider */}
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>أو</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            {/* Phone Login */}
+            <TouchableOpacity 
+              style={styles.phoneBtn} 
+              onPress={() => setMode('phone_login')}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="phone-portrait-outline" size={20} color="#888" />
+              <Text style={styles.phoneBtnText}>الدخول برقم الجوال</Text>
+            </TouchableOpacity>
+
             {/* Guest Login */}
             <TouchableOpacity 
-              style={styles.guestLink} 
+              style={styles.guestBtn} 
               onPress={handleGuestLogin}
               disabled={isLoading}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
               {isLoading ? (
                 <ActivityIndicator size="small" color="#888" />
               ) : (
-                <Text style={styles.guestText}>تجربة بدون حساب</Text>
+                <>
+                  <Ionicons name="person-outline" size={20} color="#888" />
+                  <Text style={styles.guestBtnText}>الدخول كزائر</Text>
+                </>
               )}
             </TouchableOpacity>
 
