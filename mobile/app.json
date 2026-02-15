@@ -26,9 +26,11 @@
             "enableProguardInReleaseBuilds": false,
             "packagingOptions": {
               "jniLibs": {
-                "useLegacyPackaging": true
+                "useLegacyPackaging": true,
+                "pageSize": 16384
               }
-            }
+            },
+            "ndkVersion": "28.0.12674087"
           },
           "ios": {
             "deploymentTarget": "15.1",
