@@ -49,35 +49,19 @@ const AdvertiserScreen = () => {
     video_url: '',
   });
 
-  // جلب الباقات من السيرفر
+  // الباقات ثابتة (ساعية) - لا حاجة لجلبها من السيرفر
   useEffect(() => {
-    loadPackages();
+    // الباقات محملة مباشرة
+    setIsLoadingPackages(false);
   }, []);
 
-  const loadPackages = async () => {
-    try {
-      const response = await api.getPackages();
-      if (response.ok) {
-        const data = await response.json();
-        if (data.packages && data.packages.length > 0) {
-          // إضافة الميزات للباقات إذا لم تكن موجودة
-          const packagesWithFeatures = data.packages.map((pkg, index) => ({
-            ...pkg,
-            features: pkg.features || [
-              `${pkg.duration_months * 1000} مشاهدة مضمونة`,
-              index > 0 ? 'تقرير يومي' : 'تقرير أسبوعي',
-              index > 1 ? 'دعم مخصص' : undefined,
-            ].filter(Boolean),
-            popular: index === 1,
-          }));
-          setPackages(packagesWithFeatures);
-        }
-      }
-    } catch (error) {
-      console.log('Using fallback packages');
-    } finally {
-      setIsLoadingPackages(false);
-    }
+  // Format duration for display
+  const formatDuration = (hours) => {
+    if (hours < 24) return `${hours} ساعة`;
+    if (hours === 24) return 'يوم كامل';
+    if (hours === 48) return 'يومين';
+    if (hours === 168) return 'أسبوع كامل';
+    return `${Math.floor(hours / 24)} أيام`;
   };
 
   const handleSubmit = async () => {
