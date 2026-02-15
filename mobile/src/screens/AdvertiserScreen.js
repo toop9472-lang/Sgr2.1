@@ -385,8 +385,12 @@ const AdvertiserScreen = () => {
             {selectedPackage && (
               <View style={styles.summaryCard}>
                 <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>الباقة المختارة</Text>
-                  <Text style={styles.summaryValue}>{selectedPackage.description}</Text>
+                  <Text style={styles.summaryLabel}>المدة</Text>
+                  <Text style={styles.summaryValue}>{formatDuration(selectedPackage.duration_hours)}</Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>نوع الإعلان</Text>
+                  <Text style={styles.summaryValue}>{adType === 'local' ? 'محلي' : 'عالمي'}</Text>
                 </View>
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>المبلغ الإجمالي</Text>
