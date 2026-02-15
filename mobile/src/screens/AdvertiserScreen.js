@@ -204,7 +204,30 @@ const AdvertiserScreen = () => {
         {/* Step 1: Package Selection */}
         {step === 1 && (
           <>
-            <Text style={styles.sectionTitle}>اختر الباقة المناسبة</Text>
+            <Text style={styles.sectionTitle}>اختر مدة الإعلان</Text>
+            <Text style={styles.sectionSubtitle}>الإعلان يبدأ فوراً بعد الدفع مع مؤقت عد تنازلي</Text>
+            
+            {/* Ad Type Selection */}
+            <View style={styles.adTypeContainer}>
+              <Text style={styles.adTypeLabel}>نوع الإعلان:</Text>
+              <View style={styles.adTypeButtons}>
+                <TouchableOpacity
+                  style={[styles.adTypeBtn, adType === 'local' && styles.adTypeBtnActive]}
+                  onPress={() => setAdType('local')}
+                >
+                  <Ionicons name="location-outline" size={18} color={adType === 'local' ? '#FFF' : '#888'} />
+                  <Text style={[styles.adTypeBtnText, adType === 'local' && styles.adTypeBtnTextActive]}>محلي</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.adTypeBtn, adType === 'global' && styles.adTypeBtnActive]}
+                  onPress={() => setAdType('global')}
+                >
+                  <Ionicons name="globe-outline" size={18} color={adType === 'global' ? '#FFF' : '#888'} />
+                  <Text style={[styles.adTypeBtnText, adType === 'global' && styles.adTypeBtnTextActive]}>عالمي</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
             {packages.map((pkg, index) => (
               <TouchableOpacity
                 key={pkg.id}
@@ -215,37 +238,30 @@ const AdvertiserScreen = () => {
                 onPress={() => setSelectedPackage(pkg)}
                 activeOpacity={0.7}
               >
-                {pkg.popular && (
+                {pkg.duration_hours === 24 && (
+                  <View style={styles.bestValueBadge}>
+                    <Ionicons name="star" size={10} color="#000" />
+                    <Text style={styles.bestValueText}>الأفضل قيمة</Text>
+                  </View>
+                )}
+                {pkg.popular && pkg.duration_hours !== 24 && (
                   <View style={styles.popularBadge}>
                     <Ionicons name="star" size={10} color="#000" />
-                    <Text style={styles.popularText}>الأكثر شعبية</Text>
+                    <Text style={styles.popularText}>شائع</Text>
                   </View>
                 )}
                 
                 {/* Package Icon */}
                 <View style={styles.packageIcon}>
-                  <Ionicons 
-                    name={index === 0 ? "rocket-outline" : index === 1 ? "flash-outline" : "diamond-outline"} 
-                    size={24} 
-                    color="#60a5fa" 
-                  />
+                  <Ionicons name="time-outline" size={24} color="#60a5fa" />
                 </View>
                 
                 <View style={styles.packageHeader}>
-                  <Text style={styles.packageName}>{pkg.description}</Text>
+                  <Text style={styles.packageName}>{formatDuration(pkg.duration_hours)}</Text>
                   <View style={styles.priceContainer}>
                     <Text style={styles.packagePrice}>{pkg.amount}</Text>
                     <Text style={styles.priceCurrency}>﷼</Text>
                   </View>
-                </View>
-                
-                <View style={styles.packageFeatures}>
-                  {pkg.features.map((f, i) => (
-                    <View key={i} style={styles.featureRow}>
-                      <Ionicons name="checkmark-circle" size={16} color="#22c55e" />
-                      <Text style={styles.packageFeature}>{f}</Text>
-                    </View>
-                  ))}
                 </View>
                 
                 {selectedPackage?.id === pkg.id && (
