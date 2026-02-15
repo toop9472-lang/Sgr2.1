@@ -19,11 +19,15 @@
     },
     "production": {
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "app-bundle",
+        "gradleCommand": ":app:bundleRelease"
       },
       "ios": {
         "distribution": "store",
         "credentialsSource": "remote"
+      },
+      "env": {
+        "EAS_BUILD_NO_EXPO_GO_WARNING": "1"
       }
     }
   },
