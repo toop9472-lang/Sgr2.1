@@ -8,6 +8,7 @@ let refreshToken = null;
 
 export const api = {
   baseUrl: API_URL,
+  BASE_URL: API_URL,
   
   // Set tokens
   setTokens(access, refresh = null) {
