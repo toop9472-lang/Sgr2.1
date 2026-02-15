@@ -164,15 +164,31 @@ STRIPE_API_KEY=sk_test_...
 ## Pending Tasks
 
 ### P0 - Critical
-- [ ] Test mobile app build (eas build --local)
+- [x] ✅ iOS App Build for App Store (February 15, 2026)
+- [x] ✅ Android App Build for Play Store (February 15, 2026)
 - [ ] Integrate SMS/2FA into mobile app UI
 
 ### P1 - High Priority
-- [x] Server always-on (User upgraded hosting plan)
+- [x] Server always-on (User upgraded hosting plan + UptimeRobot)
 - [ ] Test full payment flow with real Stripe
 - [ ] Add countdown timer to user profile picture
+- [ ] Full feature parity verification between Web and Mobile
 
-### Completed This Session
+### P2 - Future
+- [ ] Enable Live Twilio SMS (User postponed)
+- [ ] Improve Support Screen UI on mobile
+
+### Completed This Session (February 15, 2026)
+- [x] iOS App Build v5.2.0 (Build #16) - FINISHED
+  - IPA URL: https://expo.dev/artifacts/eas/kyYTXa9nbWCvRJ5YGmKRLh.ipa
+  - SDK: Expo 53.0.0
+  - Ready for App Store Connect
+- [x] Android App Build (AAB) - Successfully uploaded by user
+- [x] Server stability verified via UptimeRobot
+- [x] Expo SDK upgraded from older version to SDK 53
+- [x] 2-second display timeout for ad info implemented
+
+### Previous Session Completed
 - [x] Mobile AdViewerScreen redesigned to match Web version
   - Clean minimal design
   - Top bar with back/close buttons and info (points, duration, time)
