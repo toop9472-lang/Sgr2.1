@@ -42,12 +42,13 @@ const AuthScreen = ({ onLogin }) => {
   
   // Handle connection errors
   const handleConnectionError = (error) => {
+    console.log('Connection Error:', error.message);
     if (error.message === 'CONNECTION_TIMEOUT') {
       Alert.alert('خطأ في الاتصال', 'انتهت مهلة الاتصال بالسيرفر. يرجى المحاولة مرة أخرى.');
     } else if (error.message === 'NO_CONNECTION') {
       Alert.alert('لا يوجد اتصال', 'تحقق من اتصالك بالإنترنت وحاول مرة أخرى.');
     } else {
-      handleConnectionError(error);
+      Alert.alert('خطأ في الاتصال', 'حدث خطأ غير متوقع. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.');
     }
   };
   
