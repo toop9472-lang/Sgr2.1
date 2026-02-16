@@ -81,10 +81,17 @@ export const api = {
         headers.Authorization = `Bearer ${accessToken}`;
       }
       
+      // Create abort controller for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), CONNECTION_TIMEOUT);
+      
       let response = await fetch(`${API_URL}${endpoint}`, {
         ...options,
         headers,
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
       
       // If token expired, try refresh
       if (response.status === 401 && refreshToken) {
@@ -100,6 +107,14 @@ export const api = {
       
       return response;
     } catch (error) {
+      // Check if it's an abort error (timeout)
+      if (error.name === 'AbortError') {
+        throw new Error('CONNECTION_TIMEOUT');
+      }
+      // Network error
+      if (error.message === 'Network request failed' || error.message === 'Failed to fetch') {
+        throw new Error('NO_CONNECTION');
+      }
       console.error('API Error:', error);
       throw error;
     }
