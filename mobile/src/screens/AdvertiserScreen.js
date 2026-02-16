@@ -852,6 +852,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
   },
+  inputError: {
+    borderColor: '#ef4444',
+  },
+  videoHintContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+  },
+  videoHint: {
+    color: '#60a5fa',
+    fontSize: 12,
+  },
+  errorText: {
+    color: '#ef4444',
+    fontSize: 12,
+    marginTop: 4,
+  },
   textArea: { 
     height: 100, 
     textAlignVertical: 'top',
