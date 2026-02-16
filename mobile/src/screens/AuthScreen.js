@@ -47,7 +47,7 @@ const AuthScreen = ({ onLogin }) => {
     } else if (error.message === 'NO_CONNECTION') {
       Alert.alert('لا يوجد اتصال', 'تحقق من اتصالك بالإنترنت وحاول مرة أخرى.');
     } else {
-      Alert.alert('خطأ', 'تحقق من اتصالك بالإنترنت');
+      handleConnectionError(error);
     }
   };
   
@@ -179,7 +179,7 @@ const AuthScreen = ({ onLogin }) => {
       } else if (error.message === 'NO_CONNECTION') {
         Alert.alert('لا يوجد اتصال', 'تحقق من اتصالك بالإنترنت وحاول مرة أخرى.');
       } else {
-        Alert.alert('خطأ', 'تحقق من اتصالك بالإنترنت');
+        handleConnectionError(error);
       }
     } finally {
       setIsLoading(false);
@@ -227,7 +227,7 @@ const AuthScreen = ({ onLogin }) => {
         Alert.alert('خطأ', data.detail || 'فشل إنشاء الحساب');
       }
     } catch (error) {
-      Alert.alert('خطأ', 'تحقق من اتصالك بالإنترنت');
+      handleConnectionError(error);
     } finally {
       setIsLoading(false);
     }
@@ -265,7 +265,7 @@ const AuthScreen = ({ onLogin }) => {
         Alert.alert('خطأ', data.detail || 'رقم الجوال أو كلمة المرور غير صحيحة');
       }
     } catch (error) {
-      Alert.alert('خطأ', 'تحقق من اتصالك بالإنترنت');
+      handleConnectionError(error);
     } finally {
       setIsLoading(false);
     }
@@ -293,7 +293,7 @@ const AuthScreen = ({ onLogin }) => {
         Alert.alert('خطأ', data.detail || 'رمز التحقق غير صحيح');
       }
     } catch (error) {
-      Alert.alert('خطأ', 'تحقق من اتصالك بالإنترنت');
+      handleConnectionError(error);
     } finally {
       setIsLoading(false);
     }
@@ -324,7 +324,7 @@ const AuthScreen = ({ onLogin }) => {
       }
       Alert.alert('تم', 'إذا كان الرقم مسجلاً، سيتم إرسال رمز التحقق');
     } catch (error) {
-      Alert.alert('خطأ', 'تحقق من اتصالك بالإنترنت');
+      handleConnectionError(error);
     } finally {
       setIsLoading(false);
     }
@@ -361,7 +361,7 @@ const AuthScreen = ({ onLogin }) => {
         Alert.alert('خطأ', data.detail || 'فشل تغيير كلمة المرور');
       }
     } catch (error) {
-      Alert.alert('خطأ', 'تحقق من اتصالك بالإنترنت');
+      handleConnectionError(error);
     } finally {
       setIsLoading(false);
     }
@@ -411,7 +411,7 @@ const AuthScreen = ({ onLogin }) => {
         }
       }
     } catch (error) {
-      Alert.alert('خطأ', 'تحقق من اتصالك بالإنترنت');
+      handleConnectionError(error);
     } finally {
       setIsLoading(false);
     }
