@@ -1,14 +1,38 @@
 // API Service - Lightweight API handler with enhanced security
 // Production URL - يتم تعيينه من خلال متغيرات البيئة في Expo
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://saqr-live.emergent.host';
+
+// Connection check timeout
+const CONNECTION_TIMEOUT = 15000; // 15 seconds
 
 // Token storage
 let accessToken = null;
 let refreshToken = null;
 
+// Check if API is reachable
+const checkConnection = async () => {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    const response = await fetch(`${API_URL}/api/health`, {
+      method: 'GET',
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+    return response.ok;
+  } catch (error) {
+    return false;
+  }
+};
+
 export const api = {
   baseUrl: API_URL,
   BASE_URL: API_URL,
+  
+  // Check connection
+  checkConnection,
   
   // Set tokens
   setTokens(access, refresh = null) {
