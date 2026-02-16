@@ -40,6 +40,7 @@ const AdvertiserScreen = () => {
   const [packages, setPackages] = useState(HOURLY_PACKAGES);
   const [createdAd, setCreatedAd] = useState(null);
   const [adType, setAdType] = useState('local'); // local or global
+  const [videoError, setVideoError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -49,6 +50,40 @@ const AdvertiserScreen = () => {
     description: '',
     video_url: '',
   });
+
+  // Validate video URL and duration
+  const validateVideoUrl = (url) => {
+    if (!url) {
+      setVideoError('');
+      return true;
+    }
+    
+    // Basic URL validation
+    const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+    if (!urlPattern.test(url)) {
+      setVideoError('رابط الفيديو غير صالح');
+      return false;
+    }
+    
+    // Check for common video formats
+    const videoExtensions = ['.mp4', '.mov', '.avi', '.webm', '.m4v'];
+    const hasVideoExtension = videoExtensions.some(ext => url.toLowerCase().includes(ext));
+    const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
+    const isVimeo = url.includes('vimeo.com');
+    
+    if (!hasVideoExtension && !isYouTube && !isVimeo) {
+      setVideoError('يرجى استخدام رابط فيديو صالح (MP4, YouTube, Vimeo)');
+      return false;
+    }
+    
+    setVideoError('');
+    return true;
+  };
+
+  const handleVideoUrlChange = (url) => {
+    setFormData({ ...formData, video_url: url });
+    validateVideoUrl(url);
+  };
 
   // الباقات ثابتة (ساعية) - لا حاجة لجلبها من السيرفر
   useEffect(() => {
