@@ -1,6 +1,6 @@
 // API Service - Lightweight API handler with enhanced security
-// Production URL - يمكن تغييره من خلال متغيرات البيئة في Expo
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://saqrpointscom.store';
+// Production URL - يتم تعيينه من خلال متغيرات البيئة في Expo
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 // Token storage
 let accessToken = null;
