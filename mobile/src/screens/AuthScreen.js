@@ -40,6 +40,17 @@ const AuthScreen = ({ onLogin }) => {
   // OTP input refs
   const otpRefs = useRef([]);
   
+  // Handle connection errors
+  const handleConnectionError = (error) => {
+    if (error.message === 'CONNECTION_TIMEOUT') {
+      Alert.alert('خطأ في الاتصال', 'انتهت مهلة الاتصال بالسيرفر. يرجى المحاولة مرة أخرى.');
+    } else if (error.message === 'NO_CONNECTION') {
+      Alert.alert('لا يوجد اتصال', 'تحقق من اتصالك بالإنترنت وحاول مرة أخرى.');
+    } else {
+      Alert.alert('خطأ', 'تحقق من اتصالك بالإنترنت');
+    }
+  };
+  
   // Countdown timer for resend OTP
   useEffect(() => {
     if (countdown > 0) {
