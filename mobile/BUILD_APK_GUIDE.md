@@ -177,7 +177,7 @@ eas build --platform ios --profile production
 
 ### API URL:
 ```
-https://ios-submission-1.preview.emergentagent.com
+https://saqr-live.preview.emergentagent.com
 ```
 
 ---
