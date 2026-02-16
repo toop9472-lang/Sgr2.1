@@ -81,6 +81,9 @@ export const api = {
         headers.Authorization = `Bearer ${accessToken}`;
       }
       
+      // Log the request for debugging
+      console.log(`API Request: ${API_URL}${endpoint}`);
+      
       // Create abort controller for timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), CONNECTION_TIMEOUT);
@@ -92,6 +95,9 @@ export const api = {
       });
       
       clearTimeout(timeoutId);
+      
+      // Log response status
+      console.log(`API Response: ${response.status} for ${endpoint}`);
       
       // If token expired, try refresh
       if (response.status === 401 && refreshToken) {
@@ -107,6 +113,9 @@ export const api = {
       
       return response;
     } catch (error) {
+      // Log error for debugging
+      console.error(`API Error for ${endpoint}:`, error.message);
+      
       // Check if it's an abort error (timeout)
       if (error.name === 'AbortError') {
         throw new Error('CONNECTION_TIMEOUT');
