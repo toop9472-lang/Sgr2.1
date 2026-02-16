@@ -415,6 +415,28 @@ const AdvertiserScreen = () => {
                   textAlignVertical="top"
                 />
               </View>
+
+              {/* Video URL */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>
+                  <Ionicons name="videocam-outline" size={14} color="#9ca3af" /> رابط الفيديو (اختياري)
+                </Text>
+                <TextInput
+                  style={[styles.input, videoError ? styles.inputError : null]}
+                  placeholder="https://example.com/video.mp4"
+                  placeholderTextColor="#6b7280"
+                  value={formData.video_url}
+                  onChangeText={handleVideoUrlChange}
+                  autoCapitalize="none"
+                />
+                <View style={styles.videoHintContainer}>
+                  <Ionicons name="information-circle-outline" size={14} color="#60a5fa" />
+                  <Text style={styles.videoHint}>الحد الأقصى للفيديو: دقيقة واحدة (60 ثانية)</Text>
+                </View>
+                {videoError ? (
+                  <Text style={styles.errorText}>{videoError}</Text>
+                ) : null}
+              </View>
             </View>
 
             {/* Selected Package Summary */}
