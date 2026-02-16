@@ -95,6 +95,20 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
 
   const loadAds = async () => {
     try {
+      // First check connection
+      const isConnected = await api.checkConnection();
+      if (!isConnected) {
+        Alert.alert(
+          'لا يوجد اتصال',
+          'تحقق من اتصالك بالإنترنت وحاول مرة أخرى.',
+          [
+            { text: 'إعادة المحاولة', onPress: () => loadAds() },
+            { text: 'استخدام إعلانات تجريبية', onPress: () => { setAds(DEMO_ADS); setIsLoading(false); } }
+          ]
+        );
+        return;
+      }
+      
       const response = await api.getAds();
       if (response.ok) {
         const data = await response.json();
@@ -107,7 +121,18 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
       } else {
         setAds(DEMO_ADS);
       }
-    } catch {
+    } catch (error) {
+      if (error.message === 'CONNECTION_TIMEOUT' || error.message === 'NO_CONNECTION') {
+        Alert.alert(
+          'خطأ في الاتصال',
+          'لا يمكن الوصول للسيرفر. هل تريد استخدام إعلانات تجريبية؟',
+          [
+            { text: 'إعادة المحاولة', onPress: () => loadAds() },
+            { text: 'نعم', onPress: () => { setAds(DEMO_ADS); setIsLoading(false); } }
+          ]
+        );
+        return;
+      }
       setAds(DEMO_ADS);
     } finally {
       setIsLoading(false);
