@@ -163,7 +163,13 @@ const AuthScreen = ({ onLogin }) => {
         Alert.alert('خطأ', data.detail || 'فشل إرسال رمز التحقق');
       }
     } catch (error) {
-      Alert.alert('خطأ', 'تحقق من اتصالك بالإنترنت');
+      if (error.message === 'CONNECTION_TIMEOUT') {
+        Alert.alert('خطأ في الاتصال', 'انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى.');
+      } else if (error.message === 'NO_CONNECTION') {
+        Alert.alert('لا يوجد اتصال', 'تحقق من اتصالك بالإنترنت وحاول مرة أخرى.');
+      } else {
+        Alert.alert('خطأ', 'تحقق من اتصالك بالإنترنت');
+      }
     } finally {
       setIsLoading(false);
     }
