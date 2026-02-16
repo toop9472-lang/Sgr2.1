@@ -18,7 +18,8 @@ import api from '../services/api';
 import storage from '../services/storage';
 import colors from '../styles/colors';
 
-const API_URL = 'https://saqrpointscom.store';
+// Use the API URL from the api service
+const API_URL = api.BASE_URL || 'https://saqr-live.emergent.host';
 
 // الباقات الساعية الجديدة (تطابق الويب)
 const HOURLY_PACKAGES = [
