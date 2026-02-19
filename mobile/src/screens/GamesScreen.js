@@ -1,6 +1,6 @@
-// Games Screen - Professional Gaming Hub
-// Puzzle + Chess + Tic-Tac-Toe with Global Leaderboard
-import React, { useState, useEffect, useCallback } from 'react';
+// Games Screen - Professional Gaming Hub with Multiplayer
+// Puzzle, Chess, Tic-Tac-Toe, Trivia, Riddles - Online & vs AI
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,150 +11,124 @@ import {
   Modal,
   Alert,
   ActivityIndicator,
-  Image,
   Animated,
+  TextInput,
+  FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import api from '../services/api';
 import storage from '../services/storage';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
-// ==================== PUZZLE GAME ====================
-const PuzzleGame = ({ onComplete, onClose }) => {
-  const [pieces, setPieces] = useState([]);
-  const [moves, setMoves] = useState(0);
-  const [timer, setTimer] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
-  const [selectedPiece, setSelectedPiece] = useState(null);
-  const [completed, setCompleted] = useState(false);
-  const gridSize = 3; // 3x3 puzzle
+// ==================== GAME CARD COMPONENT ====================
+const GameCard = ({ game, onPress, pulseAnim }) => (
+  <Animated.View style={[styles.gameCardWrapper, { transform: [{ scale: pulseAnim }] }]}>
+    <TouchableOpacity style={styles.gameCard} onPress={onPress} activeOpacity={0.85}>
+      <LinearGradient colors={game.colors} style={styles.gameCardGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+        <View style={styles.gameIconBg}>
+          <Ionicons name={game.icon} size={32} color="#FFF" />
+        </View>
+        <Text style={styles.gameName}>{game.name}</Text>
+        <Text style={styles.gameDesc}>{game.description}</Text>
+        <View style={styles.gameFooter}>
+          <View style={styles.pointsBadge}>
+            <Ionicons name="diamond" size={12} color="#fbbf24" />
+            <Text style={styles.pointsText}>{game.maxPoints}</Text>
+          </View>
+          {game.online && (
+            <View style={styles.onlineBadge}>
+              <View style={styles.onlineDot} />
+              <Text style={styles.onlineText}>أونلاين</Text>
+            </View>
+          )}
+        </View>
+      </LinearGradient>
+    </TouchableOpacity>
+  </Animated.View>
+);
 
-  const images = [
-    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=300',
-    'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=300',
-    'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=300',
-  ];
-
-  useEffect(() => {
-    initializePuzzle();
-  }, []);
-
-  useEffect(() => {
-    let interval;
-    if (isRunning && !completed) {
-      interval = setInterval(() => setTimer(t => t + 1), 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isRunning, completed]);
-
-  const initializePuzzle = () => {
-    const totalPieces = gridSize * gridSize;
-    const shuffled = [...Array(totalPieces).keys()]
-      .sort(() => Math.random() - 0.5);
-    setPieces(shuffled);
-    setMoves(0);
-    setTimer(0);
-    setIsRunning(true);
-    setCompleted(false);
-  };
-
-  const handlePiecePress = (index) => {
-    if (completed) return;
+// ==================== MODE SELECTOR ====================
+const ModeSelector = ({ onSelectMode, onClose, gameName }) => (
+  <View style={styles.modeContainer}>
+    <View style={styles.modeHeader}>
+      <TouchableOpacity onPress={onClose} style={styles.modeCloseBtn}>
+        <Ionicons name="close" size={24} color="#FFF" />
+      </TouchableOpacity>
+      <Text style={styles.modeTitle}>{gameName}</Text>
+      <View style={{ width: 40 }} />
+    </View>
     
-    if (selectedPiece === null) {
-      setSelectedPiece(index);
-    } else {
-      // Swap pieces
-      const newPieces = [...pieces];
-      [newPieces[selectedPiece], newPieces[index]] = [newPieces[index], newPieces[selectedPiece]];
-      setPieces(newPieces);
-      setMoves(m => m + 1);
-      setSelectedPiece(null);
+    <Text style={styles.modeSubtitle}>اختر نوع اللعب</Text>
+    
+    <View style={styles.modeOptions}>
+      <TouchableOpacity style={styles.modeOption} onPress={() => onSelectMode('online')}>
+        <LinearGradient colors={['#3b82f6', '#1d4ed8']} style={styles.modeGradient}>
+          <Ionicons name="globe-outline" size={40} color="#FFF" />
+          <Text style={styles.modeOptionTitle}>أونلاين</Text>
+          <Text style={styles.modeOptionDesc}>تحدى لاعبين حقيقيين</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.modeOption} onPress={() => onSelectMode('ai_medium')}>
+        <LinearGradient colors={['#10b981', '#059669']} style={styles.modeGradient}>
+          <Ionicons name="hardware-chip-outline" size={40} color="#FFF" />
+          <Text style={styles.modeOptionTitle}>كمبيوتر - متوسط</Text>
+          <Text style={styles.modeOptionDesc}>للتدريب والتعلم</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.modeOption} onPress={() => onSelectMode('ai_hard')}>
+        <LinearGradient colors={['#ef4444', '#dc2626']} style={styles.modeGradient}>
+          <Ionicons name="skull-outline" size={40} color="#FFF" />
+          <Text style={styles.modeOptionTitle}>كمبيوتر - صعب</Text>
+          <Text style={styles.modeOptionDesc}>تحدٍ حقيقي</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+    </View>
+  </View>
+);
 
-      // Check if solved
-      if (newPieces.every((piece, idx) => piece === idx)) {
-        setCompleted(true);
-        setIsRunning(false);
-        const points = Math.max(100 - moves * 2 - Math.floor(timer / 10), 10);
-        setTimeout(() => onComplete(points, moves, timer), 500);
-      }
-    }
-  };
-
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
+// ==================== WAITING FOR OPPONENT ====================
+const WaitingScreen = ({ onCancel, gameType }) => {
+  const spinAnim = useRef(new Animated.Value(0)).current;
+  
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(spinAnim, { toValue: 1, duration: 2000, useNativeDriver: true })
+    ).start();
+  }, []);
+  
+  const spin = spinAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+  
   return (
-    <View style={styles.gameContainer}>
-      <View style={styles.gameHeader}>
-        <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-          <Ionicons name="close" size={24} color="#FFF" />
-        </TouchableOpacity>
-        <Text style={styles.gameTitle}>🧩 تركيب الصور</Text>
-        <TouchableOpacity onPress={initializePuzzle} style={styles.resetBtn}>
-          <Ionicons name="refresh" size={20} color="#60a5fa" />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.statsRow}>
-        <View style={styles.statBox}>
-          <Ionicons name="time-outline" size={18} color="#60a5fa" />
-          <Text style={styles.statValue}>{formatTime(timer)}</Text>
-        </View>
-        <View style={styles.statBox}>
-          <Ionicons name="swap-horizontal" size={18} color="#f59e0b" />
-          <Text style={styles.statValue}>{moves} حركة</Text>
-        </View>
-      </View>
-
-      <View style={styles.puzzleGrid}>
-        {pieces.map((piece, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.puzzlePiece,
-              selectedPiece === index && styles.selectedPiece,
-              completed && piece === index && styles.correctPiece,
-            ]}
-            onPress={() => handlePiecePress(index)}
-          >
-            <LinearGradient
-              colors={completed ? ['#10b981', '#059669'] : ['#1e293b', '#334155']}
-              style={styles.pieceGradient}
-            >
-              <Text style={styles.pieceNumber}>{piece + 1}</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {completed && (
-        <View style={styles.completedBanner}>
-          <Text style={styles.completedText}>🎉 أحسنت!</Text>
-        </View>
-      )}
+    <View style={styles.waitingContainer}>
+      <Animated.View style={{ transform: [{ rotate: spin }] }}>
+        <Ionicons name="sync-outline" size={60} color="#60a5fa" />
+      </Animated.View>
+      <Text style={styles.waitingTitle}>جاري البحث عن منافس...</Text>
+      <Text style={styles.waitingDesc}>انتظر قليلاً ليتم إيجاد لاعب مناسب</Text>
+      <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
+        <Text style={styles.cancelText}>إلغاء</Text>
+      </TouchableOpacity>
     </View>
   );
 };
 
-// ==================== TIC TAC TOE ====================
-const TicTacToe = ({ onComplete, onClose }) => {
+// ==================== TIC TAC TOE GAME ====================
+const TicTacToeGame = ({ mode, onComplete, onClose }) => {
   const [board, setBoard] = useState(Array(9).fill(null));
   const [isPlayerTurn, setIsPlayerTurn] = useState(true);
   const [gameOver, setGameOver] = useState(false);
   const [winner, setWinner] = useState(null);
-  const [playerScore, setPlayerScore] = useState(0);
-  const [aiScore, setAiScore] = useState(0);
+  const [scores, setScores] = useState({ player: 0, opponent: 0, draws: 0 });
+  const [opponentName, setOpponentName] = useState(mode === 'online' ? 'منافس' : 'الكمبيوتر');
 
   const winPatterns = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
-    [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
-    [0, 4, 8], [2, 4, 6] // diagonals
+    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+    [0, 4, 8], [2, 4, 6]
   ];
 
   const checkWinner = (squares) => {
@@ -167,54 +141,56 @@ const TicTacToe = ({ onComplete, onClose }) => {
     return squares.every(s => s !== null) ? 'draw' : null;
   };
 
-  const minimax = (squares, isMaximizing) => {
+  const minimax = (squares, isMax, depth = 0) => {
     const result = checkWinner(squares);
-    if (result === 'O') return 10;
-    if (result === 'X') return -10;
+    if (result === 'O') return 10 - depth;
+    if (result === 'X') return depth - 10;
     if (result === 'draw') return 0;
 
-    if (isMaximizing) {
-      let bestScore = -Infinity;
+    if (isMax) {
+      let best = -Infinity;
       for (let i = 0; i < 9; i++) {
         if (!squares[i]) {
           squares[i] = 'O';
-          bestScore = Math.max(bestScore, minimax(squares, false));
+          best = Math.max(best, minimax(squares, false, depth + 1));
           squares[i] = null;
         }
       }
-      return bestScore;
+      return best;
     } else {
-      let bestScore = Infinity;
+      let best = Infinity;
       for (let i = 0; i < 9; i++) {
         if (!squares[i]) {
           squares[i] = 'X';
-          bestScore = Math.min(bestScore, minimax(squares, true));
+          best = Math.min(best, minimax(squares, true, depth + 1));
           squares[i] = null;
         }
       }
-      return bestScore;
+      return best;
     }
   };
 
-  const aiMove = (currentBoard) => {
-    let bestScore = -Infinity;
-    let bestMove = null;
+  const getAIMove = (currentBoard) => {
+    const empty = currentBoard.map((s, i) => s === null ? i : null).filter(i => i !== null);
     
-    // Add some randomness for easier gameplay
-    if (Math.random() < 0.3) {
-      const emptySquares = currentBoard.map((s, i) => s === null ? i : null).filter(i => i !== null);
-      return emptySquares[Math.floor(Math.random() * emptySquares.length)];
+    if (mode === 'ai_medium') {
+      // 50% chance of best move, 50% random
+      if (Math.random() < 0.5) {
+        return empty[Math.floor(Math.random() * empty.length)];
+      }
     }
-
-    for (let i = 0; i < 9; i++) {
-      if (!currentBoard[i]) {
-        currentBoard[i] = 'O';
-        const score = minimax(currentBoard, false);
-        currentBoard[i] = null;
-        if (score > bestScore) {
-          bestScore = score;
-          bestMove = i;
-        }
+    
+    // Hard mode - always best move
+    let bestScore = -Infinity;
+    let bestMove = empty[0];
+    
+    for (let i of empty) {
+      currentBoard[i] = 'O';
+      const score = minimax(currentBoard, false);
+      currentBoard[i] = null;
+      if (score > bestScore) {
+        bestScore = score;
+        bestMove = i;
       }
     }
     return bestMove;
@@ -229,36 +205,40 @@ const TicTacToe = ({ onComplete, onClose }) => {
 
     const result = checkWinner(newBoard);
     if (result) {
-      handleGameEnd(result, newBoard);
+      endGame(result);
       return;
     }
 
     setIsPlayerTurn(false);
+    
+    // AI Move
     setTimeout(() => {
-      const aiIndex = aiMove([...newBoard]);
-      if (aiIndex !== null) {
+      const aiIndex = getAIMove([...newBoard]);
+      if (aiIndex !== null && aiIndex !== undefined) {
         newBoard[aiIndex] = 'O';
         setBoard([...newBoard]);
         const aiResult = checkWinner(newBoard);
         if (aiResult) {
-          handleGameEnd(aiResult, newBoard);
+          endGame(aiResult);
         } else {
           setIsPlayerTurn(true);
         }
       }
-    }, 500);
+    }, 600);
   };
 
-  const handleGameEnd = (result, finalBoard) => {
+  const endGame = (result) => {
     setGameOver(true);
     setWinner(result);
+    
     if (result === 'X') {
-      setPlayerScore(s => s + 1);
-      onComplete(50, 'win');
+      setScores(s => ({ ...s, player: s.player + 1 }));
+      onComplete(mode === 'ai_hard' ? 80 : 50, 'win');
     } else if (result === 'draw') {
+      setScores(s => ({ ...s, draws: s.draws + 1 }));
       onComplete(20, 'draw');
     } else {
-      setAiScore(s => s + 1);
+      setScores(s => ({ ...s, opponent: s.opponent + 1 }));
       onComplete(5, 'lose');
     }
   };
@@ -273,56 +253,85 @@ const TicTacToe = ({ onComplete, onClose }) => {
   return (
     <View style={styles.gameContainer}>
       <View style={styles.gameHeader}>
-        <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-          <Ionicons name="close" size={24} color="#FFF" />
+        <TouchableOpacity onPress={onClose} style={styles.headerBtn}>
+          <Ionicons name="arrow-back" size={24} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.gameTitle}>⭕ إكس أو</Text>
-        <TouchableOpacity onPress={resetGame} style={styles.resetBtn}>
-          <Ionicons name="refresh" size={20} color="#60a5fa" />
+        <Text style={styles.gameTitle}>إكس أو</Text>
+        <TouchableOpacity onPress={resetGame} style={styles.headerBtn}>
+          <Ionicons name="refresh" size={22} color="#60a5fa" />
         </TouchableOpacity>
       </View>
 
+      {/* Score Board */}
       <View style={styles.scoreBoard}>
-        <View style={styles.scoreItem}>
-          <Text style={styles.scoreLabel}>أنت (X)</Text>
-          <Text style={styles.scoreValue}>{playerScore}</Text>
+        <View style={[styles.scorePlayer, isPlayerTurn && !gameOver && styles.activePlayer]}>
+          <Ionicons name="person" size={20} color="#60a5fa" />
+          <Text style={styles.scoreLabel}>أنت</Text>
+          <Text style={styles.scoreNum}>{scores.player}</Text>
         </View>
-        <Text style={styles.vsText}>VS</Text>
-        <View style={styles.scoreItem}>
-          <Text style={styles.scoreLabel}>الذكاء (O)</Text>
-          <Text style={styles.scoreValue}>{aiScore}</Text>
+        <View style={styles.scoreMiddle}>
+          <Text style={styles.drawsLabel}>تعادل</Text>
+          <Text style={styles.drawsNum}>{scores.draws}</Text>
+        </View>
+        <View style={[styles.scorePlayer, !isPlayerTurn && !gameOver && styles.activePlayer]}>
+          <Ionicons name={mode === 'online' ? 'person' : 'hardware-chip'} size={20} color="#f59e0b" />
+          <Text style={styles.scoreLabel}>{opponentName}</Text>
+          <Text style={styles.scoreNum}>{scores.opponent}</Text>
         </View>
       </View>
 
+      {/* Board */}
       <View style={styles.tttBoard}>
-        {board.map((cell, index) => (
+        {board.map((cell, idx) => (
           <TouchableOpacity
-            key={index}
+            key={idx}
             style={[
               styles.tttCell,
-              index % 3 !== 2 && styles.tttCellBorderRight,
-              index < 6 && styles.tttCellBorderBottom,
+              idx % 3 !== 2 && styles.cellBorderR,
+              idx < 6 && styles.cellBorderB,
             ]}
-            onPress={() => handlePress(index)}
+            onPress={() => handlePress(idx)}
+            activeOpacity={0.7}
           >
-            <Text style={[
-              styles.tttCellText,
-              cell === 'X' && styles.tttX,
-              cell === 'O' && styles.tttO,
-            ]}>
-              {cell}
-            </Text>
+            {cell && (
+              <Ionicons
+                name={cell === 'X' ? 'close' : 'ellipse-outline'}
+                size={50}
+                color={cell === 'X' ? '#60a5fa' : '#f59e0b'}
+              />
+            )}
           </TouchableOpacity>
         ))}
       </View>
 
+      {/* Turn Indicator */}
+      {!gameOver && (
+        <View style={styles.turnIndicator}>
+          <Ionicons 
+            name={isPlayerTurn ? 'close' : 'ellipse-outline'} 
+            size={24} 
+            color={isPlayerTurn ? '#60a5fa' : '#f59e0b'} 
+          />
+          <Text style={styles.turnText}>
+            {isPlayerTurn ? 'دورك' : `دور ${opponentName}`}
+          </Text>
+        </View>
+      )}
+
+      {/* Game Over */}
       {gameOver && (
-        <View style={styles.gameOverBanner}>
-          <Text style={styles.gameOverText}>
-            {winner === 'X' ? '🎉 فزت!' : winner === 'draw' ? '🤝 تعادل' : '😔 خسرت'}
+        <View style={styles.resultCard}>
+          <Ionicons 
+            name={winner === 'X' ? 'trophy' : winner === 'draw' ? 'remove' : 'sad'} 
+            size={50} 
+            color={winner === 'X' ? '#fbbf24' : winner === 'draw' ? '#888' : '#ef4444'} 
+          />
+          <Text style={styles.resultText}>
+            {winner === 'X' ? 'فوز!' : winner === 'draw' ? 'تعادل' : 'خسارة'}
           </Text>
           <TouchableOpacity style={styles.playAgainBtn} onPress={resetGame}>
-            <Text style={styles.playAgainText}>العب مرة أخرى</Text>
+            <Ionicons name="refresh" size={18} color="#FFF" />
+            <Text style={styles.playAgainText}>العب مجدداً</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -330,90 +339,377 @@ const TicTacToe = ({ onComplete, onClose }) => {
   );
 };
 
-// ==================== CHESS (Simplified) ====================
-const ChessGame = ({ onComplete, onClose }) => {
-  const [message, setMessage] = useState('');
-  
-  // Simple chess puzzle - find the best move
-  const [puzzle, setPuzzle] = useState({
-    question: 'أين تضع الملكة لتحقق الشاه؟',
-    board: [
-      ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜'],
-      ['♟', '♟', '♟', ' ', '♟', '♟', '♟', '♟'],
-      [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-      [' ', ' ', ' ', '♟', ' ', ' ', ' ', ' '],
-      [' ', ' ', ' ', ' ', '♙', ' ', ' ', ' '],
-      [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-      ['♙', '♙', '♙', '♙', ' ', '♙', '♙', '♙'],
-      ['♖', '♘', '♗', '♕', '♔', '♗', '♘', '♖'],
-    ],
-    correctAnswer: { row: 0, col: 7 },
-    hint: 'فكر في الزاوية',
-  });
-  
-  const [selectedCell, setSelectedCell] = useState(null);
-  const [solved, setSolved] = useState(false);
-  const [attempts, setAttempts] = useState(0);
+// ==================== PUZZLE GAME ====================
+const PuzzleGame = ({ mode, onComplete, onClose }) => {
+  const [pieces, setPieces] = useState([]);
+  const [moves, setMoves] = useState(0);
+  const [timer, setTimer] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [completed, setCompleted] = useState(false);
+  const [difficulty, setDifficulty] = useState(3); // 3x3, 4x4, 5x5
+  const gridSize = difficulty;
 
-  const handleCellPress = (row, col) => {
-    if (solved) return;
+  useEffect(() => {
+    initPuzzle();
+  }, [difficulty]);
+
+  useEffect(() => {
+    let interval;
+    if (!completed && pieces.length > 0) {
+      interval = setInterval(() => setTimer(t => t + 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [completed, pieces]);
+
+  const initPuzzle = () => {
+    const total = gridSize * gridSize;
+    let arr = [...Array(total).keys()];
+    // Shuffle
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    setPieces(arr);
+    setMoves(0);
+    setTimer(0);
+    setCompleted(false);
+    setSelected(null);
+  };
+
+  const handlePiecePress = (idx) => {
+    if (completed) return;
     
-    setSelectedCell({ row, col });
-    setAttempts(a => a + 1);
-    
-    if (row === puzzle.correctAnswer.row && col === puzzle.correctAnswer.col) {
-      setSolved(true);
-      const points = Math.max(100 - attempts * 10, 20);
-      setMessage('🎉 إجابة صحيحة!');
-      setTimeout(() => onComplete(points, attempts), 1000);
+    if (selected === null) {
+      setSelected(idx);
     } else {
-      setMessage('❌ حاول مرة أخرى');
+      const newPieces = [...pieces];
+      [newPieces[selected], newPieces[idx]] = [newPieces[idx], newPieces[selected]];
+      setPieces(newPieces);
+      setMoves(m => m + 1);
+      setSelected(null);
+
+      if (newPieces.every((p, i) => p === i)) {
+        setCompleted(true);
+        const basePoints = { 3: 50, 4: 100, 5: 150 }[gridSize] || 50;
+        const bonus = Math.max(0, 50 - Math.floor(moves / 5) - Math.floor(timer / 30));
+        onComplete(basePoints + bonus, moves, timer);
+      }
+    }
+  };
+
+  const formatTime = (s) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
+
+  return (
+    <View style={styles.gameContainer}>
+      <View style={styles.gameHeader}>
+        <TouchableOpacity onPress={onClose} style={styles.headerBtn}>
+          <Ionicons name="arrow-back" size={24} color="#FFF" />
+        </TouchableOpacity>
+        <Text style={styles.gameTitle}>تركيب الصور</Text>
+        <TouchableOpacity onPress={initPuzzle} style={styles.headerBtn}>
+          <Ionicons name="refresh" size={22} color="#60a5fa" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Difficulty Selector */}
+      <View style={styles.difficultyRow}>
+        {[3, 4, 5].map(d => (
+          <TouchableOpacity
+            key={d}
+            style={[styles.diffBtn, difficulty === d && styles.diffBtnActive]}
+            onPress={() => setDifficulty(d)}
+          >
+            <Text style={[styles.diffText, difficulty === d && styles.diffTextActive]}>{d}x{d}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Stats */}
+      <View style={styles.statsRow}>
+        <View style={styles.statItem}>
+          <Ionicons name="time-outline" size={18} color="#60a5fa" />
+          <Text style={styles.statText}>{formatTime(timer)}</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Ionicons name="swap-horizontal" size={18} color="#f59e0b" />
+          <Text style={styles.statText}>{moves}</Text>
+        </View>
+      </View>
+
+      {/* Puzzle Grid */}
+      <View style={[styles.puzzleGrid, { width: width - 40 }]}>
+        {pieces.map((piece, idx) => {
+          const pieceSize = (width - 48) / gridSize;
+          return (
+            <TouchableOpacity
+              key={idx}
+              style={[
+                styles.puzzlePiece,
+                { width: pieceSize, height: pieceSize },
+                selected === idx && styles.pieceSelected,
+                completed && piece === idx && styles.pieceCorrect,
+              ]}
+              onPress={() => handlePiecePress(idx)}
+            >
+              <LinearGradient
+                colors={completed ? ['#10b981', '#059669'] : (piece === idx ? ['#3b82f6', '#2563eb'] : ['#1e293b', '#334155'])}
+                style={styles.pieceInner}
+              >
+                <Text style={styles.pieceNum}>{piece + 1}</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {completed && (
+        <View style={styles.completedCard}>
+          <Ionicons name="checkmark-circle" size={50} color="#10b981" />
+          <Text style={styles.completedText}>ممتاز!</Text>
+          <Text style={styles.completedSub}>{moves} حركة في {formatTime(timer)}</Text>
+        </View>
+      )}
+    </View>
+  );
+};
+
+// ==================== TRIVIA GAME ====================
+const TriviaGame = ({ mode, onComplete, onClose }) => {
+  const [currentQ, setCurrentQ] = useState(0);
+  const [score, setScore] = useState(0);
+  const [answered, setAnswered] = useState(null);
+  const [showResult, setShowResult] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(15);
+
+  const questions = [
+    { q: 'ما هي عاصمة المملكة العربية السعودية؟', options: ['الرياض', 'جدة', 'مكة', 'الدمام'], correct: 0 },
+    { q: 'كم عدد أركان الإسلام؟', options: ['3', '4', '5', '6'], correct: 2 },
+    { q: 'ما هو أطول نهر في العالم؟', options: ['الأمازون', 'النيل', 'المسيسيبي', 'اليانغتسي'], correct: 1 },
+    { q: 'في أي عام هبط الإنسان على القمر؟', options: ['1965', '1969', '1972', '1975'], correct: 1 },
+    { q: 'ما هي أكبر قارة في العالم؟', options: ['أفريقيا', 'أمريكا الشمالية', 'آسيا', 'أوروبا'], correct: 2 },
+    { q: 'كم عدد ألوان قوس قزح؟', options: ['5', '6', '7', '8'], correct: 2 },
+    { q: 'ما هو العنصر الكيميائي الأكثر وفرة في الكون؟', options: ['الأكسجين', 'الهيدروجين', 'الكربون', 'النيتروجين'], correct: 1 },
+    { q: 'من هو مخترع المصباح الكهربائي؟', options: ['نيوتن', 'أينشتاين', 'إديسون', 'تسلا'], correct: 2 },
+    { q: 'كم عدد الكواكب في المجموعة الشمسية؟', options: ['7', '8', '9', '10'], correct: 1 },
+    { q: 'ما هي اللغة الأكثر انتشاراً في العالم؟', options: ['العربية', 'الإنجليزية', 'الصينية', 'الإسبانية'], correct: 2 },
+  ];
+
+  useEffect(() => {
+    if (timeLeft > 0 && answered === null && !showResult) {
+      const timer = setTimeout(() => setTimeLeft(t => t - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (timeLeft === 0 && answered === null) {
+      handleAnswer(-1);
+    }
+  }, [timeLeft, answered, showResult]);
+
+  const handleAnswer = (idx) => {
+    if (answered !== null) return;
+    setAnswered(idx);
+    
+    if (idx === questions[currentQ].correct) {
+      setScore(s => s + 10 + Math.floor(timeLeft / 3));
+    }
+
+    setTimeout(() => {
+      if (currentQ < questions.length - 1) {
+        setCurrentQ(c => c + 1);
+        setAnswered(null);
+        setTimeLeft(15);
+      } else {
+        setShowResult(true);
+        const finalScore = score + (idx === questions[currentQ].correct ? 10 + Math.floor(timeLeft / 3) : 0);
+        onComplete(finalScore, currentQ + 1);
+      }
+    }, 1500);
+  };
+
+  if (showResult) {
+    return (
+      <View style={styles.gameContainer}>
+        <View style={styles.resultScreen}>
+          <Ionicons name="ribbon" size={80} color="#fbbf24" />
+          <Text style={styles.finalScore}>{score}</Text>
+          <Text style={styles.finalLabel}>نقطة</Text>
+          <Text style={styles.finalSub}>أجبت على {questions.length} سؤال</Text>
+          <TouchableOpacity style={styles.exitBtn} onPress={onClose}>
+            <Text style={styles.exitText}>إنهاء</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  const q = questions[currentQ];
+
+  return (
+    <View style={styles.gameContainer}>
+      <View style={styles.gameHeader}>
+        <TouchableOpacity onPress={onClose} style={styles.headerBtn}>
+          <Ionicons name="arrow-back" size={24} color="#FFF" />
+        </TouchableOpacity>
+        <Text style={styles.gameTitle}>أسئلة ثقافية</Text>
+        <View style={styles.headerBtn}>
+          <Text style={styles.scoreText}>{score}</Text>
+        </View>
+      </View>
+
+      {/* Progress */}
+      <View style={styles.progressRow}>
+        <Text style={styles.progressText}>{currentQ + 1} / {questions.length}</Text>
+        <View style={styles.progressBar}>
+          <View style={[styles.progressFill, { width: `${((currentQ + 1) / questions.length) * 100}%` }]} />
+        </View>
+      </View>
+
+      {/* Timer */}
+      <View style={[styles.timerCircle, timeLeft <= 5 && styles.timerDanger]}>
+        <Ionicons name="time" size={20} color={timeLeft <= 5 ? '#ef4444' : '#60a5fa'} />
+        <Text style={[styles.timerText, timeLeft <= 5 && styles.timerDangerText]}>{timeLeft}</Text>
+      </View>
+
+      {/* Question */}
+      <View style={styles.questionCard}>
+        <Text style={styles.questionText}>{q.q}</Text>
+      </View>
+
+      {/* Options */}
+      <View style={styles.optionsContainer}>
+        {q.options.map((opt, idx) => {
+          let optStyle = styles.optionBtn;
+          if (answered !== null) {
+            if (idx === q.correct) optStyle = [styles.optionBtn, styles.optionCorrect];
+            else if (idx === answered) optStyle = [styles.optionBtn, styles.optionWrong];
+          }
+          
+          return (
+            <TouchableOpacity
+              key={idx}
+              style={optStyle}
+              onPress={() => handleAnswer(idx)}
+              disabled={answered !== null}
+            >
+              <View style={styles.optionLetter}>
+                <Text style={styles.optionLetterText}>{['أ', 'ب', 'ج', 'د'][idx]}</Text>
+              </View>
+              <Text style={styles.optionText}>{opt}</Text>
+              {answered !== null && idx === q.correct && (
+                <Ionicons name="checkmark-circle" size={24} color="#10b981" />
+              )}
+              {answered !== null && idx === answered && idx !== q.correct && (
+                <Ionicons name="close-circle" size={24} color="#ef4444" />
+              )}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+};
+
+// ==================== RIDDLES GAME ====================
+const RiddlesGame = ({ mode, onComplete, onClose }) => {
+  const [currentR, setCurrentR] = useState(0);
+  const [score, setScore] = useState(0);
+  const [input, setInput] = useState('');
+  const [revealed, setRevealed] = useState(false);
+  const [hints, setHints] = useState(3);
+
+  const riddles = [
+    { r: 'ما هو الشيء الذي يمشي بدون أرجل؟', answer: 'الوقت', hint: 'يتعلق بالساعة' },
+    { r: 'شيء إذا أخذت منه ازداد؟', answer: 'الحفرة', hint: 'في الأرض' },
+    { r: 'ما هو الذي يسمع بلا أذن ويتكلم بلا لسان؟', answer: 'الهاتف', hint: 'جهاز إلكتروني' },
+    { r: 'أنا أطير بلا أجنحة وأبكي بلا عيون؟', answer: 'السحاب', hint: 'في السماء' },
+    { r: 'كلما زاد نقص؟', answer: 'العمر', hint: 'يتعلق بالإنسان' },
+    { r: 'ما هو البيت الذي ليس فيه أبواب ولا نوافذ؟', answer: 'بيت الشعر', hint: 'أدب' },
+    { r: 'شيء يكون أمامك ولا تراه؟', answer: 'المستقبل', hint: 'زمن' },
+    { r: 'له رأس ولا عين له، ولها عين ولا رأس لها؟', answer: 'الدبوس والإبرة', hint: 'أدوات خياطة' },
+  ];
+
+  const checkAnswer = () => {
+    const userAns = input.trim().toLowerCase();
+    const correctAns = riddles[currentR].answer.toLowerCase();
+    
+    if (userAns === correctAns || userAns.includes(correctAns) || correctAns.includes(userAns)) {
+      setScore(s => s + 20);
+      Alert.alert('صحيح!', 'إجابة ممتازة', [{ text: 'التالي', onPress: nextRiddle }]);
+    } else {
+      Alert.alert('خطأ', `الإجابة الصحيحة: ${riddles[currentR].answer}`, [{ text: 'التالي', onPress: nextRiddle }]);
+    }
+  };
+
+  const nextRiddle = () => {
+    if (currentR < riddles.length - 1) {
+      setCurrentR(c => c + 1);
+      setInput('');
+      setRevealed(false);
+    } else {
+      onComplete(score, currentR + 1);
+      onClose();
+    }
+  };
+
+  const useHint = () => {
+    if (hints > 0) {
+      setHints(h => h - 1);
+      setRevealed(true);
     }
   };
 
   return (
     <View style={styles.gameContainer}>
       <View style={styles.gameHeader}>
-        <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-          <Ionicons name="close" size={24} color="#FFF" />
+        <TouchableOpacity onPress={onClose} style={styles.headerBtn}>
+          <Ionicons name="arrow-back" size={24} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.gameTitle}>♟️ ألغاز الشطرنج</Text>
-        <View style={styles.resetBtn} />
-      </View>
-
-      <View style={styles.puzzleQuestion}>
-        <Text style={styles.questionText}>{puzzle.question}</Text>
-        <Text style={styles.hintText}>💡 {puzzle.hint}</Text>
-      </View>
-
-      <View style={styles.chessBoard}>
-        {puzzle.board.map((row, rowIndex) => (
-          <View key={rowIndex} style={styles.chessRow}>
-            {row.map((piece, colIndex) => (
-              <TouchableOpacity
-                key={colIndex}
-                style={[
-                  styles.chessCell,
-                  (rowIndex + colIndex) % 2 === 0 ? styles.lightCell : styles.darkCell,
-                  selectedCell?.row === rowIndex && selectedCell?.col === colIndex && styles.selectedChessCell,
-                  solved && rowIndex === puzzle.correctAnswer.row && colIndex === puzzle.correctAnswer.col && styles.correctCell,
-                ]}
-                onPress={() => handleCellPress(rowIndex, colIndex)}
-              >
-                <Text style={styles.chessPiece}>{piece}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        ))}
-      </View>
-
-      {message ? (
-        <View style={[styles.messageBanner, solved && styles.successBanner]}>
-          <Text style={styles.messageText}>{message}</Text>
+        <Text style={styles.gameTitle}>الألغاز</Text>
+        <View style={styles.headerBtn}>
+          <Text style={styles.scoreText}>{score}</Text>
         </View>
-      ) : null}
+      </View>
 
-      <Text style={styles.attemptsText}>المحاولات: {attempts}</Text>
+      <View style={styles.riddleProgress}>
+        <Text style={styles.riddleNum}>اللغز {currentR + 1} من {riddles.length}</Text>
+        <View style={styles.hintsBox}>
+          <Ionicons name="bulb" size={18} color="#fbbf24" />
+          <Text style={styles.hintsText}>{hints}</Text>
+        </View>
+      </View>
+
+      <View style={styles.riddleCard}>
+        <Ionicons name="help-circle" size={40} color="#8b5cf6" style={{ marginBottom: 16 }} />
+        <Text style={styles.riddleText}>{riddles[currentR].r}</Text>
+        
+        {revealed && (
+          <View style={styles.hintBox}>
+            <Ionicons name="bulb" size={16} color="#fbbf24" />
+            <Text style={styles.hintText}>{riddles[currentR].hint}</Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.answerSection}>
+        <TextInput
+          style={styles.answerInput}
+          placeholder="اكتب إجابتك..."
+          placeholderTextColor="#666"
+          value={input}
+          onChangeText={setInput}
+          onSubmitEditing={checkAnswer}
+        />
+        
+        <View style={styles.riddleBtns}>
+          <TouchableOpacity style={styles.hintBtn} onPress={useHint} disabled={hints === 0}>
+            <Ionicons name="bulb-outline" size={20} color={hints > 0 ? '#fbbf24' : '#444'} />
+            <Text style={[styles.hintBtnText, hints === 0 && { color: '#444' }]}>تلميح</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.submitBtn} onPress={checkAnswer}>
+            <Ionicons name="send" size={20} color="#FFF" />
+            <Text style={styles.submitText}>تحقق</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 };
@@ -421,141 +717,132 @@ const ChessGame = ({ onComplete, onClose }) => {
 // ==================== MAIN GAMES SCREEN ====================
 const GamesScreen = ({ user, onPointsEarned }) => {
   const [activeGame, setActiveGame] = useState(null);
+  const [gameMode, setGameMode] = useState(null);
+  const [showModeSelector, setShowModeSelector] = useState(null);
+  const [showWaiting, setShowWaiting] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
-  const [userStats, setUserStats] = useState({ rank: 0, totalPoints: 0, gamesPlayed: 0 });
+  const [userStats, setUserStats] = useState({ rank: '-', points: 0, games: 0 });
   const [loading, setLoading] = useState(true);
-  const pulseAnim = new Animated.Value(1);
+  
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const glowAnim = useRef(new Animated.Value(0)).current;
 
   const games = [
-    {
-      id: 'puzzle',
-      name: 'تركيب الصور',
-      icon: '🧩',
-      color: ['#8b5cf6', '#6d28d9'],
-      description: 'رتب القطع واكسب نقاط',
-      maxPoints: 100,
-    },
-    {
-      id: 'tictactoe',
-      name: 'إكس أو',
-      icon: '⭕',
-      color: ['#f59e0b', '#d97706'],
-      description: 'تحدى الذكاء الاصطناعي',
-      maxPoints: 50,
-    },
-    {
-      id: 'chess',
-      name: 'ألغاز الشطرنج',
-      icon: '♟️',
-      color: ['#10b981', '#059669'],
-      description: 'حل الألغاز واكسب',
-      maxPoints: 100,
-    },
+    { id: 'tictactoe', name: 'إكس أو', icon: 'grid-outline', colors: ['#f59e0b', '#d97706'], description: 'تحدى منافسك', maxPoints: 80, online: true },
+    { id: 'puzzle', name: 'تركيب الصور', icon: 'apps-outline', colors: ['#8b5cf6', '#6d28d9'], description: 'رتب القطع', maxPoints: 150, online: true },
+    { id: 'trivia', name: 'أسئلة ثقافية', icon: 'school-outline', colors: ['#3b82f6', '#1d4ed8'], description: 'اختبر معلوماتك', maxPoints: 100, online: false },
+    { id: 'riddles', name: 'الألغاز', icon: 'bulb-outline', colors: ['#10b981', '#059669'], description: 'حل الألغاز', maxPoints: 160, online: false },
   ];
 
   useEffect(() => {
     fetchLeaderboard();
-    startPulseAnimation();
+    startAnimations();
   }, []);
 
-  const startPulseAnimation = () => {
+  const startAnimations = () => {
     Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.05, duration: 1000, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1.02, duration: 1500, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
+      ])
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, { toValue: 1, duration: 2000, useNativeDriver: true }),
+        Animated.timing(glowAnim, { toValue: 0, duration: 2000, useNativeDriver: true }),
       ])
     ).start();
   };
 
   const fetchLeaderboard = async () => {
     try {
-      const token = await storage.getToken();
-      const response = await api.fetch('/api/games/leaderboard', {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      
+      const response = await api.fetch('/api/games/leaderboard');
       if (response.ok) {
         const data = await response.json();
         setLeaderboard(data.leaderboard || []);
-        setUserStats(data.userStats || { rank: 0, totalPoints: 0, gamesPlayed: 0 });
+        setUserStats(data.userStats || {});
       }
-    } catch (error) {
-      console.log('Leaderboard error:', error);
-      // Set mock data for demo
-      setLeaderboard([
-        { rank: 1, name: 'محمد', points: 2500, avatar: '🥇' },
-        { rank: 2, name: 'أحمد', points: 2100, avatar: '🥈' },
-        { rank: 3, name: 'سارة', points: 1800, avatar: '🥉' },
-        { rank: 4, name: 'فاطمة', points: 1500, avatar: '🎮' },
-        { rank: 5, name: 'خالد', points: 1200, avatar: '🎮' },
-      ]);
-      setUserStats({ rank: 15, totalPoints: 450, gamesPlayed: 12 });
+    } catch (e) {
+      console.log(e);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGameComplete = async (gameId, points, ...args) => {
+  const handleGameSelect = (gameId) => {
+    const game = games.find(g => g.id === gameId);
+    if (game.online) {
+      setShowModeSelector(gameId);
+    } else {
+      setActiveGame(gameId);
+      setGameMode('solo');
+    }
+  };
+
+  const handleModeSelect = (mode) => {
+    if (mode === 'online') {
+      setShowWaiting(true);
+      // Simulate finding opponent
+      setTimeout(() => {
+        setShowWaiting(false);
+        setActiveGame(showModeSelector);
+        setGameMode('ai_medium'); // For now, play vs AI
+        setShowModeSelector(null);
+      }, 2000);
+    } else {
+      setActiveGame(showModeSelector);
+      setGameMode(mode);
+      setShowModeSelector(null);
+    }
+  };
+
+  const handleGameComplete = async (points) => {
     try {
-      const token = await storage.getToken();
       await api.fetch('/api/games/complete', {
         method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: JSON.stringify({ gameId, points }),
+        body: JSON.stringify({ gameId: activeGame, points }),
       });
-      
-      if (onPointsEarned) {
-        onPointsEarned(points);
-      }
-      
-      Alert.alert(
-        '🎉 أحسنت!',
-        `لقد ربحت ${points} نقطة!`,
-        [{ text: 'حسناً', onPress: () => setActiveGame(null) }]
-      );
-      
-      fetchLeaderboard();
-    } catch (error) {
-      console.log('Game complete error:', error);
-      Alert.alert('🎉 أحسنت!', `لقد ربحت ${points} نقطة!`);
-      setActiveGame(null);
-    }
+      if (onPointsEarned) onPointsEarned(points);
+    } catch (e) {}
+    
+    Alert.alert('نتيجة', `حصلت على ${points} نقطة!`);
+    fetchLeaderboard();
   };
 
-  const renderGame = () => {
+  const closeGame = () => {
+    setActiveGame(null);
+    setGameMode(null);
+  };
+
+  // Render active game
+  if (activeGame) {
     switch (activeGame) {
-      case 'puzzle':
-        return (
-          <PuzzleGame
-            onComplete={(points, moves, time) => handleGameComplete('puzzle', points, moves, time)}
-            onClose={() => setActiveGame(null)}
-          />
-        );
       case 'tictactoe':
-        return (
-          <TicTacToe
-            onComplete={(points, result) => handleGameComplete('tictactoe', points, result)}
-            onClose={() => setActiveGame(null)}
-          />
-        );
-      case 'chess':
-        return (
-          <ChessGame
-            onComplete={(points, attempts) => handleGameComplete('chess', points, attempts)}
-            onClose={() => setActiveGame(null)}
-          />
-        );
-      default:
-        return null;
+        return <TicTacToeGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
+      case 'puzzle':
+        return <PuzzleGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
+      case 'trivia':
+        return <TriviaGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
+      case 'riddles':
+        return <RiddlesGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
     }
-  };
+  }
 
-  if (loading) {
+  // Mode selector modal
+  if (showModeSelector) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#60a5fa" />
-        <Text style={styles.loadingText}>جاري التحميل...</Text>
-      </View>
+      <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
+        {showWaiting ? (
+          <WaitingScreen onCancel={() => { setShowWaiting(false); setShowModeSelector(null); }} />
+        ) : (
+          <ModeSelector
+            gameName={games.find(g => g.id === showModeSelector)?.name}
+            onSelectMode={handleModeSelect}
+            onClose={() => setShowModeSelector(null)}
+          />
+        )}
+      </LinearGradient>
     );
   }
 
@@ -563,569 +850,221 @@ const GamesScreen = ({ user, onPointsEarned }) => {
     <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>🎮 الألعاب</Text>
-          <Text style={styles.headerSubtitle}>العب واكسب النقاط</Text>
+        <View style={styles.mainHeader}>
+          <Text style={styles.mainTitle}>الألعاب</Text>
+          <Text style={styles.mainSub}>العب وتنافس واكسب النقاط</Text>
         </View>
 
-        {/* User Stats Card */}
-        <View style={styles.userStatsCard}>
-          <LinearGradient
-            colors={['#1e293b', '#0f172a']}
-            style={styles.statsGradient}
-          >
-            <View style={styles.statsItem}>
-              <Text style={styles.statsNumber}>#{userStats.rank || '-'}</Text>
-              <Text style={styles.statsLabel}>ترتيبك</Text>
-            </View>
-            <View style={styles.statsDivider} />
-            <View style={styles.statsItem}>
-              <Text style={styles.statsNumber}>{userStats.totalPoints || 0}</Text>
-              <Text style={styles.statsLabel}>نقاطك</Text>
-            </View>
-            <View style={styles.statsDivider} />
-            <View style={styles.statsItem}>
-              <Text style={styles.statsNumber}>{userStats.gamesPlayed || 0}</Text>
-              <Text style={styles.statsLabel}>ألعابك</Text>
-            </View>
-          </LinearGradient>
+        {/* User Stats */}
+        <View style={styles.userCard}>
+          <View style={styles.userStatItem}>
+            <Ionicons name="trophy" size={24} color="#fbbf24" />
+            <Text style={styles.userStatNum}>#{userStats.rank || '-'}</Text>
+            <Text style={styles.userStatLabel}>ترتيبك</Text>
+          </View>
+          <View style={styles.userStatDivider} />
+          <View style={styles.userStatItem}>
+            <Ionicons name="diamond" size={24} color="#60a5fa" />
+            <Text style={styles.userStatNum}>{userStats.points || 0}</Text>
+            <Text style={styles.userStatLabel}>نقاطك</Text>
+          </View>
+          <View style={styles.userStatDivider} />
+          <View style={styles.userStatItem}>
+            <Ionicons name="game-controller" size={24} color="#10b981" />
+            <Text style={styles.userStatNum}>{userStats.games || 0}</Text>
+            <Text style={styles.userStatLabel}>ألعابك</Text>
+          </View>
         </View>
 
-        {/* Games Grid */}
-        <Text style={styles.sectionTitle}>🕹️ اختر لعبة</Text>
-        <View style={styles.gamesGrid}>
-          {games.map((game) => (
-            <Animated.View
+        {/* Games */}
+        <Text style={styles.sectionTitle}>اختر لعبة</Text>
+        <View style={styles.gamesContainer}>
+          {games.map(game => (
+            <GameCard
               key={game.id}
-              style={[styles.gameCardWrapper, { transform: [{ scale: pulseAnim }] }]}
-            >
-              <TouchableOpacity
-                style={styles.gameCard}
-                onPress={() => setActiveGame(game.id)}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={game.color}
-                  style={styles.gameCardGradient}
-                >
-                  <View style={styles.gameIconContainer}>
-                    <Text style={styles.gameIcon}>{game.icon}</Text>
-                  </View>
-                  <Text style={styles.gameName}>{game.name}</Text>
-                  <Text style={styles.gameDesc}>{game.description}</Text>
-                  <View style={styles.pointsBadge}>
-                    <Ionicons name="star" size={12} color="#fbbf24" />
-                    <Text style={styles.pointsText}>حتى {game.maxPoints} نقطة</Text>
-                  </View>
-                  
-                  {/* Glow Effect */}
-                  <View style={styles.glowEffect} />
-                </LinearGradient>
-              </TouchableOpacity>
-            </Animated.View>
+              game={game}
+              onPress={() => handleGameSelect(game.id)}
+              pulseAnim={pulseAnim}
+            />
           ))}
         </View>
 
         {/* Leaderboard */}
-        <Text style={styles.sectionTitle}>🏆 التصنيف العالمي</Text>
-        <View style={styles.leaderboardContainer}>
-          {leaderboard.slice(0, 10).map((player, index) => (
-            <View
-              key={index}
-              style={[
-                styles.leaderboardItem,
-                index < 3 && styles.topThree,
-              ]}
-            >
-              <View style={styles.rankBadge}>
-                <Text style={[
-                  styles.rankText,
-                  index === 0 && styles.goldRank,
-                  index === 1 && styles.silverRank,
-                  index === 2 && styles.bronzeRank,
-                ]}>
-                  {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${player.rank}`}
-                </Text>
+        <Text style={styles.sectionTitle}>التصنيف العالمي</Text>
+        <View style={styles.leaderboardCard}>
+          {leaderboard.slice(0, 10).map((player, idx) => (
+            <View key={idx} style={[styles.lbRow, idx < 3 && styles.lbTopRow]}>
+              <View style={styles.lbRank}>
+                {idx < 3 ? (
+                  <Ionicons name="medal" size={24} color={['#fbbf24', '#94a3b8', '#cd7f32'][idx]} />
+                ) : (
+                  <Text style={styles.lbRankText}>#{idx + 1}</Text>
+                )}
               </View>
-              <View style={styles.playerInfo}>
-                <Text style={styles.playerName}>{player.name}</Text>
-                <Text style={styles.playerGames}>{player.gamesPlayed || 0} لعبة</Text>
+              <View style={styles.lbInfo}>
+                <Text style={styles.lbName}>{player.name}</Text>
+                <Text style={styles.lbGames}>{player.gamesPlayed} لعبة</Text>
               </View>
-              <View style={styles.pointsContainer}>
-                <Ionicons name="star" size={14} color="#fbbf24" />
-                <Text style={styles.playerPoints}>{player.points}</Text>
+              <View style={styles.lbPoints}>
+                <Ionicons name="diamond" size={14} color="#fbbf24" />
+                <Text style={styles.lbPointsText}>{player.points}</Text>
               </View>
             </View>
           ))}
         </View>
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
-
-      {/* Game Modal */}
-      <Modal
-        visible={activeGame !== null}
-        animationType="slide"
-        transparent={false}
-      >
-        <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.modalContainer}>
-          {renderGame()}
-        </LinearGradient>
-      </Modal>
     </LinearGradient>
   );
 };
 
+// ==================== STYLES ====================
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#0a0a0f',
-  },
-  loadingText: {
-    color: '#888',
-    marginTop: 12,
-    fontSize: 16,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-  },
-  headerTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFF',
-    textAlign: 'right',
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: '#888',
-    textAlign: 'right',
-    marginTop: 4,
-  },
-  userStatsCard: {
-    marginHorizontal: 20,
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 24,
-  },
-  statsGradient: {
-    flexDirection: 'row',
-    padding: 20,
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  statsItem: {
-    alignItems: 'center',
-  },
-  statsNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#60a5fa',
-  },
-  statsLabel: {
-    fontSize: 12,
-    color: '#888',
-    marginTop: 4,
-  },
-  statsDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFF',
-    textAlign: 'right',
-    marginHorizontal: 20,
-    marginBottom: 16,
-  },
-  gamesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 12,
-    justifyContent: 'space-between',
-    marginBottom: 32,
-  },
-  gameCardWrapper: {
-    width: (width - 48) / 2,
-    marginHorizontal: 4,
-    marginBottom: 16,
-  },
-  gameCard: {
-    borderRadius: 20,
-    overflow: 'hidden',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  gameCardGradient: {
-    padding: 20,
-    alignItems: 'center',
-    minHeight: 180,
-    position: 'relative',
-  },
-  gameIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  gameIcon: {
-    fontSize: 32,
-  },
-  gameName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginBottom: 4,
-  },
-  gameDesc: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  pointsBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
-  },
-  pointsText: {
-    fontSize: 11,
-    color: '#fbbf24',
-    fontWeight: '600',
-  },
-  glowEffect: {
-    position: 'absolute',
-    top: -50,
-    right: -50,
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  leaderboardContainer: {
-    marginHorizontal: 20,
-    backgroundColor: 'rgba(30,41,59,0.5)',
-    borderRadius: 16,
-    padding: 16,
-  },
-  leaderboardItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
-  },
-  topThree: {
-    backgroundColor: 'rgba(251,191,36,0.05)',
-    marginHorizontal: -16,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  rankBadge: {
-    width: 40,
-    alignItems: 'center',
-  },
-  rankText: {
-    fontSize: 16,
-    color: '#888',
-    fontWeight: 'bold',
-  },
-  goldRank: {
-    fontSize: 24,
-  },
-  silverRank: {
-    fontSize: 24,
-  },
-  bronzeRank: {
-    fontSize: 24,
-  },
-  playerInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  playerName: {
-    fontSize: 16,
-    color: '#FFF',
-    fontWeight: '600',
-  },
-  playerGames: {
-    fontSize: 12,
-    color: '#888',
-  },
-  pointsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  playerPoints: {
-    fontSize: 16,
-    color: '#fbbf24',
-    fontWeight: 'bold',
-  },
-  // Game Container Styles
-  modalContainer: {
-    flex: 1,
-  },
-  gameContainer: {
-    flex: 1,
-    padding: 20,
-  },
-  gameHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 40,
-    marginBottom: 20,
-  },
-  closeBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  gameTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFF',
-  },
-  resetBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(96,165,250,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 20,
-    marginBottom: 20,
-  },
-  statBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
-    gap: 8,
-  },
-  statValue: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  // Puzzle Styles
-  puzzleGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 20,
-  },
-  puzzlePiece: {
-    width: (width - 80) / 3,
-    height: (width - 80) / 3,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  selectedPiece: {
-    borderWidth: 3,
-    borderColor: '#60a5fa',
-  },
-  correctPiece: {
-    borderWidth: 2,
-    borderColor: '#10b981',
-  },
-  pieceGradient: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  pieceNumber: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFF',
-  },
-  completedBanner: {
-    marginTop: 20,
-    padding: 16,
-    backgroundColor: 'rgba(16,185,129,0.2)',
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  completedText: {
-    fontSize: 24,
-    color: '#10b981',
-    fontWeight: 'bold',
-  },
-  // Tic Tac Toe Styles
-  scoreBoard: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 30,
-    gap: 20,
-  },
-  scoreItem: {
-    alignItems: 'center',
-  },
-  scoreLabel: {
-    fontSize: 14,
-    color: '#888',
-  },
-  scoreValue: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFF',
-  },
-  vsText: {
-    fontSize: 18,
-    color: '#666',
-    fontWeight: 'bold',
-  },
-  tttBoard: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    width: width - 80,
-    alignSelf: 'center',
-  },
-  tttCell: {
-    width: (width - 80) / 3,
-    height: (width - 80) / 3,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  tttCellBorderRight: {
-    borderRightWidth: 2,
-    borderRightColor: 'rgba(255,255,255,0.2)',
-  },
-  tttCellBorderBottom: {
-    borderBottomWidth: 2,
-    borderBottomColor: 'rgba(255,255,255,0.2)',
-  },
-  tttCellText: {
-    fontSize: 48,
-    fontWeight: 'bold',
-  },
-  tttX: {
-    color: '#60a5fa',
-  },
-  tttO: {
-    color: '#f59e0b',
-  },
-  gameOverBanner: {
-    marginTop: 30,
-    alignItems: 'center',
-  },
-  gameOverText: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginBottom: 16,
-  },
-  playAgainBtn: {
-    backgroundColor: '#60a5fa',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  playAgainText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  // Chess Styles
-  puzzleQuestion: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 20,
-  },
-  questionText: {
-    fontSize: 18,
-    color: '#FFF',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  hintText: {
-    fontSize: 14,
-    color: '#888',
-    textAlign: 'center',
-  },
-  chessBoard: {
-    alignSelf: 'center',
-    borderWidth: 2,
-    borderColor: '#333',
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  chessRow: {
-    flexDirection: 'row',
-  },
-  chessCell: {
-    width: (width - 80) / 8,
-    height: (width - 80) / 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  lightCell: {
-    backgroundColor: '#f0d9b5',
-  },
-  darkCell: {
-    backgroundColor: '#b58863',
-  },
-  selectedChessCell: {
-    backgroundColor: '#7fadcf',
-  },
-  correctCell: {
-    backgroundColor: '#7bc96f',
-  },
-  chessPiece: {
-    fontSize: 24,
-  },
-  messageBanner: {
-    marginTop: 20,
-    padding: 12,
-    backgroundColor: 'rgba(239,68,68,0.2)',
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  successBanner: {
-    backgroundColor: 'rgba(16,185,129,0.2)',
-  },
-  messageText: {
-    fontSize: 18,
-    color: '#FFF',
-    fontWeight: '600',
-  },
-  attemptsText: {
-    textAlign: 'center',
-    color: '#888',
-    marginTop: 16,
-    fontSize: 14,
-  },
+  container: { flex: 1 },
+  mainHeader: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 20 },
+  mainTitle: { fontSize: 34, fontWeight: '700', color: '#FFF', textAlign: 'right' },
+  mainSub: { fontSize: 15, color: '#888', textAlign: 'right', marginTop: 4 },
+  
+  userCard: { marginHorizontal: 20, backgroundColor: 'rgba(30,41,59,0.6)', borderRadius: 20, padding: 20, flexDirection: 'row', justifyContent: 'space-around', marginBottom: 24 },
+  userStatItem: { alignItems: 'center' },
+  userStatNum: { fontSize: 22, fontWeight: '700', color: '#FFF', marginTop: 8 },
+  userStatLabel: { fontSize: 12, color: '#888', marginTop: 2 },
+  userStatDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.1)' },
+  
+  sectionTitle: { fontSize: 20, fontWeight: '700', color: '#FFF', textAlign: 'right', marginHorizontal: 20, marginBottom: 16 },
+  
+  gamesContainer: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 12, justifyContent: 'space-between', marginBottom: 24 },
+  gameCardWrapper: { width: (width - 48) / 2, marginHorizontal: 4, marginBottom: 16 },
+  gameCard: { borderRadius: 20, overflow: 'hidden' },
+  gameCardGradient: { padding: 20, alignItems: 'center', minHeight: 170 },
+  gameIconBg: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+  gameName: { fontSize: 17, fontWeight: '700', color: '#FFF', marginBottom: 4 },
+  gameDesc: { fontSize: 12, color: 'rgba(255,255,255,0.8)', marginBottom: 12 },
+  gameFooter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  pointsBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, gap: 4 },
+  pointsText: { fontSize: 11, color: '#fbbf24', fontWeight: '600' },
+  onlineBadge: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  onlineDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#10b981' },
+  onlineText: { fontSize: 10, color: '#10b981' },
+  
+  leaderboardCard: { marginHorizontal: 20, backgroundColor: 'rgba(30,41,59,0.4)', borderRadius: 16, padding: 12 },
+  lbRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' },
+  lbTopRow: { backgroundColor: 'rgba(251,191,36,0.05)', marginHorizontal: -12, paddingHorizontal: 12, borderRadius: 8 },
+  lbRank: { width: 40, alignItems: 'center' },
+  lbRankText: { fontSize: 14, color: '#888', fontWeight: '600' },
+  lbInfo: { flex: 1, marginLeft: 12 },
+  lbName: { fontSize: 15, color: '#FFF', fontWeight: '600' },
+  lbGames: { fontSize: 11, color: '#888' },
+  lbPoints: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  lbPointsText: { fontSize: 15, color: '#fbbf24', fontWeight: '700' },
+  
+  // Mode Selector
+  modeContainer: { flex: 1, padding: 20, paddingTop: 60 },
+  modeHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40 },
+  modeCloseBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
+  modeTitle: { fontSize: 24, fontWeight: '700', color: '#FFF' },
+  modeSubtitle: { fontSize: 18, color: '#888', textAlign: 'center', marginBottom: 30 },
+  modeOptions: { gap: 16 },
+  modeOption: { borderRadius: 20, overflow: 'hidden' },
+  modeGradient: { padding: 24, alignItems: 'center' },
+  modeOptionTitle: { fontSize: 20, fontWeight: '700', color: '#FFF', marginTop: 12 },
+  modeOptionDesc: { fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 4 },
+  
+  // Waiting
+  waitingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  waitingTitle: { fontSize: 20, fontWeight: '600', color: '#FFF', marginTop: 24 },
+  waitingDesc: { fontSize: 14, color: '#888', marginTop: 8, textAlign: 'center' },
+  cancelBtn: { marginTop: 30, paddingHorizontal: 30, paddingVertical: 12, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 12 },
+  cancelText: { color: '#FFF', fontSize: 16 },
+  
+  // Game Common
+  gameContainer: { flex: 1, backgroundColor: '#0a0a0f', padding: 20, paddingTop: 50 },
+  gameHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  headerBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
+  gameTitle: { fontSize: 22, fontWeight: '700', color: '#FFF' },
+  scoreText: { fontSize: 18, fontWeight: '700', color: '#fbbf24' },
+  
+  // Tic Tac Toe
+  scoreBoard: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', marginBottom: 24 },
+  scorePlayer: { alignItems: 'center', padding: 12, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.05)' },
+  activePlayer: { backgroundColor: 'rgba(96,165,250,0.15)', borderWidth: 1, borderColor: 'rgba(96,165,250,0.3)' },
+  scoreLabel: { fontSize: 13, color: '#888', marginTop: 4 },
+  scoreNum: { fontSize: 28, fontWeight: '700', color: '#FFF' },
+  scoreMiddle: { alignItems: 'center' },
+  drawsLabel: { fontSize: 12, color: '#666' },
+  drawsNum: { fontSize: 20, fontWeight: '600', color: '#888' },
+  tttBoard: { flexDirection: 'row', flexWrap: 'wrap', width: width - 60, alignSelf: 'center', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 16, padding: 10 },
+  tttCell: { width: (width - 80) / 3, height: (width - 80) / 3, justifyContent: 'center', alignItems: 'center' },
+  cellBorderR: { borderRightWidth: 2, borderRightColor: 'rgba(255,255,255,0.1)' },
+  cellBorderB: { borderBottomWidth: 2, borderBottomColor: 'rgba(255,255,255,0.1)' },
+  turnIndicator: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 24, gap: 8 },
+  turnText: { fontSize: 16, color: '#888' },
+  resultCard: { alignItems: 'center', marginTop: 30, padding: 24, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 20 },
+  resultText: { fontSize: 28, fontWeight: '700', color: '#FFF', marginTop: 12 },
+  playAgainBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 20, backgroundColor: '#3b82f6', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
+  playAgainText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
+  
+  // Puzzle
+  difficultyRow: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginBottom: 16 },
+  diffBtn: { paddingHorizontal: 20, paddingVertical: 8, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)' },
+  diffBtnActive: { backgroundColor: '#3b82f6' },
+  diffText: { color: '#888', fontSize: 14, fontWeight: '600' },
+  diffTextActive: { color: '#FFF' },
+  statsRow: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginBottom: 20 },
+  statItem: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12 },
+  statText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
+  puzzleGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignSelf: 'center', gap: 4 },
+  puzzlePiece: { borderRadius: 10, overflow: 'hidden' },
+  pieceSelected: { borderWidth: 2, borderColor: '#60a5fa' },
+  pieceCorrect: { borderWidth: 2, borderColor: '#10b981' },
+  pieceInner: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  pieceNum: { fontSize: 24, fontWeight: '700', color: '#FFF' },
+  completedCard: { alignItems: 'center', marginTop: 24, padding: 20, backgroundColor: 'rgba(16,185,129,0.1)', borderRadius: 16 },
+  completedText: { fontSize: 24, fontWeight: '700', color: '#10b981', marginTop: 8 },
+  completedSub: { fontSize: 14, color: '#888', marginTop: 4 },
+  
+  // Trivia
+  progressRow: { marginBottom: 16 },
+  progressText: { fontSize: 14, color: '#888', textAlign: 'center', marginBottom: 8 },
+  progressBar: { height: 6, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden' },
+  progressFill: { height: '100%', backgroundColor: '#3b82f6', borderRadius: 3 },
+  timerCircle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', alignSelf: 'center', gap: 6, backgroundColor: 'rgba(96,165,250,0.1)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, marginBottom: 20 },
+  timerDanger: { backgroundColor: 'rgba(239,68,68,0.1)' },
+  timerText: { fontSize: 18, fontWeight: '700', color: '#60a5fa' },
+  timerDangerText: { color: '#ef4444' },
+  questionCard: { backgroundColor: 'rgba(255,255,255,0.05)', padding: 24, borderRadius: 20, marginBottom: 24 },
+  questionText: { fontSize: 18, color: '#FFF', textAlign: 'center', lineHeight: 28 },
+  optionsContainer: { gap: 12 },
+  optionBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', padding: 16, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  optionCorrect: { backgroundColor: 'rgba(16,185,129,0.15)', borderColor: '#10b981' },
+  optionWrong: { backgroundColor: 'rgba(239,68,68,0.15)', borderColor: '#ef4444' },
+  optionLetter: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  optionLetterText: { color: '#FFF', fontWeight: '600' },
+  optionText: { flex: 1, fontSize: 15, color: '#FFF' },
+  resultScreen: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  finalScore: { fontSize: 64, fontWeight: '700', color: '#fbbf24', marginTop: 16 },
+  finalLabel: { fontSize: 18, color: '#888' },
+  finalSub: { fontSize: 14, color: '#666', marginTop: 8 },
+  exitBtn: { marginTop: 30, backgroundColor: '#3b82f6', paddingHorizontal: 40, paddingVertical: 14, borderRadius: 12 },
+  exitText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
+  
+  // Riddles
+  riddleProgress: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  riddleNum: { fontSize: 14, color: '#888' },
+  hintsBox: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(251,191,36,0.1)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
+  hintsText: { color: '#fbbf24', fontWeight: '600' },
+  riddleCard: { backgroundColor: 'rgba(139,92,246,0.1)', padding: 30, borderRadius: 24, alignItems: 'center', marginBottom: 24 },
+  riddleText: { fontSize: 20, color: '#FFF', textAlign: 'center', lineHeight: 32 },
+  hintBox: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 20, backgroundColor: 'rgba(251,191,36,0.1)', padding: 12, borderRadius: 12 },
+  hintText: { color: '#fbbf24', fontSize: 14 },
+  answerSection: { gap: 16 },
+  answerInput: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 14, padding: 16, fontSize: 16, color: '#FFF', textAlign: 'right', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  riddleBtns: { flexDirection: 'row', gap: 12 },
+  hintBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: 'rgba(251,191,36,0.1)', padding: 14, borderRadius: 12 },
+  hintBtnText: { color: '#fbbf24', fontWeight: '600' },
+  submitBtn: { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#3b82f6', padding: 14, borderRadius: 12 },
+  submitText: { color: '#FFF', fontWeight: '600', fontSize: 16 },
 });
 
 export default GamesScreen;
