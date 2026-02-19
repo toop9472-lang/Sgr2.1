@@ -18,6 +18,7 @@ import AdViewerScreen from './src/screens/AdViewerScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import SupportScreen from './src/screens/SupportScreen';
 import ChallengesScreen from './src/screens/ChallengesScreen';
+import GamesScreen from './src/screens/GamesScreen';
 
 // Components
 import BottomNav from './src/components/BottomNav';
