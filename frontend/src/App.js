@@ -19,7 +19,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import DownloadPage from "./pages/DownloadPage";
 import SupportPage from "./pages/SupportPage";
-import SupportPageComponent from "./components/SupportPage";
+import AISupportPage from "./components/SupportPage";
 import SettingsPage from "./components/SettingsPage";
 import ChallengesPage from "./components/ChallengesPage";
 import BottomNav from "./components/BottomNav";
