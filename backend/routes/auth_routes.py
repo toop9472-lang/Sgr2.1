@@ -469,3 +469,185 @@ async def logout():
     Logout user (client should clear token)
     """
     return {'message': 'تم تسجيل الخروج بنجاح'}
+
+
+
+# ==================== Password Reset APIs ====================
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class VerifyResetOTPRequest(BaseModel):
+    email: EmailStr
+    otp: str
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    reset_token: str
+    new_password: str
+
+@router.post('/forgot-password', response_model=dict)
+async def forgot_password(data: ForgotPasswordRequest):
+    """
+    Send password reset OTP to user's email
+    """
+    import random
+    import string
+    
+    db = get_db()
+    
+    # Find user by email
+    user = await db.users.find_one({'email': data.email})
+    
+    if not user:
+        # Don't reveal if email exists or not for security
+        return {'message': 'إذا كان البريد الإلكتروني مسجلاً، سيتم إرسال رمز التحقق'}
+    
+    # Generate 6-digit OTP
+    otp = ''.join(random.choices(string.digits, k=6))
+    
+    # Store OTP with expiration (15 minutes)
+    await db.password_resets.update_one(
+        {'email': data.email},
+        {
+            '$set': {
+                'email': data.email,
+                'otp': otp,
+                'created_at': datetime.utcnow(),
+                'expires_at': datetime.utcnow().replace(second=0, microsecond=0) + __import__('datetime').timedelta(minutes=15),
+                'used': False
+            }
+        },
+        upsert=True
+    )
+    
+    # Send email with OTP
+    try:
+        from services.email_service import send_email
+        await send_email(
+            to_email=data.email,
+            subject='رمز استعادة كلمة المرور - صقر',
+            html_content=f'''
+            <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right; padding: 20px;">
+                <h2 style="color: #3b82f6;">استعادة كلمة المرور</h2>
+                <p>مرحباً،</p>
+                <p>رمز التحقق الخاص بك هو:</p>
+                <div style="background: #f3f4f6; padding: 20px; text-align: center; border-radius: 10px; margin: 20px 0;">
+                    <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #1f2937;">{otp}</span>
+                </div>
+                <p>هذا الرمز صالح لمدة 15 دقيقة فقط.</p>
+                <p>إذا لم تطلب استعادة كلمة المرور، يرجى تجاهل هذه الرسالة.</p>
+                <p style="color: #6b7280; margin-top: 30px;">فريق صقر</p>
+            </div>
+            '''
+        )
+    except Exception as e:
+        print(f"Failed to send reset email: {e}")
+        # Continue anyway - OTP is stored
+    
+    return {'message': 'تم إرسال رمز التحقق إلى بريدك الإلكتروني'}
+
+@router.post('/verify-reset-otp', response_model=dict)
+async def verify_reset_otp(data: VerifyResetOTPRequest):
+    """
+    Verify the OTP and return a reset token
+    """
+    db = get_db()
+    
+    # Find valid OTP
+    reset_record = await db.password_resets.find_one({
+        'email': data.email,
+        'otp': data.otp,
+        'used': False
+    })
+    
+    if not reset_record:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='رمز التحقق غير صحيح'
+        )
+    
+    # Check if expired
+    if reset_record.get('expires_at') and reset_record['expires_at'] < datetime.utcnow():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='انتهت صلاحية رمز التحقق'
+        )
+    
+    # Generate reset token
+    reset_token = str(uuid.uuid4())
+    
+    # Update record with reset token
+    await db.password_resets.update_one(
+        {'email': data.email, 'otp': data.otp},
+        {
+            '$set': {
+                'reset_token': reset_token,
+                'token_expires_at': datetime.utcnow().replace(second=0, microsecond=0) + __import__('datetime').timedelta(minutes=30)
+            }
+        }
+    )
+    
+    return {'reset_token': reset_token, 'message': 'تم التحقق بنجاح'}
+
+@router.post('/reset-password', response_model=dict)
+async def reset_password(data: ResetPasswordRequest):
+    """
+    Reset user's password using the reset token
+    """
+    db = get_db()
+    
+    # Verify reset token
+    reset_record = await db.password_resets.find_one({
+        'email': data.email,
+        'reset_token': data.reset_token,
+        'used': False
+    })
+    
+    if not reset_record:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='رابط إعادة التعيين غير صالح'
+        )
+    
+    # Check if token expired
+    if reset_record.get('token_expires_at') and reset_record['token_expires_at'] < datetime.utcnow():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='انتهت صلاحية رابط إعادة التعيين'
+        )
+    
+    # Validate new password
+    if len(data.new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='كلمة المرور يجب أن تكون 6 أحرف على الأقل'
+        )
+    
+    # Hash new password
+    new_password_hash = bcrypt.hash(data.new_password)
+    
+    # Update user's password
+    result = await db.users.update_one(
+        {'email': data.email},
+        {
+            '$set': {
+                'password_hash': new_password_hash,
+                'updated_at': datetime.utcnow()
+            }
+        }
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='المستخدم غير موجود'
+        )
+    
+    # Mark reset record as used
+    await db.password_resets.update_one(
+        {'email': data.email, 'reset_token': data.reset_token},
+        {'$set': {'used': True}}
+    )
+    
+    return {'message': 'تم تغيير كلمة المرور بنجاح'}
