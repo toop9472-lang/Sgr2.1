@@ -46,6 +46,8 @@ from routes.two_factor_routes import router as two_factor_router
 from routes.comments_routes import router as comments_router
 from routes.challenges_routes import router as challenges_router
 from routes.phone_auth_routes import router as phone_auth_router
+from routes.games_routes import router as games_router
+from routes import games_routes
 
 
 ROOT_DIR = Path(__file__).parent
