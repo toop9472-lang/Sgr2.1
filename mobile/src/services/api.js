@@ -165,6 +165,11 @@ export const api = {
   async logout() {
     this.clearTokens();
   },
+  
+  // Get current user from server
+  async getCurrentUser() {
+    return this.fetch('/api/auth/me');
+  },
 
   // Ads
   async getAds() {
