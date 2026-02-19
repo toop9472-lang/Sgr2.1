@@ -22,6 +22,7 @@ import SupportPage from "./pages/SupportPage";
 import AISupportPage from "./components/SupportPage";
 import SettingsPage from "./components/SettingsPage";
 import ChallengesPage from "./components/ChallengesPage";
+import GamesPage from "./components/GamesPage";
 import BottomNav from "./components/BottomNav";
 import { Toaster } from "./components/ui/toaster";
 import { toast } from "./hooks/use-toast";
@@ -474,6 +475,13 @@ function MainApp() {
               )}
               {currentPage === 'challenges' && !showFullScreenAds && (
                 <ChallengesPage 
+                  user={user}
+                  onNavigate={handleNavigate}
+                  onPointsEarned={handlePointsEarned}
+                />
+              )}
+              {currentPage === 'games' && !showFullScreenAds && (
+                <GamesPage 
                   user={user}
                   onNavigate={handleNavigate}
                   onPointsEarned={handlePointsEarned}
