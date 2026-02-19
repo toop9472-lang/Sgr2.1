@@ -217,6 +217,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Set database for games routes
+games_routes.set_database(db)
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
