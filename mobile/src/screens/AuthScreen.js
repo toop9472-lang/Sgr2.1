@@ -1,5 +1,5 @@
-// Auth Screen - Login / Register with Phone & Email
-// Professional Design with Ionicons & OTP Support
+// Auth Screen - Login / Register with Email & Social
+// Professional Design with Ionicons
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -17,9 +17,13 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
 import api from '../services/api';
 import storage from '../services/storage';
 import colors from '../styles/colors';
+
+// Warm up browser for faster OAuth
+WebBrowser.maybeCompleteAuthSession();
 
 const AuthScreen = ({ onLogin }) => {
   // Modes: main, phone_login, phone_register, phone_otp, phone_login_otp, email_login, email_register, forgot_password, reset_password
