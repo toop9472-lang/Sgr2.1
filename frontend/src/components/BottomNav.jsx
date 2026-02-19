@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, User, Megaphone, PlayCircle, Trophy } from 'lucide-react';
+import { Home, User, Megaphone, PlayCircle, Gamepad2 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 
 const BottomNav = ({ currentPage, onNavigate }) => {
@@ -7,7 +7,7 @@ const BottomNav = ({ currentPage, onNavigate }) => {
 
   const navItems = [
     { id: 'home', label: language === 'ar' ? 'الرئيسية' : 'Home', icon: Home },
-    { id: 'challenges', label: language === 'ar' ? 'التحديات' : 'Challenges', icon: Trophy },
+    { id: 'games', label: language === 'ar' ? 'الألعاب' : 'Games', icon: Gamepad2 },
     { id: 'advertiser', label: language === 'ar' ? 'أعلن' : 'Advertise', icon: Megaphone },
     { id: 'profile', label: language === 'ar' ? 'حسابي' : 'Profile', icon: User },
   ];
