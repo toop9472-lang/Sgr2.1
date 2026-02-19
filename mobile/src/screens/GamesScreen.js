@@ -1,5 +1,5 @@
 // Games Screen - Professional Gaming Hub with Multiplayer
-// Puzzle, Chess, Tic-Tac-Toe, Trivia, Riddles - Online & vs AI
+// Puzzle, Chess, Tic-Tac-Toe, Trivia, Riddles, Brick Breaker - Online & vs AI
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
@@ -20,6 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import api from '../services/api';
 import storage from '../services/storage';
 import ChessGame from './games/ChessGame';
+import BrickBreakerGame from './games/BrickBreakerGame';
 
 const { width, height } = Dimensions.get('window');
 
