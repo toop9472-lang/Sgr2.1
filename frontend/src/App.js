@@ -402,6 +402,9 @@ function MainApp() {
       {/* Download Page */}
       <Route path="/download" element={<DownloadPage />} />
       
+      {/* Forgot Password */}
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      
       {/* User Routes */}
       <Route path="/*" element={
         <>
