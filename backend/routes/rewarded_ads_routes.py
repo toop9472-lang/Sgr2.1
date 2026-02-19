@@ -304,10 +304,8 @@ async def complete_rewarded_ad(
     if not can_watch:
         return {'success': False, 'message': 'وصلت للحد اليومي', 'remaining': 0}
     
-    # Calculate points: 1 point per 60 seconds of watch time
-    # Minimum 1 point if ad completed
-    minutes_watched = view.watch_duration // 60
-    reward_points = max(1, minutes_watched)  # At least 1 point if completed
+    # Calculate points: 1 point per completed ad view
+    reward_points = view.points_earned if view.points_earned else 1
     
     # Record the view
     view_doc = {
