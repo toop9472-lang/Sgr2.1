@@ -395,6 +395,7 @@ function MainApp() {
       
       {/* Support Page */}
       <Route path="/support" element={<SupportPage />} />
+      <Route path="/help" element={<SupportPage />} />
       
       {/* Download Page */}
       <Route path="/download" element={<DownloadPage />} />
