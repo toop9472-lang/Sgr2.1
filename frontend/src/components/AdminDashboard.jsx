@@ -971,31 +971,31 @@ const InvoicesContent = () => {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">جاري التحميل...</div>;
+    return <div className="text-center py-8 text-gray-400">جاري التحميل...</div>;
   }
 
   return (
     <div className="space-y-4">
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
-        <Card>
+        <Card className="bg-[#111118] border-white/10">
           <CardContent className="pt-4">
-            <p className="text-2xl font-bold text-green-600">{stats.total_revenue.toFixed(2)} ر.س</p>
-            <p className="text-xs text-gray-500">إجمالي الإيرادات</p>
+            <p className="text-2xl font-bold text-green-400">{stats.total_revenue.toFixed(2)} ر.س</p>
+            <p className="text-xs text-gray-400">إجمالي الإيرادات</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-[#111118] border-white/10">
           <CardContent className="pt-4">
-            <p className="text-2xl font-bold text-yellow-600">{stats.pending_amount.toFixed(2)} ر.س</p>
-            <p className="text-xs text-gray-500">مبالغ معلقة</p>
+            <p className="text-2xl font-bold text-yellow-400">{stats.pending_amount.toFixed(2)} ر.س</p>
+            <p className="text-xs text-gray-400">مبالغ معلقة</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Invoices List */}
-      <Card>
+      <Card className="bg-[#111118] border-white/10">
         <CardHeader>
-          <CardTitle className="text-lg">الفواتير الأخيرة</CardTitle>
+          <CardTitle className="text-lg text-white">الفواتير الأخيرة</CardTitle>
         </CardHeader>
         <CardContent>
           {invoices.length === 0 ? (
@@ -1003,13 +1003,13 @@ const InvoicesContent = () => {
           ) : (
             <div className="space-y-2">
               {invoices.slice(0, 10).map((inv) => (
-                <div key={inv.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                <div key={inv.id} className="flex justify-between items-center p-3 bg-white/5 rounded border border-white/10">
                   <div>
-                    <p className="font-mono text-sm">{inv.invoice_number}</p>
-                    <p className="text-xs text-gray-500">{inv.advertiser_name}</p>
+                    <p className="font-mono text-sm text-white">{inv.invoice_number}</p>
+                    <p className="text-xs text-gray-400">{inv.advertiser_name}</p>
                   </div>
                   <div className="text-left">
-                    <p className="font-bold">{inv.total?.toFixed(2)} ر.س</p>
+                    <p className="font-bold text-white">{inv.total?.toFixed(2)} ر.س</p>
                     {getStatusBadge(inv.status)}
                   </div>
                 </div>
