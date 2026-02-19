@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import api from '../services/api';
 import storage from '../services/storage';
+import ChessGame from './games/ChessGame';
 
 const { width, height } = Dimensions.get('window');
 
@@ -728,10 +729,11 @@ const GamesScreen = ({ user, onPointsEarned }) => {
   const glowAnim = useRef(new Animated.Value(0)).current;
 
   const games = [
+    { id: 'chess', name: 'الشطرنج', icon: 'trophy-outline', colors: ['#8b5cf6', '#6d28d9'], description: 'لعبة الملوك', maxPoints: 200, online: true },
     { id: 'tictactoe', name: 'إكس أو', icon: 'grid-outline', colors: ['#f59e0b', '#d97706'], description: 'تحدى منافسك', maxPoints: 80, online: true },
-    { id: 'puzzle', name: 'تركيب الصور', icon: 'apps-outline', colors: ['#8b5cf6', '#6d28d9'], description: 'رتب القطع', maxPoints: 150, online: true },
-    { id: 'trivia', name: 'أسئلة ثقافية', icon: 'school-outline', colors: ['#3b82f6', '#1d4ed8'], description: 'اختبر معلوماتك', maxPoints: 100, online: false },
-    { id: 'riddles', name: 'الألغاز', icon: 'bulb-outline', colors: ['#10b981', '#059669'], description: 'حل الألغاز', maxPoints: 160, online: false },
+    { id: 'puzzle', name: 'تركيب الصور', icon: 'apps-outline', colors: ['#3b82f6', '#1d4ed8'], description: 'رتب القطع', maxPoints: 150, online: true },
+    { id: 'trivia', name: 'أسئلة ثقافية', icon: 'school-outline', colors: ['#10b981', '#059669'], description: 'اختبر معلوماتك', maxPoints: 100, online: false },
+    { id: 'riddles', name: 'الألغاز', icon: 'bulb-outline', colors: ['#ef4444', '#dc2626'], description: 'حل الألغاز', maxPoints: 160, online: false },
   ];
 
   useEffect(() => {
@@ -818,6 +820,8 @@ const GamesScreen = ({ user, onPointsEarned }) => {
   // Render active game
   if (activeGame) {
     switch (activeGame) {
+      case 'chess':
+        return <ChessGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
       case 'tictactoe':
         return <TicTacToeGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
       case 'puzzle':
