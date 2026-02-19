@@ -50,13 +50,18 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.saqr.rewards",
-      "buildNumber": "21",
+      "buildNumber": "24",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "يستخدم التطبيق الكاميرا لتحميل الصور",
         "NSPhotoLibraryUsageDescription": "يستخدم التطبيق مكتبة الصور لتحميل الصور",
         "NSUserTrackingUsageDescription": "يستخدم هذا التطبيق معرّف الإعلان لتقديم إعلانات مخصصة",
         "GADApplicationIdentifier": "ca-app-pub-5132559433385403~6910358704",
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": ["saqr"]
+          }
+        ],
         "SKAdNetworkItems": [
           {
             "SKAdNetworkIdentifier": "cstr6suwn9.skadnetwork"
