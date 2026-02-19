@@ -501,16 +501,17 @@ const AdminDashboard = ({ admin, onLogout }) => {
                 
                 {/* Pagination */}
                 {totalUsers > 20 && (
-                  <div className="flex justify-center gap-2 mt-4 pt-4 border-t">
+                  <div className="flex justify-center gap-2 mt-4 pt-4 border-t border-white/10">
                     <Button
                       onClick={() => loadUsers(usersPage - 1, userSearch)}
                       disabled={usersPage <= 1}
                       variant="outline"
                       size="sm"
+                      className="border-white/20 text-gray-300 hover:bg-white/10"
                     >
                       السابق
                     </Button>
-                    <span className="px-4 py-2 text-sm bg-gray-100 rounded">
+                    <span className="px-4 py-2 text-sm bg-white/5 text-gray-300 rounded">
                       صفحة {usersPage} من {Math.ceil(totalUsers / 20)}
                     </span>
                     <Button
@@ -518,6 +519,7 @@ const AdminDashboard = ({ admin, onLogout }) => {
                       disabled={usersPage >= Math.ceil(totalUsers / 20)}
                       variant="outline"
                       size="sm"
+                      className="border-white/20 text-gray-300 hover:bg-white/10"
                     >
                       التالي
                     </Button>
@@ -530,32 +532,32 @@ const AdminDashboard = ({ admin, onLogout }) => {
           {/* Pending Withdrawals */}
           <TabsContent value="withdrawals" className="space-y-4 mt-4">
             {pendingWithdrawals.length === 0 ? (
-              <Card>
+              <Card className="bg-[#111118] border-white/10">
                 <CardContent className="pt-6 text-center text-gray-500">
                   لا توجد طلبات سحب معلقة
                 </CardContent>
               </Card>
             ) : (
               pendingWithdrawals.map((withdrawal) => (
-                <Card key={withdrawal.id} className="shadow-md">
+                <Card key={withdrawal.id} className="shadow-md bg-[#111118] border-white/10">
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div>
-                        <CardTitle className="text-lg">{withdrawal.user_name || 'مستخدم'}</CardTitle>
-                        <CardDescription>{withdrawal.user_email}</CardDescription>
+                        <CardTitle className="text-lg text-white">{withdrawal.user_name || 'مستخدم'}</CardTitle>
+                        <CardDescription className="text-gray-400">{withdrawal.user_email}</CardDescription>
                       </div>
-                      <Badge variant="outline">{withdrawal.status}</Badge>
+                      <Badge variant="outline" className="text-gray-300 border-white/20">{withdrawal.status}</Badge>
                     </div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2 mb-4">
-                      <p className="text-sm"><strong>المبلغ:</strong> ${withdrawal.amount}</p>
-                      <p className="text-sm"><strong>النقاط:</strong> {withdrawal.points}</p>
-                      <p className="text-sm"><strong>الطريقة:</strong> {withdrawal.method_name}</p>
-                      <div className="bg-gray-50 p-3 rounded-lg mt-2">
-                        <p className="text-sm font-semibold mb-1">تفاصيل الحساب:</p>
+                      <p className="text-sm text-gray-300"><strong className="text-white">المبلغ:</strong> ${withdrawal.amount}</p>
+                      <p className="text-sm text-gray-300"><strong className="text-white">النقاط:</strong> {withdrawal.points}</p>
+                      <p className="text-sm text-gray-300"><strong className="text-white">الطريقة:</strong> {withdrawal.method_name}</p>
+                      <div className="bg-white/5 p-3 rounded-lg mt-2 border border-white/10">
+                        <p className="text-sm font-semibold mb-1 text-white">تفاصيل الحساب:</p>
                         {Object.entries(withdrawal.details || {}).map(([key, value]) => (
-                          <p key={key} className="text-sm"><strong>{key}:</strong> {value}</p>
+                          <p key={key} className="text-sm text-gray-300"><strong className="text-gray-400">{key}:</strong> {value}</p>
                         ))}
                       </div>
                     </div>
