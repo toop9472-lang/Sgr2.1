@@ -7,7 +7,6 @@ const BottomNav = ({ currentPage, onNavigate }) => {
 
   const navItems = [
     { id: 'home', label: language === 'ar' ? 'الرئيسية' : 'Home', icon: Home },
-    { id: 'games', label: language === 'ar' ? 'الألعاب' : 'Games', icon: Gamepad2 },
     { id: 'advertiser', label: language === 'ar' ? 'أعلن' : 'Advertise', icon: Megaphone },
     { id: 'profile', label: language === 'ar' ? 'حسابي' : 'Profile', icon: User },
   ];
@@ -15,7 +14,34 @@ const BottomNav = ({ currentPage, onNavigate }) => {
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-[#0a0a0f]/98 backdrop-blur-xl border-t border-white/10 z-40">
       <div className="flex items-center justify-around px-2 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
-        {navItems.map((item) => {
+        {/* Home button */}
+        <button
+          onClick={() => onNavigate('home')}
+          className={`flex flex-col items-center gap-0.5 py-1 px-3 rounded-lg transition-all duration-200 min-w-[50px] ${
+            currentPage === 'home'
+              ? 'text-[#60a5fa]'
+              : 'text-gray-500 hover:text-gray-300'
+          }`}
+          data-testid="nav-home"
+        >
+          <Home size={22} className={currentPage === 'home' ? 'stroke-[2.5]' : 'stroke-2'} />
+          <span className={`text-[10px] ${currentPage === 'home' ? 'font-semibold' : 'font-medium'}`}>
+            {language === 'ar' ? 'الرئيسية' : 'Home'}
+          </span>
+        </button>
+
+        {/* Games Button - Glowing lime/yellow-green */}
+        <button
+          onClick={() => onNavigate('games')}
+          className="flex items-center gap-1.5 bg-gradient-to-r from-lime-500 to-lime-600 hover:from-lime-400 hover:to-lime-500 px-4 py-2 rounded-2xl transition-all shadow-lg shadow-lime-500/30"
+          data-testid="nav-games"
+        >
+          <Gamepad2 size={18} className="text-white" />
+          <span className="text-white text-xs font-bold">{language === 'ar' ? 'ألعاب' : 'Games'}</span>
+        </button>
+
+        {/* Other nav items */}
+        {navItems.slice(1).map((item) => {
           const Icon = item.icon;
           const isActive = currentPage === item.id;
           return (
@@ -44,7 +70,7 @@ const BottomNav = ({ currentPage, onNavigate }) => {
           data-testid="nav-watch-ads"
         >
           <PlayCircle size={18} className="text-white" />
-          <span className="text-white text-xs font-semibold">شاهد</span>
+          <span className="text-white text-xs font-semibold">{language === 'ar' ? 'شاهد' : 'Watch'}</span>
         </button>
       </div>
     </div>
