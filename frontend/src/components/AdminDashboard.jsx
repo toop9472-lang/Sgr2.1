@@ -807,19 +807,19 @@ const RewardsSettingsContent = ({ getAuthHeaders }) => {
       </Card>
 
       {/* النصائح */}
-      <Card>
+      <Card className="bg-[#111118] border-white/10">
         <CardHeader>
-          <CardTitle className="text-lg">💡 نصائح الصفحة الرئيسية</CardTitle>
-          <CardDescription>تظهر بشكل متحرك للمستخدمين</CardDescription>
+          <CardTitle className="text-lg text-white">💡 نصائح الصفحة الرئيسية</CardTitle>
+          <CardDescription className="text-gray-400">تظهر بشكل متحرك للمستخدمين</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {settings.tips.map((tip, idx) => (
-            <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+            <div key={idx} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-white/10">
               <span className="text-xl">{tip.icon}</span>
               <Input
                 value={tip.text}
                 onChange={(e) => updateTip(idx, 'text', e.target.value)}
-                className="flex-1"
+                className="flex-1 bg-white/5 border-white/10 text-white"
               />
               <label className="flex items-center gap-1">
                 <input
@@ -875,43 +875,43 @@ const AnalyticsContent = () => {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">جاري التحميل...</div>;
+    return <div className="text-center py-8 text-gray-400">جاري التحميل...</div>;
   }
 
   return (
     <div className="space-y-4">
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card>
+        <Card className="bg-[#111118] border-white/10">
           <CardContent className="pt-4">
-            <p className="text-2xl font-bold text-indigo-600">{analytics?.engagement?.total_views || 0}</p>
-            <p className="text-xs text-gray-500">إجمالي المشاهدات</p>
+            <p className="text-2xl font-bold text-indigo-400">{analytics?.engagement?.total_views || 0}</p>
+            <p className="text-xs text-gray-400">إجمالي المشاهدات</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-[#111118] border-white/10">
           <CardContent className="pt-4">
-            <p className="text-2xl font-bold text-green-600">{analytics?.users?.active_last_7_days || 0}</p>
-            <p className="text-xs text-gray-500">نشط آخر 7 أيام</p>
+            <p className="text-2xl font-bold text-green-400">{analytics?.users?.active_last_7_days || 0}</p>
+            <p className="text-xs text-gray-400">نشط آخر 7 أيام</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-[#111118] border-white/10">
           <CardContent className="pt-4">
-            <p className="text-2xl font-bold text-purple-600">{analytics?.financials?.total_points_distributed || 0}</p>
-            <p className="text-xs text-gray-500">نقاط موزعة</p>
+            <p className="text-2xl font-bold text-purple-400">{analytics?.financials?.total_points_distributed || 0}</p>
+            <p className="text-xs text-gray-400">نقاط موزعة</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-[#111118] border-white/10">
           <CardContent className="pt-4">
-            <p className="text-2xl font-bold text-orange-600">{analytics?.users?.activity_rate || 0}%</p>
-            <p className="text-xs text-gray-500">معدل النشاط</p>
+            <p className="text-2xl font-bold text-orange-400">{analytics?.users?.activity_rate || 0}%</p>
+            <p className="text-xs text-gray-400">معدل النشاط</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Top Ads */}
-      <Card>
+      <Card className="bg-[#111118] border-white/10">
         <CardHeader>
-          <CardTitle className="text-lg">أفضل الإعلانات</CardTitle>
+          <CardTitle className="text-lg text-white">أفضل الإعلانات</CardTitle>
         </CardHeader>
         <CardContent>
           {topAds.length === 0 ? (
@@ -919,12 +919,12 @@ const AnalyticsContent = () => {
           ) : (
             <div className="space-y-2">
               {topAds.map((ad, i) => (
-                <div key={ad.ad_id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                <div key={ad.ad_id} className="flex justify-between items-center p-3 bg-white/5 rounded border border-white/10">
                   <div className="flex items-center gap-3">
-                    <span className={`font-bold ${i === 0 ? 'text-yellow-500' : 'text-gray-400'}`}>#{i+1}</span>
-                    <span className="font-medium">{ad.title}</span>
+                    <span className={`font-bold ${i === 0 ? 'text-yellow-400' : 'text-gray-500'}`}>#{i+1}</span>
+                    <span className="font-medium text-white">{ad.title}</span>
                   </div>
-                  <span className="font-bold text-indigo-600">{ad.views} مشاهدة</span>
+                  <span className="font-bold text-indigo-400">{ad.views} مشاهدة</span>
                 </div>
               ))}
             </div>
