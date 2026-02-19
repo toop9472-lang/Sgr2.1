@@ -688,59 +688,64 @@ const RewardsSettingsContent = ({ getAuthHeaders }) => {
   };
 
   if (isLoading) {
-    return <div className="p-4 text-center text-gray-500">جاري التحميل...</div>;
+    return <div className="p-4 text-center text-gray-400">جاري التحميل...</div>;
   }
 
   return (
     <div className="space-y-6">
       {/* الإعدادات الأساسية */}
-      <Card>
+      <Card className="bg-[#111118] border-white/10">
         <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
+          <CardTitle className="text-lg flex items-center gap-2 text-white">
             ⚙️ إعدادات النقاط الأساسية
           </CardTitle>
-          <CardDescription>تحكم في قيم النقاط والمكافآت</CardDescription>
+          <CardDescription className="text-gray-400">تحكم في قيم النقاط والمكافآت</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm text-gray-600 mb-1 block">النقاط لكل إعلان</label>
+              <label className="text-sm text-gray-400 mb-1 block">النقاط لكل إعلان</label>
               <Input
                 type="number"
                 value={settings.points_per_ad}
                 onChange={(e) => setSettings({ ...settings, points_per_ad: parseInt(e.target.value) || 0 })}
+                className="bg-white/5 border-white/10 text-white"
               />
             </div>
             <div>
-              <label className="text-sm text-gray-600 mb-1 block">وقت المشاهدة (ثانية)</label>
+              <label className="text-sm text-gray-400 mb-1 block">وقت المشاهدة (ثانية)</label>
               <Input
                 type="number"
                 value={settings.min_watch_time}
                 onChange={(e) => setSettings({ ...settings, min_watch_time: parseInt(e.target.value) || 30 })}
+                className="bg-white/5 border-white/10 text-white"
               />
             </div>
             <div>
-              <label className="text-sm text-gray-600 mb-1 block">نقاط = 1 دولار</label>
+              <label className="text-sm text-gray-400 mb-1 block">نقاط = 1 دولار</label>
               <Input
                 type="number"
                 value={settings.points_per_dollar}
                 onChange={(e) => setSettings({ ...settings, points_per_dollar: parseInt(e.target.value) || 500 })}
+                className="bg-white/5 border-white/10 text-white"
               />
             </div>
             <div>
-              <label className="text-sm text-gray-600 mb-1 block">الحد اليومي للإعلانات</label>
+              <label className="text-sm text-gray-400 mb-1 block">الحد اليومي للإعلانات</label>
               <Input
                 type="number"
                 value={settings.daily_limit}
                 onChange={(e) => setSettings({ ...settings, daily_limit: parseInt(e.target.value) || 50 })}
+                className="bg-white/5 border-white/10 text-white"
               />
             </div>
             <div className="col-span-2">
-              <label className="text-sm text-gray-600 mb-1 block">الحد الأدنى للسحب (نقاط)</label>
+              <label className="text-sm text-gray-400 mb-1 block">الحد الأدنى للسحب (نقاط)</label>
               <Input
                 type="number"
                 value={settings.min_withdrawal}
                 onChange={(e) => setSettings({ ...settings, min_withdrawal: parseInt(e.target.value) || 500 })}
+                className="bg-white/5 border-white/10 text-white"
               />
             </div>
           </div>
@@ -748,14 +753,14 @@ const RewardsSettingsContent = ({ getAuthHeaders }) => {
       </Card>
 
       {/* التحديات اليومية */}
-      <Card>
+      <Card className="bg-[#111118] border-white/10">
         <CardHeader>
-          <CardTitle className="text-lg">🎯 التحديات اليومية</CardTitle>
-          <CardDescription>تظهر للمستخدمين في الصفحة الرئيسية</CardDescription>
+          <CardTitle className="text-lg text-white">🎯 التحديات اليومية</CardTitle>
+          <CardDescription className="text-gray-400">تظهر للمستخدمين في الصفحة الرئيسية</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {settings.daily_challenges.map((challenge, idx) => (
-            <div key={idx} className="p-4 bg-gray-50 rounded-xl space-y-3">
+            <div key={idx} className="p-4 bg-white/5 rounded-xl space-y-3 border border-white/10">
               <div className="flex items-center justify-between">
                 <span className="text-2xl">{challenge.icon}</span>
                 <label className="flex items-center gap-2">
@@ -765,7 +770,7 @@ const RewardsSettingsContent = ({ getAuthHeaders }) => {
                     onChange={(e) => updateChallenge(idx, 'enabled', e.target.checked)}
                     className="rounded"
                   />
-                  <span className="text-sm">مفعّل</span>
+                  <span className="text-sm text-gray-300">مفعّل</span>
                 </label>
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -773,23 +778,27 @@ const RewardsSettingsContent = ({ getAuthHeaders }) => {
                   placeholder="العنوان"
                   value={challenge.title}
                   onChange={(e) => updateChallenge(idx, 'title', e.target.value)}
+                  className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
                 />
                 <Input
                   placeholder="الوصف"
                   value={challenge.desc}
                   onChange={(e) => updateChallenge(idx, 'desc', e.target.value)}
+                  className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
                 />
                 <Input
                   type="number"
                   placeholder="الهدف"
                   value={challenge.target}
                   onChange={(e) => updateChallenge(idx, 'target', parseInt(e.target.value) || 0)}
+                  className="bg-white/5 border-white/10 text-white"
                 />
                 <Input
                   type="number"
                   placeholder="المكافأة"
                   value={challenge.reward}
                   onChange={(e) => updateChallenge(idx, 'reward', parseInt(e.target.value) || 0)}
+                  className="bg-white/5 border-white/10 text-white"
                 />
               </div>
             </div>
