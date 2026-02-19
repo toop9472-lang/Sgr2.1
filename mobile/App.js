@@ -227,6 +227,12 @@ export default function App() {
             onPointsEarned={handlePointsEarned}
           />
         )}
+        {currentPage === 'games' && (
+          <GamesScreen 
+            user={user}
+            onPointsEarned={handlePointsEarned}
+          />
+        )}
       </LinearGradient>
 
       {/* AI Floating Button */}
