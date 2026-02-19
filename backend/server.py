@@ -47,6 +47,8 @@ from routes.comments_routes import router as comments_router
 from routes.challenges_routes import router as challenges_router
 from routes.phone_auth_routes import router as phone_auth_router
 from routes.games_routes import router as games_router
+from routes.websocket_routes import router as websocket_router
+from routes.support_form_routes import router as support_form_router
 from routes import games_routes
 
 
@@ -188,6 +190,10 @@ api_router.include_router(comments_router)
 api_router.include_router(challenges_router)
 api_router.include_router(phone_auth_router)
 api_router.include_router(games_router)
+api_router.include_router(support_form_router)
+
+# Include WebSocket router (at app level, not api_router)
+app.include_router(websocket_router)
 
 # Include the router in the main app
 app.include_router(api_router)
