@@ -227,14 +227,14 @@ const AdminDashboard = ({ admin, onLogout }) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-gray-600">جاري التحميل...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0f]">
+        <p className="text-gray-300">جاري التحميل...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-[#0a0a0f] pb-20">
       {/* Header */}
       <div className="bg-gradient-to-r from-gray-900 to-gray-800 px-4 pt-8 pb-20 shadow-lg">
         <div className="flex justify-between items-center mb-6">
@@ -276,7 +276,7 @@ const AdminDashboard = ({ admin, onLogout }) => {
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg border-0 bg-gradient-to-br from-gray-500 to-gray-600">
+          <Card className="shadow-lg border-0 bg-gradient-to-br from-gray-600 to-gray-700">
             <CardContent className="pt-4 pb-4">
               <div className="text-center text-white">
                 <p className="text-xs opacity-80">غير متصل</p>
@@ -290,38 +290,38 @@ const AdminDashboard = ({ admin, onLogout }) => {
       {/* Financial Stats Cards */}
       <div className="px-4 mb-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Card className="shadow-lg border-0">
+          <Card className="shadow-lg border-0 bg-[#111118]">
             <CardContent className="pt-4 pb-4">
               <div className="text-center">
-                <p className="text-xs text-gray-600">الإيرادات</p>
-                <p className="text-2xl font-bold text-green-600">{stats?.total_revenue || 0} ر.س</p>
+                <p className="text-xs text-gray-400">الإيرادات</p>
+                <p className="text-2xl font-bold text-green-400">{stats?.total_revenue || 0} ر.س</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg border-0">
+          <Card className="shadow-lg border-0 bg-[#111118]">
             <CardContent className="pt-4 pb-4">
               <div className="text-center">
-                <p className="text-xs text-gray-600">المدفوعات</p>
-                <p className="text-2xl font-bold text-red-600">{stats?.total_payouts || 0} $</p>
+                <p className="text-xs text-gray-400">المدفوعات</p>
+                <p className="text-2xl font-bold text-red-400">{stats?.total_payouts || 0} $</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg border-0">
+          <Card className="shadow-lg border-0 bg-[#111118]">
             <CardContent className="pt-4 pb-4">
               <div className="text-center">
-                <p className="text-xs text-gray-600">صافي الربح</p>
-                <p className="text-2xl font-bold text-indigo-600">{stats?.net_profit || 0} ر.س</p>
+                <p className="text-xs text-gray-400">صافي الربح</p>
+                <p className="text-2xl font-bold text-indigo-400">{stats?.net_profit || 0} ر.س</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg border-0">
+          <Card className="shadow-lg border-0 bg-[#111118]">
             <CardContent className="pt-4 pb-4">
               <div className="text-center">
-                <p className="text-xs text-gray-600">إعلانات نشطة</p>
-                <p className="text-2xl font-bold text-purple-600">{stats?.active_ads || 0}</p>
+                <p className="text-xs text-gray-400">إعلانات نشطة</p>
+                <p className="text-2xl font-bold text-purple-400">{stats?.active_ads || 0}</p>
               </div>
             </CardContent>
           </Card>
@@ -330,27 +330,27 @@ const AdminDashboard = ({ admin, onLogout }) => {
 
       {/* Ad Stats Cards - NEW */}
       <div className="px-4 mb-6">
-        <Card className="shadow-lg border-0">
+        <Card className="shadow-lg border-0 bg-[#111118]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">إحصائيات الإعلانات</CardTitle>
+            <CardTitle className="text-base text-white">إحصائيات الإعلانات</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-4 gap-4">
-              <div className="text-center p-3 bg-blue-50 rounded-lg">
-                <p className="text-2xl font-bold text-blue-600">{userStats?.ads?.total_views || 0}</p>
-                <p className="text-xs text-gray-600">مشاهدات</p>
+              <div className="text-center p-3 bg-blue-500/20 rounded-lg">
+                <p className="text-2xl font-bold text-blue-400">{userStats?.ads?.total_views || 0}</p>
+                <p className="text-xs text-gray-400">مشاهدات</p>
               </div>
-              <div className="text-center p-3 bg-green-50 rounded-lg">
-                <p className="text-2xl font-bold text-green-600">{userStats?.ads?.completed_views || 0}</p>
-                <p className="text-xs text-gray-600">مكتملة</p>
+              <div className="text-center p-3 bg-green-500/20 rounded-lg">
+                <p className="text-2xl font-bold text-green-400">{userStats?.ads?.completed_views || 0}</p>
+                <p className="text-xs text-gray-400">مكتملة</p>
               </div>
-              <div className="text-center p-3 bg-purple-50 rounded-lg">
-                <p className="text-2xl font-bold text-purple-600">{userStats?.ads?.completion_rate || 0}%</p>
-                <p className="text-xs text-gray-600">نسبة الإكمال</p>
+              <div className="text-center p-3 bg-purple-500/20 rounded-lg">
+                <p className="text-2xl font-bold text-purple-400">{userStats?.ads?.completion_rate || 0}%</p>
+                <p className="text-xs text-gray-400">نسبة الإكمال</p>
               </div>
-              <div className="text-center p-3 bg-orange-50 rounded-lg">
-                <p className="text-2xl font-bold text-orange-600">{userStats?.ads?.avg_views_per_ad || 0}</p>
-                <p className="text-xs text-gray-600">متوسط/إعلان</p>
+              <div className="text-center p-3 bg-orange-500/20 rounded-lg">
+                <p className="text-2xl font-bold text-orange-400">{userStats?.ads?.avg_views_per_ad || 0}</p>
+                <p className="text-xs text-gray-400">متوسط/إعلان</p>
               </div>
             </div>
           </CardContent>
@@ -360,45 +360,45 @@ const AdminDashboard = ({ admin, onLogout }) => {
       {/* Tabs */}
       <div className="px-4">
         <Tabs defaultValue="users" className="w-full">
-          <TabsList className="flex flex-wrap gap-2 h-auto p-2 bg-gray-100 rounded-lg">
-            <TabsTrigger value="users" className="flex-1 min-w-[100px] text-xs py-2">
+          <TabsList className="flex flex-wrap gap-2 h-auto p-2 bg-[#111118] rounded-lg">
+            <TabsTrigger value="users" className="flex-1 min-w-[100px] text-xs py-2 text-gray-300 data-[state=active]:bg-white/10 data-[state=active]:text-white">
               المستخدمون ({totalUsers})
             </TabsTrigger>
-            <TabsTrigger value="withdrawals" className="flex-1 min-w-[100px] text-xs py-2">
+            <TabsTrigger value="withdrawals" className="flex-1 min-w-[100px] text-xs py-2 text-gray-300 data-[state=active]:bg-white/10 data-[state=active]:text-white">
               السحوبات ({pendingWithdrawals.length})
             </TabsTrigger>
-            <TabsTrigger value="ads" className="flex-1 min-w-[100px] text-xs py-2 flex items-center justify-center gap-1">
+            <TabsTrigger value="ads" className="flex-1 min-w-[100px] text-xs py-2 flex items-center justify-center gap-1 text-gray-300 data-[state=active]:bg-white/10 data-[state=active]:text-white">
               <Video className="w-3 h-3" /> الإعلانات ({pendingAds.length})
             </TabsTrigger>
-            <TabsTrigger value="ai-assistant" className="flex-1 min-w-[100px] text-xs py-2 flex items-center justify-center gap-1">
+            <TabsTrigger value="ai-assistant" className="flex-1 min-w-[100px] text-xs py-2 flex items-center justify-center gap-1 text-gray-300 data-[state=active]:bg-white/10 data-[state=active]:text-white">
               <Bot className="w-3 h-3" /> مساعد AI
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex-1 min-w-[100px] text-xs py-2">
+            <TabsTrigger value="analytics" className="flex-1 min-w-[100px] text-xs py-2 text-gray-300 data-[state=active]:bg-white/10 data-[state=active]:text-white">
               التحليلات
             </TabsTrigger>
-            <TabsTrigger value="invoices" className="flex-1 min-w-[100px] text-xs py-2">
+            <TabsTrigger value="invoices" className="flex-1 min-w-[100px] text-xs py-2 text-gray-300 data-[state=active]:bg-white/10 data-[state=active]:text-white">
               الفواتير
             </TabsTrigger>
-            <TabsTrigger value="dev-requests" className="flex-1 min-w-[100px] text-xs py-2 flex items-center justify-center gap-1">
+            <TabsTrigger value="dev-requests" className="flex-1 min-w-[100px] text-xs py-2 flex items-center justify-center gap-1 text-gray-300 data-[state=active]:bg-white/10 data-[state=active]:text-white">
               <FileText className="w-3 h-3" /> طلبات التطوير
             </TabsTrigger>
-            <TabsTrigger value="rewards" className="flex-1 min-w-[100px] text-xs py-2">
+            <TabsTrigger value="rewards" className="flex-1 min-w-[100px] text-xs py-2 text-gray-300 data-[state=active]:bg-white/10 data-[state=active]:text-white">
               🎁 المكافآت
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex-1 min-w-[100px] text-xs py-2">
+            <TabsTrigger value="settings" className="flex-1 min-w-[100px] text-xs py-2 text-gray-300 data-[state=active]:bg-white/10 data-[state=active]:text-white">
               الإعدادات
             </TabsTrigger>
           </TabsList>
 
           {/* Users Management Tab */}
           <TabsContent value="users" className="mt-4">
-            <Card>
+            <Card className="bg-[#111118] border-white/10">
               <CardHeader>
-                <CardTitle className="text-lg flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center justify-between text-white">
                   <span>إدارة المستخدمين</span>
                   <div className="flex items-center gap-2">
                     <div className="relative">
-                      <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-500" />
                       <Input
                         placeholder="بحث بالاسم أو البريد..."
                         value={userSearch}
@@ -406,15 +406,15 @@ const AdminDashboard = ({ admin, onLogout }) => {
                           setUserSearch(e.target.value);
                           loadUsers(1, e.target.value);
                         }}
-                        className="pr-10 w-64"
+                        className="pr-10 w-64 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
                       />
                     </div>
-                    <Button onClick={() => loadUsers(usersPage, userSearch)} variant="ghost" size="sm">
+                    <Button onClick={() => loadUsers(usersPage, userSearch)} variant="ghost" size="sm" className="text-gray-300 hover:text-white hover:bg-white/10">
                       <RefreshCw className="w-4 h-4" />
                     </Button>
                   </div>
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-gray-400">
                   إجمالي: {totalUsers} | 
                   نشط الآن: {userStats?.users?.online || 0} | 
                   نشط آخر 24 ساعة: {userStats?.users?.active_24h || 0}
@@ -426,36 +426,36 @@ const AdminDashboard = ({ admin, onLogout }) => {
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full">
-                      <thead className="bg-gray-100">
+                      <thead className="bg-white/5">
                         <tr>
-                          <th className="text-right p-3 text-sm font-semibold text-gray-700">المستخدم</th>
-                          <th className="text-right p-3 text-sm font-semibold text-gray-700">البريد</th>
-                          <th className="text-center p-3 text-sm font-semibold text-gray-700">النقاط</th>
-                          <th className="text-center p-3 text-sm font-semibold text-gray-700">الحالة</th>
-                          <th className="text-center p-3 text-sm font-semibold text-gray-700">الإجراءات</th>
+                          <th className="text-right p-3 text-sm font-semibold text-gray-300">المستخدم</th>
+                          <th className="text-right p-3 text-sm font-semibold text-gray-300">البريد</th>
+                          <th className="text-center p-3 text-sm font-semibold text-gray-300">النقاط</th>
+                          <th className="text-center p-3 text-sm font-semibold text-gray-300">الحالة</th>
+                          <th className="text-center p-3 text-sm font-semibold text-gray-300">الإجراءات</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100">
+                      <tbody className="divide-y divide-white/5">
                         {allUsers.map((user) => (
-                          <tr key={user.user_id || user.id} className="hover:bg-gray-50">
+                          <tr key={user.user_id || user.id} className="hover:bg-white/5">
                             <td className="p-3">
                               <div className="flex items-center gap-3">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${user.is_banned ? 'bg-red-500' : 'bg-indigo-500'}`}>
                                   {(user.name || 'U')[0].toUpperCase()}
                                 </div>
-                                <span className="font-medium">{user.name || 'بدون اسم'}</span>
+                                <span className="font-medium text-white">{user.name || 'بدون اسم'}</span>
                               </div>
                             </td>
-                            <td className="p-3 text-sm text-gray-600" dir="ltr">{user.email}</td>
+                            <td className="p-3 text-sm text-gray-400" dir="ltr">{user.email}</td>
                             <td className="p-3 text-center">
-                              <span className="font-bold text-indigo-600">{user.points || 0}</span>
-                              <span className="text-xs text-gray-400 block">مكتسبة: {user.total_earned || 0}</span>
+                              <span className="font-bold text-indigo-400">{user.points || 0}</span>
+                              <span className="text-xs text-gray-500 block">مكتسبة: {user.total_earned || 0}</span>
                             </td>
                             <td className="p-3 text-center">
                               {user.is_banned ? (
                                 <Badge variant="destructive">محظور</Badge>
                               ) : (
-                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">نشط</Badge>
+                                <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/30">نشط</Badge>
                               )}
                             </td>
                             <td className="p-3">
@@ -465,7 +465,7 @@ const AdminDashboard = ({ admin, onLogout }) => {
                                     onClick={() => handleUnbanUser(user.user_id || user.id)}
                                     variant="ghost"
                                     size="sm"
-                                    className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                    className="text-green-400 hover:text-green-300 hover:bg-green-500/10"
                                     title="رفع الحظر"
                                   >
                                     <UserCheck className="w-4 h-4" />
@@ -475,7 +475,7 @@ const AdminDashboard = ({ admin, onLogout }) => {
                                     onClick={() => handleBanUser(user.user_id || user.id, user.name)}
                                     variant="ghost"
                                     size="sm"
-                                    className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                    className="text-orange-400 hover:text-orange-300 hover:bg-orange-500/10"
                                     title="حظر"
                                   >
                                     <Ban className="w-4 h-4" />
@@ -485,7 +485,7 @@ const AdminDashboard = ({ admin, onLogout }) => {
                                   onClick={() => handleDeleteUser(user.user_id || user.id, user.name)}
                                   variant="ghost"
                                   size="sm"
-                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
                                   title="حذف"
                                 >
                                   <Trash2 className="w-4 h-4" />
