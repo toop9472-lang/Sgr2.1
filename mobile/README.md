@@ -209,8 +209,8 @@ eas submit -p android
 
 ## 📞 الدعم والمساعدة
 
-- **الموقع:** https://app-overhaul-15.preview.emergentagent.com
-- **API Docs:** https://app-overhaul-15.preview.emergentagent.com/docs
+- **الموقع:** https://game-pivot-1.preview.emergentagent.com
+- **API Docs:** https://game-pivot-1.preview.emergentagent.com/docs
 
 ---
 

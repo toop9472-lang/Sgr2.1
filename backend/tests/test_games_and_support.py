@@ -3,7 +3,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://app-overhaul-15.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://game-pivot-1.preview.emergentagent.com')
 
 class TestGamesAPI:
     """Games API endpoint tests"""

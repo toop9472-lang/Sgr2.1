@@ -177,7 +177,7 @@ eas build --platform ios --profile production
 
 ### API URL:
 ```
-https://app-overhaul-15.preview.emergentagent.com
+https://game-pivot-1.preview.emergentagent.com
 ```
 
 ---
