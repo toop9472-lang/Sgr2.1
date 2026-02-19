@@ -3,6 +3,7 @@ import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import AuthPage from "./components/AuthPage";
 import AuthCallback from "./components/AuthCallback";
+import ForgotPasswordPage from "./components/ForgotPasswordPage";
 import HomePage from "./components/HomePage";
 import FullScreenAdsViewer from "./components/FullScreenAdsViewer";
 import AIFloatingButton from "./components/AIFloatingButton";
