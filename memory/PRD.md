@@ -1,7 +1,12 @@
 # Saqr Rewards App - PRD
 
 ## Original Problem Statement
-Build an application for watching rewarded video ads where users earn points.
+Build an application for watching rewarded video ads where users earn points. The app was rejected by Apple due to:
+1. Primary purpose being ad display
+2. Non-functional Google/Apple login on iPad  
+3. Inadequate support URL
+
+The user requested to transform the app into a gaming platform with Chess, Tic-Tac-Toe, Picture Puzzle, Trivia, and Riddles games.
 
 ## User's Preferred Language
 Arabic (العربية)
@@ -10,148 +15,91 @@ Arabic (العربية)
 
 ## What's Been Implemented
 
-## ✅ إصلاح التنقل في عارض الإعلانات (February 14, 2026)
-- [x] زر X → ينقل للصفحة الرئيسية
-- [x] زر السهم ← → ينقل للملف الشخصي
-- [x] تحديث الموبايل ليطابق الويب
+### ✅ Gaming Platform (February 19, 2026) - MAJOR UPDATE
+- [x] Complete games section with 5 games:
+  - Chess (الشطرنج) - 200 points, AI with medium/hard difficulty
+  - Tic-Tac-Toe (إكس أو) - 80 points, AI with minimax algorithm
+  - Picture Puzzle (تركيب الصور) - 150 points, 3x3, 4x4, 5x5 grids
+  - Trivia (أسئلة ثقافية) - 100 points, 10 cultural questions
+  - Riddles (الألغاز) - 160 points, Arabic riddles with hints
+- [x] Global leaderboard with rankings
+- [x] Points-based rewards system
+- [x] Mode selection (vs AI medium/hard)
+- [x] Game statistics tracking
 
-## ✅ نظام التعليقات على الإعلانات (February 14, 2026)
-- [x] أيقونة التعليقات ظاهرة دائماً بجانب زر الصوت
-- [x] لوحة تعليقات جميلة وهادئة من الأسفل
-- [x] التعليقات خاصة بكل إعلان (لا تتداخل بين الإعلانات)
-- [x] ليست دردشة مفتوحة - فقط تعليقات على الإعلان
-- [x] إمكانية الإعجاب بالتعليقات
-- [x] تصميم نظيف ومريح
-- [x] API يعمل: GET /api/comments/ad/{ad_id}, POST /api/comments/
+### ✅ Support Page (February 19, 2026)
+- [x] Professional support page at /support
+- [x] FAQ section with 8 questions in Arabic
+- [x] Contact form that submits to backend
+- [x] Ticket ID generation for support requests
+- [x] Contact info: support@saqr.app
 
-## ✅ تم تحسين صفحة مشاهدة الإعلانات (February 14, 2026)
-- [x] تصميم نظيف وهادئ
-- [x] زر X للخروج للرئيسية + سهم للخلف للصفحة الشخصية
-- [x] إلغاء جميع الأسهم الأخرى
-- [x] عداد مختصر وأنيق
-- [x] معلومات الإعلان مصغرة ومائلة لليمين
-- [x] إلغاء صورة المعلن
-- [x] رابط الموقع كنص خفيف
-- [x] تحسين الأداء لتحمل آلاف الإعلانات
+### ✅ WebSocket Multiplayer Infrastructure (February 19, 2026)
+- [x] WebSocket routes for real-time multiplayer
+- [x] Game room management
+- [x] Matchmaking system
+- [x] Player waiting queue
+- [x] Note: Frontend integration pending
 
-### New Hourly Ad Packages System ✅ (February 14, 2026)
-- [x] 7 hourly pricing packages:
-  - 1 hour: 79 SAR
-  - 3 hours: 119 SAR
-  - 6 hours: 149 SAR
-  - 12 hours: 199 SAR
-  - 24 hours: 275 SAR
-  - 48 hours: 399 SAR
-  - 7 days: 999 SAR
-- [x] Countdown timer for active ads
-- [x] Ad auto-activation after payment
-- [x] Ad expiration tracking
-
-### Ad Filtering System ✅ (February 14, 2026)
-- [x] Local ads (personal ads) filter
-- [x] Global ads filter
-- [x] Type selection on advertiser page
-
-### Manual Payout Approval System ✅ (February 14, 2026)
-- [x] Automatic approval for payouts < 10 points
-- [x] Manual admin approval required for payouts >= 10 points
-- [x] Admin withdrawal management page
-- [x] Points refund on rejection
-
-### Phone Authentication System ✅ (February 13, 2026)
-- [x] SMS OTP verification for registration
-- [x] Phone number registration with password validation
-- [x] Login with 2FA (SMS verification on every login)
-- [x] Password reset via SMS
-- [x] Password strength validation (8 chars, uppercase, number, symbol)
-- [x] Rate limiting (max 5 OTPs per hour)
-- [x] OTP expiration (5 minutes)
-- [x] Max 3 attempts per OTP
-
-### Core Features ✅
+### ✅ Previous Features (Still Working)
 - [x] Cheat-proof point system (1 point per 60 seconds)
 - [x] Ad Viewer with timer
 - [x] Guest mode
 - [x] Remember Me feature
 - [x] Mobile-optimized UI
-
-### Daily Challenges System ✅
-- [x] 5 Daily Challenges (max 69 points/day)
-- [x] 14-Day Login Rewards (150 points/month)
-
-### Advertiser System ✅
-- [x] Advertiser Dashboard
-- [x] Hourly Ad Packages
-- [x] Stripe payment integration
-- [x] My Ads Page with countdown timer
-- [x] Ad countdown timer component
-
-### Security Features ✅
-- [x] CORS policy with allowlist
-- [x] JWT authentication
-- [x] Rate limiting
-- [x] Account lockout
+- [x] Daily Challenges System
+- [x] Advertiser System with Stripe
+- [x] Phone Authentication with OTP
+- [x] Social Logins (Google/Apple)
 
 ---
 
 ## API Endpoints
 
-### Payment Packages
-- `GET /api/payments/packages` - Get hourly pricing packages
-- `POST /api/payments/checkout` - Create Stripe checkout session
-- `GET /api/payments/status/{session_id}` - Check payment status
+### Games API
+- `GET /api/games/leaderboard` - Get global leaderboard
+- `POST /api/games/complete` - Record game completion and award points
 
-### Ads
-- `GET /api/ads` - Get all active ads (supports ?ad_type=local|global filter)
-- `GET /api/ads/advertiser/status/{ad_id}` - Get ad status with countdown
-- `GET /api/ads/advertiser/my-ads?email={email}` - Get advertiser's ads
+### Support API
+- `POST /api/support/submit` - Submit support request
+- `GET /api/support/tickets` - Get support tickets (admin)
+- `PUT /api/support/tickets/{id}/status` - Update ticket status
 
-### Withdrawals (Admin)
-- `GET /api/withdrawals/admin/pending` - Get pending withdrawal requests
-- `POST /api/withdrawals/admin/{id}/approve` - Approve withdrawal
-- `POST /api/withdrawals/admin/{id}/reject` - Reject withdrawal
-
-### Phone Authentication
-- `POST /api/phone/send-otp` - Send verification OTP
-- `POST /api/phone/verify-otp` - Verify OTP code
-- `POST /api/phone/register` - Register with phone
-- `POST /api/phone/login` - Login step 1 (password)
-- `POST /api/phone/verify-login` - Login step 2 (2FA OTP)
-- `POST /api/phone/forgot-password` - Request password reset
-- `POST /api/phone/reset-password` - Reset password with OTP
+### WebSocket (Multiplayer)
+- `WS /ws/game/{player_id}` - Real-time game connection
+- `GET /api/game/online-players` - Get online player count
 
 ---
 
 ## Environment Variables
 
-### Twilio SMS (Add to /app/backend/.env)
+### Backend (/app/backend/.env)
 ```
-TWILIO_ACCOUNT_SID=your_account_sid
-TWILIO_AUTH_TOKEN=your_auth_token
-TWILIO_PHONE_NUMBER=+1xxxxxxxxxx
-```
-
-### Stripe (Already configured)
-```
-STRIPE_API_KEY=sk_test_...
+MONGO_URL=mongodb://localhost:27017
+DB_NAME=saqr_db
+JWT_SECRET=xxx
+CORS_ORIGINS=*
+STRIPE_API_KEY=sk_test_xxx
 ```
 
 ---
 
-## New Components Created
+## Files Reference
+
+### Games (Mobile)
+- `/app/mobile/src/screens/GamesScreen.js` - Main games hub (5 games)
+- `/app/mobile/src/screens/games/ChessGame.js` - Chess game component
+
+### Games (Web)
+- `/app/frontend/src/components/GamesPage.jsx` - Web games page
+
+### Support
+- `/app/frontend/src/pages/SupportPage.jsx` - Support page with FAQ
+- `/app/backend/routes/support_form_routes.py` - Support form API
 
 ### Backend
-- `/app/backend/routes/payment_routes.py` - Updated with hourly packages
-- `/app/backend/routes/ad_routes.py` - Updated with ad filtering and countdown
-- `/app/backend/routes/withdrawal_routes.py` - Updated with manual approval
-- `/app/backend/routes/advertiser_routes.py` - Updated with hourly packages
-
-### Frontend
-- `/app/frontend/src/components/AdvertiserPage.jsx` - Updated with hourly packages
-- `/app/frontend/src/components/AdCountdownTimer.jsx` - NEW - Countdown timer component
-- `/app/frontend/src/components/AdTypeFilter.jsx` - NEW - Ad type filter component
-- `/app/frontend/src/components/MyAdsPage.jsx` - NEW - Advertiser's ads page
-- `/app/frontend/src/components/AdminWithdrawalsPage.jsx` - NEW - Admin withdrawals management
+- `/app/backend/routes/games_routes.py` - Games API
+- `/app/backend/routes/websocket_routes.py` - WebSocket multiplayer
 
 ---
 
@@ -161,94 +109,53 @@ STRIPE_API_KEY=sk_test_...
 
 ---
 
-## Pending Tasks
+## Pending Tasks (Priority Order)
 
-### P0 - Critical
-- [x] ✅ iOS App Build for App Store (February 15, 2026) - Build #17
-- [x] ✅ Android App Build for Play Store (February 15, 2026) - Version Code 46
-- [x] ✅ Add Social Login Options (Google, Apple, Email, Guest)
-- [ ] Integrate SMS/2FA into mobile app UI
+### P0 - Apple Store Compliance
+- [x] ✅ Games section implemented (main purpose is now gaming)
+- [x] ✅ Support page with FAQ and contact form
+- [ ] Test Google/Apple login on iPad
+- [ ] Build and submit new iOS version
 
-### P1 - High Priority
-- [x] Server always-on (User upgraded hosting plan + UptimeRobot)
-- [ ] Test full payment flow with real Stripe
-- [ ] Add countdown timer to user profile picture
-- [ ] Full feature parity verification between Web and Mobile
+### P1 - User-Reported Bugs (List of 17)
+- [ ] Points resetting on login (frontend issue)
+- [ ] Ads stuck on "loading"
+- [ ] Language switching not working
+- [ ] Light mode not working
+- [ ] Daily login bonus calculation
 
-### P2 - Future
-- [ ] Enable Live Twilio SMS (User postponed)
-- [ ] Improve Support Screen UI on mobile
-
-### Completed This Session (February 15, 2026)
-- [x] iOS App Build v5.2.0 (Build #16) - FINISHED
-  - IPA URL: https://expo.dev/artifacts/eas/kyYTXa9nbWCvRJ5YGmKRLh.ipa
-  - SDK: Expo 53.0.0
-  - Ready for App Store Connect
-- [x] Android App Build (AAB) - Successfully uploaded by user
-- [x] Server stability verified via UptimeRobot
-- [x] Expo SDK upgraded from older version to SDK 53
-- [x] 2-second display timeout for ad info implemented
-
-### Previous Session Completed
-- [x] Mobile AdViewerScreen redesigned to match Web version
-  - Clean minimal design
-  - Top bar with back/close buttons and info (points, duration, time)
-  - Sound button bottom right
-  - "المس للتحكم" (Tap for controls) hint
-  - Play/pause controls on tap
-  - Navigation between ads
-  - Points animation on earning
-
----
-
-## Files Reference
-
-### New Ads System
-- Packages: `/app/backend/routes/payment_routes.py` (PRICING_PACKAGES)
-- Ad filtering: `/app/backend/routes/ad_routes.py` (ad_type parameter)
-- Withdrawal approval: `/app/backend/routes/withdrawal_routes.py` (MANUAL_APPROVAL_THRESHOLD)
-- Advertiser pricing: `/app/backend/routes/advertiser_routes.py` (HOURLY_PACKAGES)
-
-### Phone Auth
-- Service: `/app/backend/services/sms_service.py`
-- Routes: `/app/backend/routes/phone_auth_routes.py`
+### P2 - Future Features
+- [ ] Real-time multiplayer integration (WebSocket backend ready)
+- [ ] More games and content
+- [ ] Achievements system
 
 ---
 
 ## Test Reports
-- Latest: `/app/test_reports/iteration_16.json`
-- Backend tests: `/app/backend/tests/test_new_ads_system.py`
+- Latest: `/app/test_reports/iteration_18.json` - All tests passed (100%)
 
 ---
 
-**Last Updated:** February 15, 2026
+**Last Updated:** February 19, 2026
 
 ---
 
 ## Change Log
+
+### February 19, 2026 - Gaming Platform
+- ✅ Created 5 games (Chess, Tic-Tac-Toe, Puzzle, Trivia, Riddles)
+- ✅ Games leaderboard API
+- ✅ Support page with contact form
+- ✅ WebSocket multiplayer infrastructure
+- ✅ Updated BottomNav to show "الألعاب" (Games)
+- ✅ All tests passed (100% success rate)
 
 ### February 15, 2026 - iOS & Android Builds
 - ✅ Built iOS IPA for App Store (v5.2.0, Build #16)
-  - Expo SDK 53.0.0
-  - Bundle ID: com.saqr.rewards
-  - IPA: https://expo.dev/artifacts/eas/kyYTXa9nbWCvRJ5YGmKRLh.ipa
-- ✅ Android AAB uploaded to Play Store by user
-- ✅ Server stability verified (UptimeRobot active)
-- ✅ Feature parity between Web and Mobile verified
-  - AdViewerScreen matches FullScreenAdsViewer
-  - Comments system works on both platforms
-  - 2-second ad info display timeout on both platforms
-
----
-
-## Change Log
+- ✅ Android AAB uploaded to Play Store
+- ✅ Server stability verified
 
 ### February 14, 2026 - Mobile UI Sync
-- Updated `/app/mobile/src/screens/AdViewerScreen.js` to match web design
-- Key changes:
-  - Removed complex bottom info panel (advertiser avatar, description, etc.)
-  - Added minimal top bar with: back button, info stats, close button
-  - Added "المس للتحكم" hint at bottom
-  - Controls show on tap: play/pause center, navigation
-  - Points animation on earning minute
-  - Clean black background with transparent overlays
+- ✅ Updated AdViewerScreen to match web design
+- ✅ Comments system
+- ✅ 2-second ad info display timeout
