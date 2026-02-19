@@ -349,7 +349,9 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
   const games = [
     { id: 'chess', name: 'الشطرنج', icon: '♟️', colors: ['#8b5cf6', '#6d28d9'], description: 'لعبة الملوك', maxPoints: 200, online: true },
     { id: 'tictactoe', name: 'إكس أو', icon: '⭕', colors: ['#f59e0b', '#d97706'], description: 'تحدى منافسك', maxPoints: 80, online: true },
+    { id: 'puzzle', name: 'تركيب الصور', icon: '🧩', colors: ['#3b82f6', '#1d4ed8'], description: 'رتب القطع', maxPoints: 150, online: false },
     { id: 'trivia', name: 'أسئلة ثقافية', icon: '❓', colors: ['#10b981', '#059669'], description: 'اختبر معلوماتك', maxPoints: 100, online: false },
+    { id: 'riddles', name: 'الألغاز', icon: '💡', colors: ['#ef4444', '#dc2626'], description: 'حل الألغاز', maxPoints: 160, online: false },
   ];
 
   useEffect(() => {
