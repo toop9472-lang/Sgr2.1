@@ -48,6 +48,16 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress }) => {
         {navItems.map((item) => (
           <NavButton key={item.id} item={item} />
         ))}
+        
+        {/* زر المشاهدة */}
+        <TouchableOpacity 
+          onPress={onAdsPress}
+          activeOpacity={0.8}
+          style={styles.watchButton}
+        >
+          <Ionicons name="play-circle" size={20} color="#FFF" />
+          <Text style={styles.watchButtonText}>شاهد</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
