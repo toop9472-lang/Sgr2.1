@@ -5,7 +5,7 @@ from typing import Optional, List
 from datetime import datetime, timezone
 from bson import ObjectId
 
-router = APIRouter(prefix="/api/games", tags=["Games"])
+router = APIRouter(prefix="/games", tags=["Games"])
 
 # Database will be injected
 db = None
