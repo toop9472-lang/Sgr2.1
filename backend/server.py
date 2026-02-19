@@ -49,6 +49,7 @@ from routes.phone_auth_routes import router as phone_auth_router
 from routes.games_routes import router as games_router
 from routes.websocket_routes import router as websocket_router
 from routes.support_form_routes import router as support_form_router
+from routes.diamonds_routes import router as diamonds_router
 from routes import games_routes
 
 
@@ -191,6 +192,7 @@ api_router.include_router(challenges_router)
 api_router.include_router(phone_auth_router)
 api_router.include_router(games_router)
 api_router.include_router(support_form_router)
+api_router.include_router(diamonds_router)
 
 # Include WebSocket router (at app level, not api_router)
 app.include_router(websocket_router)
