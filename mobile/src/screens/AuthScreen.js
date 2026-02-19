@@ -564,7 +564,7 @@ const AuthScreen = ({ onLogin }) => {
               />
             </View>
             <Text style={styles.appName}>صقر</Text>
-            <Text style={styles.tagline}>شاهد الإعلانات واكسب المال</Text>
+            <Text style={styles.tagline}>أكمل التحديات واكسب المكافآت</Text>
 
             {/* Apple Sign In */}
             {Platform.OS === 'ios' && (
@@ -572,9 +572,16 @@ const AuthScreen = ({ onLogin }) => {
                 style={styles.appleBtn} 
                 onPress={handleAppleSignIn}
                 activeOpacity={0.8}
+                disabled={isLoading}
               >
-                <Ionicons name="logo-apple" size={22} color="#FFF" />
-                <Text style={styles.appleBtnText}>الدخول بحساب Apple</Text>
+                {isLoading ? (
+                  <ActivityIndicator size="small" color="#FFF" />
+                ) : (
+                  <>
+                    <Ionicons name="logo-apple" size={22} color="#FFF" />
+                    <Text style={styles.appleBtnText}>الدخول بحساب Apple</Text>
+                  </>
+                )}
               </TouchableOpacity>
             )}
 
@@ -583,10 +590,24 @@ const AuthScreen = ({ onLogin }) => {
               style={styles.googleBtn} 
               onPress={handleGoogleSignIn}
               activeOpacity={0.8}
+              disabled={isLoading}
             >
-              <Ionicons name="logo-google" size={20} color="#FFF" />
-              <Text style={styles.googleBtnText}>الدخول بحساب Google</Text>
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#FFF" />
+              ) : (
+                <>
+                  <Ionicons name="logo-google" size={20} color="#FFF" />
+                  <Text style={styles.googleBtnText}>الدخول بحساب Google</Text>
+                </>
+              )}
             </TouchableOpacity>
+
+            {/* Divider */}
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>أو</Text>
+              <View style={styles.dividerLine} />
+            </View>
 
             {/* Email Login */}
             <TouchableOpacity 
@@ -598,23 +619,6 @@ const AuthScreen = ({ onLogin }) => {
               <Text style={styles.emailText}>الدخول بالبريد الإلكتروني</Text>
             </TouchableOpacity>
 
-            {/* Divider */}
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>أو</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            {/* Phone Login */}
-            <TouchableOpacity 
-              style={styles.phoneBtn} 
-              onPress={() => setMode('phone_login')}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="phone-portrait-outline" size={20} color="#888" />
-              <Text style={styles.phoneBtnText}>الدخول برقم الجوال</Text>
-            </TouchableOpacity>
-
             {/* Guest Login */}
             <TouchableOpacity 
               style={styles.guestBtn} 
@@ -622,21 +626,19 @@ const AuthScreen = ({ onLogin }) => {
               disabled={isLoading}
               activeOpacity={0.8}
             >
-              {isLoading ? (
-                <ActivityIndicator size="small" color="#888" />
-              ) : (
-                <>
-                  <Ionicons name="person-outline" size={20} color="#888" />
-                  <Text style={styles.guestBtnText}>الدخول كزائر</Text>
-                </>
-              )}
+              <Ionicons name="person-outline" size={20} color="#888" />
+              <Text style={styles.guestBtnText}>الدخول كزائر</Text>
             </TouchableOpacity>
 
             {/* Terms */}
             <Text style={styles.terms}>
               بالتسجيل، أنت توافق على{' '}
-              <Text style={styles.termsLink} onPress={() => Linking.openURL('https://saqrpointscom.store/terms')}>
+              <Text style={styles.termsLink} onPress={() => Linking.openURL('https://saqr-live.emergent.host/terms')}>
                 الشروط والأحكام
+              </Text>
+              {' '}و{' '}
+              <Text style={styles.termsLink} onPress={() => Linking.openURL('https://saqr-live.emergent.host/privacy')}>
+                سياسة الخصوصية
               </Text>
             </Text>
           </View>
