@@ -826,6 +826,8 @@ const GamesScreen = ({ user, onPointsEarned }) => {
         return <ChessGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
       case 'tictactoe':
         return <TicTacToeGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
+      case 'brickbreaker':
+        return <BrickBreakerGame difficulty={gameMode === 'ai_hard' ? 'hard' : 'medium'} onComplete={handleGameComplete} onClose={closeGame} />;
       case 'puzzle':
         return <PuzzleGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
       case 'trivia':
