@@ -463,7 +463,7 @@ function MainApp() {
                 />
               )}
               {currentPage === 'support' && !showFullScreenAds && (
-                <SupportPage 
+                <AISupportPage 
                   user={user}
                 />
               )}
