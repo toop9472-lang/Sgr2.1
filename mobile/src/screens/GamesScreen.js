@@ -732,6 +732,7 @@ const GamesScreen = ({ user, onPointsEarned }) => {
   const games = [
     { id: 'chess', name: 'الشطرنج', icon: 'trophy-outline', colors: ['#8b5cf6', '#6d28d9'], description: 'لعبة الملوك', maxPoints: 200, online: true },
     { id: 'tictactoe', name: 'إكس أو', icon: 'grid-outline', colors: ['#f59e0b', '#d97706'], description: 'تحدى منافسك', maxPoints: 80, online: true },
+    { id: 'brickbreaker', name: 'تكسير الطوب', icon: 'apps', colors: ['#ec4899', '#db2777'], description: 'كسّر كل الطوب', maxPoints: 180, online: false },
     { id: 'puzzle', name: 'تركيب الصور', icon: 'apps-outline', colors: ['#3b82f6', '#1d4ed8'], description: 'رتب القطع', maxPoints: 150, online: true },
     { id: 'trivia', name: 'أسئلة ثقافية', icon: 'school-outline', colors: ['#10b981', '#059669'], description: 'اختبر معلوماتك', maxPoints: 100, online: false },
     { id: 'riddles', name: 'الألغاز', icon: 'bulb-outline', colors: ['#ef4444', '#dc2626'], description: 'حل الألغاز', maxPoints: 160, online: false },
