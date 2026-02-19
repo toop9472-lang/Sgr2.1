@@ -242,29 +242,39 @@ const AuthPage = ({ onLogin, onGuestMode, onAdminLogin }) => {
               
               {/* خيار تذكرني */}
               {!isRegister && (
-                <div className="flex items-center gap-3 py-2">
+                <div className="flex items-center justify-between py-2">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setRememberMe(!rememberMe)}
+                      className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                        rememberMe 
+                          ? 'bg-[#3b82f6] border-[#3b82f6]' 
+                          : 'bg-transparent border-white/30 hover:border-white/50'
+                      }`}
+                      data-testid="remember-me-checkbox"
+                    >
+                      {rememberMe && (
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </button>
+                    <label 
+                      className="text-gray-400 text-sm cursor-pointer select-none"
+                      onClick={() => setRememberMe(!rememberMe)}
+                    >
+                      {isRTL ? 'تذكرني' : 'Remember me'}
+                    </label>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => setRememberMe(!rememberMe)}
-                    className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                      rememberMe 
-                        ? 'bg-[#3b82f6] border-[#3b82f6]' 
-                        : 'bg-transparent border-white/30 hover:border-white/50'
-                    }`}
-                    data-testid="remember-me-checkbox"
+                    onClick={() => navigate('/forgot-password')}
+                    className="text-[#60a5fa] hover:underline text-sm"
+                    data-testid="forgot-password-link"
                   >
-                    {rememberMe && (
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
+                    {isRTL ? 'نسيت كلمة المرور؟' : 'Forgot password?'}
                   </button>
-                  <label 
-                    className="text-gray-400 text-sm cursor-pointer select-none"
-                    onClick={() => setRememberMe(!rememberMe)}
-                  >
-                    {isRTL ? 'تذكرني' : 'Remember me'}
-                  </label>
                 </div>
               )}
               
