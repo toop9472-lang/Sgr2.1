@@ -1,207 +1,202 @@
 <analysis>**original_problem_statement:**
-The user's application was repeatedly rejected by app stores due to backend instability, security vulnerabilities, and a poor UI/UX. The initial scope included overhauling the ad viewing system, implementing a commenting feature, and fixing build blockers.
+The user's application was repeatedly rejected by app stores due to backend instability, security vulnerabilities, and a poor UI/UX. After deploying the app to a new, stable server to fix the instability, the user received another rejection from Apple with three main issues:
+1.  **Guideline 1.5:** The support URL leads to a page without actual support information.
+2.  **Guideline 2.1:** Sign in with Apple or Google is non-functional on iPad.
+3.  **Guideline 3.2.2:** The primary purpose of the app is to display ads, which is inappropriate for the App Store.
 
-After resolving the build issues, the user's app was again rejected by Apple due to a missing guest/social login flow. The user has also reported multiple new issues:
-1.  The production server becomes unresponsive (sleeps).
-2.  The mobile app has UI/UX inconsistencies compared to the web version (ad packages, page layout direction).
-3.  The production URL for the web app shows an old version of the code.
-4.  Google Play requires additional information for compliance (developer account linking, app links).
+To address this, the user has requested a major overhaul and provided a list of 17 bugs and feature requests. The primary goal is to pivot the app's core purpose from watch ads for points to a gaming and engagement platform to pass Apple's review.
 
 **PRODUCT REQUIREMENTS (New & Updated):**
-1.  **Solve Server Instability:** Deploy the backend and frontend to a permanent, non-sleeping hosting environment.
-2.  **Restore Login Options:** The login screen must provide options for Google, Apple, Email, and Guest login to comply with app store review guidelines.
-3.  **Achieve UI/UX Parity (Web & Mobile):**
-    *   Mobile app must show the new hourly ad packages, not the old monthly ones.
-    *   Mobile app layout must correctly support Right-to-Left (RTL) for Arabic.
-    *   Mobile login screen UI should be consistent with the web version.
-4.  **Create App Download Page:** A dedicated page () on the website that provides smart links to the App Store and Google Play.
-5.  **Fulfill Google Play Requirements:** Provide necessary links and information to complete the app submission process.
+1.  **Fix Apple Rejection Reasons (P0):**
+    *   **App's Purpose:** Transform the app's core concept. The user wants to add a professional gaming section with Picture Puzzles, Chess, and Tic-Tac-Toe, including online multiplayer (person-vs-person), AI opponents (medium/hard), a global leaderboard, and point-based rewards. This will become the app's main focus instead of ads.
+    *   **Social Logins:** Fix Apple/Google login on all devices, especially iPad.
+    *   **Support Page:** Create a proper support page on the website.
+2.  **Implement Extensive Bug Fixes & Features (User's List of 17):**
+    *   **Points & Rewards:** Fix points resetting on login, incorrect ad reward points (should be 1), and incorrect daily login bonus calculation.
+    *   **UI/UX:** Fix non-functional language switching and light mode. Add a Forgot Password option. Make the admin page dark-themed.
+    *   **Features:** Fix non-working support form, AI chat, and ads stuck on loading. Replace phone number login with OTP-based password recovery. Limit profile picture changes to once a week. Update terms and conditions.
+    *   **Content:** Change contact info to real accounts. Add more ad networks.
+    *   **Code Quality:** Remove all unused/dummy code.
 
 **User's preferred language**: العربية
 
 **what currently exists?**
-The agent has successfully addressed several critical issues. The mobile app's login screen was updated to re-introduce Google, Apple, Email, and Guest login options, resolving an Apple rejection. New builds for both iOS (build #18) and Android (build #47) were created and the iOS version was automatically submitted to App Store Connect. These new builds also contain fixes for UI inconsistencies, including updating the ad packages to the new hourly model and enforcing RTL layout for Arabic. A new  page was created for the web app. However, the user reported that the main production URL is serving an old version of the site and that the server continues to be unresponsive at times. The user has just given approval to deploy the application using Emergent's hosting service to resolve these stability and content freshness issues permanently.
+The application is deployed on a stable production server. The agent has addressed several critical bugs related to server connectivity and login freezes by hardcoding the new production URL into the mobile app's source code and fixing faulty logic in error handling and API calls.
+
+However, the app was rejected again by Apple. In response, the user has requested a major pivot towards a gaming platform and provided a list of 17 issues to be fixed. The agent began working on this list, starting by correcting the ad reward points on the backend and creating the basic file structure (routes, screens) for the new gaming section. The gaming implementation is currently a skeleton without any functional logic, and the online multiplayer is only a simulation.
 
 **Last working item**:
-- Last item agent was working: The user inquired about hosting options to solve the server sleeping and stale content issues. The agent explained various hosting providers and the costs associated with Emergent's deployment service. The user confirmed they want to proceed with the Emergent deployment plan.
-- Status: NOT STARTED
-- Agent Testing Done: N/A
-- Which testing method agent to use? N/A (Awaiting deployment action)
-- User Testing Done: N/A
+- Last item agent was working: The agent started addressing the user's comprehensive list of 17 issues. Specifically, it was working on:
+    1.  **Issue #4:** Ad reward is 5 points instead of 1. The agent modified  to grant only 1 point.
+    2.  **Issue #1:** Points resetting on login. The agent investigated the backend and concluded the issue is likely on the frontend, as the API correctly returns the user's points.
+- Status: IN PROGRESS
+- Agent Testing Done: N
+- Which testing method agent to use? Both. Backend agent to verify API logic for points and rewards. Frontend agent to test UI display of points, login flow, and game interactions once implemented.
+- User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1:** Deploy the application to a permanent, non-sleeping production server. (P0)
--   **Issue 2:** User verification of the latest mobile build (v18) and its fixes. (P1)
--   **Issue 3:** The server instability issue is recurring. (P1)
--   **Issue 4:** Assist user with remaining Google Play Console requirements. (P2)
+- **Issue 1**: App's primary purpose is ad display (Apple Rejection 3.2.2) (P0 - Blocker)
+- **Issue 2**: Google/Apple login is non-functional on iPad (Apple Rejection 2.1) (P0 - Blocker)
+- **Issue 3**: The support URL is inadequate (Apple Rejection 1.5) (P0 - Blocker)
+- **Issue 4**: Points reset to zero after each login (User List #1) (P1)
+- **Issue 5**: Ads are stuck on loading and do not work (User List #7) (P1)
+- **Issue 6**: Full list of 15 other bugs and feature requests from the user. (P2)
 
 **Issues Detail:**
--   **Issue 1:** Deploy the application to a permanent, non-sleeping production server.
-    -   Description: The user is experiencing issues with the current deployment where the server becomes unresponsive (sleeps) and the frontend serves outdated content. The user has agreed to use Emergent's deployment service for 50 credits/month to get a stable, 24/7 server.
-    -   Attempted fixes: User configured UptimeRobot, but it proved insufficient.
-    -   Next debug checklist:
-        1.  Initiate the deployment process using the .
-        2.  Confirm with the user once the new, stable URLs for frontend and backend are active.
-        3.  Ensure the custom domain  points to the new deployment.
-    -   Why fix this issue and what will be achieved with the fix?: This will provide a stable, always-on backend, which is a requirement for App Store compliance and a good user experience. It will also ensure the latest version of the frontend is live.
-    -   Status: NOT STARTED
-    -   Is recurring issue?: Y
-    -   Should Test frontend/backend/both after fix?: Both
-    -   Blocked on other issue: None
+- **Issue 1: App's primary purpose is ad display**
+    - Attempted fixes: The agent created skeleton files for a new Games section (, ). This is the user's requested solution.
+    - Next debug checklist:
+        1.  Flesh out the  UI to be engaging and professional as requested.
+        2.  Implement the three requested games: Picture Puzzle, Chess, and Tic-Tac-Toe.
+        3.  Implement backend logic for game state, wins/losses, and point rewards.
+        4.  **Crucially:** Implement a real-time multiplayer system using WebSockets for person-vs-person challenges. The current implementation is a placeholder.
+        5.  Implement a global leaderboard.
+    - Why fix this issue and what will be achieved with the fix?: This is the most critical issue and the main reason for the latest Apple rejection. Fixing it will change the app's core identity to a gaming platform, making it compliant.
+    - Status: IN PROGRESS
+    - Is recurring issue?: Y
+    - Should Test frontend/backend/both after fix?: Both
+    - Blocked on other issue: None. This is the main blocker.
 
--   **Issue 2:** User verification of the latest mobile build (v18) and its fixes.
-    -   Description: The agent has built and submitted a new mobile version (iOS build 18, Android code 47) which includes fixes for RTL layout, updated ad packages, and a redesigned login screen. The user has not yet tested this build to confirm the fixes.
-    -   Attempted fixes: N/A
-    -   Next debug checklist:
-        1.  Ask the user to download the latest build from TestFlight (iOS) and test the reported issues (RTL, ad packages, login UI).
-        2.  Ask the user if they have uploaded the new AAB to Google Play for testing.
-    -   Why fix this issue and what will be achieved with the fix?: To confirm that the implemented fixes meet the user's expectations before moving on to other tasks.
-    -   Status: USER VERIFICATION PENDING
-    -   Is recurring issue?: N
-    -   Should Test frontend/backend/both after fix?: Frontend (Mobile)
-    -   Blocked on other issue: None
+- **Issue 2: Google/Apple login is non-functional on iPad**
+    - Attempted fixes: Agent installed  and  and modified  to use . This has not been tested on a real iPad.
+    - Next debug checklist:
+        1.  Review the implementation in  for correctness.
+        2.  Verify the backend endpoints (, ) are configured correctly for mobile redirects.
+        3.  The testing agent must be used to specifically test the social login flow on an iPad environment.
+    - Why fix this issue and what will be achieved with the fix?: This is a direct rejection reason from Apple and must be fixed for the app to be approved.
+    - Status: IN PROGRESS
+    - Is recurring issue?: Y
+    - Should Test frontend/backend/both after fix?: Both (Frontend primarily)
+    - Blocked on other issue: None.
 
--   **Issue 3:** The server instability issue is recurring.
-    -   Description: Despite an external ping service (UptimeRobot), the user reported the server was unresponsive for an hour. This indicates the current hosting solution is not viable for production.
-    -   Attempted fixes: An external cron job (UptimeRobot) was set up.
-    -   Next debug checklist: This issue will be resolved by completing Issue 1: Deploy the application.... No separate action is needed.
-    -   Why fix this issue and what will be achieved with the fix?: A stable backend is critical for the app's functionality and for passing App Store reviews.
-    -   Status: IN PROGRESS
-    -   Is recurring issue?: Y
-    -   Should Test frontend/backend/both after fix?: Backend
-    -   Blocked on other issue: None. This is the blocker.
+- **Issue 3: The support URL is inadequate**
+    - Attempted fixes: The agent created a new  for the frontend. However, there was confusion with routing, and the existing AI chat support page was deemed temporarily sufficient. This is incorrect; Apple requires a clear support page.
+    - Next debug checklist:
+        1.  Ensure the route  in  correctly points to the new, static .
+        2.  The  should contain an FAQ, a contact form, and/or a support email address.
+        3.  Deploy the frontend and verify the URL  is publicly accessible and correct.
+        4.  Update the URL in App Store Connect.
+    - Why fix this issue and what will be achieved with the fix?: To resolve a direct Apple rejection reason.
+    - Status: IN PROGRESS
+    - Is recurring issue?: Y
+    - Should Test frontend/backend/both after fix?: Frontend
+    - Blocked on other issue: None.
 
--   **Issue 4:** Assist user with remaining Google Play Console requirements.
-    -   Description: The user mentioned Google Play is asking for linking the developer account to the ad account and app links. The agent provided the AdMob IDs and app/privacy policy links. It's unclear if the user's issue is fully resolved.
-    -   Attempted fixes: Agent provided AdMob IDs and store/privacy links.
-    -   Next debug checklist:
-        1.  After the deployment is complete, ask the user if they still face any issues in the Google Play Console.
-        2.  If so, ask for a screenshot or the exact text from Google to provide further assistance.
-    -   Why fix this issue and what will be achieved with the fix?: To help the user successfully publish their app on the Google Play Store.
-    -   Status: NOT STARTED
-    -   Is recurring issue?: N
-    -   Should Test frontend/backend/both after fix?: N/A
-    -   Blocked on other issue: Issue 1 (Deployment needs to be complete to ensure all links are final).
+- **Issue 4: Points reset to zero after each login**
+    - Attempted fixes: The agent checked the backend login endpoint and confirmed it returns the correct point balance from the database.
+    - Next debug checklist:
+        1.  Investigate the frontend state management (, , or similar) in the mobile app.
+        2.  Check if the user's point balance is being correctly stored in the app's state or  after login.
+        3.  Trace the data flow from the login response to the UI component that displays the points.
+    - Why fix this issue and what will be achieved with the fix?: This is a critical bug that breaks the app's core reward loop.
+    - Status: IN PROGRESS
+    - Is recurring issue?: N
+    - Should Test frontend/backend/both after fix?: Frontend
+    - Blocked on other issue: None.
 
 **In progress Task List**:
--   **Task 1:** Deploy the full application to a stable production environment.
-    -   Where to resume: The user has just approved the use of Emergent's deployment plan. The next action is to call the appropriate tool/agent to begin the deployment.
-    -   What will be achieved with this?: A stable, always-on server for the backend and an up-to-date frontend, resolving the user's primary complaints.
-    -   Status: IN PROGRESS
-    -   Should Test frontend/backend/both after fix?: Both
-    -   Blocked on something: None
+- **Task 1: Build the full gaming section**
+    - Where to resume: The backend routes and frontend screen are placeholders. The next step is to start implementing the UI for the game selection lobby in  and the backend logic for the first game (e.g., Tic-Tac-Toe) in .
+    - What will be achieved with this?: Address the main reason for Apple's rejection and create a new core feature for the app.
+    - Status: IN PROGRESS
+    - Should Test frontend/backend/both after fix?: Both
+    - Blocked on something: The multiplayer aspect will require a significant implementation effort (likely WebSockets).
 
 **Upcoming and Future Tasks**
-*   **Upcoming Tasks:**
-    *   **Guide user on App Store/Google Play submission (P1):** Once the app is stable and verified, provide final guidance for submitting for review with the correct demo credentials.
-*   **Future Tasks:**
-    *   **Enable Live Twilio SMS (P2):** The user postponed this to a future update. The task will involve getting the Twilio phone number from the user and adding it to the backend environment variables.
-    -   **Implement Support Screen UI on mobile (P2):**
-    -   **Add Redis for caching (P3):**
-    -   **Implement general API Rate Limiting (P3):**
-    -   **Improve API Documentation (P3):**
+*   **Upcoming Tasks (from User's List of 17):**
+    *   (P1) Fix ads stuck on loading ().
+    *   (P1) Fix language switching not working ().
+    *   (P1) Fix light mode not working ().
+    *   (P1) Add Forgot Password option ().
+    *   (P1) Fix daily login bonus calculation ().
+    *   (P2) Remove phone number login, use it for OTP recovery only ().
+    *   (P2) Fix support page form ().
+    *   (P2) Fix Stay connected challenge logic ().
+    *   (P2) Update Terms & Conditions ().
+    *   (P2) Limit profile picture changes ().
+    *   (P2) Fix AI Chat ().
+    *   (P2) Update contact info ().
+    *   (P2) Make admin page dark mode ().
+    *   (P2) Add more ad networks ().
+    *   (P3) Clean up all dummy/unused code ().
+*   **Future Tasks (from previous forks):**
+    *   Enable Live Twilio SMS (postponed by user).
+    -   Add Redis for caching.
+    -   Implement general API Rate Limiting.
+    -   Improve API Documentation.
 
 **Completed work in this session**
--   **Mobile App Rejection (RESOLVED):** Addressed Apple's rejection by re-implementing Google, Apple, Email, and Guest login options in the mobile app.
--   **Mobile App UI/UX Bugs (RESOLVED):**
-    -   Fixed ad packages in the mobile app to show the correct hourly rates.
-    -   Forced Right-to-Left (RTL) layout in the mobile app to fix reversed pages for Arabic.
-    -   Updated the mobile login screen UI for better consistency with the web version.
--   **New Mobile Builds (DONE):**
-    -   Built new iOS (, build #18) and Android (, code 47) versions containing all recent fixes.
--   **App Store Submission (DONE):**
-    -   Automatically submitted the updated iOS build (#18) to App Store Connect via .
--   **Web App Download Page (DONE):**
-    -   Created a new, responsive  page on the web app with a QR code and smart links to the app stores.
--   **User Support (DONE):**
-    -   Provided the user with their Google AdMob IDs.
-    -   Provided direct links to the app's future store pages.
-    -   Explained various hosting options and their pricing to address the server instability issue.
--   **Workspace Cleanup (DONE):** Deleted the obsolete  directory.
-
-**Earlier issues found/mentioned but not fixed**
--   **Issue 1: Server Instability:** The initial fix of using UptimeRobot was insufficient. The issue is now being addressed with a full-fledged deployment plan, which is the current P0 task.
-
-**Known issue recurrence from previous fork**
--   **Issue recurrence:** Mobile App build process is broken. (RESOLVED in previous session)
--   **Issue recurrence:** Server instability / sleeping.
-    -   **Recurrence count:** 2+
-    -   **Status:** IN PROGRESS (The current P0 task is to fix this permanently by deploying to a stable host).
+-   **Stable Deployment:** Deployed the application to a permanent, non-sleeping production server, resolving server instability.
+-   **Connection Bug Fixes:** Resolved persistent mobile app connection errors by hardcoding the new production URL in , , , , and .
+-   **Login Bug Fixes:**
+    -   Fixed a login screen freeze caused by an infinite recursion in .
+    -   Fixed a bug where the API response was consumed twice, causing errors ().
+-   **Build Management:** Successfully built and submitted multiple new versions of the mobile apps (iOS and Android) to fix issues and at the user's request (e.g., changing Android build number to 50).
+-   **Workspace Cleanup:** Deleted old Expo build artifacts to free up space.
+-   **Initial Refactoring for Apple Rejection:**
+    -   Created a new  on the web app.
+    -   Modified  to remove phone number login and use  for social logins.
+    -   Created placeholder files and routes for the new Games feature.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   Backend: Python, FastAPI, MongoDB ()
--   Frontend: React, React Native (Expo SDK 53), TailwindCSS
--   Build/Deployment: Expo EAS Build, Expo EAS Submit, Android App Bundle (AAB), iOS IPA
-
-**key DB schema**
--   No changes in this session.
-
-**changes in tech stack**
--   No changes in this session.
+-   Backend: Python, FastAPI, MongoDB
+-   Frontend: React, React Native (Expo)
+-   Deployment: Emergent Hosting, Expo EAS Build & Submit
+-   Authentication: JWT, Social Logins via  and .
 
 **All files of reference**
--   **Created:**
-    -   : New page to provide app store download links.
--   **Modified:**
-    -   : Overhauled to add multiple social/guest login buttons and improve layout.
-    -   : Updated to fetch and display the new hourly ad packages.
-    -   : Added logic to force RTL layout for the Arabic language.
-    -   : Incremented  and  for new builds.
-    -   : Added a  constant.
-    -   : Added the route for the new  page.
-
-**Areas that need refactoring**:
--   : This file from a previous session may contain redundant code and should be reviewed for cleanup in the future.
-
-**key api endpoints**
--   : Used to check server health. Confirmed to be working, but the server itself is unstable.
--   : Endpoint for fetching ad packages. Was a source of a bug due to outdated data on the production server.
+-   **Modified (Mobile):** , , , , , , , .
+-   **Created (Mobile):** .
+-   **Modified (Backend):** .
+-   **Created (Backend):** .
+-   **Modified (Frontend):** .
+-   **Created (Frontend):** .
 
 **Critical Info for New Agent**
--   **DEPLOYMENT IS PRIORITY #1:** The user has approved the plan to deploy the application using Emergent's hosting service for 50 credits/month. Your first task is to initiate this deployment. This will solve the server instability and the outdated frontend issues.
--   **LATEST MOBILE BUILD IS v18:** The latest builds are iOS #18 and Android #47. These contain critical fixes for App Store compliance (login options) and user-reported bugs (RTL, ad packages). The iOS build has already been submitted to App Store Connect.
--   **AWAITING USER FEEDBACK ON MOBILE:** The user has not yet tested the latest mobile build (#18). After deployment, you must ask the user to test it and confirm the fixes.
--   **ALL URLS WILL CHANGE:** The deployment will generate new URLs for the backend and frontend. All hardcoded or environment variables pointing to the old preview URLs will need to be updated. The custom domain  will need to be pointed to the new service.
-
-**documents and test reports created in this job**
--   None.
+-   **PRIORITY #1 IS APPLE COMPLIANCE:** You must focus on resolving the three rejection reasons. The highest priority is implementing the Games section to change the app's core purpose. The social login fix for iPad and the support page are also mandatory.
+-   **HUGE BACKLOG:** The user has provided a list of 17 issues. You must manage expectations and communicate a clear, prioritized plan. Address the Apple blockers first, then critical bugs (like points resetting), then other features.
+-   **MULTIPLAYER IS COMPLEX:** The user expects real-time, person-vs-person online multiplayer. As the previous agent noted, this will likely require a WebSocket server. This is a significant engineering task beyond simple API endpoints. You should confirm this plan with the user.
+-   **HARDCODED URL:** The previous agent hardcoded the production URL () in multiple mobile app files to fix a persistent connection issue. While this works, it's not ideal. Be aware of this when making changes.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Does your 00 plan include web apps and fix the Apple connection issue? (Status: **Addressed**. Agent clarified pricing is 50 credits/month, not 00, and it will fix the server issue).
-2.  **User:** Do you offer plans other than the 00 one? (Status: **Addressed**. Agent clarified the pricing structure).
-3.  **User:** The paid plan with you is 00. (Status: **Corrected**. Agent clarified the actual cost is 50 credits/month).
-4.  **User:** What is the best hosting option for my app, considering I aim for 20k active users and a permanent server? (Status: **Answered**. Agent provided a detailed comparison of hosting options).
-5.  **User:** The link takes me to an old version of the app. (Status: **Addressed**. Agent explained this is because the production server has not been updated and proposed deployment as the solution).
-6.  **User:** Yes. (In response to adding a download page) (Status: **Completed**. Agent created the page).
-7.  **User:** When adding a link to the app store, what should I put? (Status: **Answered**. Agent provided the direct store links).
-8.  **User:** Did you upload the app to Apple? (Status: **Answered**. Agent confirmed the upload was successful and provided links).
-9.  **User:** The Google Ads client ID. (Status: **Answered**. Agent provided the AdMob app and unit IDs).
-10. **User:** The iOS build has been uploaded. (This is an agent message, but reflects user interaction) (Status: **Completed**).
+1.  **User:** Fix the problem. (Referring to the connection error) (Status: **Completed**)
+2.  **User:** Did you check all the notes in the previous message? (Status: **Addressed**)
+3.  **User:** Yes, build and upload. (Status: **Completed**)
+4.  **User:** Reports a new Apple rejection with 3 issues (Support URL, Social Login, App Purpose). (Status: **Pending**)
+5.  **User:** Cancel the ads on the ads page for now... put a simple game... After that we will update to put the ads back... improve the login page to be only Google, Apple, and email. (Status: **In Progress**)
+6.  **User:** Asks for a strong, core purpose for the app to be consistent with its foundation, while also solving Apple's issues. (Status: **In Progress**)
+7.  **User:** I want to add only one page... the challenges page, make a change to it now and make the app publishable. (This was a change of plan from the user). (Status: **Superseded**)
+8.  **User:** Leave the ads as they were... revert the change... On the challenges page, create something strong... like cultural challenges, news, a game, suggest something to me. (Status: **Superseded**)
+9.  **User:** Picture puzzle game + chess + tic-tac-toe with a global leaderboard and the prizes are points. I want everything to be professional. (Status: **In Progress**)
+10. **User:** Provides a list of 17 bugs and feature requests, including real-time multiplayer, bug fixes for points, UI, and features. Asks to start on everything now. (Status: **In Progress**)
 
 **Project Health Check:**
 -   **Broken**:
-    -   The current production deployment is unstable and serves outdated code.
+    -   Apple/Google login on iPad.
+    -   Multiple features from the user's list of 17: language switching, light mode, support form, ads loading, AI chat.
+    -   The core reward loop (points resetting on login).
 -   **Mocked**:
-    -   Twilio integration is in dev-only mode (does not send real SMS).
+    -   The entire Games feature is a skeleton. Online multiplayer is not implemented.
 -   **In Progress**:
-    -   Deployment to a stable, production-grade server.
+    -   Implementing the gaming platform to address Apple's rejection.
+    -   Systematically fixing the long list of 17 user-reported issues.
 
 **3rd Party Integrations**
 -   **Resend**: For emails.
--   **Expo (EAS)**: Used for mobile app builds and submissions to App Store Connect.
+-   **Expo (EAS)**: For mobile app builds and submissions.
 -   **Stripe**: For advertiser payments.
--   **Twilio**: For SMS verification (Status: Partially integrated, postponed by user).
--   **Google AdMob**: For rewarded ads in the mobile app.
--   **UptimeRobot**: External service configured by the user, but proved insufficient to keep the server active.
+-   **Twilio**: Partially integrated for SMS (postponed).
+-   **Google AdMob**: For rewarded ads.
+-   **expo-auth-session / expo-web-browser**: For handling social logins.
 
 **Testing status**
 -   Testing agent used after significant changes: NO
 -   Troubleshoot agent used after agent stuck in loop: NO
 -   Test files created: []
--   Known regressions: The server sleeping issue is a known regression from a previous state where it was thought to be fixed.
+-   Known regressions: Social logins on iPad are a known, recurring issue. The app's core purpose being flagged by Apple is also a recurring theme.
 
 **Credentials to test flow:**
 -   Admin Account:  / 
@@ -209,4 +204,4 @@ The agent has successfully addressed several critical issues. The mobile app's l
 -   Guest Mode is also available.
 
 **What agent forgot to execute**
--   The agent has been highly responsive and has not forgotten any explicit user requests in this session. All identified issues were either fixed or are part of the current P0 task (deployment).</analysis>
+-   The agent just received the massive list of 17 items, so it has a very large backlog to get through. The agent correctly identified the need for WebSockets for multiplayer but has not yet formulated or presented a concrete implementation plan for this complex feature to the user.</analysis>
