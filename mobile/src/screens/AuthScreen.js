@@ -515,38 +515,80 @@ const AuthScreen = ({ onLogin }) => {
     );
   };
 
-  // Google Sign In
+  // Google Sign In using WebBrowser
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      // Open Google OAuth URL
-      const authUrl = `${api.BASE_URL}/api/auth/google`;
-      const supported = await Linking.canOpenURL(authUrl);
-      if (supported) {
-        await Linking.openURL(authUrl);
-      } else {
-        Alert.alert('خطأ', 'لا يمكن فتح صفحة تسجيل الدخول بـ Google');
+      const authUrl = `${api.BASE_URL}/api/auth/google?redirect_uri=saqr://auth/callback`;
+      
+      const result = await WebBrowser.openAuthSessionAsync(
+        authUrl,
+        'saqr://auth/callback'
+      );
+      
+      if (result.type === 'success' && result.url) {
+        // Extract session_id from URL
+        const url = result.url;
+        const sessionMatch = url.match(/session_id=([^&]+)/);
+        
+        if (sessionMatch) {
+          const sessionId = sessionMatch[1];
+          // Get user data from session
+          const response = await fetch(`${api.BASE_URL}/api/auth/session/${sessionId}`);
+          const data = await response.json();
+          
+          if (response.ok && data.user) {
+            await storage.setToken(data.token);
+            await storage.setUserData(data.user);
+            onLogin(data.user);
+          } else {
+            Alert.alert('خطأ', 'فشل تسجيل الدخول');
+          }
+        }
+      } else if (result.type === 'cancel') {
+        // User cancelled, do nothing
       }
     } catch (error) {
+      console.log('Google Sign In Error:', error);
       Alert.alert('خطأ', 'حدث خطأ أثناء تسجيل الدخول بـ Google');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Apple Sign In
+  // Apple Sign In using WebBrowser
   const handleAppleSignIn = async () => {
     setIsLoading(true);
     try {
-      // Open Apple OAuth URL  
-      const authUrl = `${api.BASE_URL}/api/auth/apple`;
-      const supported = await Linking.canOpenURL(authUrl);
-      if (supported) {
-        await Linking.openURL(authUrl);
-      } else {
-        Alert.alert('خطأ', 'لا يمكن فتح صفحة تسجيل الدخول بـ Apple');
+      const authUrl = `${api.BASE_URL}/api/auth/apple?redirect_uri=saqr://auth/callback`;
+      
+      const result = await WebBrowser.openAuthSessionAsync(
+        authUrl,
+        'saqr://auth/callback'
+      );
+      
+      if (result.type === 'success' && result.url) {
+        const url = result.url;
+        const sessionMatch = url.match(/session_id=([^&]+)/);
+        
+        if (sessionMatch) {
+          const sessionId = sessionMatch[1];
+          const response = await fetch(`${api.BASE_URL}/api/auth/session/${sessionId}`);
+          const data = await response.json();
+          
+          if (response.ok && data.user) {
+            await storage.setToken(data.token);
+            await storage.setUserData(data.user);
+            onLogin(data.user);
+          } else {
+            Alert.alert('خطأ', 'فشل تسجيل الدخول');
+          }
+        }
+      } else if (result.type === 'cancel') {
+        // User cancelled
       }
     } catch (error) {
+      console.log('Apple Sign In Error:', error);
       Alert.alert('خطأ', 'حدث خطأ أثناء تسجيل الدخول بـ Apple');
     } finally {
       setIsLoading(false);
