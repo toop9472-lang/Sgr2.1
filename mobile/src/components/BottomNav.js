@@ -9,14 +9,14 @@ import {
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const hasNotch = Platform.OS === 'ios' && SCREEN_HEIGHT >= 812;
 
-const BottomNav = ({ currentPage, onNavigate, onAdsPress }) => {
+const BottomNav = ({ currentPage, onNavigate, onAdsPress, onGamesPress }) => {
   const navItems = [
     { id: 'home', label: 'الرئيسية', icon: 'home', iconOutline: 'home-outline' },
-    { id: 'games', label: 'الألعاب', icon: 'game-controller', iconOutline: 'game-controller-outline' },
     { id: 'advertiser', label: 'أعلن', icon: 'megaphone', iconOutline: 'megaphone-outline' },
     { id: 'profile', label: 'حسابي', icon: 'person', iconOutline: 'person-outline' },
   ];
@@ -45,7 +45,28 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress }) => {
   return (
     <View style={styles.container}>
       <View style={styles.navContent}>
-        {navItems.map((item) => (
+        {navItems.slice(0, 1).map((item) => (
+          <NavButton key={item.id} item={item} />
+        ))}
+        
+        {/* زر الألعاب - مضيء أخضر مصفر */}
+        <TouchableOpacity 
+          onPress={() => onGamesPress ? onGamesPress() : onNavigate('games')}
+          activeOpacity={0.8}
+          style={styles.gamesButton}
+        >
+          <LinearGradient
+            colors={['#84cc16', '#65a30d']}
+            style={styles.gamesButtonGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <Ionicons name="game-controller" size={18} color="#FFF" />
+            <Text style={styles.gamesButtonText}>ألعاب</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        {navItems.slice(1).map((item) => (
           <NavButton key={item.id} item={item} />
         ))}
         
@@ -97,6 +118,27 @@ const styles = StyleSheet.create({
   navLabelActive: { 
     color: '#60a5fa', 
     fontWeight: '600',
+  },
+  gamesButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#84cc16',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  gamesButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    gap: 4,
+  },
+  gamesButtonText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
   watchButton: {
     flexDirection: 'row',
