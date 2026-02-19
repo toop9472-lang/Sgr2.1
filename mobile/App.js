@@ -90,6 +90,27 @@ export default function App() {
       if (savedToken && savedUser) {
         setUser(savedUser);
         setIsAuthenticated(true);
+        
+        // Fetch latest user data from server to sync points
+        try {
+          api.setTokens(savedToken, null);
+          const response = await api.getCurrentUser();
+          if (response.ok) {
+            const userData = await response.json();
+            if (userData.user) {
+              const updatedUser = {
+                ...savedUser,
+                ...userData.user,
+                points: userData.user.points || savedUser.points || 0,
+                total_earned: userData.user.total_earned || savedUser.total_earned || 0,
+              };
+              setUser(updatedUser);
+              await storage.setUserData(updatedUser);
+            }
+          }
+        } catch (syncError) {
+          console.log('User sync skipped:', syncError.message);
+        }
       }
 
       // Load settings
