@@ -193,6 +193,13 @@ Arabic (العربية)
 
 ## 📝 Change Log
 
+### February 20, 2026 - Bug Fixes & Diamond Shop
+- ✅ Fixed Brick Breaker game - ball now moves correctly after click
+- ✅ Added Diamond Shop with 4 packages (100-1000 diamonds, 3-19 SAR)
+- ✅ Added "+" button on diamonds to open shop
+- ✅ Fixed 100 questions and 100 riddles count
+- ✅ Fixed animal image URL in puzzle game
+
 ### February 20, 2026 - Professional Games Implementation
 - ✅ Complete Chess game with 8×8 board, all pieces, valid moves, AI opponent
 - ✅ Puzzle game with 6 real images and 3 difficulty levels (3×3, 4×4, 5×5)
