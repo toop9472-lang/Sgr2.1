@@ -178,7 +178,7 @@ const TermsOfService = () => {
           {/* Contact */}
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">
-              {isRTL ? '11. اتصل بنا' : '11. Contact Us'}
+              {isRTL ? '12. اتصل بنا' : '12. Contact Us'}
             </h2>
             <p>
               {isRTL 
