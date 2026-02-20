@@ -118,7 +118,7 @@ const TermsOfService = () => {
           {/* Advertisers */}
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">
-              {isRTL ? '6. المعلنون' : '6. Advertisers'}
+              {isRTL ? '7. المعلنون' : '7. Advertisers'}
             </h2>
             <p>
               {isRTL 
