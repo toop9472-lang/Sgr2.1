@@ -128,7 +128,7 @@ Arabic (العربية)
 ## 📋 Remaining Tasks
 
 ### P0 - Apple Compliance
-- [ ] Test Google/Apple login on iPad
+- [ ] Test Google/Apple login on iPad (CRITICAL - App Store rejection reason)
 - [ ] Build new iOS version
 
 ### P1 - Real Multiplayer Enhancement
@@ -137,9 +137,12 @@ Arabic (العربية)
 - [ ] Add chat during games
 
 ### P2 - Minor Fixes
-- [ ] Video autoplay in ads viewer
+- [ ] Video autoplay in ads viewer (stuck on loading)
 - [ ] AI Chat functionality
 - [ ] Profile picture change limit (once/week)
+- [ ] Remove phone number login (keep for OTP recovery only)
+- [ ] Update Terms & Conditions page
+- [ ] Replace dummy contact info with real accounts
 
 ---
 
