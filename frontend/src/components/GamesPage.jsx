@@ -1816,11 +1816,11 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
         <div className="h-2 bg-black/30 rounded-full overflow-hidden mb-2">
           <div 
             className="h-full bg-green-500 rounded-full transition-all"
-            style={{ width: `${Math.min(100, ((150 - balance.daily_points_remaining) / 150) * 100)}%` }}
+            style={{ width: `${Math.min(100, ((70 - balance.daily_points_remaining) / 70) * 100)}%` }}
           />
         </div>
         <div className="flex justify-between text-xs">
-          <span className="text-green-400 font-semibold">{150 - balance.daily_points_remaining} / 150</span>
+          <span className="text-green-400 font-semibold">{70 - balance.daily_points_remaining} / 70</span>
           <span className="text-gray-500">متبقي: {balance.daily_points_remaining}</span>
         </div>
       </div>
