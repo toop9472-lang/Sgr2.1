@@ -21,6 +21,7 @@ import api from '../services/api';
 import storage from '../services/storage';
 import ChessGame from './games/ChessGame';
 import BrickBreakerGame from './games/BrickBreakerGame';
+import { triviaQuestions, riddlesQuestions } from '../data/questionsData';
 
 const { width, height } = Dimensions.get('window');
 
