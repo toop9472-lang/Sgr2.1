@@ -22,7 +22,7 @@ db = client[os.environ.get('DB_NAME', 'saqr_db')]
 INITIAL_DIAMONDS = 300
 
 # الحد اليومي للنقاط من الألعاب
-DAILY_POINTS_LIMIT = 150
+DAILY_POINTS_LIMIT = 70  # الحد اليومي من الألعاب فقط
 
 # قيمة النقاط بالدولار (500 نقطة = 1 دولار)
 POINTS_PER_DOLLAR = 500
