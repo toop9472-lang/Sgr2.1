@@ -84,7 +84,7 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
                 : 'https://game-pivot-1.preview.emergentagent.com';
               
               // إنشاء جلسة دفع Stripe
-              const response = await api.fetch('/api/payments/checkout/create', {
+              const response = await api.fetch('/api/diamond-payments/checkout/create', {
                 method: 'POST',
                 body: JSON.stringify({
                   user_id: userId,
