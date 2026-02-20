@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import api from '../services/api';
 import storage from '../services/storage';
+import multiplayerService from '../services/multiplayer';
 import ChessGame from './games/ChessGame';
 import BrickBreakerGame from './games/BrickBreakerGame';
 import { triviaQuestions, riddlesQuestions } from '../data/questionsData';
