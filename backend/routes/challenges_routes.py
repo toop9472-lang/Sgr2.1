@@ -94,25 +94,26 @@ DAILY_CHALLENGES = [
 ]
 # Total: 15 + 25 + 10 + 5 + 14 = 69 points max
 
-# 14-day login rewards - Total 150 points/month
-# Distribution: Increasing rewards to keep users engaged
+# 14-day login rewards - Total: 160 points + 200 diamonds
+# Distribution: Points and diamonds mixed to keep users engaged
 LOGIN_REWARDS = [
-    {"day": 1, "points": 5},
-    {"day": 2, "points": 5},
-    {"day": 3, "points": 8},
-    {"day": 4, "points": 8},
-    {"day": 5, "points": 10},
-    {"day": 6, "points": 10},
-    {"day": 7, "points": 15},  # Week 1 bonus
-    {"day": 8, "points": 10},
-    {"day": 9, "points": 10},
-    {"day": 10, "points": 12},
-    {"day": 11, "points": 12},
-    {"day": 12, "points": 15},
-    {"day": 13, "points": 15},
-    {"day": 14, "points": 15},  # Final bonus
+    {"day": 1, "points": 30, "diamonds": 20},   # يوم 1: 30 نقطة + 20 ألماسة
+    {"day": 2, "points": 10, "diamonds": 10},   # يوم 2: 10 نقطة + 10 ألماسة
+    {"day": 3, "points": 15, "diamonds": 0},    # يوم 3: 15 نقطة
+    {"day": 4, "points": 0, "diamonds": 25},    # يوم 4: 25 ألماسة
+    {"day": 5, "points": 10, "diamonds": 10},   # يوم 5: 10 نقطة + 10 ألماسة
+    {"day": 6, "points": 15, "diamonds": 0},    # يوم 6: 15 نقطة
+    {"day": 7, "points": 20, "diamonds": 35},   # يوم 7: 20 نقطة + 35 ألماسة (مكافأة الأسبوع)
+    {"day": 8, "points": 10, "diamonds": 10},   # يوم 8: 10 نقطة + 10 ألماسة
+    {"day": 9, "points": 10, "diamonds": 0},    # يوم 9: 10 نقطة
+    {"day": 10, "points": 0, "diamonds": 20},   # يوم 10: 20 ألماسة
+    {"day": 11, "points": 10, "diamonds": 10},  # يوم 11: 10 نقطة + 10 ألماسة
+    {"day": 12, "points": 10, "diamonds": 0},   # يوم 12: 10 نقطة
+    {"day": 13, "points": 10, "diamonds": 10},  # يوم 13: 10 نقطة + 10 ألماسة
+    {"day": 14, "points": 10, "diamonds": 50},  # يوم 14: 10 نقطة + 50 ألماسة (مكافأة النهاية)
 ]
-# Total: 5+5+8+8+10+10+15+10+10+12+12+15+15+15 = 150 points
+# Total Points: 30+10+15+0+10+15+20+10+10+0+10+10+10+10 = 160 points
+# Total Diamonds: 20+10+0+25+10+0+35+10+0+20+10+0+10+50 = 200 diamonds
 
 
 # ============ HELPER FUNCTIONS ============
