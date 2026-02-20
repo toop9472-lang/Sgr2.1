@@ -198,13 +198,19 @@ export const riddles = [
   { q: 'ما هو الشيء الذي يربط الناس ببعضهم دون أن يلمسهم؟', options: ['الكلام', 'الحب', 'الهاتف', 'كل ما سبق'], correct: 3 },
   { q: 'ما هو الشيء الذي تراه مرة في السنة ومرتين في الأسبوع ولا تراه في اليوم؟', options: ['حرف السين', 'حرف الألف', 'حرف الواو', 'حرف النون'], correct: 0 },
   { q: 'ما هو الشيء الذي يتبعك أينما ذهبت في النهار ويختفي في الليل؟', options: ['الظل', 'الشمس', 'الحرارة', 'الضوء'], correct: 0 },
+  { q: 'ما هو الشيء الذي له عينان ولا يرى؟', options: ['الباب', 'النظارة', 'الميزان', 'الكرسي'], correct: 0 },
+  { q: 'ما هو الشيء الذي تأخذه قبل أن تعطيه؟', options: ['الصورة', 'النفس', 'القرار', 'الإذن'], correct: 0 },
+  { q: 'ما هو الشيء الذي يتحدث كل اللغات؟', options: ['الصدى', 'المترجم', 'الراديو', 'الببغاء'], correct: 0 },
+  { q: 'ما هو الشيء الذي إذا سخن جمد؟', options: ['البيض', 'الحليب', 'الماء', 'العصير'], correct: 0 },
+  { q: 'ما هو الشيء الذي له رأس ولا يفكر؟', options: ['الدبوس', 'القلم', 'المسمار', 'الإبرة'], correct: 0 },
+  { q: 'ما هو الشيء الذي كلما مشى فقد شيئاً من ذيله؟', options: ['الخيط', 'الحبل', 'السلك', 'الإبرة'], correct: 0 },
 ];
 
-// Puzzle Images (using placeholder URLs)
+// Puzzle Images (using working URLs)
 export const puzzleImages = [
   { id: 1, name: 'الطبيعة', url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop' },
   { id: 2, name: 'المدينة', url: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=400&h=400&fit=crop' },
-  { id: 3, name: 'الحيوانات', url: 'https://images.unsplash.com/photo-1474511320723-9a56873571b7?w=400&h=400&fit=crop' },
+  { id: 3, name: 'الحيوانات', url: 'https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?w=400&h=400&fit=crop' },
   { id: 4, name: 'الفضاء', url: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400&h=400&fit=crop' },
   { id: 5, name: 'الزهور', url: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400&h=400&fit=crop' },
   { id: 6, name: 'البحر', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=400&fit=crop' },
