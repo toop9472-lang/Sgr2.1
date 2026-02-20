@@ -1,1394 +1,27 @@
-// Games Page - Professional Version with All Features
+// Games Page - Refactored Version with Chat Integration & Guest Restriction
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
-  Trophy, Grid3X3, Puzzle, Brain, Lightbulb, Layers,
-  RotateCcw, Clock, Star, Diamond, Medal, Gamepad2, 
-  Users, Cpu, X, ChevronLeft, Zap, Eye, Wifi, Crown,
-  HelpCircle, Play, Pause, Volume2, VolumeX, Target,
-  Sparkles, Gift, Lock, Unlock, ArrowUp, ArrowDown,
-  ArrowLeft, ArrowRight, RefreshCw, Award, Flame,
-  MessageCircle, Send, Apple, CreditCard, Calculator, Type
+  Trophy, Grid3X3, Puzzle, Brain, 
+  Clock, Star, Diamond, Medal, Gamepad2, 
+  Users, Cpu, X, Wifi, Crown, Lock,
+  Calculator, Type, Apple, CreditCard, MessageCircle
 } from 'lucide-react';
-import { triviaQuestions, puzzleImages, INITIAL_CHESS_BOARD, arabicWords, generateMathProblem } from '../data/gameData';
 import soundManager from '../utils/soundManager';
-import GameChat, { ChatToggleButton, SoundToggleButton } from './GameChat';
+import GameChat, { ChatToggleButton } from './GameChat';
+
+// Import game components
+import { 
+  ChessGame, 
+  TicTacToeGame, 
+  TriviaGame, 
+  SpeedMathGame, 
+  WordChainGame, 
+  PuzzleGame 
+} from './games';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-// ==================== CHESS GAME (Real Implementation) ====================
-const ChessGame = ({ mode, onComplete, onClose, userDiamonds, onUseDiamonds }) => {
-  const [board, setBoard] = useState(JSON.parse(JSON.stringify(INITIAL_CHESS_BOARD)));
-  const [selectedPiece, setSelectedPiece] = useState(null);
-  const [validMoves, setValidMoves] = useState([]);
-  const [turn, setTurn] = useState('white');
-  const [gameOver, setGameOver] = useState(false);
-  const [winner, setWinner] = useState(null);
-  const [capturedPieces, setCapturedPieces] = useState({ white: [], black: [] });
-  const [moveHistory, setMoveHistory] = useState([]);
-  const [showHint, setShowHint] = useState(false);
-  const [hintMove, setHintMove] = useState(null);
-
-  const pieceSymbols = {
-    'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
-    'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟'
-  };
-
-  const isWhitePiece = (piece) => piece && piece === piece.toUpperCase();
-  const isBlackPiece = (piece) => piece && piece === piece.toLowerCase();
-
-  const getValidMoves = (row, col, piece) => {
-    const moves = [];
-    const isWhite = isWhitePiece(piece);
-    const pieceType = piece.toLowerCase();
-
-    const addMove = (r, c) => {
-      if (r >= 0 && r < 8 && c >= 0 && c < 8) {
-        const target = board[r][c];
-        if (!target || (isWhite ? isBlackPiece(target) : isWhitePiece(target))) {
-          moves.push([r, c]);
-          return !target;
-        }
-      }
-      return false;
-    };
-
-    switch (pieceType) {
-      case 'p':
-        const direction = isWhite ? -1 : 1;
-        const startRow = isWhite ? 6 : 1;
-        if (!board[row + direction]?.[col]) {
-          moves.push([row + direction, col]);
-          if (row === startRow && !board[row + 2 * direction]?.[col]) {
-            moves.push([row + 2 * direction, col]);
-          }
-        }
-        [-1, 1].forEach(dc => {
-          const target = board[row + direction]?.[col + dc];
-          if (target && (isWhite ? isBlackPiece(target) : isWhitePiece(target))) {
-            moves.push([row + direction, col + dc]);
-          }
-        });
-        break;
-      case 'r':
-        [[0,1],[0,-1],[1,0],[-1,0]].forEach(([dr, dc]) => {
-          for (let i = 1; i < 8; i++) {
-            if (!addMove(row + dr*i, col + dc*i)) break;
-          }
-        });
-        break;
-      case 'n':
-        [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr, dc]) => {
-          addMove(row + dr, col + dc);
-        });
-        break;
-      case 'b':
-        [[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([dr, dc]) => {
-          for (let i = 1; i < 8; i++) {
-            if (!addMove(row + dr*i, col + dc*i)) break;
-          }
-        });
-        break;
-      case 'q':
-        [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([dr, dc]) => {
-          for (let i = 1; i < 8; i++) {
-            if (!addMove(row + dr*i, col + dc*i)) break;
-          }
-        });
-        break;
-      case 'k':
-        [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([dr, dc]) => {
-          addMove(row + dr, col + dc);
-        });
-        break;
-    }
-    return moves;
-  };
-
-  const handleCellClick = (row, col) => {
-    if (gameOver) return;
-    
-    const piece = board[row][col];
-    
-    if (selectedPiece) {
-      const [selRow, selCol] = selectedPiece;
-      const isValidMove = validMoves.some(([r, c]) => r === row && c === col);
-      
-      if (isValidMove) {
-        const newBoard = board.map(r => [...r]);
-        const captured = newBoard[row][col];
-        newBoard[row][col] = newBoard[selRow][selCol];
-        newBoard[selRow][selCol] = null;
-        
-        if (captured) {
-          soundManager.chessCapture(); // صوت الأسر
-          const capColor = isWhitePiece(captured) ? 'white' : 'black';
-          setCapturedPieces(prev => ({
-            ...prev,
-            [capColor]: [...prev[capColor], captured]
-          }));
-          
-          if (captured.toLowerCase() === 'k') {
-            setGameOver(true);
-            setWinner(turn);
-            soundManager.win(); // صوت الفوز
-            onComplete(turn === 'white' ? 30 : 10, turn === 'white' ? 'win' : 'lose');
-          }
-        } else {
-          soundManager.chessPiece(); // صوت تحريك القطعة
-        }
-        
-        setBoard(newBoard);
-        setMoveHistory(prev => [...prev, { from: [selRow, selCol], to: [row, col], piece: board[selRow][selCol] }]);
-        setTurn(turn === 'white' ? 'black' : 'white');
-        setSelectedPiece(null);
-        setValidMoves([]);
-        
-        // AI move
-        if (mode !== 'online' && !gameOver) {
-          setTimeout(() => makeAIMove(newBoard), 500);
-        }
-      } else {
-        setSelectedPiece(null);
-        setValidMoves([]);
-      }
-    } else if (piece && ((turn === 'white' && isWhitePiece(piece)) || (turn === 'black' && isBlackPiece(piece)))) {
-      if (turn === 'white') {
-        soundManager.click(); // صوت اختيار القطعة
-        setSelectedPiece([row, col]);
-        setValidMoves(getValidMoves(row, col, piece));
-      }
-    }
-  };
-
-  const makeAIMove = (currentBoard) => {
-    if (gameOver) return;
-    
-    const blackPieces = [];
-    currentBoard.forEach((row, r) => {
-      row.forEach((piece, c) => {
-        if (isBlackPiece(piece)) {
-          blackPieces.push({ piece, row: r, col: c });
-        }
-      });
-    });
-
-    let bestMove = null;
-    let bestScore = -Infinity;
-    
-    blackPieces.forEach(({ piece, row, col }) => {
-      const moves = getValidMoves(row, col, piece);
-      moves.forEach(([toRow, toCol]) => {
-        const target = currentBoard[toRow][toCol];
-        let score = Math.random() * 10;
-        if (target) {
-          const values = { 'p': 1, 'n': 3, 'b': 3, 'r': 5, 'q': 9, 'k': 100 };
-          score += values[target.toLowerCase()] * 10;
-        }
-        if (mode === 'ai_hard') {
-          score += (4 - Math.abs(toRow - 4)) + (4 - Math.abs(toCol - 4));
-        }
-        if (score > bestScore) {
-          bestScore = score;
-          bestMove = { from: [row, col], to: [toRow, toCol], piece };
-        }
-      });
-    });
-
-    if (bestMove) {
-      const newBoard = currentBoard.map(r => [...r]);
-      const captured = newBoard[bestMove.to[0]][bestMove.to[1]];
-      newBoard[bestMove.to[0]][bestMove.to[1]] = newBoard[bestMove.from[0]][bestMove.from[1]];
-      newBoard[bestMove.from[0]][bestMove.from[1]] = null;
-      
-      if (captured) {
-        setCapturedPieces(prev => ({
-          ...prev,
-          white: [...prev.white, captured]
-        }));
-        if (captured.toLowerCase() === 'k') {
-          setGameOver(true);
-          setWinner('black');
-          onComplete(5, 'lose');
-        }
-      }
-      
-      setBoard(newBoard);
-      setTurn('white');
-    }
-  };
-
-  const getHint = () => {
-    if (userDiamonds < 2) return;
-    onUseDiamonds(2);
-    
-    const whitePieces = [];
-    board.forEach((row, r) => {
-      row.forEach((piece, c) => {
-        if (isWhitePiece(piece)) {
-          whitePieces.push({ piece, row: r, col: c });
-        }
-      });
-    });
-
-    let bestMove = null;
-    let bestScore = -Infinity;
-    
-    whitePieces.forEach(({ piece, row, col }) => {
-      const moves = getValidMoves(row, col, piece);
-      moves.forEach(([toRow, toCol]) => {
-        const target = board[toRow][toCol];
-        let score = Math.random() * 5;
-        if (target) {
-          const values = { 'p': 1, 'n': 3, 'b': 3, 'r': 5, 'q': 9, 'k': 100 };
-          score += values[target.toLowerCase()] * 10;
-        }
-        if (score > bestScore) {
-          bestScore = score;
-          bestMove = { from: [row, col], to: [toRow, toCol] };
-        }
-      });
-    });
-
-    if (bestMove) {
-      setHintMove(bestMove);
-      setShowHint(true);
-      setTimeout(() => setShowHint(false), 3000);
-    }
-  };
-
-  const resetGame = () => {
-    setBoard(JSON.parse(JSON.stringify(INITIAL_CHESS_BOARD)));
-    setSelectedPiece(null);
-    setValidMoves([]);
-    setTurn('white');
-    setGameOver(false);
-    setWinner(null);
-    setCapturedPieces({ white: [], black: [] });
-    setMoveHistory([]);
-  };
-
-  return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white p-4">
-      <div className="max-w-lg mx-auto">
-        <div className="flex items-center justify-between mb-4">
-          <button onClick={onClose} className="p-2 rounded-full bg-white/10 hover:bg-white/20">
-            <ChevronLeft size={24} />
-          </button>
-          <h1 className="text-xl font-bold flex items-center gap-2">
-            <Crown size={24} className="text-purple-400" />
-            الشطرنج
-          </h1>
-          <button onClick={resetGame} className="p-2 rounded-full bg-white/10 hover:bg-white/20">
-            <RotateCcw size={20} />
-          </button>
-        </div>
-
-        {/* Captured pieces */}
-        <div className="flex justify-between mb-2 text-sm">
-          <div className="flex items-center gap-1">
-            <span className="text-gray-400">أسير:</span>
-            <span>{capturedPieces.black.map(p => pieceSymbols[p]).join('')}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span>{capturedPieces.white.map(p => pieceSymbols[p]).join('')}</span>
-            <span className="text-gray-400">:أسير</span>
-          </div>
-        </div>
-
-        {/* Turn indicator */}
-        <div className={`text-center mb-2 py-2 rounded-lg ${turn === 'white' ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-600/20 text-gray-400'}`}>
-          {turn === 'white' ? 'دورك (الأبيض)' : 'دور الخصم (الأسود)'}
-        </div>
-
-        {/* Chess Board */}
-        <div className="aspect-square bg-gradient-to-br from-amber-900 to-amber-800 rounded-lg p-1 mb-4">
-          <div className="grid grid-cols-8 gap-0 h-full">
-            {board.map((row, r) => 
-              row.map((piece, c) => {
-                const isLight = (r + c) % 2 === 0;
-                const isSelected = selectedPiece && selectedPiece[0] === r && selectedPiece[1] === c;
-                const isValidMove = validMoves.some(([vr, vc]) => vr === r && vc === c);
-                const isHint = showHint && hintMove && 
-                  ((hintMove.from[0] === r && hintMove.from[1] === c) || 
-                   (hintMove.to[0] === r && hintMove.to[1] === c));
-                
-                return (
-                  <button
-                    key={`${r}-${c}`}
-                    onClick={() => handleCellClick(r, c)}
-                    className={`relative flex items-center justify-center text-2xl md:text-3xl font-bold transition-all
-                      ${isLight ? 'bg-amber-200' : 'bg-amber-700'}
-                      ${isSelected ? 'ring-2 ring-blue-500' : ''}
-                      ${isHint ? 'ring-2 ring-green-500 animate-pulse' : ''}`}
-                  >
-                    {isValidMove && (
-                      <div className={`absolute w-3 h-3 rounded-full ${piece ? 'ring-2 ring-red-500 bg-transparent' : 'bg-green-500/50'}`} />
-                    )}
-                    {piece && (
-                      <span className={isWhitePiece(piece) ? 'text-white drop-shadow-lg' : 'text-gray-900'}>
-                        {pieceSymbols[piece]}
-                      </span>
-                    )}
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-        {/* Hint button */}
-        <button
-          onClick={getHint}
-          disabled={userDiamonds < 2}
-          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 disabled:opacity-50 py-3 rounded-xl mb-4"
-        >
-          <HelpCircle size={20} />
-          <span>تلميح</span>
-          <Diamond size={16} />
-          <span>2</span>
-        </button>
-
-        {/* Game Over */}
-        {gameOver && (
-          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-            <div className="bg-[#1a1a2e] rounded-2xl p-8 text-center max-w-sm mx-4">
-              <Trophy size={80} className={`mx-auto mb-4 ${winner === 'white' ? 'text-yellow-400' : 'text-gray-400'}`} />
-              <h2 className="text-2xl font-bold mb-2">{winner === 'white' ? 'فوز!' : 'خسارة'}</h2>
-              <p className="text-gray-400 mb-6">{winner === 'white' ? 'أحسنت! لقد فزت' : 'حظ أوفر في المرة القادمة'}</p>
-              <div className="flex gap-3">
-                <button onClick={resetGame} className="flex-1 bg-blue-600 hover:bg-blue-700 py-3 rounded-xl">
-                  العب مجدداً
-                </button>
-                <button onClick={onClose} className="flex-1 bg-white/10 hover:bg-white/20 py-3 rounded-xl">
-                  خروج
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// ==================== TIC TAC TOE GAME ====================
-const TicTacToeGame = ({ mode, onComplete, onClose }) => {
-  const [board, setBoard] = useState(Array(9).fill(null));
-  const [isPlayerTurn, setIsPlayerTurn] = useState(true);
-  const [gameOver, setGameOver] = useState(false);
-  const [winner, setWinner] = useState(null);
-  const [scores, setScores] = useState({ player: 0, opponent: 0, draws: 0 });
-  const [winningLine, setWinningLine] = useState(null);
-
-  const winPatterns = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8],
-    [0, 3, 6], [1, 4, 7], [2, 5, 8],
-    [0, 4, 8], [2, 4, 6]
-  ];
-
-  const checkWinner = (squares) => {
-    for (let pattern of winPatterns) {
-      const [a, b, c] = pattern;
-      if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-        return { winner: squares[a], line: pattern };
-      }
-    }
-    return squares.every(s => s !== null) ? { winner: 'draw', line: null } : null;
-  };
-
-  const minimax = (squares, isMax, depth = 0) => {
-    const result = checkWinner(squares);
-    if (result?.winner === 'O') return 10 - depth;
-    if (result?.winner === 'X') return depth - 10;
-    if (result?.winner === 'draw') return 0;
-
-    if (isMax) {
-      let best = -Infinity;
-      for (let i = 0; i < 9; i++) {
-        if (!squares[i]) {
-          squares[i] = 'O';
-          best = Math.max(best, minimax(squares, false, depth + 1));
-          squares[i] = null;
-        }
-      }
-      return best;
-    } else {
-      let best = Infinity;
-      for (let i = 0; i < 9; i++) {
-        if (!squares[i]) {
-          squares[i] = 'X';
-          best = Math.min(best, minimax(squares, true, depth + 1));
-          squares[i] = null;
-        }
-      }
-      return best;
-    }
-  };
-
-  const getAIMove = (currentBoard) => {
-    const empty = currentBoard.map((s, i) => s === null ? i : null).filter(i => i !== null);
-    if (mode === 'ai_medium' && Math.random() < 0.4) {
-      return empty[Math.floor(Math.random() * empty.length)];
-    }
-    let bestScore = -Infinity;
-    let bestMove = empty[0];
-    for (let i of empty) {
-      currentBoard[i] = 'O';
-      const score = minimax(currentBoard, false);
-      currentBoard[i] = null;
-      if (score > bestScore) {
-        bestScore = score;
-        bestMove = i;
-      }
-    }
-    return bestMove;
-  };
-
-  const handlePress = (index) => {
-    if (board[index] || gameOver || !isPlayerTurn) return;
-    soundManager.click(); // صوت النقر
-    const newBoard = [...board];
-    newBoard[index] = 'X';
-    setBoard(newBoard);
-    const result = checkWinner(newBoard);
-    if (result) {
-      endGame(result);
-      return;
-    }
-    setIsPlayerTurn(false);
-    setTimeout(() => {
-      const aiIndex = getAIMove([...newBoard]);
-      if (aiIndex !== null && aiIndex !== undefined) {
-        soundManager.move(); // صوت حركة الخصم
-        newBoard[aiIndex] = 'O';
-        setBoard([...newBoard]);
-        const aiResult = checkWinner(newBoard);
-        if (aiResult) {
-          endGame(aiResult);
-        } else {
-          setIsPlayerTurn(true);
-        }
-      }
-    }, 600);
-  };
-
-  const endGame = (result) => {
-    setGameOver(true);
-    setWinner(result.winner);
-    setWinningLine(result.line);
-    if (result.winner === 'X') {
-      soundManager.win(); // صوت الفوز
-      setScores(s => ({ ...s, player: s.player + 1 }));
-      onComplete(mode === 'ai_hard' ? 25 : 20, 'win');
-    } else if (result.winner === 'draw') {
-      soundManager.success(); // صوت التعادل
-      setScores(s => ({ ...s, draws: s.draws + 1 }));
-      onComplete(10, 'draw');
-    } else {
-      soundManager.lose(); // صوت الخسارة
-      setScores(s => ({ ...s, opponent: s.opponent + 1 }));
-      onComplete(5, 'lose');
-    }
-  };
-
-  const resetGame = () => {
-    soundManager.click();
-    setBoard(Array(9).fill(null));
-    setIsPlayerTurn(true);
-    setGameOver(false);
-    setWinner(null);
-    setWinningLine(null);
-  };
-
-  return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white p-4 md:p-8">
-      <div className="max-w-lg mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <button onClick={onClose} className="p-2 rounded-full bg-white/10 hover:bg-white/20">
-            <ChevronLeft size={24} />
-          </button>
-          <h1 className="text-xl font-bold flex items-center gap-2">
-            <Grid3X3 size={24} className="text-orange-400" />
-            اكس او
-          </h1>
-          <button onClick={resetGame} className="p-2 rounded-full bg-white/10 hover:bg-white/20">
-            <RotateCcw size={20} className="text-blue-400" />
-          </button>
-        </div>
-
-        <div className="flex justify-around items-center mb-8 bg-white/5 rounded-2xl p-4">
-          <div className={`text-center p-3 rounded-xl ${isPlayerTurn && !gameOver ? 'bg-blue-500/20 border border-blue-500/30' : ''}`}>
-            <div className="text-blue-400 text-sm">أنت</div>
-            <div className="text-2xl font-bold">{scores.player}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-gray-500 text-sm">تعادل</div>
-            <div className="text-xl text-gray-400">{scores.draws}</div>
-          </div>
-          <div className={`text-center p-3 rounded-xl ${!isPlayerTurn && !gameOver ? 'bg-orange-500/20 border border-orange-500/30' : ''}`}>
-            <div className="text-orange-400 text-sm">الكمبيوتر</div>
-            <div className="text-2xl font-bold">{scores.opponent}</div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-2 bg-white/5 p-3 rounded-2xl mb-6">
-          {board.map((cell, idx) => (
-            <button
-              key={idx}
-              onClick={() => handlePress(idx)}
-              className={`aspect-square flex items-center justify-center text-4xl font-bold rounded-xl transition-all
-                ${cell ? 'bg-white/10' : 'bg-white/5 hover:bg-white/10'}
-                ${cell === 'X' ? 'text-blue-400' : 'text-orange-400'}
-                ${winningLine?.includes(idx) ? 'ring-2 ring-yellow-400 bg-yellow-400/20' : ''}`}
-            >
-              {cell}
-            </button>
-          ))}
-        </div>
-
-        {!gameOver && (
-          <div className="text-center text-gray-400 flex items-center justify-center gap-2">
-            {isPlayerTurn ? (
-              <><Users size={18} /><span>دورك</span></>
-            ) : (
-              <><Cpu size={18} className="animate-pulse" /><span>دور الكمبيوتر...</span></>
-            )}
-          </div>
-        )}
-
-        {gameOver && (
-          <div className="bg-white/10 rounded-2xl p-6 text-center">
-            <div className={`mb-3 ${winner === 'X' ? 'text-yellow-400' : winner === 'draw' ? 'text-gray-400' : 'text-red-400'}`}>
-              {winner === 'X' ? <Trophy size={60} className="mx-auto" /> : winner === 'draw' ? <Users size={60} className="mx-auto" /> : <X size={60} className="mx-auto" />}
-            </div>
-            <div className="text-2xl font-bold mb-4">
-              {winner === 'X' ? 'فوز!' : winner === 'draw' ? 'تعادل' : 'خسارة'}
-            </div>
-            <button onClick={resetGame} className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-xl font-semibold flex items-center gap-2 mx-auto">
-              <RotateCcw size={18} />
-              العب مجدداً
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// ==================== TRIVIA GAME (100 Questions) ====================
-const TriviaGame = ({ onComplete, onClose, userDiamonds, onUseDiamonds }) => {
-  const [questions] = useState(() => [...triviaQuestions].sort(() => Math.random() - 0.5).slice(0, 15));
-  const [currentQ, setCurrentQ] = useState(0);
-  const [score, setScore] = useState(0);
-  const [answered, setAnswered] = useState(null);
-  const [showResult, setShowResult] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(20);
-  const [streak, setStreak] = useState(0);
-  const [showHint, setShowHint] = useState(false);
-  const [eliminatedOptions, setEliminatedOptions] = useState([]);
-
-  useEffect(() => {
-    if (timeLeft > 0 && answered === null && !showResult) {
-      const timer = setTimeout(() => setTimeLeft(t => t - 1), 1000);
-      return () => clearTimeout(timer);
-    } else if (timeLeft === 0 && answered === null) {
-      handleAnswer(-1);
-    }
-  }, [timeLeft, answered, showResult]);
-
-  const getHint = () => {
-    if (userDiamonds < 2 || eliminatedOptions.length > 0) return;
-    onUseDiamonds(2);
-    const wrongOptions = [0, 1, 2, 3].filter(i => i !== questions[currentQ].correct);
-    const toEliminate = wrongOptions.sort(() => Math.random() - 0.5).slice(0, 2);
-    setEliminatedOptions(toEliminate);
-  };
-
-  const handleAnswer = (idx) => {
-    if (answered !== null) return;
-    setAnswered(idx);
-    
-    if (idx === questions[currentQ].correct) {
-      soundManager.triviaCorrect(); // صوت الإجابة الصحيحة
-      const bonus = streak >= 3 ? 5 : 0;
-      setScore(s => s + 10 + Math.floor(timeLeft / 4) + bonus);
-      setStreak(s => s + 1);
-    } else {
-      soundManager.triviaWrong(); // صوت الإجابة الخاطئة
-      setStreak(0);
-    }
-
-    setTimeout(() => {
-      if (currentQ < questions.length - 1) {
-        setCurrentQ(c => c + 1);
-        setAnswered(null);
-        setTimeLeft(20);
-        setEliminatedOptions([]);
-      } else {
-        setShowResult(true);
-        if (score > 50) {
-          soundManager.win();
-        }
-        onComplete(score, score > 50 ? 'win' : 'lose');
-      }
-    }, 1500);
-  };
-
-  if (showResult) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center p-4">
-        <div className="text-center">
-          <Trophy size={80} className="mx-auto text-yellow-400 mb-4" />
-          <div className="text-5xl font-bold text-yellow-400 mb-2">{score}</div>
-          <div className="text-gray-400 mb-6">نقطة</div>
-          <button onClick={onClose} className="bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-xl font-semibold">
-            إنهاء
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const q = questions[currentQ];
-
-  return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white p-4 md:p-8">
-      <div className="max-w-xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <button onClick={onClose} className="p-2 rounded-full bg-white/10 hover:bg-white/20">
-            <ChevronLeft size={24} />
-          </button>
-          <h1 className="text-xl font-bold flex items-center gap-2">
-            <Brain size={24} className="text-green-400" />
-            أسئلة ثقافية
-          </h1>
-          <div className="flex items-center gap-1 text-yellow-400 font-bold">
-            <Star size={18} />
-            {score}
-          </div>
-        </div>
-
-        {streak >= 3 && (
-          <div className="flex items-center justify-center gap-2 mb-4 text-orange-400">
-            <Flame size={20} />
-            <span>سلسلة {streak} إجابات صحيحة!</span>
-          </div>
-        )}
-
-        <div className="mb-4">
-          <div className="flex justify-between text-sm text-gray-400 mb-2">
-            <span>{currentQ + 1} / {questions.length}</span>
-          </div>
-          <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-            <div className="h-full bg-green-500 transition-all" style={{ width: `${((currentQ + 1) / questions.length) * 100}%` }} />
-          </div>
-        </div>
-
-        <div className={`flex items-center justify-center gap-2 mb-6 ${timeLeft <= 5 ? 'text-red-400' : 'text-blue-400'}`}>
-          <Clock size={20} />
-          <span className="text-2xl font-bold">{timeLeft}</span>
-        </div>
-
-        <div className="bg-white/5 rounded-2xl p-6 mb-4 border border-white/10">
-          <p className="text-lg text-center">{q.q}</p>
-        </div>
-
-        <button
-          onClick={getHint}
-          disabled={userDiamonds < 2 || eliminatedOptions.length > 0}
-          className="w-full flex items-center justify-center gap-2 bg-purple-600/20 hover:bg-purple-600/30 disabled:opacity-50 py-2 rounded-xl mb-4 border border-purple-500/30"
-        >
-          <HelpCircle size={18} />
-          <span>حذف إجابتين</span>
-          <Diamond size={14} />
-          <span>2</span>
-        </button>
-
-        <div className="space-y-3">
-          {q.options.map((opt, idx) => {
-            if (eliminatedOptions.includes(idx)) return null;
-            let bgClass = 'bg-white/5 hover:bg-white/10 border-transparent';
-            if (answered !== null) {
-              if (idx === q.correct) bgClass = 'bg-green-500/30 border-green-500';
-              else if (idx === answered) bgClass = 'bg-red-500/30 border-red-500';
-            }
-            return (
-              <button
-                key={idx}
-                onClick={() => handleAnswer(idx)}
-                disabled={answered !== null}
-                className={`w-full p-4 rounded-xl text-right transition-all border ${bgClass}`}
-              >
-                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/10 ml-3">
-                  {['أ', 'ب', 'ج', 'د'][idx]}
-                </span>
-                {opt}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ==================== RIDDLES GAME (100 Riddles) ====================
-// ==================== SPEED MATH GAME (سرعة الحساب) ====================
-const SpeedMathGame = ({ mode, onComplete, onClose, userDiamonds, onUseDiamonds }) => {
-  const [problems, setProblems] = useState([]);
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(10);
-  const [answered, setAnswered] = useState(null);
-  const [showResult, setShowResult] = useState(false);
-  const [streak, setStreak] = useState(0);
-  const [difficulty, setDifficulty] = useState('medium');
-  const totalProblems = 15;
-
-  useEffect(() => {
-    // Generate problems
-    const newProblems = [];
-    for (let i = 0; i < totalProblems; i++) {
-      newProblems.push(generateMathProblem(difficulty));
-    }
-    setProblems(newProblems);
-  }, [difficulty]);
-
-  useEffect(() => {
-    if (showResult || problems.length === 0) return;
-    
-    const timer = setInterval(() => {
-      setTimeLeft(t => {
-        if (t <= 1) {
-          handleTimeout();
-          return 10;
-        }
-        return t - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [currentIdx, showResult, problems.length]);
-
-  const handleTimeout = () => {
-    soundManager.error();
-    setStreak(0);
-    moveNext();
-  };
-
-  const handleAnswer = (idx) => {
-    if (answered !== null || problems.length === 0) return;
-    
-    const problem = problems[currentIdx];
-    setAnswered(idx);
-    
-    if (idx === problem.correctIndex) {
-      soundManager.triviaCorrect();
-      const bonus = streak >= 3 ? 5 : 0;
-      const timeBonus = Math.floor(timeLeft / 2);
-      setScore(s => s + 10 + timeBonus + bonus);
-      setStreak(s => s + 1);
-    } else {
-      soundManager.triviaWrong();
-      setStreak(0);
-    }
-
-    setTimeout(moveNext, 1000);
-  };
-
-  const moveNext = () => {
-    if (currentIdx < totalProblems - 1) {
-      setCurrentIdx(c => c + 1);
-      setAnswered(null);
-      setTimeLeft(10);
-    } else {
-      setShowResult(true);
-      soundManager.win();
-      onComplete(score, score > 50 ? 'win' : 'lose');
-    }
-  };
-
-  if (showResult) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center p-4">
-        <div className="text-center">
-          <Calculator size={80} className="mx-auto text-blue-400 mb-4" />
-          <div className="text-5xl font-bold text-blue-400 mb-2">{score}</div>
-          <div className="text-gray-400 mb-2">نقطة</div>
-          <div className="text-green-400 mb-6">سلسلة: {streak} إجابات صحيحة متتالية</div>
-          <button onClick={onClose} className="bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-xl font-semibold">
-            إنهاء
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (problems.length === 0) {
-    return <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">جاري التحميل...</div>;
-  }
-
-  const problem = problems[currentIdx];
-
-  return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white p-4 md:p-8">
-      <div className="max-w-xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <button onClick={onClose} className="p-2 rounded-full bg-white/10 hover:bg-white/20">
-            <ChevronLeft size={24} />
-          </button>
-          <h1 className="text-xl font-bold flex items-center gap-2">
-            <Calculator size={24} className="text-blue-400" />
-            سرعة الحساب
-          </h1>
-          <div className="flex items-center gap-3">
-            {streak >= 3 && (
-              <div className="flex items-center gap-1 text-orange-400">
-                <Flame size={18} />
-                <span>{streak}</span>
-              </div>
-            )}
-            <div className="flex items-center gap-1 text-yellow-400 font-bold">
-              <Star size={18} />
-              {score}
-            </div>
-          </div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="mb-4">
-          <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-            <div className="h-full bg-blue-500 transition-all" style={{ width: `${((currentIdx + 1) / totalProblems) * 100}%` }} />
-          </div>
-          <div className="text-center text-gray-400 text-sm mt-2">{currentIdx + 1} / {totalProblems}</div>
-        </div>
-
-        {/* Timer */}
-        <div className="flex justify-center mb-6">
-          <div className={`w-20 h-20 rounded-full border-4 ${timeLeft <= 3 ? 'border-red-500 animate-pulse' : 'border-blue-500'} flex items-center justify-center`}>
-            <span className={`text-3xl font-bold ${timeLeft <= 3 ? 'text-red-400' : 'text-white'}`}>{timeLeft}</span>
-          </div>
-        </div>
-
-        {/* Math Problem */}
-        <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-2xl p-8 mb-6">
-          <p className="text-4xl font-bold text-center">{problem.question}</p>
-        </div>
-
-        {/* Options Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          {problem.options.map((opt, idx) => {
-            let bgClass = 'bg-white/5 hover:bg-white/10 border-transparent';
-            if (answered !== null) {
-              if (idx === problem.correctIndex) bgClass = 'bg-green-500/30 border-green-500';
-              else if (idx === answered) bgClass = 'bg-red-500/30 border-red-500';
-            }
-            return (
-              <button
-                key={idx}
-                onClick={() => handleAnswer(idx)}
-                disabled={answered !== null}
-                className={`p-6 rounded-xl text-center text-2xl font-bold transition-all border-2 ${bgClass}`}
-              >
-                {opt}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Streak Indicator */}
-        {streak >= 2 && (
-          <div className="mt-4 text-center text-orange-400 flex items-center justify-center gap-2">
-            <Flame size={20} />
-            <span>{streak} إجابات صحيحة متتالية!</span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// ==================== WORD CHAIN GAME (سباق الكلمات) ====================
-const WordChainGame = ({ mode, onComplete, onClose }) => {
-  const [currentWord, setCurrentWord] = useState('');
-  const [lastLetter, setLastLetter] = useState('');
-  const [playerTurn, setPlayerTurn] = useState(true);
-  const [score, setScore] = useState(0);
-  const [opponentScore, setOpponentScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(15);
-  const [usedWords, setUsedWords] = useState(new Set());
-  const [inputWord, setInputWord] = useState('');
-  const [message, setMessage] = useState('');
-  const [gameOver, setGameOver] = useState(false);
-  const [words] = useState(arabicWords);
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    // Start with random word
-    const startWord = words[Math.floor(Math.random() * words.length)];
-    setCurrentWord(startWord);
-    setLastLetter(startWord[startWord.length - 1]);
-    setUsedWords(new Set([startWord]));
-  }, [words]);
-
-  useEffect(() => {
-    if (gameOver) return;
-    
-    const timer = setInterval(() => {
-      setTimeLeft(t => {
-        if (t <= 1) {
-          handleTimeout();
-          return 15;
-        }
-        return t - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [playerTurn, gameOver]);
-
-  const handleTimeout = () => {
-    if (playerTurn) {
-      soundManager.error();
-      setMessage('انتهى الوقت! خسرت الدور');
-      setOpponentScore(s => s + 1);
-      if (opponentScore + 1 >= 3) {
-        endGame(false);
-        return;
-      }
-    } else {
-      soundManager.success();
-      setMessage('فشل الخصم! حصلت على نقطة');
-      setScore(s => s + 1);
-      if (score + 1 >= 3) {
-        endGame(true);
-        return;
-      }
-    }
-    setTimeLeft(15);
-    setPlayerTurn(!playerTurn);
-  };
-
-  const submitWord = () => {
-    const word = inputWord.trim();
-    
-    if (!word) return;
-    
-    // Validate word
-    if (word[0] !== lastLetter) {
-      setMessage(`يجب أن تبدأ الكلمة بحرف "${lastLetter}"`);
-      soundManager.error();
-      return;
-    }
-    
-    if (usedWords.has(word)) {
-      setMessage('هذه الكلمة مستخدمة بالفعل!');
-      soundManager.error();
-      return;
-    }
-    
-    if (word.length < 2) {
-      setMessage('الكلمة قصيرة جداً!');
-      soundManager.error();
-      return;
-    }
-
-    // Valid word
-    soundManager.success();
-    setCurrentWord(word);
-    setLastLetter(word[word.length - 1]);
-    setUsedWords(prev => new Set([...prev, word]));
-    setScore(s => s + 1);
-    setInputWord('');
-    setMessage('');
-    
-    if (score + 1 >= 5) {
-      endGame(true);
-      return;
-    }
-
-    // AI turn
-    setPlayerTurn(false);
-    setTimeLeft(15);
-    
-    setTimeout(() => {
-      makeAIMove(word[word.length - 1]);
-    }, 1500);
-  };
-
-  const makeAIMove = (startLetter) => {
-    const validWords = words.filter(w => 
-      w[0] === startLetter && !usedWords.has(w)
-    );
-    
-    if (validWords.length === 0) {
-      setMessage('فشل الخصم في إيجاد كلمة!');
-      soundManager.success();
-      setScore(s => s + 1);
-      if (score + 1 >= 5) {
-        endGame(true);
-        return;
-      }
-    } else {
-      const aiWord = validWords[Math.floor(Math.random() * validWords.length)];
-      setCurrentWord(aiWord);
-      setLastLetter(aiWord[aiWord.length - 1]);
-      setUsedWords(prev => new Set([...prev, aiWord]));
-      setOpponentScore(s => s + 1);
-      setMessage(`الخصم: ${aiWord}`);
-      soundManager.move();
-      
-      if (opponentScore + 1 >= 5) {
-        endGame(false);
-        return;
-      }
-    }
-    
-    setPlayerTurn(true);
-    setTimeLeft(15);
-  };
-
-  const endGame = (won) => {
-    setGameOver(true);
-    if (won) {
-      soundManager.win();
-      onComplete(score * 10, 'win');
-    } else {
-      soundManager.lose();
-      onComplete(score * 5, 'lose');
-    }
-  };
-
-  if (gameOver) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center p-4">
-        <div className="text-center">
-          <Type size={80} className={`mx-auto mb-4 ${score >= opponentScore ? 'text-green-400' : 'text-red-400'}`} />
-          <div className="text-3xl font-bold mb-2">{score >= opponentScore ? 'فزت!' : 'خسرت!'}</div>
-          <div className="text-xl mb-4">
-            <span className="text-green-400">{score}</span>
-            <span className="text-gray-400"> - </span>
-            <span className="text-red-400">{opponentScore}</span>
-          </div>
-          <button onClick={onClose} className="bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-xl font-semibold">
-            إنهاء
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white p-4 md:p-8">
-      <div className="max-w-xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <button onClick={onClose} className="p-2 rounded-full bg-white/10 hover:bg-white/20">
-            <ChevronLeft size={24} />
-          </button>
-          <h1 className="text-xl font-bold flex items-center gap-2">
-            <Type size={24} className="text-orange-400" />
-            سباق الكلمات
-          </h1>
-          <div className="flex items-center gap-2">
-            <span className="text-green-400 font-bold">{score}</span>
-            <span className="text-gray-400">-</span>
-            <span className="text-red-400 font-bold">{opponentScore}</span>
-          </div>
-        </div>
-
-        {/* Timer */}
-        <div className="flex justify-center mb-6">
-          <div className={`w-20 h-20 rounded-full border-4 ${timeLeft <= 5 ? 'border-red-500 animate-pulse' : 'border-orange-500'} flex items-center justify-center`}>
-            <span className={`text-3xl font-bold ${timeLeft <= 5 ? 'text-red-400' : 'text-white'}`}>{timeLeft}</span>
-          </div>
-        </div>
-
-        {/* Turn Indicator */}
-        <div className={`text-center p-3 rounded-xl mb-4 ${playerTurn ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-          {playerTurn ? 'دورك!' : 'دور الخصم...'}
-        </div>
-
-        {/* Current Word */}
-        <div className="bg-gradient-to-br from-orange-500/10 to-yellow-500/10 border border-orange-500/20 rounded-2xl p-6 mb-4">
-          <p className="text-sm text-gray-400 text-center mb-2">الكلمة الحالية:</p>
-          <p className="text-3xl font-bold text-center">{currentWord}</p>
-          <p className="text-sm text-center mt-2 text-orange-400">
-            الكلمة التالية يجب أن تبدأ بحرف: <span className="text-2xl font-bold">{lastLetter}</span>
-          </p>
-        </div>
-
-        {/* Message */}
-        {message && (
-          <div className="bg-purple-500/20 border border-purple-500/30 rounded-xl p-3 mb-4 text-center text-purple-400">
-            {message}
-          </div>
-        )}
-
-        {/* Input */}
-        {playerTurn && (
-          <div className="flex gap-2">
-            <input
-              ref={inputRef}
-              type="text"
-              value={inputWord}
-              onChange={(e) => setInputWord(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && submitWord()}
-              placeholder={`اكتب كلمة تبدأ بـ "${lastLetter}"`}
-              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-right focus:outline-none focus:border-orange-500"
-              autoFocus
-            />
-            <button
-              onClick={submitWord}
-              className="bg-orange-500 hover:bg-orange-600 px-6 py-3 rounded-xl font-semibold"
-            >
-              أرسل
-            </button>
-          </div>
-        )}
-
-        {/* Used Words */}
-        <div className="mt-6">
-          <p className="text-gray-400 text-sm mb-2">الكلمات المستخدمة ({usedWords.size}):</p>
-          <div className="flex flex-wrap gap-2">
-            {[...usedWords].slice(-10).map((word, idx) => (
-              <span key={idx} className="bg-white/5 px-3 py-1 rounded-full text-sm">{word}</span>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ==================== PUZZLE GAME (With Images) ====================
-const PuzzleGame = ({ mode, onComplete, onClose, userDiamonds, onUseDiamonds }) => {
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [tiles, setTiles] = useState([]);
-  const [emptyIndex, setEmptyIndex] = useState(15);
-  const [moves, setMoves] = useState(0);
-  const [solved, setSolved] = useState(false);
-  const [gridSize, setGridSize] = useState(4);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [showHint, setShowHint] = useState(false);
-
-  const initGame = (image, size = 4) => {
-    setGridSize(size);
-    const totalTiles = size * size;
-    const numbers = Array.from({ length: totalTiles - 1 }, (_, i) => i);
-    
-    // Shuffle ensuring solvability
-    let shuffled;
-    do {
-      shuffled = [...numbers].sort(() => Math.random() - 0.5);
-    } while (!isSolvable(shuffled, size));
-    
-    setTiles(shuffled);
-    setEmptyIndex(totalTiles - 1);
-    setMoves(0);
-    setSolved(false);
-    setSelectedImage(image);
-    setImageLoaded(false);
-  };
-
-  const isSolvable = (arr, size) => {
-    let inversions = 0;
-    for (let i = 0; i < arr.length; i++) {
-      for (let j = i + 1; j < arr.length; j++) {
-        if (arr[i] > arr[j]) inversions++;
-      }
-    }
-    return size % 2 === 1 ? inversions % 2 === 0 : true;
-  };
-
-  const canMove = (idx) => {
-    const row = Math.floor(idx / gridSize);
-    const col = idx % gridSize;
-    const emptyRow = Math.floor(emptyIndex / gridSize);
-    const emptyCol = emptyIndex % gridSize;
-    return (Math.abs(row - emptyRow) + Math.abs(col - emptyCol)) === 1;
-  };
-
-  const moveTile = (idx) => {
-    if (!canMove(idx) || solved) return;
-    
-    soundManager.puzzleSlide(); // صوت تحريك القطعة
-    
-    const newTiles = [...tiles];
-    const tileIdx = tiles.indexOf(tiles[idx]);
-    
-    // Swap with empty
-    [newTiles[idx], newTiles[emptyIndex]] = [newTiles[emptyIndex], newTiles[idx]];
-    
-    const temp = tiles[idx];
-    newTiles[emptyIndex] = temp;
-    newTiles[idx] = null;
-    
-    setTiles(prevTiles => {
-      const updated = [...prevTiles];
-      updated[emptyIndex] = prevTiles[idx];
-      updated[idx] = null;
-      return updated;
-    });
-    
-    setEmptyIndex(idx);
-    setMoves(m => m + 1);
-
-    // Check if solved
-    const isSolved = tiles.every((t, i) => {
-      if (i === emptyIndex) return true;
-      return t === i;
-    });
-    
-    if (isSolved) {
-      setSolved(true);
-      soundManager.puzzleComplete(); // صوت إكمال البازل
-      const bonus = Math.max(0, 100 - moves);
-      onComplete(20 + bonus, 'win');
-    }
-  };
-
-  const getHint = () => {
-    if (userDiamonds < 2) return;
-    onUseDiamonds(2);
-    setShowHint(true);
-    setTimeout(() => setShowHint(false), 3000);
-  };
-
-  if (!selectedImage) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0f] text-white p-4">
-        <div className="max-w-lg mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <button onClick={onClose} className="p-2 rounded-full bg-white/10 hover:bg-white/20">
-              <ChevronLeft size={24} />
-            </button>
-            <h1 className="text-xl font-bold flex items-center gap-2">
-              <Puzzle size={24} className="text-blue-400" />
-              تركيب الصور
-            </h1>
-            <div className="w-10" />
-          </div>
-
-          <p className="text-center text-gray-400 mb-6">اختر صورة للتركيب</p>
-
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            {puzzleImages.map(img => (
-              <button
-                key={img.id}
-                onClick={() => initGame(img)}
-                className="relative aspect-square rounded-xl overflow-hidden border-2 border-transparent hover:border-blue-500 transition-all"
-              >
-                <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-3">
-                  <span className="text-white font-semibold">{img.name}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-
-          <div className="text-center">
-            <p className="text-gray-400 mb-3">اختر مستوى الصعوبة</p>
-            <div className="flex justify-center gap-3">
-              <button className="px-4 py-2 bg-green-600/20 border border-green-500/30 rounded-lg text-green-400">
-                3×3 سهل
-              </button>
-              <button className="px-4 py-2 bg-blue-600/20 border border-blue-500/30 rounded-lg text-blue-400">
-                4×4 متوسط
-              </button>
-              <button className="px-4 py-2 bg-red-600/20 border border-red-500/30 rounded-lg text-red-400">
-                5×5 صعب
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white p-4">
-      <div className="max-w-md mx-auto">
-        <div className="flex items-center justify-between mb-4">
-          <button onClick={onClose} className="p-2 rounded-full bg-white/10 hover:bg-white/20">
-            <ChevronLeft size={24} />
-          </button>
-          <h1 className="text-lg font-bold">{selectedImage.name}</h1>
-          <button onClick={() => initGame(selectedImage)} className="p-2 rounded-full bg-white/10 hover:bg-white/20">
-            <RotateCcw size={20} />
-          </button>
-        </div>
-
-        <div className="flex justify-between mb-4 text-sm">
-          <span className="text-gray-400">الحركات: {moves}</span>
-          {showHint && <span className="text-green-400">انظر الصورة الأصلية أدناه</span>}
-        </div>
-
-        {/* Puzzle Grid */}
-        <div className="aspect-square bg-white/5 rounded-xl p-1 mb-4 relative overflow-hidden">
-          <div className={`grid gap-1 h-full`} style={{ gridTemplateColumns: `repeat(${gridSize}, 1fr)` }}>
-            {Array.from({ length: gridSize * gridSize }, (_, idx) => {
-              const tileValue = tiles[idx];
-              const isCorrect = tileValue === idx;
-              
-              if (idx === emptyIndex || tileValue === null || tileValue === undefined) {
-                return <div key={idx} className="bg-black/50 rounded" />;
-              }
-
-              const tileRow = Math.floor(tileValue / gridSize);
-              const tileCol = tileValue % gridSize;
-              const bgPosX = (tileCol / (gridSize - 1)) * 100;
-              const bgPosY = (tileRow / (gridSize - 1)) * 100;
-
-              return (
-                <button
-                  key={idx}
-                  onClick={() => moveTile(idx)}
-                  disabled={!canMove(idx)}
-                  className={`rounded overflow-hidden transition-all ${canMove(idx) ? 'hover:ring-2 ring-blue-500' : ''} ${isCorrect ? 'ring-1 ring-green-500/50' : ''}`}
-                  style={{
-                    backgroundImage: `url(${selectedImage.url})`,
-                    backgroundSize: `${gridSize * 100}%`,
-                    backgroundPosition: `${bgPosX}% ${bgPosY}%`
-                  }}
-                />
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Hint - Show original image */}
-        <button
-          onClick={getHint}
-          disabled={userDiamonds < 2}
-          className="w-full flex items-center justify-center gap-2 bg-purple-600/20 hover:bg-purple-600/30 disabled:opacity-50 py-3 rounded-xl mb-4 border border-purple-500/30"
-        >
-          <Eye size={18} />
-          <span>عرض الصورة الأصلية</span>
-          <Diamond size={14} />
-          <span>2</span>
-        </button>
-
-        {showHint && (
-          <div className="mb-4">
-            <img src={selectedImage.url} alt="Original" className="w-full rounded-xl" />
-          </div>
-        )}
-
-        {solved && (
-          <div className="bg-green-500/20 border border-green-500/30 rounded-2xl p-6 text-center">
-            <Trophy size={60} className="mx-auto text-yellow-400 mb-4" />
-            <div className="text-2xl font-bold text-green-400 mb-2">ممتاز!</div>
-            <div className="text-gray-400 mb-4">أكملت اللغز في {moves} حركة</div>
-            <button onClick={() => setSelectedImage(null)} className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-xl font-semibold">
-              لعبة جديدة
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-// ==================== GAME ICONS MAP ====================
+// Game Icons Map
 const gameIcons = {
   chess: Crown,
   tictactoe: Grid3X3,
@@ -1398,7 +31,7 @@ const gameIcons = {
   speedmath: Calculator,
 };
 
-// ==================== DIAMOND SHOP ====================
+// Diamond Shop Component
 const DiamondShop = ({ onClose, userId }) => {
   const [loading, setLoading] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('apple_pay');
@@ -1430,7 +63,6 @@ const DiamondShop = ({ onClose, userId }) => {
       const data = await response.json();
       
       if (data.success && data.checkout_url) {
-        // فتح صفحة الدفع
         window.location.href = data.checkout_url;
       } else {
         setError(data.detail || 'حدث خطأ في عملية الدفع');
@@ -1443,14 +75,14 @@ const DiamondShop = ({ onClose, userId }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" data-testid="diamond-shop-modal">
       <div className="bg-[#1a1a2e] rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold flex items-center gap-2">
             <Diamond size={24} className="text-blue-400" />
             متجر الماس
           </h2>
-          <button onClick={onClose} className="p-2 rounded-full bg-white/10 hover:bg-white/20">
+          <button onClick={onClose} className="p-2 rounded-full bg-white/10 hover:bg-white/20" data-testid="diamond-shop-close">
             <X size={20} />
           </button>
         </div>
@@ -1472,6 +104,7 @@ const DiamondShop = ({ onClose, userId }) => {
                   ? 'bg-black border-2 border-white' 
                   : 'bg-black/50 border border-white/20'
               }`}
+              data-testid="payment-apple-pay"
             >
               <Apple size={20} />
               <span className="text-sm font-semibold">Apple Pay</span>
@@ -1483,6 +116,7 @@ const DiamondShop = ({ onClose, userId }) => {
                   ? 'bg-gradient-to-r from-blue-600 to-blue-700 border-2 border-blue-400' 
                   : 'bg-white/5 border border-white/10'
               }`}
+              data-testid="payment-card"
             >
               <CreditCard size={20} />
               <span className="text-sm font-semibold">بطاقة</span>
@@ -1500,6 +134,7 @@ const DiamondShop = ({ onClose, userId }) => {
                 ${pkg.popular 
                   ? 'bg-gradient-to-r from-blue-600 to-purple-600 border-2 border-blue-400' 
                   : 'bg-white/5 hover:bg-white/10 border border-white/10'}`}
+              data-testid={`diamond-package-${pkg.id}`}
             >
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
@@ -1533,17 +168,58 @@ const DiamondShop = ({ onClose, userId }) => {
   );
 };
 
-// ==================== MAIN GAMES PAGE ====================
+// Guest Restriction Modal
+const GuestRestrictionModal = ({ onClose, onLogin }) => {
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" data-testid="guest-restriction-modal">
+      <div className="bg-[#1a1a2e] rounded-2xl p-6 max-w-sm w-full text-center">
+        <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-yellow-500/20 flex items-center justify-center">
+          <Lock size={40} className="text-yellow-400" />
+        </div>
+        <h2 className="text-xl font-bold mb-2">تسجيل الدخول مطلوب</h2>
+        <p className="text-gray-400 mb-6">
+          يجب تسجيل الدخول للوصول إلى الألعاب وكسب النقاط
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 bg-white/10 hover:bg-white/20 py-3 rounded-xl font-semibold"
+            data-testid="guest-modal-close"
+          >
+            إلغاء
+          </button>
+          <button
+            onClick={onLogin}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 py-3 rounded-xl font-semibold"
+            data-testid="guest-modal-login"
+          >
+            تسجيل الدخول
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Main Games Page Component
 const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
   const [activeGame, setActiveGame] = useState(null);
   const [gameMode, setGameMode] = useState(null);
   const [showModeSelector, setShowModeSelector] = useState(null);
   const [showDiamondShop, setShowDiamondShop] = useState(false);
+  const [showGuestModal, setShowGuestModal] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [leaderboard, setLeaderboard] = useState([]);
   const [balance, setBalance] = useState({ saqr_points: 0, diamonds: 300, daily_points_remaining: 70 });
   const [loading, setLoading] = useState(true);
+  
+  // WebSocket for online games
+  const [wsConnection, setWsConnection] = useState(null);
+  const [onlineGameState, setOnlineGameState] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [opponentInfo, setOpponentInfo] = useState(null);
+  const wsRef = useRef(null);
 
   const games = [
     { id: 'chess', name: 'الشطرنج', colors: ['#8b5cf6', '#6d28d9'], description: 'لعبة الملوك الاستراتيجية', maxPoints: 30, online: true, onlineCost: 30 },
@@ -1554,8 +230,17 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
     { id: 'speedmath', name: 'سرعة الحساب', colors: ['#06b6d4', '#0891b2'], description: 'تحدي الرياضيات', maxPoints: 50, online: true, onlineCost: 15 },
   ];
 
+  // Check if user is guest
+  const isGuest = !user || user.isGuest;
+
   useEffect(() => {
     fetchData();
+    return () => {
+      // Cleanup WebSocket on unmount
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
   }, []);
 
   const toggleSound = () => {
@@ -1567,7 +252,7 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
     try {
       const [lbRes, balRes] = await Promise.all([
         fetch(`${API_URL}/api/economy/leaderboard`),
-        user?.id ? fetch(`${API_URL}/api/economy/balance/${user.id}`) : null
+        user?.id && !user.isGuest ? fetch(`${API_URL}/api/economy/balance/${user.id}`) : null
       ]);
       if (lbRes.ok) {
         const data = await lbRes.json();
@@ -1584,7 +269,80 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
     }
   };
 
+  // WebSocket connection for online games
+  const connectWebSocket = useCallback((gameType) => {
+    if (!user?.id || user.isGuest) return;
+
+    const wsUrl = API_URL.replace('https://', 'wss://').replace('http://', 'ws://');
+    const ws = new WebSocket(`${wsUrl}/ws/game/${user.id}`);
+    
+    ws.onopen = () => {
+      console.log('WebSocket connected');
+      setWsConnection(ws);
+      wsRef.current = ws;
+      
+      // Start searching for match
+      ws.send(JSON.stringify({
+        action: 'find_match',
+        game_type: gameType
+      }));
+      setIsSearching(true);
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      
+      switch (data.type) {
+        case 'waiting':
+          setIsSearching(true);
+          break;
+        case 'match_found':
+          setIsSearching(false);
+          setOnlineGameState({
+            roomId: data.room_id,
+            players: data.players,
+            myTurn: data.your_turn,
+            gameType: data.game_type
+          });
+          setOpponentInfo({
+            id: data.players.find(p => p !== user.id),
+            name: 'خصم'
+          });
+          break;
+        case 'opponent_move':
+          // Handle opponent move - will be passed to game component
+          break;
+        case 'chat_message':
+          // Chat messages are handled by GameChat component
+          break;
+        case 'player_left':
+          setOnlineGameState(null);
+          setOpponentInfo(null);
+          setWsConnection(null);
+          break;
+        default:
+          break;
+      }
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket disconnected');
+      setWsConnection(null);
+      setIsSearching(false);
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+  }, [user]);
+
   const handleGameSelect = (gameId) => {
+    // Check if user is guest
+    if (isGuest) {
+      setShowGuestModal(true);
+      return;
+    }
+
     soundManager.click();
     const game = games.find(g => g.id === gameId);
     if (game.online) {
@@ -1596,6 +354,17 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
   };
 
   const handleModeSelect = (mode) => {
+    const game = games.find(g => g.id === showModeSelector);
+    
+    if (mode === 'online') {
+      // Deduct diamonds for online play
+      if (balance.diamonds < game.onlineCost) {
+        return;
+      }
+      setBalance(prev => ({ ...prev, diamonds: prev.diamonds - game.onlineCost }));
+      connectWebSocket(showModeSelector);
+    }
+    
     setActiveGame(showModeSelector);
     setGameMode(mode);
     setShowModeSelector(null);
@@ -1627,28 +396,122 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
   };
 
   const closeGame = () => {
+    // Cleanup WebSocket if online game
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+    setActiveGame(null);
+    setGameMode(null);
+    setWsConnection(null);
+    setOnlineGameState(null);
+    setOpponentInfo(null);
+    setIsSearching(false);
+    setShowChat(false);
+  };
+
+  const cancelSearch = () => {
+    if (wsRef.current) {
+      wsRef.current.send(JSON.stringify({ action: 'cancel_search' }));
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+    setIsSearching(false);
+    setWsConnection(null);
     setActiveGame(null);
     setGameMode(null);
   };
 
+  // Searching for opponent screen
+  if (isSearching) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center p-4" data-testid="searching-screen">
+        <div className="text-center">
+          <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-blue-500/20 flex items-center justify-center animate-pulse">
+            <Wifi size={48} className="text-blue-400" />
+          </div>
+          <h2 className="text-2xl font-bold mb-2">جاري البحث عن منافس</h2>
+          <p className="text-gray-400 mb-6">يرجى الانتظار...</p>
+          <button
+            onClick={cancelSearch}
+            className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-6 py-3 rounded-xl font-semibold"
+            data-testid="cancel-search-btn"
+          >
+            إلغاء البحث
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Render active game with chat support
+  const renderGame = () => {
+    const isOnline = gameMode === 'online';
+    const gameProps = {
+      mode: gameMode,
+      onComplete: handleGameComplete,
+      onClose: closeGame,
+      userDiamonds: balance.diamonds,
+      onUseDiamonds: handleUseDiamonds,
+      wsConnection: wsConnection,
+      gameId: onlineGameState?.roomId,
+      isOnline: isOnline
+    };
+
+    let gameComponent = null;
+
+    switch (activeGame) {
+      case 'chess':
+        gameComponent = <ChessGame {...gameProps} />;
+        break;
+      case 'tictactoe':
+        gameComponent = <TicTacToeGame {...gameProps} />;
+        break;
+      case 'trivia':
+        gameComponent = <TriviaGame {...gameProps} />;
+        break;
+      case 'speedmath':
+        gameComponent = <SpeedMathGame {...gameProps} />;
+        break;
+      case 'puzzle':
+        gameComponent = <PuzzleGame {...gameProps} />;
+        break;
+      case 'wordchain':
+        gameComponent = <WordChainGame {...gameProps} />;
+        break;
+      default:
+        return null;
+    }
+
+    return (
+      <>
+        {gameComponent}
+        
+        {/* Chat for online games */}
+        {isOnline && wsConnection && (
+          <>
+            <ChatToggleButton 
+              onClick={() => setShowChat(!showChat)} 
+              unreadCount={0}
+            />
+            <GameChat
+              isOpen={showChat}
+              onClose={() => setShowChat(false)}
+              gameId={onlineGameState?.roomId}
+              playerId={user?.id}
+              playerName={user?.name}
+              opponentName={opponentInfo?.name}
+              wsConnection={wsConnection}
+            />
+          </>
+        )}
+      </>
+    );
+  };
+
   // Render active game
-  if (activeGame === 'chess') {
-    return <ChessGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} userDiamonds={balance.diamonds} onUseDiamonds={handleUseDiamonds} />;
-  }
-  if (activeGame === 'tictactoe') {
-    return <TicTacToeGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
-  }
-  if (activeGame === 'trivia') {
-    return <TriviaGame onComplete={handleGameComplete} onClose={closeGame} userDiamonds={balance.diamonds} onUseDiamonds={handleUseDiamonds} />;
-  }
-  if (activeGame === 'speedmath') {
-    return <SpeedMathGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} userDiamonds={balance.diamonds} onUseDiamonds={handleUseDiamonds} />;
-  }
-  if (activeGame === 'puzzle') {
-    return <PuzzleGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} userDiamonds={balance.diamonds} onUseDiamonds={handleUseDiamonds} />;
-  }
-  if (activeGame === 'wordchain') {
-    return <WordChainGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
+  if (activeGame) {
+    return renderGame();
   }
 
   // Mode Selector with Online Option
@@ -1657,10 +520,10 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
     const GameIcon = gameIcons[showModeSelector] || Gamepad2;
     
     return (
-      <div className="min-h-screen bg-[#0a0a0f] text-white p-4 md:p-8" dir="rtl">
+      <div className="min-h-screen bg-[#0a0a0f] text-white p-4 md:p-8" dir="rtl" data-testid="mode-selector">
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-between mb-8">
-            <button onClick={() => setShowModeSelector(null)} className="p-2 rounded-full bg-white/10 hover:bg-white/20">
+            <button onClick={() => setShowModeSelector(null)} className="p-2 rounded-full bg-white/10 hover:bg-white/20" data-testid="mode-back-btn">
               <X size={24} />
             </button>
             <h1 className="text-xl font-bold flex items-center gap-2">
@@ -1678,6 +541,7 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
               onClick={() => handleModeSelect('online')}
               disabled={balance.diamonds < game?.onlineCost}
               className="w-full bg-gradient-to-r from-blue-500 to-blue-600 disabled:from-gray-600 disabled:to-gray-700 p-6 rounded-2xl text-right hover:from-blue-400 hover:to-blue-500 transition-all"
+              data-testid="online-mode-btn"
             >
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
@@ -1701,6 +565,7 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
             <button 
               onClick={() => handleModeSelect('ai_medium')}
               className="w-full bg-gradient-to-r from-green-500 to-green-600 p-6 rounded-2xl text-right hover:from-green-400 hover:to-green-500 transition-all"
+              data-testid="ai-medium-btn"
             >
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
@@ -1717,6 +582,7 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
             <button 
               onClick={() => handleModeSelect('ai_hard')}
               className="w-full bg-gradient-to-r from-red-500 to-red-600 p-6 rounded-2xl text-right hover:from-red-400 hover:to-red-500 transition-all"
+              data-testid="ai-hard-btn"
             >
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
@@ -1738,7 +604,18 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
   const userRank = leaderboard.findIndex(l => l.user_id === user?.id);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white pb-24" dir="rtl">
+    <div className="min-h-screen bg-[#0a0a0f] text-white pb-24" dir="rtl" data-testid="games-page">
+      {/* Guest Restriction Modal */}
+      {showGuestModal && (
+        <GuestRestrictionModal 
+          onClose={() => setShowGuestModal(false)}
+          onLogin={() => {
+            setShowGuestModal(false);
+            if (onNavigate) onNavigate('auth');
+          }}
+        />
+      )}
+
       {/* Header */}
       <div className="px-6 pt-8 pb-4">
         <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -1748,49 +625,71 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
         <p className="text-gray-400 mt-1 text-sm">العب وتنافس واكسب النقاط</p>
       </div>
 
-      {/* Daily Progress */}
-      <div className="mx-6 bg-gradient-to-r from-green-500/10 to-green-600/10 border border-green-500/20 rounded-2xl p-4 mb-4">
-        <div className="flex items-center gap-2 mb-2">
-          <Clock size={16} className="text-green-400" />
-          <span className="text-green-400 text-sm font-semibold">النقاط اليومية</span>
-        </div>
-        <div className="h-2 bg-black/30 rounded-full overflow-hidden mb-2">
-          <div 
-            className="h-full bg-green-500 rounded-full transition-all"
-            style={{ width: `${Math.min(100, ((70 - balance.daily_points_remaining) / 70) * 100)}%` }}
-          />
-        </div>
-        <div className="flex justify-between text-xs">
-          <span className="text-green-400 font-semibold">{70 - balance.daily_points_remaining} / 70</span>
-          <span className="text-gray-500">متبقي: {balance.daily_points_remaining}</span>
-        </div>
-      </div>
-
-      {/* User Stats */}
-      <div className="mx-6 bg-white/5 rounded-2xl p-4 mb-6">
-        <div className="flex justify-around">
-          <div className="text-center">
-            <Medal size={24} className="mx-auto text-yellow-400 mb-1" />
-            <div className="text-xl font-bold">#{userRank >= 0 ? userRank + 1 : '-'}</div>
-            <div className="text-gray-500 text-xs">ترتيبك</div>
+      {/* Guest Banner */}
+      {isGuest && (
+        <div className="mx-6 mb-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 flex items-center gap-3" data-testid="guest-banner">
+          <Lock size={24} className="text-yellow-400" />
+          <div className="flex-1">
+            <p className="text-yellow-400 font-semibold text-sm">أنت زائر</p>
+            <p className="text-gray-400 text-xs">سجّل الدخول للعب وكسب النقاط</p>
           </div>
-          <div className="h-12 w-px bg-white/10 self-center" />
-          <div className="text-center">
-            <Star size={24} className="mx-auto text-yellow-400 mb-1" />
-            <div className="text-xl font-bold">{balance.saqr_points || 0}</div>
-            <div className="text-gray-500 text-xs">نقاط صقر</div>
-          </div>
-          <div className="h-12 w-px bg-white/10 self-center" />
-          <button onClick={() => setShowDiamondShop(true)} className="text-center group">
-            <div className="relative">
-              <Diamond size={24} className="mx-auto text-blue-400 mb-1" />
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-[10px] font-bold">+</div>
-            </div>
-            <div className="text-xl font-bold">{balance.diamonds || 0}</div>
-            <div className="text-gray-500 text-xs group-hover:text-blue-400 transition-colors">اشحن الماس</div>
+          <button 
+            onClick={() => onNavigate && onNavigate('auth')}
+            className="bg-yellow-500 text-black px-4 py-2 rounded-lg text-sm font-semibold"
+            data-testid="guest-login-btn"
+          >
+            دخول
           </button>
         </div>
-      </div>
+      )}
+
+      {/* Daily Progress - Only for logged in users */}
+      {!isGuest && (
+        <div className="mx-6 bg-gradient-to-r from-green-500/10 to-green-600/10 border border-green-500/20 rounded-2xl p-4 mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock size={16} className="text-green-400" />
+            <span className="text-green-400 text-sm font-semibold">النقاط اليومية</span>
+          </div>
+          <div className="h-2 bg-black/30 rounded-full overflow-hidden mb-2">
+            <div 
+              className="h-full bg-green-500 rounded-full transition-all"
+              style={{ width: `${Math.min(100, ((70 - balance.daily_points_remaining) / 70) * 100)}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-xs">
+            <span className="text-green-400 font-semibold">{70 - balance.daily_points_remaining} / 70</span>
+            <span className="text-gray-500">متبقي: {balance.daily_points_remaining}</span>
+          </div>
+        </div>
+      )}
+
+      {/* User Stats - Only for logged in users */}
+      {!isGuest && (
+        <div className="mx-6 bg-white/5 rounded-2xl p-4 mb-6">
+          <div className="flex justify-around">
+            <div className="text-center">
+              <Medal size={24} className="mx-auto text-yellow-400 mb-1" />
+              <div className="text-xl font-bold">#{userRank >= 0 ? userRank + 1 : '-'}</div>
+              <div className="text-gray-500 text-xs">ترتيبك</div>
+            </div>
+            <div className="h-12 w-px bg-white/10 self-center" />
+            <div className="text-center">
+              <Star size={24} className="mx-auto text-yellow-400 mb-1" />
+              <div className="text-xl font-bold">{balance.saqr_points || 0}</div>
+              <div className="text-gray-500 text-xs">نقاط صقر</div>
+            </div>
+            <div className="h-12 w-px bg-white/10 self-center" />
+            <button onClick={() => setShowDiamondShop(true)} className="text-center group" data-testid="open-diamond-shop">
+              <div className="relative">
+                <Diamond size={24} className="mx-auto text-blue-400 mb-1" />
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-[10px] font-bold">+</div>
+              </div>
+              <div className="text-xl font-bold">{balance.diamonds || 0}</div>
+              <div className="text-gray-500 text-xs group-hover:text-blue-400 transition-colors">اشحن الماس</div>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Diamond Shop Modal */}
       {showDiamondShop && (
@@ -1810,9 +709,18 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
               <button
                 key={game.id}
                 onClick={() => handleGameSelect(game.id)}
-                className="rounded-2xl overflow-hidden transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                className={`rounded-2xl overflow-hidden transition-transform hover:scale-[1.02] active:scale-[0.98] relative ${
+                  isGuest ? 'opacity-80' : ''
+                }`}
                 style={{ background: `linear-gradient(135deg, ${game.colors[0]}, ${game.colors[1]})` }}
+                data-testid={`game-card-${game.id}`}
               >
+                {/* Lock overlay for guests */}
+                {isGuest && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
+                    <Lock size={32} className="text-white/80" />
+                  </div>
+                )}
                 <div className="p-4 text-center">
                   <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-white/20 flex items-center justify-center">
                     <GameIcon size={24} />
@@ -1871,6 +779,7 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
             <div 
               key={idx} 
               className={`flex items-center p-3 border-b border-white/5 ${idx < 3 ? 'bg-yellow-500/5' : ''}`}
+              data-testid={`leaderboard-item-${idx}`}
             >
               <div className="w-10 text-center">
                 {idx === 0 ? <Crown size={22} className="text-yellow-400 mx-auto" /> :
