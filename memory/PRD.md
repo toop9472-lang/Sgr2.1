@@ -10,7 +10,22 @@ Arabic (العربية)
 
 ## ✅ All Implemented Features (February 20, 2026)
 
-### NEW: Complete Economy System - IMPLEMENTED
+### NEW: Sound Effects & Payment Updates - IMPLEMENTED
+- [x] **Sound Effects for All Games**
+  - Web Audio API based - works on all browsers
+  - Chess: piece move, capture sounds
+  - Tic-Tac-Toe: click, win, lose sounds
+  - Brick Breaker: brick hit, bonus brick, paddle hit, level up sounds
+  - Puzzle: slide, complete sounds
+  - Trivia/Riddles: correct/wrong answer sounds
+
+- [x] **Diamond Shop with Apple Pay UI**
+  - Apple Pay button (visual - Stripe handles actual payment)
+  - Credit Card button
+  - 4 packages with bonus diamonds
+  - Stripe Checkout integration
+
+### Complete Economy System - IMPLEMENTED
 - [x] **Saqr Points (نقاط صقر)**
   - Can be exchanged for real money (500 points = $1)
   - Earned from games and daily rewards
@@ -23,9 +38,9 @@ Arabic (العربية)
 
 - [x] **Diamond Purchase Packages (SAR) - Stripe Integrated**
   - Starter: 100 diamonds for 3 SAR ($0.81)
-  - Silver: 250+25 bonus for 7 SAR ($1.89)
-  - Gold: 500+75 bonus for 12 SAR ($3.24)
-  - Platinum: 1000+200 bonus for 19 SAR ($5.13)
+  - Silver: 275 diamonds (+25 bonus) for 7 SAR ($1.89)
+  - Gold: 575 diamonds (+75 bonus) for 12 SAR ($3.24)
+  - Platinum: 1200 diamonds (+200 bonus) for 19 SAR ($5.13)
 
 - [x] **Online Game Costs (Diamonds)**
   - Chess: 30
@@ -61,18 +76,25 @@ Arabic (العربية)
 - [x] AI opponents (medium/hard difficulty)
 - [x] Online vs offline play distinction
 - [x] **100 Trivia Questions** (history, geography, science, islam, literature, sports, tech, art, health, general)
-- [x] **50 Riddles** with multiple choice answers
+- [x] **100 Riddles** with multiple choice answers
+- [x] **Sound Effects** for all games via Web Audio API
 
-### UI Components - NEW
+### UI Components
 - [x] **Balance Header** - Shows points & diamonds at top of screen
-- [x] **Diamond Shop Modal** - Purchase packages with + icon trigger, Stripe integration
+- [x] **Diamond Shop Modal** - Purchase packages with Apple Pay/Card options
 - [x] **Daily Rewards Modal** - Shows on app open, once per session
 - [x] **Daily Points Progress** - Visual bar showing 150-point daily limit
 
-### Payment Integration - NEW
+### Payment Integration
 - [x] **Stripe Checkout** - For diamond purchases
+- [x] **Apple Pay UI** - Visual buttons (Stripe handles actual flow)
 - [x] **Payment Transactions** - MongoDB collection for tracking purchases
 - [x] **Payment Status Polling** - Frontend checks payment completion
+
+### WebSocket & Multiplayer
+- [x] **Real-time Multiplayer** via /ws/game/{player_id}
+- [x] **Online Players Status** via /api/game/online-players
+- [x] **Chat Support** - Backend WebSocket handles chat messages
 
 ### Previous Features - COMPLETE
 - [x] Admin Dashboard dark theme
@@ -80,16 +102,15 @@ Arabic (العربية)
 - [x] Support Page with FAQ
 - [x] Language & Theme switching
 - [x] Points sync on login
-- [x] WebSocket multiplayer infrastructure
 
 ---
 
 ## 📊 Test Status
-- **Latest:** `/app/test_reports/iteration_24.json`
+- **Latest:** `/app/test_reports/iteration_26.json`
 - **Frontend Success Rate:** 100%
-- **Backend Success Rate:** 100% (14/14 tests passed)
-- **Economy Tests:** 14/14 passed
-- **Stripe Tests:** 14/14 passed
+- **Backend Success Rate:** 100% (7/7 tests passed)
+- **All Diamond Shop features verified**
+- **All 6 games working**
 
 ---
 
