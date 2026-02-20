@@ -101,7 +101,7 @@ const TermsOfService = () => {
           {/* Prohibited Activities */}
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">
-              {isRTL ? '5. الأنشطة المحظورة' : '5. Prohibited Activities'}
+              {isRTL ? '6. الأنشطة المحظورة' : '6. Prohibited Activities'}
             </h2>
             <p className="mb-4">
               {isRTL ? 'يُحظر عليك القيام بالتالي:' : 'You are prohibited from:'}
