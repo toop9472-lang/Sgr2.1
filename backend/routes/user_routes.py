@@ -18,7 +18,8 @@ async def get_profile(user_id: str = Depends(get_current_user_id)):
     Get user profile with full details
     """
     db = get_db()
-    user = await db.users.find_one({'id': user_id})
+    # Support both 'id' and 'user_id' fields for backward compatibility
+    user = await db.users.find_one({'$or': [{'id': user_id}, {'user_id': user_id}]})
     
     if not user:
         raise HTTPException(
