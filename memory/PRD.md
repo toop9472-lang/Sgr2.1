@@ -161,10 +161,19 @@ Arabic (العربية)
 
 ## 📁 Key Files
 
-### Web Frontend (React)
-- `/app/frontend/src/components/GamesPage.jsx` - All 6 games with economy UI
-- `/app/frontend/src/components/BottomNav.jsx` - Updated navigation bar
-- `/app/frontend/src/components/AuthPage.jsx` - Apple/Google OAuth fixed
+### Web Frontend (React) - REFACTORED
+- `/app/frontend/src/components/GamesPage.jsx` - Main games page (refactored, ~750 lines)
+- `/app/frontend/src/components/games/` - Individual game components:
+  - `ChessGame.jsx` - Chess with AI and hints
+  - `TicTacToeGame.jsx` - Tic-Tac-Toe with minimax AI
+  - `TriviaGame.jsx` - 200+ cultural questions
+  - `SpeedMathGame.jsx` - Math problems with timer
+  - `WordChainGame.jsx` - Arabic word chain game
+  - `PuzzleGame.jsx` - 12 real images puzzle
+  - `index.js` - Exports all game components
+- `/app/frontend/src/components/GameChat.jsx` - Online chat component
+- `/app/frontend/src/components/BottomNav.jsx` - Navigation bar
+- `/app/frontend/src/components/AuthPage.jsx` - Apple/Google OAuth
 - `/app/frontend/src/App.js` - Main app routing
 
 ### Economy System
