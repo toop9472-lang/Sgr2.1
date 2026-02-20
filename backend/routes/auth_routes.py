@@ -258,6 +258,8 @@ async def register_email(data: EmailRegister, request: Request):
             'name': data.name,
             'avatar': user_doc['avatar'],
             'points': 0,
+            'saqr_points': 0,
+            'diamonds': 300,
             'total_earned': 0,
             'joined_date': user_doc['created_at'].isoformat()
         }
