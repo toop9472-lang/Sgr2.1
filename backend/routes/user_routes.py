@@ -94,22 +94,24 @@ async def update_profile(
     
     update_data['updated_at'] = datetime.utcnow()
     
-    await db.users.update_one(
-        {'id': user_id},
-        {'$set': update_data}
-    )
+    # Update using the correct field (id or user_id)
+    query = {'id': user_id} if user.get('id') else {'user_id': user_id}
+    await db.users.update_one(query, {'$set': update_data})
     
-    user = await db.users.find_one({'id': user_id})
+    user = await db.users.find_one({'$or': [{'id': user_id}, {'user_id': user_id}]})
+    
+    # Get user id - support both 'id' and 'user_id' fields
+    uid = user.get('id') or user.get('user_id')
     
     return {
         'success': True,
         'user': {
-            'id': user['id'],
+            'id': uid,
             'email': user['email'],
             'name': user['name'],
-            'avatar': user.get('avatar'),
-            'points': user['points'],
-            'total_earned': user['total_earned']
+            'avatar': user.get('avatar') or user.get('picture'),
+            'points': user.get('points', 0),
+            'total_earned': user.get('total_earned', 0)
         }
     }
 
