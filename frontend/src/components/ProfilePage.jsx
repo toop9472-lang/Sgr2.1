@@ -93,7 +93,7 @@ const ProfilePage = ({ user, onLogout, onNavigate }) => {
     { id: 'withdraw', icon: Award, label: t('withdrawBalance'), action: () => onNavigate('withdraw'), color: 'text-green-400', bgColor: 'bg-green-500/10' },
     { id: 'history', icon: History, label: t('transactionHistory'), action: () => setShowHistory(true), color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
     { id: 'password', icon: Lock, label: t('changePassword'), action: () => setShowChangePassword(true), color: 'text-purple-400', bgColor: 'bg-purple-500/10' },
-    { id: 'support', icon: MessageCircle, label: t('helpSupport'), action: () => window.open('mailto:support@saqr.app', '_blank'), color: 'text-yellow-400', bgColor: 'bg-yellow-500/10' },
+    { id: 'support', icon: MessageCircle, label: t('helpSupport'), action: () => window.open('/support', '_self'), color: 'text-yellow-400', bgColor: 'bg-yellow-500/10' },
     { id: 'share', icon: Share2, label: t('shareApp'), action: handleShare, color: 'text-pink-400', bgColor: 'bg-pink-500/10' },
     { id: 'privacy', icon: Shield, label: t('privacyPolicy'), action: () => window.open('/privacy', '_blank'), color: 'text-indigo-400', bgColor: 'bg-indigo-500/10' },
     { id: 'terms', icon: Shield, label: t('termsConditions'), action: () => window.open('/terms', '_blank'), color: 'text-cyan-400', bgColor: 'bg-cyan-500/10' },
