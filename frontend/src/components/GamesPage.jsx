@@ -609,10 +609,12 @@ const TriviaGame = ({ onComplete, onClose, userDiamonds, onUseDiamonds }) => {
     setAnswered(idx);
     
     if (idx === questions[currentQ].correct) {
+      soundManager.triviaCorrect(); // صوت الإجابة الصحيحة
       const bonus = streak >= 3 ? 5 : 0;
       setScore(s => s + 10 + Math.floor(timeLeft / 4) + bonus);
       setStreak(s => s + 1);
     } else {
+      soundManager.triviaWrong(); // صوت الإجابة الخاطئة
       setStreak(0);
     }
 
@@ -624,6 +626,9 @@ const TriviaGame = ({ onComplete, onClose, userDiamonds, onUseDiamonds }) => {
         setEliminatedOptions([]);
       } else {
         setShowResult(true);
+        if (score > 50) {
+          soundManager.win();
+        }
         onComplete(score, score > 50 ? 'win' : 'lose');
       }
     }, 1500);
