@@ -206,7 +206,7 @@ export const riddles = [
   { q: 'ما هو الشيء الذي كلما مشى فقد شيئاً من ذيله؟', options: ['الخيط', 'الحبل', 'السلك', 'الإبرة'], correct: 0 },
 ];
 
-// Puzzle Images (using working URLs)
+// Puzzle Images (12 diverse images for online random selection)
 export const puzzleImages = [
   { id: 1, name: 'الطبيعة', url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop' },
   { id: 2, name: 'المدينة', url: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=400&h=400&fit=crop' },
@@ -214,6 +214,12 @@ export const puzzleImages = [
   { id: 4, name: 'الفضاء', url: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400&h=400&fit=crop' },
   { id: 5, name: 'الزهور', url: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400&h=400&fit=crop' },
   { id: 6, name: 'البحر', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=400&fit=crop' },
+  { id: 7, name: 'الجبال', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=400&fit=crop' },
+  { id: 8, name: 'الغابة', url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&h=400&fit=crop' },
+  { id: 9, name: 'الصحراء', url: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=400&h=400&fit=crop' },
+  { id: 10, name: 'الشلال', url: 'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?w=400&h=400&fit=crop' },
+  { id: 11, name: 'القمر', url: 'https://images.unsplash.com/photo-1532693322450-2cb5c511067d?w=400&h=400&fit=crop' },
+  { id: 12, name: 'الطيور', url: 'https://images.unsplash.com/photo-1444464666168-49d633b86797?w=400&h=400&fit=crop' },
 ];
 
 // Chess piece values and positions
