@@ -18,7 +18,7 @@ from emergentintegrations.payments.stripe.checkout import (
     CheckoutSessionRequest
 )
 
-router = APIRouter(prefix="/payments", tags=["Payments"])
+router = APIRouter(prefix="/diamond-payments", tags=["Diamond Payments"])
 
 # Database connection
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
