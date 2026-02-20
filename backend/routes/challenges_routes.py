@@ -518,18 +518,26 @@ async def claim_login_reward(
             {'$inc': update_query}
         )
     
-    # Get updated user points
+    # Get updated user data
     user = await db.users.find_one(
         {'$or': [{'id': user_id}, {'user_id': user_id}]},
-        {'_id': 0, 'points': 1}
+        {'_id': 0, 'points': 1, 'diamonds': 1}
     )
+    
+    message_parts = []
+    if points_to_add > 0:
+        message_parts.append(f'{points_to_add} نقطة')
+    if diamonds_to_add > 0:
+        message_parts.append(f'{diamonds_to_add} ألماسة')
     
     return {
         'success': True,
         'day': request.day,
-        'points_earned': reward['points'],
+        'points_earned': points_to_add,
+        'diamonds_earned': diamonds_to_add,
         'total_points': user.get('points', 0),
-        'message': f'حصلت على {reward["points"]} نقطة!'
+        'total_diamonds': user.get('diamonds', 0),
+        'message': f'حصلت على {" و ".join(message_parts)}!'
     }
 
 
