@@ -166,7 +166,7 @@ const TermsOfService = () => {
           {/* Changes to Terms */}
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">
-              {isRTL ? '10. تعديل الشروط' : '10. Changes to Terms'}
+              {isRTL ? '11. تعديل الشروط' : '11. Changes to Terms'}
             </h2>
             <p>
               {isRTL 
