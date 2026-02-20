@@ -8,9 +8,48 @@ Arabic (العربية)
 
 ---
 
-## ✅ All Implemented Features (February 20, 2026)
+## ✅ LATEST UPDATE (February 20, 2026) - Version 5.3.0
 
-### NEW: Sound Effects & Payment Updates - IMPLEMENTED
+### NEW: Games Page Refactoring & Guest Restriction - IMPLEMENTED
+- [x] **Guest Restriction System**
+  - Guests cannot play games - modal appears asking to login
+  - Lock icons displayed on all game cards for guests
+  - Guest banner with "دخول" (Login) button
+  
+- [x] **Games Page Refactoring**
+  - Extracted all 6 games into separate modular components
+  - `/app/frontend/src/components/games/ChessGame.jsx`
+  - `/app/frontend/src/components/games/TicTacToeGame.jsx`
+  - `/app/frontend/src/components/games/TriviaGame.jsx`
+  - `/app/frontend/src/components/games/SpeedMathGame.jsx`
+  - `/app/frontend/src/components/games/WordChainGame.jsx`
+  - `/app/frontend/src/components/games/PuzzleGame.jsx`
+  - GamesPage.jsx reduced from 1900+ lines to ~750 lines
+
+- [x] **Online Chat Integration**
+  - GameChat component integrated into GamesPage
+  - ChatToggleButton for online games
+  - WebSocket-based real-time messaging
+  
+- [x] **New Games (Replaced)**
+  - "سباق الكلمات" (Word Race) - replaced Brick Breaker
+  - "سرعة الحساب" (Speed Math) - replaced Riddles
+
+- [x] **Economy Updates**
+  - Daily limit reduced to 70 Saqr Points
+  - 14-day login rewards system (160 points + 200 diamonds total)
+  - 200+ cultural questions added
+
+- [x] **Mobile App Update**
+  - Version: 5.3.0
+  - Android versionCode: 55
+  - iOS buildNumber: 25
+
+---
+
+## ✅ All Implemented Features (Earlier)
+
+### Sound Effects & Payment Updates - IMPLEMENTED
 - [x] **Sound Effects for All Games**
   - Web Audio API based - works on all browsers
   - Chess: piece move, capture sounds
