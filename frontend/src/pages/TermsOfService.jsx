@@ -71,13 +71,30 @@ const TermsOfService = () => {
           {/* Rewards System */}
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">
-              {isRTL ? '4. نظام المكافآت' : '4. Rewards System'}
+              {isRTL ? '4. نظام المكافآت والألعاب' : '4. Rewards & Games System'}
             </h2>
             <ul className="list-disc list-inside space-y-2 mr-4">
-              <li>{isRTL ? 'يتم منح النقاط مقابل مشاهدة الإعلانات والتفاعل مع المحتوى' : 'Points are awarded for watching ads and engaging with content'}</li>
-              <li>{isRTL ? 'يمكن استبدال النقاط بمكافآت وفقاً للخيارات المتاحة' : 'Points can be redeemed for rewards according to available options'}</li>
+              <li>{isRTL ? 'يتم منح النقاط مقابل الفوز في الألعاب ومشاهدة الإعلانات' : 'Points are awarded for winning games and watching ads'}</li>
+              <li>{isRTL ? 'الحد اليومي للنقاط من الألعاب: 150 نقطة' : 'Daily points limit from games: 150 points'}</li>
+              <li>{isRTL ? 'الألماسات: يحصل المستخدمون الجدد على 300 ألماسة مجاناً' : 'Diamonds: New users receive 300 diamonds for free'}</li>
+              <li>{isRTL ? 'تُستخدم الألماسات للدخول في مباريات الأونلاين ضد لاعبين حقيقيين' : 'Diamonds are used to enter online matches against real players'}</li>
+              <li>{isRTL ? 'يمكن شراء الألماسات من المتجر بأسعار تبدأ من 3 ريال' : 'Diamonds can be purchased from the store starting at 3 SAR'}</li>
+              <li>{isRTL ? 'الفائز في المباراة الأونلاين يحصل على ألماسات الخصم + نقاط إضافية' : 'Online match winner receives opponent diamonds + bonus points'}</li>
               <li>{isRTL ? 'نحتفظ بالحق في تعديل قيمة النقاط أو المكافآت في أي وقت' : 'We reserve the right to modify point values or rewards at any time'}</li>
-              <li>{isRTL ? 'لا يمكن نقل النقاط أو بيعها لمستخدمين آخرين' : 'Points cannot be transferred or sold to other users'}</li>
+              <li>{isRTL ? 'لا يمكن نقل النقاط أو الألماسات أو بيعها لمستخدمين آخرين' : 'Points and diamonds cannot be transferred or sold to other users'}</li>
+            </ul>
+          </section>
+
+          {/* In-App Purchases */}
+          <section>
+            <h2 className="text-2xl font-bold text-white mb-4">
+              {isRTL ? '5. عمليات الشراء داخل التطبيق' : '5. In-App Purchases'}
+            </h2>
+            <ul className="list-disc list-inside space-y-2 mr-4">
+              <li>{isRTL ? 'جميع عمليات الشراء نهائية وغير قابلة للاسترداد' : 'All purchases are final and non-refundable'}</li>
+              <li>{isRTL ? 'يتم معالجة المدفوعات بشكل آمن عبر Stripe' : 'Payments are securely processed via Stripe'}</li>
+              <li>{isRTL ? 'تتم إضافة الألماسات المشتراة فوراً إلى حسابك' : 'Purchased diamonds are added immediately to your account'}</li>
+              <li>{isRTL ? 'في حالة حدوث مشكلة تقنية، تواصل مع الدعم' : 'For technical issues, contact support'}</li>
             </ul>
           </section>
 
