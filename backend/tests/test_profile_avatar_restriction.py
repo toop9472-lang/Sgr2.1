@@ -24,7 +24,7 @@ class TestProfileAvatarRestriction:
         test_email = f"test_avatar_{int(time.time())}@test.com"
         test_password = "TestPass123!"
         
-        # Try to register
+        # First register the user
         register_response = requests.post(
             f"{BASE_URL}/api/auth/register",
             json={
@@ -34,24 +34,22 @@ class TestProfileAvatarRestriction:
             }
         )
         
-        if register_response.status_code == 200:
-            token = register_response.json().get('token')
-        else:
-            # If registration fails, try login
-            login_response = requests.post(
-                f"{BASE_URL}/api/auth/signin",
-                json={
-                    "email": test_email,
-                    "password": test_password
-                }
-            )
-            if login_response.status_code == 200:
-                token = login_response.json().get('token')
-            else:
-                pytest.skip("Could not authenticate user for avatar test")
-                return None
+        # Then sign in to get JWT token (register uses session cookies, not JWT)
+        login_response = requests.post(
+            f"{BASE_URL}/api/auth/signin",
+            json={
+                "email": test_email,
+                "password": test_password
+            }
+        )
         
-        return {"Authorization": f"Bearer {token}"}
+        if login_response.status_code == 200:
+            token = login_response.json().get('token')
+            if token:
+                return {"Authorization": f"Bearer {token}"}
+        
+        pytest.skip("Could not authenticate user for avatar test")
+        return None
     
     def test_first_avatar_change_succeeds(self, auth_headers):
         """First avatar change should succeed"""
