@@ -188,7 +188,6 @@ const TicTacToeGame = ({ mode, onComplete, onClose, isOnline, opponent, isMyTurn
       onComplete(10, 'draw');
     }
   };
-  };
 
   const minimax = (squares, isMax, depth = 0) => {
     const result = checkWinner(squares);
