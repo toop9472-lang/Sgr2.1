@@ -1730,13 +1730,21 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
             <div className="text-gray-500 text-xs">نقاط صقر</div>
           </div>
           <div className="h-12 w-px bg-white/10 self-center" />
-          <div className="text-center">
-            <Diamond size={24} className="mx-auto text-blue-400 mb-1" />
+          <button onClick={() => setShowDiamondShop(true)} className="text-center group">
+            <div className="relative">
+              <Diamond size={24} className="mx-auto text-blue-400 mb-1" />
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-[10px] font-bold">+</div>
+            </div>
             <div className="text-xl font-bold">{balance.diamonds || 0}</div>
-            <div className="text-gray-500 text-xs">الماسات</div>
-          </div>
+            <div className="text-gray-500 text-xs group-hover:text-blue-400 transition-colors">اشحن الماس</div>
+          </button>
         </div>
       </div>
+
+      {/* Diamond Shop Modal */}
+      {showDiamondShop && (
+        <DiamondShop onClose={() => setShowDiamondShop(false)} onPurchase={fetchData} />
+      )}
 
       {/* Games Grid */}
       <div className="px-6 mb-8">
