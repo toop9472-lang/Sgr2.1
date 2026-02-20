@@ -25,7 +25,7 @@ import BrickBreakerGame from './games/BrickBreakerGame';
 const { width, height } = Dimensions.get('window');
 
 // ==================== GAME CARD COMPONENT ====================
-const GameCard = ({ game, onPress, pulseAnim }) => (
+const GameCard = ({ game, onPress, pulseAnim, gameCost }) => (
   <Animated.View style={[styles.gameCardWrapper, { transform: [{ scale: pulseAnim }] }]}>
     <TouchableOpacity style={styles.gameCard} onPress={onPress} activeOpacity={0.85}>
       <LinearGradient colors={game.colors} style={styles.gameCardGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
@@ -36,13 +36,18 @@ const GameCard = ({ game, onPress, pulseAnim }) => (
         <Text style={styles.gameDesc}>{game.description}</Text>
         <View style={styles.gameFooter}>
           <View style={styles.pointsBadge}>
-            <Ionicons name="diamond" size={12} color="#fbbf24" />
-            <Text style={styles.pointsText}>{game.maxPoints}</Text>
+            <Ionicons name="star" size={12} color="#fbbf24" />
+            <Text style={styles.pointsText}>+{game.maxPoints}</Text>
           </View>
           {game.online && (
             <View style={styles.onlineBadge}>
-              <View style={styles.onlineDot} />
-              <Text style={styles.onlineText}>أونلاين</Text>
+              <Ionicons name="diamond" size={10} color="#60a5fa" />
+              <Text style={styles.onlineText}>{gameCost || game.onlineCost}</Text>
+            </View>
+          )}
+          {!game.online && (
+            <View style={styles.freeBadge}>
+              <Text style={styles.freeText}>مجاني</Text>
             </View>
           )}
         </View>
