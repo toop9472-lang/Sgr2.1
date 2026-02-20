@@ -940,6 +940,18 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
   if (activeGame === 'trivia') {
     return <TriviaGame onComplete={handleGameComplete} onClose={closeGame} />;
   }
+  if (activeGame === 'riddles') {
+    return <RiddlesGame onComplete={handleGameComplete} onClose={closeGame} />;
+  }
+  if (activeGame === 'puzzle') {
+    return <PuzzleGame onComplete={handleGameComplete} onClose={closeGame} />;
+  }
+  if (activeGame === 'brickbreaker') {
+    return <BrickBreakerGame onComplete={handleGameComplete} onClose={closeGame} />;
+  }
+  if (activeGame === 'chess') {
+    return <ChessGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
+  }
 
   // Mode Selector
   if (showModeSelector) {
