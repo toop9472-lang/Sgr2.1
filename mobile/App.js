@@ -112,6 +112,29 @@ export default function App() {
               };
               setUser(updatedUser);
               await storage.setUserData(updatedUser);
+              
+              // Initialize economy for user if needed
+              try {
+                await api.initializeUserEconomy(updatedUser.id);
+              } catch (e) {
+                console.log('Economy init skipped');
+              }
+              
+              // Check daily login rewards
+              try {
+                const dailyResponse = await api.getDailyLoginStatus(updatedUser.id);
+                if (dailyResponse.ok) {
+                  const dailyData = await dailyResponse.json();
+                  if (dailyData.should_show_reward && !dailyData.today_claimed) {
+                    // Show daily rewards modal after a short delay
+                    setTimeout(() => {
+                      setShowDailyRewards(true);
+                    }, 1000);
+                  }
+                }
+              } catch (e) {
+                console.log('Daily check skipped');
+              }
             }
           }
         } catch (syncError) {
