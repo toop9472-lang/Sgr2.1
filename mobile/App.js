@@ -191,7 +191,19 @@ export default function App() {
         ...prev, 
         points: (prev.points || 0) + points 
       }));
+      setBalanceRefresh(prev => prev + 1);
     }
+  };
+
+  const handleDailyRewardClaimed = (data) => {
+    setBalanceRefresh(prev => prev + 1);
+    if (data.reward_type === 'points') {
+      handlePointsEarned(data.amount);
+    }
+  };
+
+  const handleDiamondPurchase = (data) => {
+    setBalanceRefresh(prev => prev + 1);
   };
 
   // Loading Screen
