@@ -110,13 +110,13 @@ Arabic (العربية)
   - Streak resets if day is missed
 
 ### Gaming Platform - COMPLETE
-- [x] **6 Games:** Chess, Tic-Tac-Toe, Brick Breaker, Puzzle, Trivia, Riddles
+- [x] **6 Games:** Chess, Tic-Tac-Toe, Word Chain, Puzzle, Trivia, Speed Math
 - [x] Global leaderboard with rewards
 - [x] AI opponents (medium/hard difficulty)
 - [x] Online vs offline play distinction
-- [x] **100 Trivia Questions** (history, geography, science, islam, literature, sports, tech, art, health, general)
-- [x] **100 Riddles** with multiple choice answers
+- [x] **200+ Trivia Questions** (history, geography, science, islam, literature, sports, tech, art, health, general)
 - [x] **Sound Effects** for all games via Web Audio API
+- [x] **Guest Restriction** - Visitors cannot access games
 
 ### UI Components
 - [x] **Balance Header** - Shows points & diamonds at top of screen
