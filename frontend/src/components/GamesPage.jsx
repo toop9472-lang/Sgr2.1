@@ -906,6 +906,8 @@ const PuzzleGame = ({ mode, onComplete, onClose, userDiamonds, onUseDiamonds }) 
   const moveTile = (idx) => {
     if (!canMove(idx) || solved) return;
     
+    soundManager.puzzleSlide(); // صوت تحريك القطعة
+    
     const newTiles = [...tiles];
     const tileIdx = tiles.indexOf(tiles[idx]);
     
@@ -934,6 +936,7 @@ const PuzzleGame = ({ mode, onComplete, onClose, userDiamonds, onUseDiamonds }) 
     
     if (isSolved) {
       setSolved(true);
+      soundManager.puzzleComplete(); // صوت إكمال البازل
       const bonus = Math.max(0, 100 - moves);
       onComplete(20 + bonus, 'win');
     }
