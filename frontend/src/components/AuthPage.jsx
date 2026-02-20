@@ -66,10 +66,9 @@ const AuthPage = ({ onLogin, onGuestMode, onAdminLogin }) => {
   };
 
   const handleAppleLogin = () => {
-    toast({
-      title: t('comingSoon'),
-      description: isRTL ? 'تسجيل الدخول بـ Apple متاح فقط في تطبيق iOS' : 'Apple Sign In is only available on iOS app',
-    });
+    // Apple Sign In via Emergent Auth - works on all platforms including iPad
+    const redirectUrl = window.location.origin + '/';
+    window.location.href = `https://auth.emergentagent.com/apple?redirect=${encodeURIComponent(redirectUrl)}`;
   };
 
   const handleGuestMode = () => {
