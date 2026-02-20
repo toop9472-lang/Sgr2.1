@@ -717,7 +717,7 @@ const RiddlesGame = ({ mode, onComplete, onClose }) => {
 };
 
 // ==================== MAIN GAMES SCREEN ====================
-const GamesScreen = ({ user, onPointsEarned }) => {
+const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }) => {
   const [activeGame, setActiveGame] = useState(null);
   const [gameMode, setGameMode] = useState(null);
   const [showModeSelector, setShowModeSelector] = useState(null);
@@ -725,23 +725,58 @@ const GamesScreen = ({ user, onPointsEarned }) => {
   const [leaderboard, setLeaderboard] = useState([]);
   const [userStats, setUserStats] = useState({ rank: '-', points: 0, games: 0 });
   const [loading, setLoading] = useState(true);
+  const [balance, setBalance] = useState({ saqr_points: 0, diamonds: 300, daily_points_remaining: 150 });
+  const [gameCosts, setGameCosts] = useState({});
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
 
   const games = [
-    { id: 'chess', name: 'الشطرنج', icon: 'trophy-outline', colors: ['#8b5cf6', '#6d28d9'], description: 'لعبة الملوك', maxPoints: 200, online: true },
-    { id: 'tictactoe', name: 'إكس أو', icon: 'grid-outline', colors: ['#f59e0b', '#d97706'], description: 'تحدى منافسك', maxPoints: 80, online: true },
-    { id: 'brickbreaker', name: 'تكسير الطوب', icon: 'apps', colors: ['#ec4899', '#db2777'], description: 'كسّر كل الطوب', maxPoints: 180, online: false },
-    { id: 'puzzle', name: 'تركيب الصور', icon: 'apps-outline', colors: ['#3b82f6', '#1d4ed8'], description: 'رتب القطع', maxPoints: 150, online: true },
-    { id: 'trivia', name: 'أسئلة ثقافية', icon: 'school-outline', colors: ['#10b981', '#059669'], description: 'اختبر معلوماتك', maxPoints: 100, online: false },
-    { id: 'riddles', name: 'الألغاز', icon: 'bulb-outline', colors: ['#ef4444', '#dc2626'], description: 'حل الألغاز', maxPoints: 160, online: false },
+    { id: 'chess', name: 'الشطرنج', icon: 'trophy-outline', colors: ['#8b5cf6', '#6d28d9'], description: 'لعبة الملوك', maxPoints: 25, online: true, onlineCost: 30 },
+    { id: 'tictactoe', name: 'إكس أو', icon: 'grid-outline', colors: ['#f59e0b', '#d97706'], description: 'تحدى منافسك', maxPoints: 20, online: true, onlineCost: 20 },
+    { id: 'brickbreaker', name: 'تكسير الطوب', icon: 'apps', colors: ['#ec4899', '#db2777'], description: 'كسّر كل الطوب', maxPoints: 20, online: false, onlineCost: 0 },
+    { id: 'puzzle', name: 'تركيب الصور', icon: 'apps-outline', colors: ['#3b82f6', '#1d4ed8'], description: 'رتب القطع', maxPoints: 20, online: true, onlineCost: 25 },
+    { id: 'trivia', name: 'أسئلة ثقافية', icon: 'school-outline', colors: ['#10b981', '#059669'], description: 'اختبر معلوماتك', maxPoints: 25, online: false, onlineCost: 0 },
+    { id: 'riddles', name: 'الألغاز', icon: 'bulb-outline', colors: ['#ef4444', '#dc2626'], description: 'حل الألغاز', maxPoints: 20, online: false, onlineCost: 0 },
   ];
 
   useEffect(() => {
     fetchLeaderboard();
+    fetchBalance();
+    fetchGameCosts();
     startAnimations();
   }, []);
+
+  useEffect(() => {
+    if (balanceRefresh) {
+      fetchBalance();
+    }
+  }, [balanceRefresh]);
+
+  const fetchBalance = async () => {
+    if (!user?.id) return;
+    try {
+      const response = await api.getBalance(user.id);
+      if (response.ok) {
+        const data = await response.json();
+        setBalance(data);
+      }
+    } catch (e) {
+      console.log('Balance error:', e);
+    }
+  };
+
+  const fetchGameCosts = async () => {
+    try {
+      const response = await api.getGameCosts();
+      if (response.ok) {
+        const data = await response.json();
+        setGameCosts(data.online_costs || {});
+      }
+    } catch (e) {
+      console.log('Game costs error:', e);
+    }
+  };
 
   const startAnimations = () => {
     Animated.loop(
@@ -761,11 +796,15 @@ const GamesScreen = ({ user, onPointsEarned }) => {
 
   const fetchLeaderboard = async () => {
     try {
-      const response = await api.fetch('/api/games/leaderboard');
+      const response = await api.getLeaderboard();
       if (response.ok) {
         const data = await response.json();
         setLeaderboard(data.leaderboard || []);
-        setUserStats(data.userStats || {});
+        // Find user rank
+        const userRank = data.leaderboard?.findIndex(l => l.user_id === user?.id);
+        if (userRank >= 0) {
+          setUserStats({ rank: userRank + 1, points: data.leaderboard[userRank].saqr_points, games: 0 });
+        }
       }
     } catch (e) {
       console.log(e);
@@ -784,16 +823,42 @@ const GamesScreen = ({ user, onPointsEarned }) => {
     }
   };
 
-  const handleModeSelect = (mode) => {
+  const handleModeSelect = async (mode) => {
     if (mode === 'online') {
-      setShowWaiting(true);
-      // Simulate finding opponent
-      setTimeout(() => {
-        setShowWaiting(false);
-        setActiveGame(showModeSelector);
-        setGameMode('ai_medium'); // For now, play vs AI
-        setShowModeSelector(null);
-      }, 2000);
+      // التحقق من الرصيد قبل الدخول
+      const cost = gameCosts[showModeSelector] || 20;
+      if (balance.diamonds < cost) {
+        Alert.alert(
+          'رصيد غير كافٍ',
+          `تحتاج ${cost} ألماسة للعب أونلاين. رصيدك الحالي: ${balance.diamonds}`,
+          [
+            { text: 'إلغاء', style: 'cancel' },
+            { text: 'شراء ألماسات', onPress: () => onOpenDiamondShop && onOpenDiamondShop() }
+          ]
+        );
+        return;
+      }
+
+      // خصم الألماسات
+      try {
+        const response = await api.enterOnlineGame(user.id, showModeSelector, true);
+        if (response.ok) {
+          setShowWaiting(true);
+          // البحث عن منافس (محاكاة)
+          setTimeout(() => {
+            setShowWaiting(false);
+            setActiveGame(showModeSelector);
+            setGameMode('online');
+            setShowModeSelector(null);
+            fetchBalance();
+          }, 2000);
+        } else {
+          const error = await response.json();
+          Alert.alert('خطأ', error.detail || 'حدث خطأ');
+        }
+      } catch (e) {
+        Alert.alert('خطأ', 'حدث خطأ في الاتصال');
+      }
     } else {
       setActiveGame(showModeSelector);
       setGameMode(mode);
@@ -801,16 +866,33 @@ const GamesScreen = ({ user, onPointsEarned }) => {
     }
   };
 
-  const handleGameComplete = async (points) => {
-    try {
-      await api.fetch('/api/games/complete', {
-        method: 'POST',
-        body: JSON.stringify({ gameId: activeGame, points }),
-      });
-      if (onPointsEarned) onPointsEarned(points);
-    } catch (e) {}
+  const handleGameComplete = async (points, result) => {
+    const isOnline = gameMode === 'online';
+    const won = result === 'win';
     
-    Alert.alert('نتيجة', `حصلت على ${points} نقطة!`);
+    try {
+      const response = await api.recordGameResult(user.id, activeGame, isOnline, won, isOnline ? 20 : 0);
+      if (response.ok) {
+        const data = await response.json();
+        if (onPointsEarned && data.points_awarded > 0) {
+          onPointsEarned(data.points_awarded);
+        }
+        
+        let message = `حصلت على ${data.points_awarded} نقطة صقر`;
+        if (data.diamonds_awarded > 0) {
+          message += ` و ${data.diamonds_awarded} ألماسة`;
+        }
+        if (!data.can_earn_more) {
+          message += '\n\nوصلت للحد اليومي (150 نقطة)';
+        }
+        
+        Alert.alert(won ? 'فوز!' : 'نتيجة اللعبة', message);
+        fetchBalance();
+      }
+    } catch (e) {
+      console.log('Game complete error:', e);
+    }
+    
     fetchLeaderboard();
   };
 
