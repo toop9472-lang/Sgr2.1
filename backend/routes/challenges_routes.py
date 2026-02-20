@@ -448,7 +448,7 @@ async def claim_login_reward(
     request: ClaimLoginRewardRequest,
     user_id: str = Depends(get_current_user_id)
 ):
-    """Claim a specific day's login reward"""
+    """Claim a specific day's login reward (points and/or diamonds)"""
     db = get_db()
     month_start = get_current_month_start()
     month_str = month_start.strftime('%Y-%m')
@@ -469,7 +469,8 @@ async def claim_login_reward(
             'user_id': user_id,
             'month': month_str,
             'claimed_days': [],
-            'total_claimed': 0,
+            'total_claimed_points': 0,
+            'total_claimed_diamonds': 0,
             'created_at': datetime.now(timezone.utc)
         }
         await db.login_rewards.insert_one(user_rewards)
@@ -487,21 +488,35 @@ async def claim_login_reward(
     if login_count < request.day:
         raise HTTPException(status_code=400, detail=f'تحتاج {request.day} أيام تسجيل دخول')
     
+    points_to_add = reward.get('points', 0)
+    diamonds_to_add = reward.get('diamonds', 0)
+    
     # Update rewards record
     await db.login_rewards.update_one(
         {'user_id': user_id, 'month': month_str},
         {
             '$push': {'claimed_days': request.day},
-            '$inc': {'total_claimed': reward['points']},
+            '$inc': {
+                'total_claimed_points': points_to_add,
+                'total_claimed_diamonds': diamonds_to_add
+            },
             '$set': {'updated_at': datetime.now(timezone.utc)}
         }
     )
     
-    # Add points to user
-    await db.users.update_one(
-        {'$or': [{'id': user_id}, {'user_id': user_id}]},
-        {'$inc': {'points': reward['points'], 'total_earned': reward['points']}}
-    )
+    # Add points and diamonds to user
+    update_query = {}
+    if points_to_add > 0:
+        update_query['points'] = points_to_add
+        update_query['total_earned'] = points_to_add
+    if diamonds_to_add > 0:
+        update_query['diamonds'] = diamonds_to_add
+    
+    if update_query:
+        await db.users.update_one(
+            {'$or': [{'id': user_id}, {'user_id': user_id}]},
+            {'$inc': update_query}
+        )
     
     # Get updated user points
     user = await db.users.find_one(
