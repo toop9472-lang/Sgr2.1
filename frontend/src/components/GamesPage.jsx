@@ -1248,6 +1248,7 @@ const BrickBreakerGame = ({ onComplete, onClose }) => {
       // Paddle collision
       if (ball.y >= 450 && ball.y <= 475 && 
           ball.x >= paddle.x && ball.x <= paddle.x + paddle.width) {
+        soundManager.paddleHit(); // صوت ضرب المضرب
         const hitPos = (ball.x - paddle.x) / paddle.width;
         const angle = (hitPos - 0.5) * Math.PI * 0.6;
         const speed = Math.sqrt(ball.dx * ball.dx + ball.dy * ball.dy);
@@ -1259,9 +1260,11 @@ const BrickBreakerGame = ({ onComplete, onClose }) => {
       // Ball lost
       if (ball.y > 510) {
         gameDataRef.current.isRunning = false;
+        soundManager.error(); // صوت الخسارة
         setLives(l => {
           if (l <= 1) {
             setGameState('over');
+            soundManager.lose();
             onComplete(score, 'lose');
             return 0;
           }
@@ -1284,7 +1287,14 @@ const BrickBreakerGame = ({ onComplete, onClose }) => {
           brick.hits--;
           if (brick.hits <= 0) {
             brick.active = false;
+            if (brick.isBonus) {
+              soundManager.bonusBrick(); // صوت الطوبة الذهبية
+            } else {
+              soundManager.brickHit(); // صوت كسر الطوب
+            }
             setScore(s => s + brick.points);
+          } else {
+            soundManager.brickHit();
           }
           ball.dy = -ball.dy;
           hitBrick = true;
@@ -1295,9 +1305,11 @@ const BrickBreakerGame = ({ onComplete, onClose }) => {
       if (bricks.every(b => !b.active)) {
         gameDataRef.current.isRunning = false;
         if (level < 5) {
+          soundManager.levelUp(); // صوت انتقال المستوى
           setLevel(l => l + 1);
           setGameState('ready');
         } else {
+          soundManager.win(); // صوت الفوز النهائي
           setGameState('won');
           onComplete(score + 100, 'win');
         }
