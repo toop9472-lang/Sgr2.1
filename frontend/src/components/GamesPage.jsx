@@ -1408,11 +1408,94 @@ const gameIcons = {
   riddles: Lightbulb,
 };
 
+// ==================== DIAMOND SHOP ====================
+const DiamondShop = ({ onClose, onPurchase }) => {
+  const [loading, setLoading] = useState(null);
+
+  const packages = [
+    { id: 1, diamonds: 100, price: 3, popular: false },
+    { id: 2, diamonds: 300, price: 7, popular: true },
+    { id: 3, diamonds: 500, price: 10, popular: false },
+    { id: 4, diamonds: 1000, price: 19, popular: false },
+  ];
+
+  const handlePurchase = async (pkg) => {
+    setLoading(pkg.id);
+    try {
+      const response = await fetch(`${API_URL}/api/stripe/create-checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          package_id: pkg.id,
+          diamonds: pkg.diamonds,
+          amount: pkg.price
+        }),
+      });
+      const data = await response.json();
+      if (data.checkout_url) {
+        window.open(data.checkout_url, '_blank');
+      }
+    } catch (e) {
+      console.error('Purchase error:', e);
+    }
+    setLoading(null);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+      <div className="bg-[#1a1a2e] rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Diamond size={24} className="text-blue-400" />
+            متجر الماس
+          </h2>
+          <button onClick={onClose} className="p-2 rounded-full bg-white/10 hover:bg-white/20">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          {packages.map(pkg => (
+            <button
+              key={pkg.id}
+              onClick={() => handlePurchase(pkg)}
+              disabled={loading === pkg.id}
+              className={`w-full p-4 rounded-xl transition-all flex items-center justify-between
+                ${pkg.popular 
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 border-2 border-blue-400' 
+                  : 'bg-white/5 hover:bg-white/10 border border-white/10'}`}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                  <Diamond size={24} className="text-blue-400" />
+                </div>
+                <div className="text-right">
+                  <div className="font-bold text-lg">{pkg.diamonds} ماسة</div>
+                  {pkg.popular && <span className="text-xs text-yellow-400">الأكثر مبيعاً</span>}
+                </div>
+              </div>
+              <div className="bg-white/20 px-4 py-2 rounded-xl font-bold">
+                {loading === pkg.id ? '...' : `${pkg.price} ر.س`}
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-6 text-center text-gray-400 text-xs">
+          <p>الدفع آمن عبر Stripe</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ==================== MAIN GAMES PAGE ====================
 const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
   const [activeGame, setActiveGame] = useState(null);
   const [gameMode, setGameMode] = useState(null);
   const [showModeSelector, setShowModeSelector] = useState(null);
+  const [showDiamondShop, setShowDiamondShop] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
   const [balance, setBalance] = useState({ saqr_points: 0, diamonds: 300, daily_points_remaining: 150 });
   const [loading, setLoading] = useState(true);
