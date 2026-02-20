@@ -1807,7 +1807,7 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
 
       {/* Diamond Shop Modal */}
       {showDiamondShop && (
-        <DiamondShop onClose={() => setShowDiamondShop(false)} onPurchase={fetchData} />
+        <DiamondShop onClose={() => setShowDiamondShop(false)} userId={user?.id} />
       )}
 
       {/* Games Grid */}
