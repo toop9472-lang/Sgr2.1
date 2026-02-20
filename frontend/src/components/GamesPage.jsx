@@ -1058,25 +1058,24 @@ const PuzzleGame = ({ mode, onComplete, onClose, userDiamonds, onUseDiamonds }) 
   );
 };
 
-// ==================== BRICK BREAKER GAME (Advanced) ====================
+// ==================== BRICK BREAKER GAME (Fixed) ====================
 const BrickBreakerGame = ({ onComplete, onClose }) => {
   const canvasRef = useRef(null);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
   const [level, setLevel] = useState(1);
-  const [gameState, setGameState] = useState('ready'); // ready, playing, paused, over, won
-  const [bonusBrick, setBonusBrick] = useState(null);
-  
-  const gameRef = useRef({
-    ball: { x: 200, y: 350, dx: 4, dy: -4, radius: 8 },
-    paddle: { x: 150, width: 80, height: 12 },
+  const [gameState, setGameState] = useState('ready');
+  const gameDataRef = useRef({
+    ball: { x: 200, y: 400, dx: 0, dy: 0, radius: 10 },
+    paddle: { x: 175, width: 100, height: 15 },
     bricks: [],
-    animationId: null
+    animationId: null,
+    isRunning: false
   });
 
   const initBricks = useCallback((lvl) => {
-    const rows = Math.min(4 + lvl, 8);
-    const cols = 8;
+    const rows = Math.min(3 + lvl, 6);
+    const cols = 7;
     const bricks = [];
     const bonusIdx = Math.floor(Math.random() * (rows * cols));
     
@@ -1084,26 +1083,42 @@ const BrickBreakerGame = ({ onComplete, onClose }) => {
       for (let c = 0; c < cols; c++) {
         const idx = r * cols + c;
         bricks.push({
-          x: c * 48 + 10,
-          y: r * 25 + 40,
-          width: 44,
-          height: 20,
+          x: c * 55 + 15,
+          y: r * 30 + 50,
+          width: 50,
+          height: 25,
           active: true,
-          hits: r < 2 ? 2 : 1,
-          color: r < 2 ? '#ef4444' : r < 4 ? '#f59e0b' : r < 6 ? '#22c55e' : '#3b82f6',
+          hits: r < 1 ? 2 : 1,
+          color: r < 1 ? '#ef4444' : r < 2 ? '#f59e0b' : r < 3 ? '#eab308' : '#22c55e',
           isBonus: idx === bonusIdx,
           points: idx === bonusIdx ? 50 : 10
         });
       }
     }
-    gameRef.current.bricks = bricks;
-    setBonusBrick(bonusIdx);
+    gameDataRef.current.bricks = bricks;
   }, []);
+
+  const resetBall = useCallback(() => {
+    gameDataRef.current.ball = { 
+      x: 200, 
+      y: 400, 
+      dx: 0, 
+      dy: 0, 
+      radius: 10 
+    };
+  }, []);
+
+  const startBall = useCallback(() => {
+    const speed = 4 + level * 0.5;
+    const angle = (Math.random() * 60 + 60) * Math.PI / 180;
+    gameDataRef.current.ball.dx = speed * Math.cos(angle) * (Math.random() > 0.5 ? 1 : -1);
+    gameDataRef.current.ball.dy = -speed * Math.sin(angle);
+  }, [level]);
 
   useEffect(() => {
     initBricks(level);
-    gameRef.current.ball = { x: 200, y: 350, dx: 3 + level * 0.5, dy: -(3 + level * 0.5), radius: 8 };
-  }, [level, initBricks]);
+    resetBall();
+  }, [level, initBricks, resetBall]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -1111,113 +1126,148 @@ const BrickBreakerGame = ({ onComplete, onClose }) => {
     const ctx = canvas.getContext('2d');
     
     const draw = () => {
-      const { ball, paddle, bricks } = gameRef.current;
+      const { ball, paddle, bricks } = gameDataRef.current;
       
-      // Clear
-      ctx.fillStyle = '#0a0a0f';
+      ctx.fillStyle = '#0f0f1a';
       ctx.fillRect(0, 0, 400, 500);
       
       // Draw bricks
       bricks.forEach(brick => {
         if (!brick.active) return;
-        ctx.fillStyle = brick.isBonus ? '#fbbf24' : brick.color;
-        ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
+        
+        const gradient = ctx.createLinearGradient(brick.x, brick.y, brick.x, brick.y + brick.height);
+        if (brick.isBonus) {
+          gradient.addColorStop(0, '#fbbf24');
+          gradient.addColorStop(1, '#f59e0b');
+        } else {
+          gradient.addColorStop(0, brick.color);
+          gradient.addColorStop(1, brick.color + '99');
+        }
+        
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.roundRect(brick.x, brick.y, brick.width, brick.height, 4);
+        ctx.fill();
+        
         if (brick.isBonus) {
           ctx.fillStyle = '#000';
-          ctx.font = 'bold 12px Arial';
-          ctx.fillText('★', brick.x + 16, brick.y + 15);
+          ctx.font = 'bold 14px Arial';
+          ctx.fillText('★', brick.x + 18, brick.y + 18);
         }
+        
         if (brick.hits > 1) {
-          ctx.fillStyle = 'rgba(0,0,0,0.3)';
-          ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
+          ctx.fillStyle = 'rgba(0,0,0,0.4)';
+          ctx.beginPath();
+          ctx.roundRect(brick.x, brick.y, brick.width, brick.height, 4);
+          ctx.fill();
         }
       });
       
-      // Draw paddle
-      ctx.fillStyle = '#3b82f6';
+      // Draw paddle with gradient
+      const paddleGradient = ctx.createLinearGradient(paddle.x, 460, paddle.x, 475);
+      paddleGradient.addColorStop(0, '#3b82f6');
+      paddleGradient.addColorStop(1, '#1d4ed8');
+      ctx.fillStyle = paddleGradient;
       ctx.beginPath();
-      ctx.roundRect(paddle.x, 470, paddle.width, paddle.height, 6);
+      ctx.roundRect(paddle.x, 460, paddle.width, paddle.height, 8);
       ctx.fill();
       
-      // Draw ball
+      // Draw ball with glow
+      ctx.shadowColor = '#fff';
+      ctx.shadowBlur = 15;
       ctx.fillStyle = '#fff';
       ctx.beginPath();
       ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
       ctx.fill();
+      ctx.shadowBlur = 0;
       
-      // Draw lives
+      // Draw UI
       ctx.fillStyle = '#ef4444';
-      ctx.font = '16px Arial';
-      for (let i = 0; i < lives; i++) {
-        ctx.fillText('❤️', 10 + i * 25, 25);
-      }
+      ctx.font = '20px Arial';
+      ctx.fillText('❤️'.repeat(lives), 10, 30);
       
-      // Draw score
       ctx.fillStyle = '#fbbf24';
-      ctx.font = 'bold 16px Arial';
-      ctx.fillText(`نقاط: ${score}`, 320, 25);
+      ctx.font = 'bold 18px Arial';
+      ctx.textAlign = 'right';
+      ctx.fillText(`${score}`, 390, 28);
       
-      // Draw level
       ctx.fillStyle = '#22c55e';
-      ctx.fillText(`المستوى: ${level}`, 160, 25);
+      ctx.textAlign = 'center';
+      ctx.fillText(`المستوى ${level}`, 200, 28);
+      ctx.textAlign = 'left';
     };
 
     const update = () => {
-      if (gameState !== 'playing') return;
+      if (!gameDataRef.current.isRunning) {
+        draw();
+        return;
+      }
       
-      const { ball, paddle, bricks } = gameRef.current;
+      const { ball, paddle, bricks } = gameDataRef.current;
       
       // Move ball
       ball.x += ball.dx;
       ball.y += ball.dy;
       
       // Wall collision
-      if (ball.x < ball.radius || ball.x > 400 - ball.radius) {
+      if (ball.x <= ball.radius || ball.x >= 400 - ball.radius) {
         ball.dx = -ball.dx;
+        ball.x = Math.max(ball.radius, Math.min(400 - ball.radius, ball.x));
       }
-      if (ball.y < ball.radius) {
+      if (ball.y <= ball.radius) {
         ball.dy = -ball.dy;
+        ball.y = ball.radius;
       }
       
       // Paddle collision
-      if (ball.y > 460 && ball.y < 480 && ball.x > paddle.x && ball.x < paddle.x + paddle.width) {
-        ball.dy = -Math.abs(ball.dy);
+      if (ball.y >= 450 && ball.y <= 475 && 
+          ball.x >= paddle.x && ball.x <= paddle.x + paddle.width) {
         const hitPos = (ball.x - paddle.x) / paddle.width;
-        ball.dx = (hitPos - 0.5) * 8;
+        const angle = (hitPos - 0.5) * Math.PI * 0.6;
+        const speed = Math.sqrt(ball.dx * ball.dx + ball.dy * ball.dy);
+        ball.dx = speed * Math.sin(angle);
+        ball.dy = -Math.abs(speed * Math.cos(angle));
+        ball.y = 449;
       }
       
       // Ball lost
-      if (ball.y > 500) {
+      if (ball.y > 510) {
+        gameDataRef.current.isRunning = false;
         setLives(l => {
           if (l <= 1) {
             setGameState('over');
             onComplete(score, 'lose');
             return 0;
           }
-          ball.x = 200;
-          ball.y = 350;
-          ball.dx = 3 + level * 0.5;
-          ball.dy = -(3 + level * 0.5);
+          resetBall();
+          setGameState('ready');
           return l - 1;
         });
+        return;
       }
       
       // Brick collision
+      let hitBrick = false;
       bricks.forEach(brick => {
-        if (!brick.active) return;
-        if (ball.x > brick.x && ball.x < brick.x + brick.width &&
-            ball.y > brick.y && ball.y < brick.y + brick.height) {
+        if (!brick.active || hitBrick) return;
+        if (ball.x + ball.radius > brick.x && 
+            ball.x - ball.radius < brick.x + brick.width &&
+            ball.y + ball.radius > brick.y && 
+            ball.y - ball.radius < brick.y + brick.height) {
+          
           brick.hits--;
           if (brick.hits <= 0) {
             brick.active = false;
             setScore(s => s + brick.points);
           }
           ball.dy = -ball.dy;
+          hitBrick = true;
         }
       });
       
       // Check win
       if (bricks.every(b => !b.active)) {
+        gameDataRef.current.isRunning = false;
         if (level < 5) {
           setLevel(l => l + 1);
           setGameState('ready');
@@ -1225,46 +1275,65 @@ const BrickBreakerGame = ({ onComplete, onClose }) => {
           setGameState('won');
           onComplete(score + 100, 'win');
         }
+        return;
       }
       
       draw();
-      gameRef.current.animationId = requestAnimationFrame(update);
+      gameDataRef.current.animationId = requestAnimationFrame(update);
     };
 
     const handleMove = (e) => {
+      e.preventDefault();
       const rect = canvas.getBoundingClientRect();
-      const x = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
-      gameRef.current.paddle.x = Math.max(0, Math.min(400 - gameRef.current.paddle.width, x - 40));
+      const clientX = e.clientX || e.touches?.[0]?.clientX;
+      if (clientX === undefined) return;
+      const x = (clientX - rect.left) * (400 / rect.width);
+      gameDataRef.current.paddle.x = Math.max(0, Math.min(300, x - 50));
+    };
+
+    const handleStart = (e) => {
+      e.preventDefault();
+      if (gameState === 'ready' && !gameDataRef.current.isRunning) {
+        gameDataRef.current.isRunning = true;
+        startBall();
+        setGameState('playing');
+        gameDataRef.current.animationId = requestAnimationFrame(update);
+      }
     };
 
     canvas.addEventListener('mousemove', handleMove);
-    canvas.addEventListener('touchmove', handleMove);
-    canvas.addEventListener('click', () => {
-      if (gameState === 'ready') setGameState('playing');
-    });
+    canvas.addEventListener('touchmove', handleMove, { passive: false });
+    canvas.addEventListener('click', handleStart);
+    canvas.addEventListener('touchstart', handleStart, { passive: false });
 
-    if (gameState === 'playing') {
-      gameRef.current.animationId = requestAnimationFrame(update);
-    } else {
-      draw();
+    draw();
+
+    if (gameState === 'playing' && gameDataRef.current.isRunning) {
+      gameDataRef.current.animationId = requestAnimationFrame(update);
     }
 
     return () => {
       canvas.removeEventListener('mousemove', handleMove);
       canvas.removeEventListener('touchmove', handleMove);
-      if (gameRef.current.animationId) {
-        cancelAnimationFrame(gameRef.current.animationId);
+      canvas.removeEventListener('click', handleStart);
+      canvas.removeEventListener('touchstart', handleStart);
+      if (gameDataRef.current.animationId) {
+        cancelAnimationFrame(gameDataRef.current.animationId);
       }
     };
-  }, [gameState, score, lives, level, onComplete]);
+  }, [gameState, score, lives, level, onComplete, startBall, resetBall]);
 
   const resetGame = () => {
+    if (gameDataRef.current.animationId) {
+      cancelAnimationFrame(gameDataRef.current.animationId);
+    }
+    gameDataRef.current.isRunning = false;
     setScore(0);
     setLives(3);
     setLevel(1);
     setGameState('ready');
     initBricks(1);
-    gameRef.current.ball = { x: 200, y: 350, dx: 4, dy: -4, radius: 8 };
+    resetBall();
   };
 
   return (
