@@ -191,7 +191,7 @@ const TermsOfService = () => {
           {/* Governing Law */}
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">
-              {isRTL ? '12. القانون الحاكم' : '12. Governing Law'}
+              {isRTL ? '13. القانون الحاكم' : '13. Governing Law'}
             </h2>
             <p>
               {isRTL 
