@@ -251,43 +251,34 @@ const TicTacToeGame = ({ mode, onComplete, onClose, isOnline, opponent, isMyTurn
     newBoard[index] = 'X';
     setBoard(newBoard);
 
+    // إرسال الحركة للخصم الأونلاين
+    if (isOnline && onSendMove) {
+      onSendMove({ position: index, symbol: 'X' });
+    }
+
     const result = checkWinner(newBoard);
     if (result) {
-      endGame(result);
+      handleGameEnd(result, newBoard);
       return;
     }
 
     setIsPlayerTurn(false);
     
-    // AI Move
-    setTimeout(() => {
-      const aiIndex = getAIMove([...newBoard]);
-      if (aiIndex !== null && aiIndex !== undefined) {
-        newBoard[aiIndex] = 'O';
-        setBoard([...newBoard]);
-        const aiResult = checkWinner(newBoard);
-        if (aiResult) {
-          endGame(aiResult);
-        } else {
-          setIsPlayerTurn(true);
+    // AI Move (فقط إذا كان اللعب ضد الكمبيوتر)
+    if (!isOnline && (mode === 'ai_medium' || mode === 'ai_hard')) {
+      setTimeout(() => {
+        const aiIndex = getAIMove([...newBoard]);
+        if (aiIndex !== null && aiIndex !== undefined) {
+          newBoard[aiIndex] = 'O';
+          setBoard([...newBoard]);
+          const aiResult = checkWinner(newBoard);
+          if (aiResult) {
+            handleGameEnd(aiResult, newBoard);
+          } else {
+            setIsPlayerTurn(true);
+          }
         }
-      }
-    }, 600);
-  };
-
-  const endGame = (result) => {
-    setGameOver(true);
-    setWinner(result);
-    
-    if (result === 'X') {
-      setScores(s => ({ ...s, player: s.player + 1 }));
-      onComplete(mode === 'ai_hard' ? 80 : 50, 'win');
-    } else if (result === 'draw') {
-      setScores(s => ({ ...s, draws: s.draws + 1 }));
-      onComplete(20, 'draw');
-    } else {
-      setScores(s => ({ ...s, opponent: s.opponent + 1 }));
-      onComplete(5, 'lose');
+      }, 600);
     }
   };
 
