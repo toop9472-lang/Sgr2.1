@@ -358,6 +358,78 @@ export const api = {
   async checkPhone(phone) {
     return this.fetch(`/api/phone/check/${encodeURIComponent(phone)}`);
   },
+
+  // ==================== Economy System ====================
+  
+  // Get user balance (points & diamonds)
+  async getBalance(userId) {
+    return this.fetch(`/api/economy/balance/${userId}`);
+  },
+
+  // Get diamond packages
+  async getDiamondPackages() {
+    return this.fetch('/api/economy/packages');
+  },
+
+  // Purchase diamonds
+  async purchaseDiamonds(userId, packageId) {
+    return this.fetch('/api/economy/purchase-diamonds', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId, package_id: packageId }),
+    });
+  },
+
+  // Enter online game (spend diamonds)
+  async enterOnlineGame(userId, gameId, isOnline) {
+    return this.fetch('/api/economy/enter-game', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId, game_id: gameId, is_online: isOnline }),
+    });
+  },
+
+  // Record game result
+  async recordGameResult(userId, gameId, isOnline, won, opponentDiamonds = 0) {
+    return this.fetch('/api/economy/game-result', {
+      method: 'POST',
+      body: JSON.stringify({
+        user_id: userId,
+        game_id: gameId,
+        is_online: isOnline,
+        won: won,
+        opponent_diamonds: opponentDiamonds,
+      }),
+    });
+  },
+
+  // Get daily login status
+  async getDailyLoginStatus(userId) {
+    return this.fetch(`/api/economy/daily-login-status/${userId}`);
+  },
+
+  // Claim daily reward
+  async claimDailyReward(userId) {
+    return this.fetch('/api/economy/claim-daily-reward', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId }),
+    });
+  },
+
+  // Get leaderboard
+  async getLeaderboard() {
+    return this.fetch('/api/economy/leaderboard');
+  },
+
+  // Get game costs
+  async getGameCosts() {
+    return this.fetch('/api/economy/game-costs');
+  },
+
+  // Initialize user economy (on first login)
+  async initializeUserEconomy(userId) {
+    return this.fetch(`/api/economy/initialize-user/${userId}`, {
+      method: 'POST',
+    });
+  },
 };
 
 export default api;
