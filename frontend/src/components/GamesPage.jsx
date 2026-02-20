@@ -1485,8 +1485,35 @@ const DiamondShop = ({ onClose, onPurchase }) => {
           ))}
         </div>
 
-        <div className="mt-6 text-center text-gray-400 text-xs">
-          <p>الدفع آمن عبر Stripe</p>
+        {/* Payment Methods */}
+        <div className="mt-6 space-y-3">
+          <p className="text-center text-gray-400 text-sm mb-3">طريقة الدفع</p>
+          <button
+            onClick={() => setPaymentMethod('apple_pay')}
+            className={`w-full flex items-center justify-center gap-3 p-4 rounded-xl transition-all ${
+              paymentMethod === 'apple_pay' 
+                ? 'bg-black border-2 border-white' 
+                : 'bg-black/50 border border-white/20'
+            }`}
+          >
+            <Apple size={24} />
+            <span className="font-semibold">Apple Pay</span>
+          </button>
+          <button
+            onClick={() => setPaymentMethod('card')}
+            className={`w-full flex items-center justify-center gap-3 p-4 rounded-xl transition-all ${
+              paymentMethod === 'card' 
+                ? 'bg-gradient-to-r from-blue-600 to-blue-700 border-2 border-blue-400' 
+                : 'bg-white/5 border border-white/10'
+            }`}
+          >
+            <CreditCard size={24} />
+            <span className="font-semibold">بطاقة ائتمان</span>
+          </button>
+        </div>
+
+        <div className="mt-4 text-center text-gray-500 text-xs">
+          <p>جميع المعاملات آمنة ومشفرة</p>
         </div>
       </div>
     </div>
@@ -1499,6 +1526,8 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
   const [gameMode, setGameMode] = useState(null);
   const [showModeSelector, setShowModeSelector] = useState(null);
   const [showDiamondShop, setShowDiamondShop] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const [leaderboard, setLeaderboard] = useState([]);
   const [balance, setBalance] = useState({ saqr_points: 0, diamonds: 300, daily_points_remaining: 150 });
   const [loading, setLoading] = useState(true);
@@ -1515,6 +1544,11 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const toggleSound = () => {
+    const newState = soundManager.toggle();
+    setSoundEnabled(newState);
+  };
 
   const fetchData = async () => {
     try {
@@ -1538,6 +1572,7 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
   };
 
   const handleGameSelect = (gameId) => {
+    soundManager.click();
     const game = games.find(g => g.id === gameId);
     if (game.online) {
       setShowModeSelector(gameId);
