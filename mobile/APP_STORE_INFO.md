@@ -95,12 +95,12 @@ rewards,earn,points,ads,money,cashback,gift,withdraw,wallet,saqr
 
 ### رابط سياسة الخصوصية
 ```
-https://game-pivot-1.preview.emergentagent.com/privacy
+https://gaming-economy-hub.preview.emergentagent.com/privacy
 ```
 
 ### رابط الدعم
 ```
-https://game-pivot-1.preview.emergentagent.com
+https://gaming-economy-hub.preview.emergentagent.com
 ```
 
 ### البريد الإلكتروني للدعم

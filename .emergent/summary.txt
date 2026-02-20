@@ -1,212 +1,214 @@
 <analysis>**original_problem_statement:**
-The user's primary goal is to overhaul their application to pass Apple's App Store review and pivot from an ad-watching app to a professional gaming platform.
+The user's primary goal is to overhaul their application to pass Apple's App Store review and pivot from a simple ad-watching app to a professional gaming platform. This involves fixing App Store rejection issues, implementing a complex new game economy, and building a real-time multiplayer system.
 
-**Initial Rejection Reasons from Apple:**
-1.  **Guideline 1.5:** Inadequate support URL.
-2.  **Guideline 2.1:** Non-functional Google/Apple sign-in on iPad.
-3.  **Guideline 3.2.2:** App's primary purpose is displaying ads.
-
-**Latest User Requirements (Overhauling the Game Economy):**
-1.  **Game Content & Logic:**
+**PRODUCT REQUIREMENTS:**
+1.  **New Economy System:**
+    *   Introduce two currencies: Saqr Points (earned from free play, exchangeable for money at 500 points = ) and Diamonds (purchasable, used for online multiplayer).
+    *   New users receive 300 free Diamonds upon registration.
+    *   Implement a daily earning cap of 150 Saqr Points from all games combined.
+    *   Create in-app purchase packages for Diamonds using Stripe (prices 3-19 SAR).
+    *   Implement a daily login reward system that appears once per app session.
+2.  **Multiplayer & Gameplay:**
+    *   Implement a real, functional person-vs-person online multiplayer system using WebSockets.
+    *   Online matches have a Diamond entry fee. The winner receives the loser's wagered Diamonds plus a bonus.
     *   The Cultural Questions game must have at least 100 questions.
-    *   All games must be fully functional, deep, and have a medium difficulty level.
-2.  **New Economy System:**
-    *   Implement a new currency: **Diamonds**, used for online multiplayer matches.
-    *   Offline play is free and awards points. Online play costs Diamonds.
-    *   Implement a daily point earning cap of 120 points from games.
-    *   Create in-app purchase packages for Diamonds, with prices ranging from 3 to 19 SAR.
-    *   The winner of an online match receives the loser's wagered Diamonds plus a bonus.
-3.  **Leaderboard & Rewards:**
-    *   The top 3 players on the global leaderboard receive substantial point rewards (1st: 3000, 2nd: 1900, 3rd: 1000) which can be exchanged for real money.
-4.  **Multiplayer:**
-    *   Implement a real, functional online multiplayer system (person-vs-person).
-
-In addition to this major pivot, there is a backlog of 17 bug fixes and feature requests, some of which have been addressed.
+3.  **UI/UX:**
+    *   The web frontend must show all available games.
+    *   Remove all emojis from the UI and replace them with professional icons (e.g., from ).
+    *   Redesign the web frontend's bottom navigation bar: Games icon in the center, flanked by an Ads (شاهد) icon and others.
+    *   Points and Diamond balances must be clearly displayed at the top of the screen. A + icon next to the Diamond balance should open the purchase modal.
+4.  **Blocker Fixes:**
+    *   Resolve Apple's rejection reason: Google/Apple sign-in is non-functional on iPad.
 
 **User's preferred language**: العربية
 
 **what currently exists?**
-The agent has successfully transformed the application's core by building a Games section, which is now the central feature. This section includes four playable games: Chess, Tic-Tac-Toe, Picture Puzzle, and a newly added Brick Breaker. The UI has been updated to reflect this, with a glowing Games tab in the bottom navigation.
+The agent has successfully implemented the entire game economy and multiplayer system on the backend and for the mobile application. This includes:
+*   A dual-currency system ( and ) integrated into the  model.
+*   Backend APIs for daily rewards, game results with a daily point cap, and Stripe-based Diamond purchases.
+*   Automatic allocation of 300 diamonds to new users upon registration (both email and social).
+*   A real-time multiplayer backend using WebSockets, fully integrated with the Tic-Tac-Toe game on mobile for matchmaking and gameplay.
+*   Mobile UI components for a daily reward modal, a diamond shop, and a balance display.
+*   The Cultural Questions game data file () has been populated with 100 questions.
 
-Several critical bugs and features have been implemented:
-*   A Forgot Password flow with email OTP has been added to both frontend and backend.
-*   The admin dashboard has been fixed to be fully functional in dark mode.
-*   A proper static support page with a functional contact form has been created for the web frontend.
-*   Language and theme (light/dark mode) switching functionalities have been verified as working.
-*   A potential fix for the points resetting on login bug was implemented by fetching fresh user data on app startup.
+The entire implementation has been extensively tested with  and passed multiple comprehensive runs by the .
 
 **Last working item**:
-- Last item agent was working: The agent began implementing the user's massive new request to overhaul the game economy. It started by creating a new file, , to populate the Cultural Questions game with 100 questions as requested.
+- Last item agent was working: The agent was addressing the user's request to update the **web frontend** to match the mobile app's functionality and a new design. This involved making all games visible, replacing emojis with professional icons, and redesigning the bottom navigation bar.
 - Status: IN PROGRESS
 - Agent Testing Done: N
-- Which testing method agent to use? Both. The backend testing agent will be needed to verify the new currency (Diamonds), transaction logic, and leaderboard rewards. The frontend testing agent will be needed to test the in-app purchase flow, the multiplayer game lobby, and the display of Diamond balances.
+- Which testing method agent to use? Frontend testing agent to verify the UI changes on the web application, including the new navigation layout, icon replacement, and visibility of all game components.
 - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-- **Issue 1**: Implement New Game Economy & Real Multiplayer (P0)
+- **Issue 1**: Update Web Frontend UI and Game Visibility (P0)
 - **Issue 2**: Google/Apple login is non-functional on iPad (Apple Rejection 2.1) (P0 - Blocker)
-- **Issue 3**: Points reset to zero after each login (User List #1) (P1)
-- **Issue 4**: Ads are stuck on loading and do not work (User List #7) (P1)
-- **Issue 5**: Remaining bugs from user's original list (P2)
+- **Issue 3**: Ads are stuck on loading and do not work (P2)
 
 **Issues Detail:**
-- **Issue 1: Implement New Game Economy & Real Multiplayer**
-    - Attempted fixes: The agent started by creating a data file with 100 questions for one of the games.
+- **Issue 1: Update Web Frontend UI and Game Visibility**
+    - Attempted fixes: The agent has started modifying  and  to remove emojis and prepare for layout changes.
     - Next debug checklist:
-        1.  Integrate the  file into the Cultural Questions game.
-        2.  **Backend:** Add a  field to the User model in the database.
-        3.  **Backend:** Create API endpoints for purchasing Diamond packs (requires Stripe/IAP integration).
-        4.  **Backend:** Implement WebSocket-based infrastructure for real-time multiplayer matchmaking and game state synchronization.
-        5.  **Backend:** Create API endpoints for wagering Diamonds, awarding winners, and calculating leaderboard rewards.
-        6.  **Backend:** Implement the 120-point daily earning limit.
-        7.  **Frontend:** Build the UI for the Diamond store and in-app purchases.
-        8.  **Frontend:** Update the game screens to distinguish between free offline play and paid online play.
-        9.  **Frontend:** Implement the multiplayer lobby and match interaction flow.
-    - Why fix this issue and what will be achieved with the fix?: This is the user's new primary directive and is essential for creating the professional gaming experience required to monetize the app and satisfy the user's vision.
+        1.  Complete the modification of  to center the 'Games' link and add an 'Ads' link, using professional icons from a library like .
+        2.  Update  to correctly render all available games (Chess, Tic-Tac-Toe, Puzzle, Brick Breaker, Trivia), ensuring parity with the mobile app.
+        3.  Perform a final sweep to remove any remaining hardcoded emojis from the web frontend.
+        4.  Run the frontend testing agent to verify the new layout and functionality.
+    - Why fix this issue and what will be achieved with the fix?: This is a direct user request to achieve UI/UX consistency between the mobile and web platforms.
     - Status: IN PROGRESS
-    - Is recurring issue?: N
-    - Should Test frontend/backend/both after fix?: Both
-    - Blocked on other issue: None. This is the main task.
-
-- **Issue 2: Google/Apple login is non-functional on iPad**
-    - Attempted fixes:  was installed and the login flow was modified.
-    - Next debug checklist:
-        1.  This fix has **never been tested on a real iPad or simulator**.
-        2.  Use the testing agent to specifically request a test of the social login flow on an iPad environment to verify the fix.
-    - Why fix this issue and what will be achieved with the fix?: This is a direct, unresolved rejection reason from Apple and is a blocker for App Store approval.
-    - Status: USER VERIFICATION PENDING
-    - Is recurring issue?: Y
-    - Should Test frontend/backend/both after fix?: Frontend (specifically on iPad)
-    - Blocked on other issue: None.
-
-- **Issue 3: Points reset to zero after each login**
-    - Attempted fixes: The agent implemented a fix by adding a  call on app startup () to fetch fresh user data from the server instead of relying on potentially stale data from local storage.
-    - Next debug checklist:
-        1.  The fix needs to be verified through a specific test case: log in, earn points, close the app completely, reopen the app, and check if the point balance is correct.
-    - Why fix this issue and what will be achieved with the fix?: This is a critical bug that breaks the core user experience and reward loop.
-    - Status: USER VERIFICATION PENDING
     - Is recurring issue?: N
     - Should Test frontend/backend/both after fix?: Frontend
     - Blocked on other issue: None.
 
-- **Issue 4: Ads are stuck on loading**
-    - Attempted fixes: The agent investigated and confirmed that ads exist in the database. A screenshot test revealed that the ad screen loads but the video area is black.
+- **Issue 2: Google/Apple login is non-functional on iPad**
+    - Attempted fixes: The  library was previously installed in an attempt to fix this.
     - Next debug checklist:
-        1.  Investigate the video player component in .
-        2.  The issue might be related to web browser policies on . Check if the video element has the , , and  properties set correctly.
-        3.  Verify that the  from the database is valid and accessible.
-    - Why fix this issue and what will be achieved with the fix?: While the app is pivoting to games, the ad system is still part of the codebase and a source of revenue.
-    - Status: IN PROGRESS
+        1.  The implemented fix has **never been tested on a real iPad or simulator**.
+        2.  Use the  with a specific instruction to test the social login flow (Google/Apple) on an iPad environment to conclusively verify if the fix works.
+    - Why fix this issue and what will be achieved with the fix?: This is a direct, unresolved rejection reason from Apple and is a hard blocker for any future App Store submission.
+    - Status: USER VERIFICATION PENDING
+    - Is recurring issue?: Y
+    - Should Test frontend/backend/both after fix?: Frontend (specifically on iPad).
+    - Blocked on other issue: None.
+
+- **Issue 3: Ads are stuck on loading**
+    - Attempted fixes: Previous investigation revealed the ad screen loads but the video area is black. No new fixes attempted.
+    - Next debug checklist:
+        1.  Investigate the video player component in the mobile app's .
+        2.  Check the browser/device console for errors related to video playback.
+        3.  Ensure the video element has the , , and  properties set correctly to comply with browser autoplay policies.
+    - Why fix this issue and what will be achieved with the fix?: While the app's focus has shifted to games, the user's request for an Ads icon in the new nav bar indicates this feature is still relevant.
+    - Status: NOT STARTED
     - Is recurring issue?: N
     - Should Test frontend/backend/both after fix?: Frontend
     - Blocked on other issue: None.
 
 **In progress Task List**:
-- **Task 1: Build the full Game Economy and Multiplayer System**
-    - Where to resume: The agent has created . The next step is to integrate this file into the game logic, and then proceed to implement the backend infrastructure for the Diamond currency.
-    - What will be achieved with this?: Fulfills the user's latest and most extensive request, adding monetization and competitive multiplayer.
+- **Task 1: Complete Web Frontend Update**
+    - Where to resume: The agent should continue editing  and  to implement the new navigation layout, replace all emojis with icons, and ensure the games list on the web matches the mobile app.
+    - What will be achieved with this?: A modern, consistent user experience across both web and mobile platforms, as per the user's explicit instructions.
     - Status: IN PROGRESS
-    - Should Test frontend/backend/both after fix?: Both
-    - Blocked on something: This is a large task that will require payment gateway integration (Stripe) and WebSockets.
+    - Should Test frontend/backend/both after fix?: Frontend
+    - Blocked on something: None.
 
 **Upcoming and Future Tasks**
-*   **Upcoming Tasks (from User's List):**
-    *   (P2) Remove phone number login, use it for OTP recovery only.
+*   **Upcoming Tasks:**
+    *   (P1) Remove phone number login, retaining it only for OTP-based account recovery.
     *   (P2) Fix Stay connected challenge logic.
-    *   (P2) Update Terms & Conditions.
-    *   (P2) Limit profile picture changes to once a week.
-    *   (P2) Fix AI Chat.
-    *   (P2) Update contact info to real accounts.
-    *   (P2) Add more ad networks.
-    *   (P3) Clean up all dummy/unused code.
+    *   (P2) Update the Terms & Conditions page.
+    *   (P2) Implement logic to limit profile picture changes to once per week.
+    *   (P2) Investigate and fix the AI Chat functionality.
+    *   (P2) Replace all dummy contact information with real accounts.
 *   **Future Tasks:**
-    *   Enable Live Twilio SMS.
-    *   Add Redis for caching.
-    *   Implement general API Rate Limiting.
+    *   Integrate additional ad networks.
+    *   Perform a general cleanup of all dummy and unused code.
+    *   Enable Live Twilio SMS functionality.
+    *   Add Redis for caching to improve performance.
 
 **Completed work in this session**
-- **Gaming Platform Implementation:**
-  - Added four playable games: Chess, Tic-Tac-Toe, Picture Puzzle, and Brick Breaker.
-  - Redesigned the mobile navigation to feature a glowing Games tab.
-  - Created corresponding Games pages for both the mobile app and the web frontend.
-- **Admin Dashboard Fix:**
-  - Completely redesigned the Admin Dashboard to be compatible with dark mode, fixing unreadable text.
-- **Forgot Password Feature:**
-  - Implemented a full frontend and backend flow for users to reset their passwords via an email OTP.
-- **Support Page:**
-  - Created a comprehensive support page on the web with FAQs and a working contact form to satisfy Apple's requirement.
-- **Bug Fixes & Verification:**
-  - Verified that language switching and theme (light/dark) toggles are working correctly.
-  - Implemented a potential fix for the points resetting on login bug by fetching fresh user data on app start.
-  - Ran three successful, comprehensive test suites using the testing agent, verifying all implemented features.
+- **Full Game Economy Implementation (Backend & Mobile):**
+  - Implemented the  and  currency system. ()
+  - Granted 300 free diamonds on user registration. (, )
+  - Created a full suite of backend APIs for daily rewards, game results (with a 150-point cap), and starting online matches. ()
+  - Integrated Stripe for purchasing Diamond packs. ()
+- **Real-Time Multiplayer (Backend & Mobile):**
+  - Successfully integrated the existing WebSocket infrastructure for real-time multiplayer in the Tic-Tac-Toe game, including matchmaking logic. ()
+- **Mobile UI Enhancements:**
+  - Created and integrated a , , and a persistent . (, )
+- **Game Content:**
+  - Updated the Cultural Questions game to use a new data file with 100 questions. (, )
+- **Testing & Verification:**
+  - Performed extensive backend API testing with  for all new endpoints.
+  - Ran three separate, successful, comprehensive test suites with the , verifying the entire economy and multiplayer system.
+- **Documentation:**
+  - Updated  to reflect the completed work.
 
 **Earlier issues found/mentioned but not fixed**
-- **AI Chat ():** The functionality of the AI chat has not been investigated or fixed.
-- **Limit profile picture changes ():** Logic to restrict profile picture updates has not been implemented.
-- **Update contact info ():** Dummy contact information has not been replaced with real info.
-- **Add more ad networks ():** No new ad networks have been integrated.
-- **Clean up dummy code ():** A general code cleanup pass has not been performed.
+- The backlog of minor features from the user's original list remains, including:
+    - AI Chat functionality is broken.
+    - No limit on profile picture changes.
+    - Dummy contact info is still present.
+    - No new ad networks have been added.
 
 **Known issue recurrence from previous fork**
-- **Issue recurrence in previous fork**: Social logins on iPad are a known, recurring issue causing App Store rejection.
+- **Issue recurrence in previous fork**: Social logins on iPad.
 - **Recurrence count**: 2+
-- **Status**: USER VERIFICATION PENDING
+- **Status**: USER VERIFICATION PENDING. A fix has been implemented but remains untested in a relevant environment, making it a critical unknown.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   Backend: Python, FastAPI, MongoDB, **WebSockets (required for new tasks)**
--   Frontend: React, React Native (Expo)
--   Authentication: JWT, Social Logins via 
--   Monetization: Google AdMob, **In-App Purchases (required for new tasks)**
+-   Backend: Python, FastAPI, MongoDB, WebSockets
+-   Frontend: React (Web), React Native (Expo)
+-   Authentication: JWT,  for Social Logins
+-   Monetization: Stripe (for Diamond purchases), Google AdMob (existing but faulty)
 
 **key DB schema**
--   : { , , , ** (to be added)**,  }
--   : { , ,  }
--   ** (to be added)**: { , , ,  }
+-   : { , , , , ,  }
+-   (implied) : { , , , ,  }
+
+**changes in tech stack**
+- No fundamental changes, but major new capabilities have been activated:
+    - **Stripe** is now fully integrated for processing payments for the in-game currency.
+    - **WebSockets** are now actively used to facilitate real-time, person-to-person multiplayer gameplay.
 
 **All files of reference**
--   **Created:** , , , .
--   **Modified:** , , , , , , , .
+- **Created in this session:**
+    - : Manages game economy logic.
+    - : Handles Stripe payments.
+    - , , : New UI components for the economy.
+- **Heavily Modified:**
+    - : To integrate all new routes.
+    - , : To add initial Diamond grants.
+    - : To integrate all new economy features.
+    - : To add real-time multiplayer.
+- **In Progress:**
+    - 
+    - 
 
 **Critical Info for New Agent**
--   **New P0 Task:** The user has issued a comprehensive set of new requirements to build a full game economy with a new currency (Diamonds), in-app purchases, real-time multiplayer, and a high-stakes leaderboard. This is the absolute highest priority.
--   **Multiplayer is now real:** The previous idea of a simulated multiplayer is obsolete. You must implement a real-time solution, likely using WebSockets.
--   **Payment Integration Required:** The new requirements for purchasing Diamonds will necessitate integrating a payment gateway like Stripe for the web or using native mobile IAP libraries (Expo has modules for this).
--   **Verify Critical Fixes:** Two major issues have fixes that have not been user-verified: the points resetting bug and the social login on iPad bug. The iPad issue is a known App Store rejection reason and must be confirmed.
+- **Priority Shift:** The primary focus has shifted from backend/mobile implementation (which is largely complete) to updating the **web frontend**. You must complete the UI redesign and ensure all games are functional on the web.
+- **iPad Login Blocker:** The social login issue on iPad is a critical, unresolved App Store blocker. It must be tested in an iPad environment before any submission. Do not assume the previous fix worked.
+- **No Emojis:** The user was explicit about removing all emojis and using a professional icon library (like ) for the web UI. Adhere to this strictly.
+- **Multiplayer is Live:** The multiplayer system is no longer a concept; it's a functioning WebSocket-based system integrated into the mobile app. The backend infrastructure is ready to be connected to other games.
+
+**documents and test reports created in this job**
+- Multiple reports at  from the testing agent, confirming the economy and multiplayer systems are functional.
+-  has been updated with details of the new features.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Finish the remaining tasks and fix the Admin page dark mode as it's unreadable. (Status: **Completed**)
-2.  **User:** The games are not working correctly. The questions are too few, make it 100. All games must work. (Status: **In Progress**)
-3.  **User:** The multiplayer must be real (person-vs-person). (Status: **Not Started**)
-4.  **User:** A player can only earn 120 points per day from playing. (Status: **Not Started**)
-5.  **User:** Introduce a Diamond currency for online play. Offline play is free. (Status: **Not Started**)
-6.  **User:** Add in-app purchase packages for Diamonds, from 3 to 19 SAR. (Status: **Not Started**)
-7.  **User:** The winner of an online match gets the opponent's wagered Diamonds plus a bonus. (Status: **Not Started**)
-8.  **User:** The top 3 on the leaderboard get cash-exchangeable points (3000, 1900, 1000). (Status: **Not Started**)
-9.  **User:** Ensure the games are deep and medium difficulty. Ensure multiplayer and Diamond packages work. (Status: **Not Started**)
-10. **User:** اكمل (Continue). (Status: **Acknowledged**)
+1.  **User:** Complete everything.
+2.  **User:** *[Detailed requirements for the new economy: 300 diamonds, Saqr points, daily limits, login rewards, etc.]* (Status: **Completed**)
+3.  **Agent:** *[Multiple messages detailing implementation progress]*
+4.  **Agent:** Excellent! All APIs are working perfectly! *[Confirms via curl tests]*
+5.  **Agent:** Excellent! All tests passed 100%! *[Confirms via testing agent]*
+6.  **User:** Have you finished the online play functionality? (Status: **Completed**)
+7.  **Agent:** Yes, the online system is complete and all tests passed.
+8.  **User:** Move to the next task. Also, make sure all games appear on the web, I see no changes. It's important not to put any emojis, only professional symbols. Make the games page in the middle of the bar and next to it the watch icon. Reformat the bar to be consistent. (Status: **In Progress**)
+9.  **Agent:** Understood! I will start on the web frontend changes.
+10. **Agent:** *[Begins exploring and modifying web frontend files.]*
 
 **Project Health Check:**
--   **Broken**:
-    -   Apple/Google login on iPad (status unverified, potential blocker).
-    -   Ads screen (video does not play).
-    -   AI Chat, and other minor features from the original user list.
--   **Mocked**:
-    -   The entire real-time multiplayer system and game economy (Diamonds, IAP) are conceptual and not yet implemented.
--   **In Progress**:
-    -   Implementation of the new game economy, starting with adding more game content.
+- **Broken**:
+    - Apple/Google login on iPad (unverified fix).
+    - Ad-watching screen (video does not play).
+- **Mocked**:
+    - None. The previously conceptual economy and multiplayer systems are now fully implemented.
+- **In Progress**:
+    - Web frontend UI redesign (navigation bar, icons, game visibility).
 
 **3rd Party Integrations**
 -   **Expo (EAS)**: For mobile app builds and submissions.
--   **Stripe**: For advertiser payments. Will be needed for Diamond in-app purchases.
--   **Google AdMob**: For rewarded ads.
--   ** / **: For handling social logins.
--   ** or **: Will be required for Diamond purchases.
+-   **Stripe**: Actively used for Diamond in-app purchases.
+-   **Google AdMob**: For rewarded ads (currently non-functional).
+-   ** / **: For handling social logins (iPad functionality is a known, unverified issue).
+-   **WebSockets**: For real-time multiplayer.
 
 **Testing status**
--   Testing agent used after significant changes: YES (3 times)
+-   Testing agent used after significant changes: YES (multiple successful runs confirming the new economy and multiplayer features).
 -   Troubleshoot agent used after agent stuck in loop: NO
--   Test files created: []
--   Known regressions: Social login on iPad remains a known, unverified issue despite an attempted fix.</analysis>
+-   Test files created: None.
+-   Known regressions: The iPad social login issue remains a critical, unverified problem despite a previous fix attempt.
+
+**What agent forgot to execute**
+- The agent has not yet scheduled or performed a verification test for the iPad social login fix. This is the most critical oversight as it is a known App Store rejection blocker.</analysis>

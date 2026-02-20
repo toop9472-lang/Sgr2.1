@@ -177,7 +177,7 @@ eas build --platform ios --profile production
 
 ### API URL:
 ```
-https://game-pivot-1.preview.emergentagent.com
+https://gaming-economy-hub.preview.emergentagent.com
 ```
 
 ---

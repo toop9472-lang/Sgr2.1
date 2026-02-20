@@ -28,7 +28,7 @@ eas login
 
 ```bash
 # تحميل ملف المشروع
-curl -o mobile-project.zip https://game-pivot-1.preview.emergentagent.com/mobile-project.zip
+curl -o mobile-project.zip https://gaming-economy-hub.preview.emergentagent.com/mobile-project.zip
 
 # فك الضغط
 unzip mobile-project.zip -d mobile-project

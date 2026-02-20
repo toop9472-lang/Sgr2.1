@@ -81,7 +81,7 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
               // الحصول على URL الأصلي
               const originUrl = typeof window !== 'undefined' 
                 ? window.location.origin 
-                : 'https://game-pivot-1.preview.emergentagent.com';
+                : 'https://gaming-economy-hub.preview.emergentagent.com';
               
               // إنشاء جلسة دفع Stripe
               const response = await api.fetch('/api/diamond-payments/checkout/create', {
