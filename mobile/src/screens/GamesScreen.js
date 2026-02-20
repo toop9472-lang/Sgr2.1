@@ -126,13 +126,35 @@ const WaitingScreen = ({ onCancel, gameType }) => {
 };
 
 // ==================== TIC TAC TOE GAME ====================
-const TicTacToeGame = ({ mode, onComplete, onClose }) => {
+const TicTacToeGame = ({ mode, onComplete, onClose, isOnline, opponent, isMyTurn: initialTurn, matchData, onSendMove }) => {
   const [board, setBoard] = useState(Array(9).fill(null));
-  const [isPlayerTurn, setIsPlayerTurn] = useState(true);
+  const [isPlayerTurn, setIsPlayerTurn] = useState(isOnline ? initialTurn : true);
   const [gameOver, setGameOver] = useState(false);
   const [winner, setWinner] = useState(null);
   const [scores, setScores] = useState({ player: 0, opponent: 0, draws: 0 });
-  const [opponentName, setOpponentName] = useState(mode === 'online' ? 'منافس' : 'الكمبيوتر');
+  const [opponentName, setOpponentName] = useState(isOnline ? 'منافس' : (mode === 'online' ? 'منافس' : 'الكمبيوتر'));
+
+  // استقبال حركات الخصم الأونلاين
+  useEffect(() => {
+    if (isOnline) {
+      const unsubMove = require('../services/multiplayer').default.on('opponentMove', (data) => {
+        if (data.move && typeof data.move.position === 'number') {
+          const newBoard = [...board];
+          newBoard[data.move.position] = 'O';
+          setBoard(newBoard);
+          
+          const result = checkWinner(newBoard);
+          if (result) {
+            handleGameEnd(result, newBoard);
+          } else {
+            setIsPlayerTurn(true);
+          }
+        }
+      });
+      
+      return () => unsubMove();
+    }
+  }, [board, isOnline]);
 
   const winPatterns = [
     [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -148,6 +170,24 @@ const TicTacToeGame = ({ mode, onComplete, onClose }) => {
       }
     }
     return squares.every(s => s !== null) ? 'draw' : null;
+  };
+
+  const handleGameEnd = (result, newBoard) => {
+    setGameOver(true);
+    if (result === 'X') {
+      setWinner('player');
+      setScores(s => ({ ...s, player: s.player + 1 }));
+      onComplete(20, 'win');
+    } else if (result === 'O') {
+      setWinner('opponent');
+      setScores(s => ({ ...s, opponent: s.opponent + 1 }));
+      onComplete(5, 'lose');
+    } else {
+      setWinner('draw');
+      setScores(s => ({ ...s, draws: s.draws + 1 }));
+      onComplete(10, 'draw');
+    }
+  };
   };
 
   const minimax = (squares, isMax, depth = 0) => {
