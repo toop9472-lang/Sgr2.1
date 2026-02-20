@@ -1912,10 +1912,10 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
   const games = [
     { id: 'chess', name: 'الشطرنج', colors: ['#8b5cf6', '#6d28d9'], description: 'لعبة الملوك الاستراتيجية', maxPoints: 30, online: true, onlineCost: 30 },
     { id: 'tictactoe', name: 'اكس او', colors: ['#f59e0b', '#d97706'], description: 'تحدى منافسك', maxPoints: 25, online: true, onlineCost: 20 },
-    { id: 'brickbreaker', name: 'تكسير الطوب', colors: ['#ec4899', '#db2777'], description: '5 مستويات تحدي', maxPoints: 100, online: false },
+    { id: 'wordchain', name: 'سباق الكلمات', colors: ['#f97316', '#ea580c'], description: 'تحدي الكلمات المتسلسلة', maxPoints: 50, online: true, onlineCost: 20 },
     { id: 'puzzle', name: 'تركيب الصور', colors: ['#3b82f6', '#1d4ed8'], description: 'صور حقيقية للتركيب', maxPoints: 50, online: true, onlineCost: 25 },
-    { id: 'trivia', name: 'أسئلة ثقافية', colors: ['#10b981', '#059669'], description: '100 سؤال متنوع', maxPoints: 50, online: false },
-    { id: 'riddles', name: 'الألغاز', colors: ['#ef4444', '#dc2626'], description: '100 لغز ممتع', maxPoints: 50, online: false },
+    { id: 'trivia', name: 'أسئلة ثقافية', colors: ['#10b981', '#059669'], description: '200+ سؤال متنوع', maxPoints: 50, online: true, onlineCost: 15 },
+    { id: 'speedmath', name: 'سرعة الحساب', colors: ['#06b6d4', '#0891b2'], description: 'تحدي الرياضيات', maxPoints: 50, online: true, onlineCost: 15 },
   ];
 
   useEffect(() => {
