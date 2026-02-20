@@ -67,6 +67,12 @@ db = client[os.environ['DB_NAME']]
 # Create the main app without a prefix
 app = FastAPI()
 
+# App-ads.txt for Google AdMob verification (must be at root, not under /api)
+@app.get("/app-ads.txt", response_class=PlainTextResponse)
+async def app_ads_txt():
+    """Google AdMob app-ads.txt verification file"""
+    return "google.com, pub-5132559433385403, DIRECT, f08c47fec0942fa0"
+
 # Security Headers Middleware
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
