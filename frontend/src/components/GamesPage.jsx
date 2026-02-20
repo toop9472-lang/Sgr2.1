@@ -1331,11 +1331,24 @@ const BrickBreakerGame = ({ onComplete, onClose }) => {
 
     const handleStart = (e) => {
       e.preventDefault();
-      if (gameState === 'ready' && !gameDataRef.current.isRunning) {
+      e.stopPropagation();
+      
+      // Prevent double-trigger
+      if (gameDataRef.current.isRunning) return;
+      
+      if (gameState === 'ready') {
+        console.log('Starting game...');
         gameDataRef.current.isRunning = true;
         startBall();
         setGameState('playing');
-        gameDataRef.current.animationId = requestAnimationFrame(update);
+        
+        // Start animation loop
+        const runUpdate = () => {
+          if (!gameDataRef.current.isRunning) return;
+          update();
+          gameDataRef.current.animationId = requestAnimationFrame(runUpdate);
+        };
+        runUpdate();
       }
     };
 
@@ -1344,11 +1357,8 @@ const BrickBreakerGame = ({ onComplete, onClose }) => {
     canvas.addEventListener('click', handleStart);
     canvas.addEventListener('touchstart', handleStart, { passive: false });
 
+    // Initial draw
     draw();
-
-    if (gameState === 'playing' && gameDataRef.current.isRunning) {
-      gameDataRef.current.animationId = requestAnimationFrame(update);
-    }
 
     return () => {
       canvas.removeEventListener('mousemove', handleMove);
@@ -1357,9 +1367,10 @@ const BrickBreakerGame = ({ onComplete, onClose }) => {
       canvas.removeEventListener('touchstart', handleStart);
       if (gameDataRef.current.animationId) {
         cancelAnimationFrame(gameDataRef.current.animationId);
+        gameDataRef.current.animationId = null;
       }
     };
-  }, [gameState, score, lives, level, onComplete, startBall, resetBall]);
+  }, [gameState, score, lives, level, onComplete, startBall, resetBall, initBricks]);
 
   const resetGame = () => {
     if (gameDataRef.current.animationId) {
