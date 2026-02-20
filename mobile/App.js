@@ -24,6 +24,9 @@ import GamesScreen from './src/screens/GamesScreen';
 import BottomNav from './src/components/BottomNav';
 import AIFloatingButton from './src/components/AIFloatingButton';
 import AIChatModal from './src/components/AIChatModal';
+import DailyRewardsModal from './src/components/DailyRewardsModal';
+import DiamondShopModal from './src/components/DiamondShopModal';
+import BalanceHeader from './src/components/BalanceHeader';
 
 // Services
 import api from './src/services/api';
