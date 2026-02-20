@@ -784,20 +784,6 @@ const RiddlesGame = ({ mode, onComplete, onClose }) => {
     </View>
   );
 };
-          <TouchableOpacity style={styles.hintBtn} onPress={useHint} disabled={hints === 0}>
-            <Ionicons name="bulb-outline" size={20} color={hints > 0 ? '#fbbf24' : '#444'} />
-            <Text style={[styles.hintBtnText, hints === 0 && { color: '#444' }]}>تلميح</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.submitBtn} onPress={checkAnswer}>
-            <Ionicons name="send" size={20} color="#FFF" />
-            <Text style={styles.submitText}>تحقق</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
-};
 
 // ==================== MAIN GAMES SCREEN ====================
 const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }) => {
