@@ -46,14 +46,40 @@ async def update_profile(
 ):
     """
     Update user profile
+    تقييد: تغيير الصورة الشخصية مرة واحدة أسبوعياً فقط
     """
     db = get_db()
+    user = await db.users.find_one({'id': user_id})
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='المستخدم غير موجود'
+        )
+    
     update_data = {}
     
     if 'name' in data:
         update_data['name'] = data['name']
+    
     if 'avatar' in data:
+        # التحقق من تقييد تغيير الصورة (مرة أسبوعياً)
+        last_avatar_change = user.get('last_avatar_change')
+        if last_avatar_change:
+            from datetime import timedelta
+            if isinstance(last_avatar_change, str):
+                last_avatar_change = datetime.fromisoformat(last_avatar_change)
+            
+            days_since_change = (datetime.utcnow() - last_avatar_change).days
+            if days_since_change < 7:
+                remaining_days = 7 - days_since_change
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f'يمكنك تغيير الصورة الشخصية مرة واحدة أسبوعياً. تبقى {remaining_days} يوم.'
+                )
+        
         update_data['avatar'] = data['avatar']
+        update_data['last_avatar_change'] = datetime.utcnow()
     
     if not update_data:
         raise HTTPException(
