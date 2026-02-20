@@ -142,7 +142,7 @@ const TermsOfService = () => {
           {/* Limitation of Liability */}
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">
-              {isRTL ? '8. تحديد المسؤولية' : '8. Limitation of Liability'}
+              {isRTL ? '9. تحديد المسؤولية' : '9. Limitation of Liability'}
             </h2>
             <p>
               {isRTL 
