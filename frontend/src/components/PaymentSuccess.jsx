@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Check, Loader2 } from 'lucide-react';
+import { Check, Loader2, Diamond } from 'lucide-react';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { toast } from '../hooks/use-toast';
@@ -28,7 +28,14 @@ const PaymentSuccess = () => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/api/payments/status/${sessionId}`);
+      // Try diamond payments first
+      let response = await fetch(`${API_URL}/api/diamond-payments/checkout/status/${sessionId}`);
+      
+      // Fallback to old payments API
+      if (!response.ok) {
+        response = await fetch(`${API_URL}/api/payments/status/${sessionId}`);
+      }
+      
       const data = await response.json();
 
       if (data.payment_status === 'paid') {
@@ -36,7 +43,9 @@ const PaymentSuccess = () => {
         setPaymentData(data);
         toast({
           title: '✅ تم الدفع بنجاح!',
-          description: 'سيتم مراجعة إعلانك وتفعيله قريباً',
+          description: data.diamonds_added 
+            ? `تم إضافة ${data.diamonds_added} ماسة لحسابك!` 
+            : 'سيتم تفعيل طلبك قريباً',
         });
         return;
       } else if (data.status === 'expired' || data.payment_status === 'failed') {
@@ -112,14 +121,25 @@ const PaymentSuccess = () => {
             <Check className="text-green-600" size={40} />
           </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">تم الدفع بنجاح! 🎉</h2>
-          <p className="text-gray-600 mb-6">
-            شكراً لك! سيتم مراجعة إعلانك والموافقة عليه خلال 24 ساعة.
-          </p>
           
-          {paymentData && (
+          {paymentData?.diamonds_added ? (
+            <div className="mb-6">
+              <div className="flex items-center justify-center gap-2 text-2xl font-bold text-blue-600 mb-2">
+                <Diamond size={28} />
+                <span>+{paymentData.diamonds_added}</span>
+              </div>
+              <p className="text-gray-600">تم إضافة الألماسات لحسابك</p>
+            </div>
+          ) : (
+            <p className="text-gray-600 mb-6">
+              شكراً لك! سيتم تفعيل طلبك خلال 24 ساعة.
+            </p>
+          )}
+          
+          {paymentData && !paymentData.diamonds_added && (
             <div className="space-y-2 text-sm text-gray-700 text-right bg-gray-50 rounded-lg p-4 mb-6">
-              <p><strong>رقم الطلب:</strong> {paymentData.ad_id}</p>
-              <p><strong>المبلغ:</strong> {paymentData.amount} {paymentData.currency?.toUpperCase()}</p>
+              <p><strong>رقم الطلب:</strong> {paymentData.ad_id || paymentData.session_id}</p>
+              <p><strong>المبلغ:</strong> {paymentData.amount_total || paymentData.amount} {paymentData.currency?.toUpperCase()}</p>
               <p><strong>الحالة:</strong> <span className="text-green-600">مدفوع ✓</span></p>
             </div>
           )}
