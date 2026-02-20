@@ -487,59 +487,70 @@ const TriviaGame = ({ mode, onComplete, onClose }) => {
   const [score, setScore] = useState(0);
   const [answered, setAnswered] = useState(null);
   const [showResult, setShowResult] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(15);
+  const [timeLeft, setTimeLeft] = useState(20);
+  const [questions, setQuestions] = useState([]);
 
-  const questions = [
-    { q: 'ما هي عاصمة المملكة العربية السعودية؟', options: ['الرياض', 'جدة', 'مكة', 'الدمام'], correct: 0 },
-    { q: 'كم عدد أركان الإسلام؟', options: ['3', '4', '5', '6'], correct: 2 },
-    { q: 'ما هو أطول نهر في العالم؟', options: ['الأمازون', 'النيل', 'المسيسيبي', 'اليانغتسي'], correct: 1 },
-    { q: 'في أي عام هبط الإنسان على القمر؟', options: ['1965', '1969', '1972', '1975'], correct: 1 },
-    { q: 'ما هي أكبر قارة في العالم؟', options: ['أفريقيا', 'أمريكا الشمالية', 'آسيا', 'أوروبا'], correct: 2 },
-    { q: 'كم عدد ألوان قوس قزح؟', options: ['5', '6', '7', '8'], correct: 2 },
-    { q: 'ما هو العنصر الكيميائي الأكثر وفرة في الكون؟', options: ['الأكسجين', 'الهيدروجين', 'الكربون', 'النيتروجين'], correct: 1 },
-    { q: 'من هو مخترع المصباح الكهربائي؟', options: ['نيوتن', 'أينشتاين', 'إديسون', 'تسلا'], correct: 2 },
-    { q: 'كم عدد الكواكب في المجموعة الشمسية؟', options: ['7', '8', '9', '10'], correct: 1 },
-    { q: 'ما هي اللغة الأكثر انتشاراً في العالم؟', options: ['العربية', 'الإنجليزية', 'الصينية', 'الإسبانية'], correct: 2 },
-  ];
+  // اختيار 15 سؤال عشوائي من 100 سؤال
+  useEffect(() => {
+    const shuffled = [...triviaQuestions].sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, 15).map(q => ({
+      q: q.question,
+      options: q.options,
+      correct: q.answer,
+      category: q.category
+    }));
+    setQuestions(selected);
+  }, []);
 
   useEffect(() => {
+    if (questions.length === 0) return;
     if (timeLeft > 0 && answered === null && !showResult) {
       const timer = setTimeout(() => setTimeLeft(t => t - 1), 1000);
       return () => clearTimeout(timer);
     } else if (timeLeft === 0 && answered === null) {
       handleAnswer(-1);
     }
-  }, [timeLeft, answered, showResult]);
+  }, [timeLeft, answered, showResult, questions]);
 
   const handleAnswer = (idx) => {
-    if (answered !== null) return;
+    if (answered !== null || questions.length === 0) return;
     setAnswered(idx);
     
     if (idx === questions[currentQ].correct) {
-      setScore(s => s + 10 + Math.floor(timeLeft / 3));
+      setScore(s => s + 10 + Math.floor(timeLeft / 4));
     }
 
     setTimeout(() => {
       if (currentQ < questions.length - 1) {
         setCurrentQ(c => c + 1);
         setAnswered(null);
-        setTimeLeft(15);
+        setTimeLeft(20);
       } else {
         setShowResult(true);
-        const finalScore = score + (idx === questions[currentQ].correct ? 10 + Math.floor(timeLeft / 3) : 0);
-        onComplete(finalScore, currentQ + 1);
+        const finalScore = score + (idx === questions[currentQ].correct ? 10 + Math.floor(timeLeft / 4) : 0);
+        onComplete(finalScore, 'win');
       }
     }, 1500);
   };
 
+  if (questions.length === 0) {
+    return (
+      <View style={styles.gameContainer}>
+        <ActivityIndicator size="large" color="#60a5fa" />
+        <Text style={{ color: '#FFF', marginTop: 20 }}>جاري تحميل الأسئلة...</Text>
+      </View>
+    );
+  }
+
   if (showResult) {
+    const correctAnswers = Math.floor(score / 10);
     return (
       <View style={styles.gameContainer}>
         <View style={styles.resultScreen}>
           <Ionicons name="ribbon" size={80} color="#fbbf24" />
           <Text style={styles.finalScore}>{score}</Text>
           <Text style={styles.finalLabel}>نقطة</Text>
-          <Text style={styles.finalSub}>أجبت على {questions.length} سؤال</Text>
+          <Text style={styles.finalSub}>أجبت بشكل صحيح على {correctAnswers} من {questions.length} سؤال</Text>
           <TouchableOpacity style={styles.exitBtn} onPress={onClose}>
             <Text style={styles.exitText}>إنهاء</Text>
           </TouchableOpacity>
