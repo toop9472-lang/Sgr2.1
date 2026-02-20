@@ -1028,25 +1028,51 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
       console.log('Game complete error:', e);
     }
     
+    // تنظيف حالة الأونلاين
+    if (gameMode === 'online') {
+      setOnlineOpponent(null);
+      setIsMyTurn(false);
+      setMatchData(null);
+    }
+    
     fetchLeaderboard();
   };
 
   const closeGame = () => {
+    // إذا كانت لعبة أونلاين، أعلم الخصم
+    if (gameMode === 'online') {
+      multiplayerService.endGame({ forfeit: true }, onlineOpponent);
+      setOnlineOpponent(null);
+      setIsMyTurn(false);
+      setMatchData(null);
+    }
     setActiveGame(null);
     setGameMode(null);
   };
 
   // Render active game
   if (activeGame) {
+    const gameProps = {
+      mode: gameMode,
+      onComplete: handleGameComplete,
+      onClose: closeGame,
+      // Props للعب الأونلاين
+      isOnline: gameMode === 'online',
+      opponent: onlineOpponent,
+      isMyTurn: isMyTurn,
+      matchData: matchData,
+      onSendMove: (move) => multiplayerService.sendMove(move),
+    };
+    
     switch (activeGame) {
       case 'chess':
-        return <ChessGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
+        return <ChessGame {...gameProps} />;
       case 'tictactoe':
-        return <TicTacToeGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
+        return <TicTacToeGame {...gameProps} />;
       case 'brickbreaker':
         return <BrickBreakerGame difficulty={gameMode === 'ai_hard' ? 'hard' : 'medium'} onComplete={handleGameComplete} onClose={closeGame} />;
       case 'puzzle':
-        return <PuzzleGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
+        return <PuzzleGame {...gameProps} />;
       case 'trivia':
         return <TriviaGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
       case 'riddles':
@@ -1059,13 +1085,14 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
     return (
       <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
         {showWaiting ? (
-          <WaitingScreen onCancel={() => { setShowWaiting(false); setShowModeSelector(null); }} />
+          <WaitingScreen onCancel={cancelOnlineSearch} />
         ) : (
           <ModeSelector
             gameName={games.find(g => g.id === showModeSelector)?.name}
             onSelectMode={handleModeSelect}
             onClose={() => setShowModeSelector(null)}
           />
+        )}
         )}
       </LinearGradient>
     );
