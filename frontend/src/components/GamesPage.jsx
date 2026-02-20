@@ -367,6 +367,474 @@ const TriviaGame = ({ onComplete, onClose }) => {
   );
 };
 
+// ==================== RIDDLES GAME ====================
+const RiddlesGame = ({ onComplete, onClose }) => {
+  const [currentR, setCurrentR] = useState(0);
+  const [score, setScore] = useState(0);
+  const [answered, setAnswered] = useState(null);
+  const [showResult, setShowResult] = useState(false);
+
+  const riddles = [
+    { q: 'شيء له رأس ولا عين له، ما هو؟', options: ['الدبوس', 'القلم', 'المسمار', 'الابرة'], correct: 0 },
+    { q: 'ما هو الشيء الذي كلما زاد نقص؟', options: ['العمر', 'المال', 'الوقت', 'الماء'], correct: 0 },
+    { q: 'شيء يمشي بلا أرجل ويبكي بلا عيون؟', options: ['السحاب', 'الريح', 'النهر', 'الشمعة'], correct: 0 },
+    { q: 'ما هو الشيء الذي يسمع بلا أذن ويتكلم بلا لسان؟', options: ['الهاتف', 'الراديو', 'التلفاز', 'الكتاب'], correct: 0 },
+    { q: 'أنا ابن الماء فإن تركوني في الماء مت، فمن أنا؟', options: ['الثلج', 'السمك', 'الملح', 'السكر'], correct: 0 },
+    { q: 'ما الشيء الذي له أسنان ولا يعض؟', options: ['المشط', 'المنشار', 'الشوكة', 'المفتاح'], correct: 0 },
+    { q: 'شيء موجود في السماء وإذا أضفت إليه حرفا أصبح في الأرض؟', options: ['نجم/منجم', 'قمر/مقر', 'شمس/شمس', 'سحاب/سحاب'], correct: 0 },
+    { q: 'ما هو الشيء الذي يكتب ولا يقرأ؟', options: ['القلم', 'الممحاة', 'الكتاب', 'الورقة'], correct: 0 },
+    { q: 'له أوراق وما هو بنبات، له جلد وما هو بحيوان، وعلم وما هو بإنسان؟', options: ['الكتاب', 'الشجرة', 'الحيوان', 'الانسان'], correct: 0 },
+    { q: 'ما هو الشيء الذي إذا أخذنا منه ازداد وكبر؟', options: ['الحفرة', 'البئر', 'الجبل', 'النهر'], correct: 0 },
+  ];
+
+  const handleAnswer = (idx) => {
+    if (answered !== null) return;
+    setAnswered(idx);
+    
+    if (idx === riddles[currentR].correct) {
+      setScore(s => s + 15);
+    }
+
+    setTimeout(() => {
+      if (currentR < riddles.length - 1) {
+        setCurrentR(c => c + 1);
+        setAnswered(null);
+      } else {
+        setShowResult(true);
+        onComplete(score, 'win');
+      }
+    }, 1500);
+  };
+
+  if (showResult) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center p-4">
+        <div className="text-center">
+          <Lightbulb size={80} className="mx-auto text-yellow-400 mb-4" />
+          <div className="text-5xl font-bold text-yellow-400 mb-2">{score}</div>
+          <div className="text-gray-400 mb-6">نقطة</div>
+          <button onClick={onClose} className="bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-xl font-semibold transition-colors">
+            انهاء
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const r = riddles[currentR];
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0f] text-white p-4 md:p-8">
+      <div className="max-w-xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <button onClick={onClose} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+            <ChevronLeft size={24} />
+          </button>
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <Lightbulb size={24} className="text-red-400" />
+            الالغاز
+          </h1>
+          <div className="flex items-center gap-1 text-yellow-400 font-bold">
+            <Star size={18} />
+            {score}
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-red-500 transition-all duration-300"
+              style={{ width: `${((currentR + 1) / riddles.length) * 100}%` }}
+            />
+          </div>
+          <div className="text-center text-gray-400 text-sm mt-2">{currentR + 1} / {riddles.length}</div>
+        </div>
+
+        <div className="bg-gradient-to-br from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-2xl p-6 mb-6">
+          <p className="text-lg text-center">{r.q}</p>
+        </div>
+
+        <div className="space-y-3">
+          {r.options.map((opt, idx) => {
+            let bgClass = 'bg-white/5 hover:bg-white/10 border-transparent';
+            if (answered !== null) {
+              if (idx === r.correct) bgClass = 'bg-green-500/30 border-green-500';
+              else if (idx === answered) bgClass = 'bg-red-500/30 border-red-500';
+            }
+            
+            return (
+              <button
+                key={idx}
+                onClick={() => handleAnswer(idx)}
+                disabled={answered !== null}
+                className={`w-full p-4 rounded-xl text-right transition-all border ${bgClass}`}
+              >
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ==================== PUZZLE GAME ====================
+const PuzzleGame = ({ onComplete, onClose }) => {
+  const [tiles, setTiles] = useState([]);
+  const [moves, setMoves] = useState(0);
+  const [solved, setSolved] = useState(false);
+  const [startTime, setStartTime] = useState(Date.now());
+
+  useEffect(() => {
+    initGame();
+  }, []);
+
+  const initGame = () => {
+    const numbers = [1, 2, 3, 4, 5, 6, 7, 8, null];
+    const shuffled = shuffleArray([...numbers]);
+    setTiles(shuffled);
+    setMoves(0);
+    setSolved(false);
+    setStartTime(Date.now());
+  };
+
+  const shuffleArray = (arr) => {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  };
+
+  const canMove = (idx) => {
+    const emptyIdx = tiles.indexOf(null);
+    const row = Math.floor(idx / 3);
+    const col = idx % 3;
+    const emptyRow = Math.floor(emptyIdx / 3);
+    const emptyCol = emptyIdx % 3;
+    
+    return (Math.abs(row - emptyRow) + Math.abs(col - emptyCol)) === 1;
+  };
+
+  const moveTile = (idx) => {
+    if (!canMove(idx) || solved) return;
+    
+    const newTiles = [...tiles];
+    const emptyIdx = tiles.indexOf(null);
+    [newTiles[idx], newTiles[emptyIdx]] = [newTiles[emptyIdx], newTiles[idx]];
+    setTiles(newTiles);
+    setMoves(m => m + 1);
+
+    // Check if solved
+    const isSolved = newTiles.slice(0, 8).every((t, i) => t === i + 1) && newTiles[8] === null;
+    if (isSolved) {
+      setSolved(true);
+      const timeBonus = Math.max(0, 30 - Math.floor((Date.now() - startTime) / 1000));
+      const moveBonus = Math.max(0, 50 - moves);
+      onComplete(20 + timeBonus + moveBonus, 'win');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0f] text-white p-4 md:p-8">
+      <div className="max-w-sm mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <button onClick={onClose} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+            <ChevronLeft size={24} />
+          </button>
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <Puzzle size={24} className="text-blue-400" />
+            تركيب الصور
+          </h1>
+          <button onClick={initGame} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+            <RotateCcw size={20} className="text-blue-400" />
+          </button>
+        </div>
+
+        <div className="text-center mb-4 text-gray-400">
+          الحركات: {moves}
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 bg-white/5 p-3 rounded-2xl mb-6">
+          {tiles.map((tile, idx) => (
+            <button
+              key={idx}
+              onClick={() => moveTile(idx)}
+              disabled={tile === null || solved}
+              className={`aspect-square flex items-center justify-center text-2xl font-bold rounded-xl transition-all
+                ${tile === null ? 'bg-transparent' : 'bg-blue-600 hover:bg-blue-500 text-white'}`}
+            >
+              {tile}
+            </button>
+          ))}
+        </div>
+
+        {solved && (
+          <div className="bg-green-500/20 border border-green-500/30 rounded-2xl p-6 text-center">
+            <Trophy size={60} className="mx-auto text-yellow-400 mb-4" />
+            <div className="text-2xl font-bold text-green-400 mb-2">ممتاز!</div>
+            <div className="text-gray-400 mb-4">اكملت اللغز في {moves} حركة</div>
+            <button 
+              onClick={initGame}
+              className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-xl font-semibold transition-colors"
+            >
+              العب مجددا
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ==================== BRICK BREAKER GAME ====================
+const BrickBreakerGame = ({ onComplete, onClose }) => {
+  const [score, setScore] = useState(0);
+  const [lives, setLives] = useState(3);
+  const [gameOver, setGameOver] = useState(false);
+  const [bricks, setBricks] = useState([]);
+  const [ballPos, setBallPos] = useState({ x: 50, y: 80 });
+  const [paddlePos, setPaddlePos] = useState(50);
+  const [ballDir, setBallDir] = useState({ x: 2, y: -2 });
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    initBricks();
+  }, []);
+
+  const initBricks = () => {
+    const newBricks = [];
+    for (let row = 0; row < 4; row++) {
+      for (let col = 0; col < 6; col++) {
+        newBricks.push({
+          id: row * 6 + col,
+          x: col * 16 + 2,
+          y: row * 8 + 5,
+          active: true,
+          color: ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500'][row]
+        });
+      }
+    }
+    setBricks(newBricks);
+    setScore(0);
+    setLives(3);
+    setGameOver(false);
+    setBallPos({ x: 50, y: 80 });
+    setBallDir({ x: 2, y: -2 });
+    setIsPlaying(false);
+  };
+
+  useEffect(() => {
+    if (!isPlaying || gameOver) return;
+
+    const interval = setInterval(() => {
+      setBallPos(prev => {
+        let newX = prev.x + ballDir.x;
+        let newY = prev.y + ballDir.y;
+        let newDirX = ballDir.x;
+        let newDirY = ballDir.y;
+
+        // Wall collision
+        if (newX <= 0 || newX >= 100) newDirX = -newDirX;
+        if (newY <= 0) newDirY = -newDirY;
+
+        // Paddle collision
+        if (newY >= 85 && newY <= 90 && Math.abs(newX - paddlePos) < 10) {
+          newDirY = -Math.abs(newDirY);
+          newDirX = (newX - paddlePos) / 5;
+        }
+
+        // Ball lost
+        if (newY > 95) {
+          setLives(l => {
+            if (l <= 1) {
+              setGameOver(true);
+              setIsPlaying(false);
+              onComplete(score, 'lose');
+              return 0;
+            }
+            return l - 1;
+          });
+          return { x: 50, y: 80 };
+        }
+
+        // Brick collision
+        setBricks(currentBricks => {
+          const newBricks = [...currentBricks];
+          for (let brick of newBricks) {
+            if (brick.active && 
+                newX >= brick.x && newX <= brick.x + 14 &&
+                newY >= brick.y && newY <= brick.y + 6) {
+              brick.active = false;
+              newDirY = -newDirY;
+              setScore(s => s + 10);
+              
+              // Check win
+              if (newBricks.filter(b => b.active).length === 0) {
+                setGameOver(true);
+                setIsPlaying(false);
+                onComplete(score + 50, 'win');
+              }
+              break;
+            }
+          }
+          return newBricks;
+        });
+
+        setBallDir({ x: newDirX, y: newDirY });
+        return { x: Math.max(0, Math.min(100, newX)), y: Math.max(0, Math.min(100, newY)) };
+      });
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [isPlaying, gameOver, paddlePos, ballDir, score]);
+
+  const handleTouch = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX || e.touches?.[0]?.clientX) - rect.left) / rect.width * 100;
+    setPaddlePos(Math.max(10, Math.min(90, x)));
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0f] text-white p-4 md:p-8">
+      <div className="max-w-sm mx-auto">
+        <div className="flex items-center justify-between mb-4">
+          <button onClick={onClose} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+            <ChevronLeft size={24} />
+          </button>
+          <h1 className="text-lg font-bold flex items-center gap-2">
+            <Layers size={20} className="text-pink-400" />
+            تكسير الطوب
+          </h1>
+          <div className="flex items-center gap-1 text-yellow-400 font-bold">
+            <Star size={16} />
+            {score}
+          </div>
+        </div>
+
+        <div className="flex justify-center gap-4 mb-4">
+          <div className="text-pink-400 text-sm">الحياة: {'❤️'.repeat(lives)}</div>
+        </div>
+
+        <div 
+          className="relative bg-gradient-to-b from-purple-900/50 to-pink-900/50 rounded-2xl overflow-hidden border border-white/10"
+          style={{ height: '400px' }}
+          onMouseMove={handleTouch}
+          onTouchMove={handleTouch}
+          onClick={() => !isPlaying && !gameOver && setIsPlaying(true)}
+        >
+          {/* Bricks */}
+          {bricks.map(brick => brick.active && (
+            <div
+              key={brick.id}
+              className={`absolute rounded ${brick.color}`}
+              style={{
+                left: `${brick.x}%`,
+                top: `${brick.y}%`,
+                width: '14%',
+                height: '6%'
+              }}
+            />
+          ))}
+
+          {/* Ball */}
+          <div
+            className="absolute w-3 h-3 bg-white rounded-full"
+            style={{
+              left: `${ballPos.x}%`,
+              top: `${ballPos.y}%`,
+              transform: 'translate(-50%, -50%)'
+            }}
+          />
+
+          {/* Paddle */}
+          <div
+            className="absolute bg-blue-500 rounded-full"
+            style={{
+              left: `${paddlePos}%`,
+              top: '88%',
+              width: '20%',
+              height: '3%',
+              transform: 'translateX(-50%)'
+            }}
+          />
+
+          {/* Start/Game Over Overlay */}
+          {(!isPlaying || gameOver) && (
+            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+              <div className="text-center">
+                {gameOver ? (
+                  <>
+                    <div className="text-2xl font-bold mb-2">{lives === 0 ? 'انتهت اللعبة' : 'فوز!'}</div>
+                    <div className="text-yellow-400 text-xl mb-4">النقاط: {score}</div>
+                    <button 
+                      onClick={initBricks}
+                      className="bg-pink-600 hover:bg-pink-700 px-6 py-2 rounded-xl font-semibold"
+                    >
+                      العب مجددا
+                    </button>
+                  </>
+                ) : (
+                  <div className="text-xl">انقر للبدء</div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ==================== CHESS GAME (Simple) ====================
+const ChessGame = ({ mode, onComplete, onClose }) => {
+  const [message, setMessage] = useState('');
+  
+  // Simple placeholder for chess - would need full implementation
+  return (
+    <div className="min-h-screen bg-[#0a0a0f] text-white p-4 md:p-8">
+      <div className="max-w-lg mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <button onClick={onClose} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+            <ChevronLeft size={24} />
+          </button>
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <Trophy size={24} className="text-purple-400" />
+            الشطرنج
+          </h1>
+          <div className="w-10" />
+        </div>
+
+        <div className="bg-gradient-to-br from-purple-500/10 to-indigo-500/10 border border-purple-500/20 rounded-2xl p-8 text-center">
+          <Trophy size={80} className="mx-auto text-purple-400 mb-6" />
+          <h2 className="text-2xl font-bold mb-4">لعبة الشطرنج</h2>
+          <p className="text-gray-400 mb-6">
+            هذه اللعبة قيد التطوير وستكون متاحة قريباً مع ميزات متقدمة
+          </p>
+          <div className="space-y-3">
+            <button 
+              onClick={() => {
+                onComplete(15, 'win');
+                onClose();
+              }}
+              className="w-full bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-xl font-semibold transition-colors"
+            >
+              احصل على نقاط المشاركة
+            </button>
+            <button 
+              onClick={onClose}
+              className="w-full bg-white/10 hover:bg-white/20 px-6 py-3 rounded-xl font-semibold transition-colors"
+            >
+              العودة للقائمة
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ==================== GAME ICONS MAP ====================
 const gameIcons = {
   chess: Trophy,
