@@ -1410,8 +1410,21 @@ const BrickBreakerGame = ({ onComplete, onClose }) => {
           />
           
           {gameState === 'ready' && (
-            <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-xl">
-              <div className="text-center">
+            <div 
+              className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-xl cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                // Trigger click on canvas
+                if (canvasRef.current) {
+                  canvasRef.current.dispatchEvent(new MouseEvent('click', {
+                    bubbles: true,
+                    clientX: canvasRef.current.getBoundingClientRect().left + 200,
+                    clientY: canvasRef.current.getBoundingClientRect().top + 250
+                  }));
+                }
+              }}
+            >
+              <div className="text-center pointer-events-none">
                 <Zap size={60} className="mx-auto text-yellow-400 mb-4" />
                 <p className="text-xl mb-4">المستوى {level}</p>
                 <p className="text-gray-400">انقر للبدء</p>
