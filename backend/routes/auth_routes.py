@@ -214,9 +214,18 @@ async def register_email(data: EmailRegister, request: Request):
         'provider_id': data.email,
         'avatar': f"https://ui-avatars.com/api/?name={data.name}&background=6366f1&color=fff",
         'points': 0,
+        'saqr_points': 0,
+        'diamonds': 300,  # 300 ألماسة ترحيبية
         'total_earned': 0,
         'watched_ads': [],
         'status': 'active',
+        'economy_initialized': True,
+        'diamond_transactions': [{
+            'id': str(uuid.uuid4()),
+            'type': 'welcome_bonus',
+            'amount': 300,
+            'created_at': datetime.utcnow().isoformat()
+        }],
         'registration_ip': client_ip,
         'created_at': datetime.utcnow(),
         'updated_at': datetime.utcnow()
