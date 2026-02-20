@@ -446,6 +446,7 @@ const TicTacToeGame = ({ mode, onComplete, onClose }) => {
 
   const handlePress = (index) => {
     if (board[index] || gameOver || !isPlayerTurn) return;
+    soundManager.click(); // صوت النقر
     const newBoard = [...board];
     newBoard[index] = 'X';
     setBoard(newBoard);
@@ -458,6 +459,7 @@ const TicTacToeGame = ({ mode, onComplete, onClose }) => {
     setTimeout(() => {
       const aiIndex = getAIMove([...newBoard]);
       if (aiIndex !== null && aiIndex !== undefined) {
+        soundManager.move(); // صوت حركة الخصم
         newBoard[aiIndex] = 'O';
         setBoard([...newBoard]);
         const aiResult = checkWinner(newBoard);
@@ -475,18 +477,22 @@ const TicTacToeGame = ({ mode, onComplete, onClose }) => {
     setWinner(result.winner);
     setWinningLine(result.line);
     if (result.winner === 'X') {
+      soundManager.win(); // صوت الفوز
       setScores(s => ({ ...s, player: s.player + 1 }));
       onComplete(mode === 'ai_hard' ? 25 : 20, 'win');
     } else if (result.winner === 'draw') {
+      soundManager.success(); // صوت التعادل
       setScores(s => ({ ...s, draws: s.draws + 1 }));
       onComplete(10, 'draw');
     } else {
+      soundManager.lose(); // صوت الخسارة
       setScores(s => ({ ...s, opponent: s.opponent + 1 }));
       onComplete(5, 'lose');
     }
   };
 
   const resetGame = () => {
+    soundManager.click();
     setBoard(Array(9).fill(null));
     setIsPlayerTurn(true);
     setGameOver(false);
