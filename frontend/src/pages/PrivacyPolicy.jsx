@@ -140,7 +140,7 @@ const PrivacyPolicy = () => {
                 : 'If you have any questions about this privacy policy, please contact us at:'}
             </p>
             <div className="mt-4 p-4 bg-gray-800/50 rounded-xl">
-              <p className="text-blue-400">support@saqr-rewards.com</p>
+              <p className="text-blue-400">support@saqr.app</p>
             </div>
           </section>
         </div>
