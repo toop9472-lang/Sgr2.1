@@ -950,6 +950,25 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
           <Text style={styles.mainSub}>العب وتنافس واكسب النقاط</Text>
         </View>
 
+        {/* Daily Points Progress */}
+        <View style={styles.dailyProgressCard}>
+          <View style={styles.dailyProgressHeader}>
+            <Ionicons name="today" size={18} color="#10b981" />
+            <Text style={styles.dailyProgressTitle}>النقاط اليومية</Text>
+          </View>
+          <View style={styles.dailyProgressBar}>
+            <View style={[styles.dailyProgressFill, { width: `${Math.min(100, ((150 - balance.daily_points_remaining) / 150) * 100)}%` }]} />
+          </View>
+          <View style={styles.dailyProgressInfo}>
+            <Text style={styles.dailyProgressText}>
+              {150 - balance.daily_points_remaining} / 150 نقطة
+            </Text>
+            <Text style={styles.dailyProgressRemaining}>
+              متبقي: {balance.daily_points_remaining}
+            </Text>
+          </View>
+        </View>
+
         {/* User Stats */}
         <View style={styles.userCard}>
           <View style={styles.userStatItem}>
@@ -959,16 +978,22 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
           </View>
           <View style={styles.userStatDivider} />
           <View style={styles.userStatItem}>
-            <Ionicons name="diamond" size={24} color="#60a5fa" />
-            <Text style={styles.userStatNum}>{userStats.points || 0}</Text>
-            <Text style={styles.userStatLabel}>نقاطك</Text>
+            <Ionicons name="star" size={24} color="#fbbf24" />
+            <Text style={styles.userStatNum}>{balance.saqr_points || 0}</Text>
+            <Text style={styles.userStatLabel}>نقاط صقر</Text>
           </View>
           <View style={styles.userStatDivider} />
           <View style={styles.userStatItem}>
-            <Ionicons name="game-controller" size={24} color="#10b981" />
-            <Text style={styles.userStatNum}>{userStats.games || 0}</Text>
-            <Text style={styles.userStatLabel}>ألعابك</Text>
+            <Ionicons name="diamond" size={24} color="#60a5fa" />
+            <Text style={styles.userStatNum}>{balance.diamonds || 0}</Text>
+            <Text style={styles.userStatLabel}>ألماسات</Text>
           </View>
+        </View>
+
+        {/* Exchange Rate Info */}
+        <View style={styles.exchangeInfo}>
+          <Ionicons name="information-circle" size={16} color="#10b981" />
+          <Text style={styles.exchangeText}>500 نقطة صقر = 1 دولار</Text>
         </View>
 
         {/* Games */}
@@ -980,8 +1005,31 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
               game={game}
               onPress={() => handleGameSelect(game.id)}
               pulseAnim={pulseAnim}
+              gameCost={gameCosts[game.id]}
             />
           ))}
+        </View>
+
+        {/* Leaderboard Rewards Info */}
+        <View style={styles.rewardsInfoCard}>
+          <View style={styles.rewardsInfoHeader}>
+            <Ionicons name="gift" size={20} color="#fbbf24" />
+            <Text style={styles.rewardsInfoTitle}>مكافآت المتصدرين</Text>
+          </View>
+          <View style={styles.rewardsInfoList}>
+            <View style={styles.rewardRow}>
+              <Ionicons name="medal" size={18} color="#fbbf24" />
+              <Text style={styles.rewardText}>المركز الأول: 3000 نقطة</Text>
+            </View>
+            <View style={styles.rewardRow}>
+              <Ionicons name="medal" size={18} color="#94a3b8" />
+              <Text style={styles.rewardText}>المركز الثاني: 1900 نقطة</Text>
+            </View>
+            <View style={styles.rewardRow}>
+              <Ionicons name="medal" size={18} color="#cd7f32" />
+              <Text style={styles.rewardText}>المركز الثالث: 1000 نقطة</Text>
+            </View>
+          </View>
         </View>
 
         {/* Leaderboard */}
