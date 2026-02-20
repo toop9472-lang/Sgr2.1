@@ -174,6 +174,13 @@ Arabic (العربية)
 
 ## 📝 Change Log
 
+### February 20, 2026 - Major Game & Economy Updates
+- ✅ Fixed Brick Breaker game click (pointer-events-none on overlay)
+- ✅ Changed daily points limit from 150 to **70 points**
+- ✅ Updated login rewards to 14 days (160 points + 200 diamonds)
+- ✅ Added 12 puzzle images (was 6)
+- ✅ All tests passed (100% success rate)
+
 ### February 20, 2026 - All Remaining Tasks Completed
 - ✅ Fixed Apple Sign In to use Emergent Auth (works on iPad)
 - ✅ Updated Terms of Service with Games & In-App Purchases sections
@@ -191,7 +198,7 @@ Arabic (العربية)
 
 ### February 20, 2026 - Professional Games Implementation
 - ✅ Complete Chess game with AI opponent and hints
-- ✅ Puzzle game with 6 real images and 3 difficulty levels
+- ✅ Puzzle game with 12 real images and 3 difficulty levels
 - ✅ 100 Cultural Questions with timer and hint system
 - ✅ 100 Riddles with reveal answer hint
 - ✅ Brick Breaker with 5 levels and golden brick bonus
