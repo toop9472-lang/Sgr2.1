@@ -130,7 +130,7 @@ const TermsOfService = () => {
           {/* Intellectual Property */}
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">
-              {isRTL ? '7. الملكية الفكرية' : '7. Intellectual Property'}
+              {isRTL ? '8. الملكية الفكرية' : '8. Intellectual Property'}
             </h2>
             <p>
               {isRTL 
