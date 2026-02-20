@@ -751,7 +751,10 @@ const RiddlesGame = ({ onComplete, onClose, userDiamonds, onUseDiamonds }) => {
     if (answered !== null) return;
     setAnswered(idx);
     if (idx === riddlesList[currentR].correct) {
+      soundManager.triviaCorrect(); // صوت الإجابة الصحيحة
       setScore(s => s + 15);
+    } else {
+      soundManager.triviaWrong(); // صوت الإجابة الخاطئة
     }
     setTimeout(() => {
       if (currentR < riddlesList.length - 1) {
@@ -760,6 +763,7 @@ const RiddlesGame = ({ onComplete, onClose, userDiamonds, onUseDiamonds }) => {
         setShowHint(false);
       } else {
         setShowResult(true);
+        soundManager.win(); // صوت إكمال اللعبة
         onComplete(score, 'win');
       }
     }, 1500);
