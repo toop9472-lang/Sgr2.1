@@ -1756,10 +1756,10 @@ const BrickBreakerGame = ({ onComplete, onClose }) => {
 const gameIcons = {
   chess: Crown,
   tictactoe: Grid3X3,
-  brickbreaker: Layers,
+  wordchain: Type,
   puzzle: Puzzle,
   trivia: Brain,
-  riddles: Lightbulb,
+  speedmath: Calculator,
 };
 
 // ==================== DIAMOND SHOP ====================
