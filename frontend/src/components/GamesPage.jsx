@@ -1601,7 +1601,7 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
   const [showChat, setShowChat] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [leaderboard, setLeaderboard] = useState([]);
-  const [balance, setBalance] = useState({ saqr_points: 0, diamonds: 300, daily_points_remaining: 150 });
+  const [balance, setBalance] = useState({ saqr_points: 0, diamonds: 300, daily_points_remaining: 70 });
   const [loading, setLoading] = useState(true);
 
   const games = [
