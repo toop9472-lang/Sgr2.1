@@ -251,6 +251,15 @@ export default function App() {
   return (
     <View style={styles.container}>
       <LinearGradient colors={colors.gradients.dark} style={styles.mainArea}>
+        {/* Balance Header - عرض الرصيد في أعلى الصفحة */}
+        {user && !user.isGuest && (
+          <BalanceHeader 
+            userId={user.id}
+            onDiamondPress={() => setShowDiamondShop(true)}
+            refreshTrigger={balanceRefresh}
+          />
+        )}
+        
         {currentPage === 'home' && (
           <HomeScreen 
             user={user} 
@@ -293,6 +302,8 @@ export default function App() {
           <GamesScreen 
             user={user}
             onPointsEarned={handlePointsEarned}
+            onOpenDiamondShop={() => setShowDiamondShop(true)}
+            balanceRefresh={balanceRefresh}
           />
         )}
       </LinearGradient>
@@ -304,6 +315,22 @@ export default function App() {
       <AIChatModal 
         visible={showAIChat} 
         onClose={() => setShowAIChat(false)} 
+      />
+
+      {/* Daily Rewards Modal - مكافآت الدخول اليومي */}
+      <DailyRewardsModal
+        visible={showDailyRewards}
+        onClose={() => setShowDailyRewards(false)}
+        userId={user?.id}
+        onRewardClaimed={handleDailyRewardClaimed}
+      />
+
+      {/* Diamond Shop Modal - متجر شحن الألماسات */}
+      <DiamondShopModal
+        visible={showDiamondShop}
+        onClose={() => setShowDiamondShop(false)}
+        userId={user?.id}
+        onPurchaseComplete={handleDiamondPurchase}
       />
 
       {/* Bottom Navigation */}
