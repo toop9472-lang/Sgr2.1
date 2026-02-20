@@ -1295,6 +1295,10 @@ const styles = StyleSheet.create({
   hintBtnText: { color: '#fbbf24', fontWeight: '600' },
   submitBtn: { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#3b82f6', padding: 14, borderRadius: 12 },
   submitText: { color: '#FFF', fontWeight: '600', fontSize: 16 },
+  
+  // Options Grid for Riddles/Trivia
+  optionsGrid: { gap: 10 },
+  optionTextSelected: { color: '#FFF', fontWeight: '700' },
 });
 
 export default GamesScreen;
