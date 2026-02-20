@@ -53,7 +53,8 @@ async def update_profile(
     تقييد: تغيير الصورة الشخصية مرة واحدة أسبوعياً فقط
     """
     db = get_db()
-    user = await db.users.find_one({'id': user_id})
+    # Support both 'id' and 'user_id' fields for backward compatibility
+    user = await db.users.find_one({'$or': [{'id': user_id}, {'user_id': user_id}]})
     
     if not user:
         raise HTTPException(
