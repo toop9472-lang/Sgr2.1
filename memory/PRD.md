@@ -174,6 +174,13 @@ Arabic (العربية)
 
 ## 📝 Change Log
 
+### February 20, 2026 - Major Games Replacement
+- ✅ Replaced Brick Breaker with **Word Chain (سباق الكلمات)** - cooperative online game
+- ✅ Replaced Riddles with **Speed Math (سرعة الحساب)** - competitive math game
+- ✅ Increased Trivia questions to **205 questions**
+- ✅ Removed OTP from password reset - uses direct link now
+- ✅ All 6 games work: Chess, TicTacToe, WordChain, Puzzle, Trivia, SpeedMath
+
 ### February 20, 2026 - Major Game & Economy Updates
 - ✅ Fixed Brick Breaker game click (pointer-events-none on overlay)
 - ✅ Changed daily points limit from 150 to **70 points**
