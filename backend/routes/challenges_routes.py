@@ -403,7 +403,8 @@ async def get_login_rewards(user_id: str = Depends(get_current_user_id)):
             'user_id': user_id,
             'month': month_str,
             'claimed_days': [],
-            'total_claimed': 0,
+            'total_claimed_points': 0,
+            'total_claimed_diamonds': 0,
             'created_at': datetime.now(timezone.utc)
         }
         await db.login_rewards.insert_one(user_rewards)
@@ -424,7 +425,8 @@ async def get_login_rewards(user_id: str = Depends(get_current_user_id)):
         
         rewards.append({
             'day': day,
-            'points': reward['points'],
+            'points': reward.get('points', 0),
+            'diamonds': reward.get('diamonds', 0),
             'claimed': is_claimed,
             'can_claim': can_claim,
             'unlocked': login_count >= day
@@ -432,8 +434,10 @@ async def get_login_rewards(user_id: str = Depends(get_current_user_id)):
     
     return {
         'rewards': rewards,
-        'total_points': 150,
-        'claimed_points': user_rewards.get('total_claimed', 0),
+        'total_points': 160,
+        'total_diamonds': 200,
+        'claimed_points': user_rewards.get('total_claimed_points', user_rewards.get('total_claimed', 0)),
+        'claimed_diamonds': user_rewards.get('total_claimed_diamonds', 0),
         'login_days': login_count,
         'month': month_str
     }
