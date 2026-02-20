@@ -7,9 +7,9 @@ import {
   HelpCircle, Play, Pause, Volume2, VolumeX, Target,
   Sparkles, Gift, Lock, Unlock, ArrowUp, ArrowDown,
   ArrowLeft, ArrowRight, RefreshCw, Award, Flame,
-  MessageCircle, Send, Apple, CreditCard
+  MessageCircle, Send, Apple, CreditCard, Calculator, Type
 } from 'lucide-react';
-import { triviaQuestions, riddles, puzzleImages, INITIAL_CHESS_BOARD } from '../data/gameData';
+import { triviaQuestions, puzzleImages, INITIAL_CHESS_BOARD, arabicWords, generateMathProblem } from '../data/gameData';
 import soundManager from '../utils/soundManager';
 import GameChat, { ChatToggleButton, SoundToggleButton } from './GameChat';
 
