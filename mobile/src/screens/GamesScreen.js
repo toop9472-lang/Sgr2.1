@@ -797,6 +797,9 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
   const [loading, setLoading] = useState(true);
   const [balance, setBalance] = useState({ saqr_points: 0, diamonds: 300, daily_points_remaining: 150 });
   const [gameCosts, setGameCosts] = useState({});
+  const [onlineOpponent, setOnlineOpponent] = useState(null);
+  const [isMyTurn, setIsMyTurn] = useState(false);
+  const [matchData, setMatchData] = useState(null);
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
@@ -810,12 +813,60 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
     { id: 'riddles', name: 'الألغاز', icon: 'bulb-outline', colors: ['#ef4444', '#dc2626'], description: 'حل الألغاز', maxPoints: 20, online: false, onlineCost: 0 },
   ];
 
+  // Multiplayer event handlers
+  useEffect(() => {
+    const unsubMatchFound = multiplayerService.on('matchFound', (data) => {
+      console.log('Match found!', data);
+      setShowWaiting(false);
+      setMatchData(data);
+      setOnlineOpponent(data.players.find(p => p !== user?.id));
+      setIsMyTurn(data.your_turn);
+      setActiveGame(data.game_type);
+      setGameMode('online');
+      setShowModeSelector(null);
+    });
+
+    const unsubOpponentMove = multiplayerService.on('opponentMove', (data) => {
+      console.log('Opponent moved:', data);
+      // سيتم معالجتها في كل لعبة
+    });
+
+    const unsubPlayerLeft = multiplayerService.on('playerLeft', (data) => {
+      Alert.alert('انتهت المباراة', 'غادر الخصم المباراة', [
+        { text: 'موافق', onPress: () => {
+          handleGameComplete(20, 'win'); // ربح بالانسحاب
+          closeGame();
+        }}
+      ]);
+    });
+
+    const unsubGameEnded = multiplayerService.on('gameEnded', (data) => {
+      console.log('Game ended:', data);
+    });
+
+    return () => {
+      unsubMatchFound();
+      unsubOpponentMove();
+      unsubPlayerLeft();
+      unsubGameEnded();
+    };
+  }, [user?.id]);
+
   useEffect(() => {
     fetchLeaderboard();
     fetchBalance();
     fetchGameCosts();
     startAnimations();
-  }, []);
+
+    // Connect to multiplayer service
+    if (user?.id) {
+      multiplayerService.connect(user.id).catch(e => console.log('WS connect error:', e));
+    }
+
+    return () => {
+      multiplayerService.disconnect();
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     if (balanceRefresh) {
