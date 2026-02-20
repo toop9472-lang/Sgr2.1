@@ -95,12 +95,12 @@ rewards,earn,points,ads,money,cashback,gift,withdraw,wallet,saqr
 
 ### رابط سياسة الخصوصية
 ```
-https://gaming-platform-mvp.preview.emergentagent.com/privacy
+https://game-economy-launch.preview.emergentagent.com/privacy
 ```
 
 ### رابط الدعم
 ```
-https://gaming-platform-mvp.preview.emergentagent.com
+https://game-economy-launch.preview.emergentagent.com
 ```
 
 ### البريد الإلكتروني للدعم

@@ -3,206 +3,199 @@ The user's primary goal is to overhaul their application to pass Apple's App Sto
 
 **PRODUCT REQUIREMENTS:**
 1.  **New Economy System:**
-    *   Introduce two currencies: Saqr Points and Diamonds.
-    *   New users receive 300 free Diamonds.
-    *   Implement a daily earning cap of 150 Saqr Points.
-    *   Create in-app purchase packages for Diamonds (prices 3-19 SAR).
-    *   Implement a daily login reward system.
+    *   Introduce Saqr Points and Diamonds.
+    *   New users get 300 free Diamonds.
+    *   Daily earning cap of 70 Saqr Points from games.
+    *   In-app purchases for Diamonds using Apple Pay/Stripe.
+    *   A 14-day daily login reward system granting a total of 160 Saqr Points and 200 Diamonds.
 2.  **Multiplayer & Gameplay:**
-    *   Implement real person-vs-person online multiplayer using WebSockets.
-    *   Online matches have a Diamond entry fee.
-    *   All games must be highly professional, complex, and realistic.
-    *   Cultural Questions and Riddles games must have at least 100 questions each.
-    *   Puzzle game must use real images.
-    *   Chess game must be fully functional.
-    *   Brick Breaker must be challenging with multiple levels.
-    *   Implement a hint system for games, costing Diamonds.
-    *   Implement sound effects for games and real-time chat for online matches.
-3.  **UI/UX:**
-    *   The web frontend must show all available games, and they must all be functional.
-    *   Remove all emojis and use professional icons.
-    *   Redesign the bottom navigation bar: Games in the center, flanked by Ads (شاهد).
-    *   Points and Diamond balances must be displayed, with a + icon to open the purchase modal.
-4.  **Blocker Fixes & Payments:**
+    *   Implement real person-vs-person online multiplayer.
+    *   Replace Brick Breaker and Riddles with Word Race and Speed Math.
+    *   Cultural Questions game must have over 200 questions.
+    *   Puzzle game must use at least 12 real images.
+    *   Implement real-time chat for online matches.
+    *   Implement sound effects for all games.
+3.  **UI/UX & Auth:**
+    *   Redesign the UI to be professional, removing emojis.
+    *   Remove OTP from login and password recovery, using a direct email link for recovery.
+4.  **Blocker Fixes:**
     *   Resolve Apple's rejection reason: Google/Apple sign-in is non-functional on iPad.
-    *   Implement Apple Pay for Diamond purchases.
+    *   Fix the ad-watching screen where videos are stuck on loading.
+    *   Limit profile picture changes to once per week.
 
 **User's preferred language**: العربية
 
 **what currently exists?**
-The backend game economy and multiplayer systems are complete. The web frontend has been significantly overhauled to meet the user's quality standards. All six games are now fully implemented and feature-rich:
-*   **Chess:** A complete, playable game against the computer or online, with a hint feature.
-*   **Puzzle:** Uses 6 real images and has 3 difficulty levels (3x3, 4x4, 5x5).
-*   **Brick Breaker:** Features 5 difficulty levels, a bonus golden brick, and fixed click-to-start functionality.
-*   **Trivia & Riddles:** Both now have 100 unique questions/riddles with a hint system (delete two answers).
-*   **Tic-Tac-Toe:** Fully functional for offline and online play.
-A Diamond Shop modal has been added, accessible via a + button next to the balance, showing four purchase packages. The UI is clean, uses professional icons, and the navigation bar is laid out as requested.
+The application has been significantly transformed into a feature-rich gaming platform. The backend economy, including a 70-point daily cap and a 14-day login bonus system, is complete. The frontend features six fully functional games: Chess, Tic-Tac-Toe, Puzzle (with 12 images), Cultural Questions (with 200+ questions), and the newly added Word Race (سباق الكلمات) and Speed Math (سرعة الحساب). Sound effects have been added to all games. The Diamond Shop is functional with both Card and Apple Pay options. The password recovery flow has been updated to use a secure email link instead of OTP. A weekly limit on changing profile pictures has been implemented on the backend.
 
 **Last working item**:
-- Last item agent was working: The agent was implementing a new set of major features requested by the user:
-    1.  Adding sound effects to all games.
-    2.  Creating a real-time chat system for online multiplayer games.
-    3.  Switching the payment method in the Diamond Shop from Stripe Checkout to Apple Pay.
-- Status: IN PROGRESS
+- Last item agent was working: The user explicitly requested to Finish the chat integration and complained about the agent's speed. The agent was just about to start this task.
+- Status: NOT STARTED
 - Agent Testing Done: N
-- Which testing method agent to use? both. The  subagent must be called for the Apple Pay integration. The  will then be needed to verify the frontend chat UI, sound effects, and the end-to-end Apple Pay flow. The backend needs testing for the new chat WebSocket logic.
+- Which testing method agent to use? both. The backend WebSocket endpoint for chat needs to be verified. The frontend  component needs to be integrated into the online game UI and tested for real-time message exchange using the .
 - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-- **Issue 1**: Implement Sound Effects, Live Chat, and Apple Pay (P0)
+- **Issue 1**: Implement real-time chat for online games (P0)
 - **Issue 2**: Google/Apple login is non-functional on iPad (Apple Rejection 2.1) (P0 - Blocker)
 - **Issue 3**: Ads are stuck on loading and do not work (P2)
 
 **Issues Detail:**
-- **Issue 1: Implement Sound Effects, Live Chat, and Apple Pay**
-    - Attempted fixes: The agent created a new  file, started adding sound effect paths to , and began modifying  to accommodate a new payment button.
+- **Issue 1: Implement real-time chat for online games**
+    - Attempted fixes: A  component was created, and the backend WebSocket was confirmed to support chat messages. However, the component is not rendered or integrated into any of the online game screens.
     - Next debug checklist:
-        1.  **Apple Pay:** Call  to get the correct implementation playbook for Stripe with Apple Pay.
-        2.  **Chat:** Implement the backend WebSocket route to handle real-time chat messages between two players in a game session. Integrate the  component into the UI for online games (Chess, Tic-Tac-Toe, Puzzle).
-        3.  **Sounds:** Source appropriate sound effect files (e.g., ) for game actions (click, win, lose, brick break). Use a library like  or  to trigger them from the game components.
-        4.  **Testing:** Thoroughly test all three features end-to-end.
-    - Why fix this issue and what will be achieved with the fix?: This is a direct user request to enhance the gaming experience and add a required payment method.
-    - Status: IN PROGRESS
+        1.  In , locate the rendering logic for online game sessions.
+        2.  Render the  component within the game view when a user is in an online match.
+        3.  Pass the active WebSocket instance and game session details as props to .
+        4.  Implement the sending and receiving of chat messages within the component.
+        5.  Use the  to simulate a two-player game and verify the chat functionality.
+    - Why fix this issue and what will be achieved with the fix?: This is a direct user request to improve the multiplayer experience.
+    - Status: NOT STARTED
     - Is recurring issue?: N
     - Should Test frontend/backend/both after fix?: Both
     - Blocked on other issue: None.
 
 - **Issue 2: Google/Apple login is non-functional on iPad**
-    - Attempted fixes: The  library was previously installed, but this fix has **never been tested**.
+    - Attempted fixes: The agent removed an iOS-specific check from the login logic, assuming a generic web redirect would work. This fix has **never been verified in an actual iPad environment.**
     - Next debug checklist:
-        1.  Use the  with a specific instruction to test the social login flow (Google/Apple) **on an iPad environment** to conclusively verify if the fix works.
-    - Why fix this issue and what will be achieved with the fix?: This is a direct, unresolved rejection reason from Apple and is a hard blocker for any future App Store submission.
+        1.  Invoke the .
+        2.  Provide an explicit instruction in the test plan to simulate an **iPad user-agent** and test the entire Google and Apple social login flows from start to finish.
+    - Why fix this issue and what will be achieved with the fix?: This is the original, critical App Store rejection reason. Resolving it is mandatory for the app to be published.
     - Status: USER VERIFICATION PENDING
     - Is recurring issue?: Y
     - Should Test frontend/backend/both after fix?: Frontend (specifically on iPad).
     - Blocked on other issue: None.
 
 - **Issue 3: Ads are stuck on loading**
-    - Attempted fixes: None in this session.
+    - Attempted fixes: The agent added  and  attributes to the video player in . The effectiveness is unknown.
     - Next debug checklist:
-        1.  Investigate the video player component in the mobile app's .
-        2.  Check the browser/device console for errors related to video playback.
-    - Why fix this issue and what will be achieved with the fix?: The user requested an Ads icon in the nav bar, indicating this feature is still relevant.
-    - Status: NOT STARTED
+        1.  Navigate to the Ads screen in the application.
+        2.  Open the browser developer console and check for any media playback errors or failed network requests related to the ad video.
+    - Why fix this issue and what will be achieved with the fix?: This is a core feature for the app's monetization model.
+    - Status: USER VERIFICATION PENDING
     - Is recurring issue?: N
     - Should Test frontend/backend/both after fix?: Frontend
     - Blocked on other issue: None.
 
 **In progress Task List**:
-- **Task 1: Complete Sound, Chat, and Apple Pay Implementation**
-    - Where to resume: Continue building out the  component, integrating Apple Pay via the subagent playbook, and adding sound effect logic to the game components.
-    - What will be achieved with this?: A more immersive gaming experience and the user's preferred payment method.
-    - Status: IN PROGRESS
-    - Should Test frontend/backend/both after fix?: Both
-    - Blocked on something: Needs playbook from  for Apple Pay.
+- None.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   (P1) Remove phone number login, retaining it only for OTP-based account recovery.
-    *   (P2) Fix Stay connected challenge logic.
-    *   (P2) Update the Terms & Conditions page.
-    *   (P2) Implement logic to limit profile picture changes to once per week.
-    *   (P2) Investigate and fix the AI Chat functionality.
-    *   (P2) Replace all dummy contact information with real accounts.
+    *   (P1) Fix Stay connected challenge logic.
 *   **Future Tasks:**
+    *   Enable Live Twilio SMS functionality.
     *   Integrate additional ad networks.
+    *   Add Redis for caching to improve performance.
     *   Perform a general cleanup of all dummy and unused code.
-    - Enable Live Twilio SMS functionality.
-    - Add Redis for caching to improve performance.
 
 **Completed work in this session**
-- **Massive Web Frontend Game Overhaul:**
-  - Implemented all 6 games on the web frontend, transforming them from placeholders to fully functional, professional experiences.
-  - **Chess:** Implemented a full, playable chess game with hints. ()
-  - **Puzzle:** Added 6 real images and 3 difficulty levels. (, )
-  - **Brick Breaker:** Fixed the freezing bug and added 5 levels with a bonus brick. ()
-  - **Trivia & Riddles:** Expanded content to 100 items each and added a hint feature. (, )
-- **Web UI/UX Enhancements:**
-  - Added a Diamond Shop modal with 4 purchase packages, triggered by a + button. (, )
-  - Added Online Play buttons and detailed descriptions for all games. ()
-- **Bug Fixes & Content Completion:**
-  - Resolved an issue where Brick Breaker would not start on click.
-  - Fixed a broken image link in the Puzzle game.
-  - Added missing questions and riddles to meet the 100-item requirement, passing testing agent checks.
+- **Major Game Overhaul:**
+    - Replaced Brick Breaker with a new Word Race game ().
+    - Replaced Riddles with a new Speed Math game ().
+    - The new games were created as separate, modular components.
+- **Content and Economy Tuning:**
+    - Increased Cultural Questions content to over 200 questions.
+    - Reduced the daily Saqr Points earning limit to 70.
+    - Implemented a new 14-day daily login reward system (160 points + 200 diamonds).
+    - Increased the number of images in the Puzzle game to 12.
+- **Authentication & Security:**
+    - Removed OTP from the password recovery flow, replacing it with a direct, secure email link.
+    - Implemented a server-side restriction to limit profile picture changes to once per week.
+- **Bug Fixes and Polish:**
+    - Successfully integrated sound effects into all active games.
+    - Fixed a state-related bug in the .
+    - Resolved a critical bug where the Brick Breaker game was unclickable before it was replaced.
+- **Testing:** All of the above completed work was successfully verified by the , which reported 100% success.
 
 **Earlier issues found/mentioned but not fixed**
-- AI Chat functionality is broken.
-- No limit on profile picture changes.
-- Dummy contact info is still present.
-- No new ad networks have been added.
+- **Stay connected challenge logic:** This task was mentioned in a previous handoff summary but was not addressed or planned in the current session. The logic for this feature is still incomplete.
 
 **Known issue recurrence from previous fork**
 - **Issue recurrence in previous fork**: Social logins on iPad.
-- **Recurrence count**: 2+
-- **Status**: USER VERIFICATION PENDING. A fix was implemented in a past session but has never been tested in a real iPad environment. This remains a critical unknown.
+- **Recurrence count**: 3+
+- **Status**: USER VERIFICATION PENDING. An attempted fix has been made, but it remains untested on the target platform. This is the highest-risk item in the project.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
 - Backend: Python, FastAPI, MongoDB, WebSockets
-- Frontend: React, Canvas API (for Brick Breaker)
-- Payments: Stripe (current), Apple Pay (requested)
-- Real-time: WebSockets (for multiplayer and now for chat)
+- Frontend: React
+- Payments: Stripe, Apple Pay
+- Real-time: WebSockets
 
 **key DB schema**
--   : { , , , , ,  }
+- : { ..., : datetime } - Added to track and enforce the weekly limit on profile picture changes.
 
 **changes in tech stack**
-- No changes, but **Apple Pay** integration is a newly requested technology.
+- None.
 
 **All files of reference**
-- **Created:**
-  - , 
-  - , , 
-  -  (In Progress)
 - **Heavily Modified:**
-  - : Overhauled to add professional features, images, levels, and hints.
-  - : Logic to handle all 6 functional games.
-  - : Fixed major bug.
-  - : New routes and modal integration.
-  - : Added trigger for the shop modal.
+    - : Contains new business logic for login rewards, daily limits, and password reset.
+    - : The main game container; logic was updated to replace two games and change UI text.
+- **Created:**
+    - : New game component.
+    - : New game component.
+- **Modified:**
+    - : Defines the new 14-day reward structure.
+    - : File was overwritten with 200+ new questions.
+    -  & : Authentication flow changed to remove OTP.
+
+**Areas that need refactoring**:
+-  is a monolithic file exceeding 3000 lines. It still contains the embedded code for Chess, Tic-Tac-Toe, Puzzle, and Trivia. These should be extracted into their own modular components inside , following the pattern used for the new games (, ). This will significantly improve maintainability.
+
+**key api endpoints**
+- : Now sends a tokenized URL via email instead of an OTP.
+- : Now accepts a token from the URL instead of an OTP.
+- : Now enforces a one-week cooldown between updates.
+- : Now correctly returns the daily Saqr Point limit of 70.
+- : Logic updated to handle the new 14-day reward schedule with both points and diamonds.
 
 **Critical Info for New Agent**
-- **Priority 1: Apple Pay.** You MUST start by calling  to get the correct playbook for integrating Apple Pay with Stripe. Do not attempt this from your own knowledge.
-- **Priority 2: iPad Login Blocker.** The social login issue on iPad is a critical, unresolved App Store blocker. After the current task, you must prioritize testing this in an iPad environment. The user has forgotten, but it's essential.
-- **User's High Expectations:** The user now expects extremely high-quality, professional features. Simple implementations will be rejected. The current request (sounds, chat, Apple Pay) must be done robustly.
+- **Immediate Priority: Chat Integration.** The user's last instruction was to finish the chat feature, and they expressed impatience. You must start this task first.
+- **Critical Blocker: iPad Login.** The social login issue on iPad is the original reason for App Store rejection and remains unverified. After implementing chat, this MUST be your next priority. Use a testing agent with an iPad user-agent to get a definitive pass/fail.
+- **Refactoring Needed:** Before making significant new changes, propose refactoring the massive  file by extracting the remaining game components into their own files. This will prevent the file from becoming unmanageable.
 
 **documents and test reports created in this job**
-- Multiple new reports at . The latest one showed 95% success before the final fixes were applied.
--  has been updated multiple times to reflect the significantly enhanced game features.
+-  was updated multiple times to reflect completed tasks.
+- Multiple test reports were generated at , with the latest ones confirming 100% success on all implemented features.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** The games don't work. (Status: **Resolved**. Agent found only 2/6 games were implemented and fixed it.)
-2.  **User:** *[Detailed list of complaints: Chess is fake, Puzzle has no images, Brick Breaker freezes, not enough questions, etc. Demanded professional quality.]* (Status: **Resolved**. Agent did a massive overhaul of all games.)
-3.  **User:** Complete. (Status: Acknowledged.)
-4.  **User:** Brick Breaker doesn't work on click, and I don't see the diamond packages. (Status: **Resolved**. Agent fixed the game's click listener and added the Diamond Shop modal.)
-5.  **User:** Yes, add sound effects, chat for online players, do the remaining tasks, and make the diamond payment Apple Pay. (Status: **In Progress**. This is the current task.)
+1.  **User:** Fix Brick Breaker, implement online puzzle mode, set daily limit to 70 points, update login rewards, remove OTP auth. (Status: **Resolved**)
+2.  **User:** Accepted the plan. (Status: Acknowledged)
+3.  **User:** Replace Brick Breaker with a hard online co-op game and Riddles with a fun global online game. Remove OTP from password recovery too. (Status: **Resolved**)
+4.  **User:** Suggests Word Race for one game, asks for more options for the other. Wants more trivia questions and functional online chat. (Status: **Resolved**)
+5.  **User:** Chooses Speed Math for the second game. (Status: **Resolved**)
+6.  **User:** Finish integrating the chat. (Status: **Pending**)
+7.  **User:** You are slow. (Status: Acknowledged)
+8.  **User:** I will do it now quickly! (Agent Response) (Status: Acknowledged)
 
 **Project Health Check:**
 - **Broken**:
-    - Apple/Google login on iPad (unverified fix).
-    - Ad-watching screen (video does not play).
+    - Apple/Google login on iPad (fix is unverified).
+    - Ad-watching screen (fix is unverified).
 - **Mocked**:
     - None.
 - **In Progress**:
-    - Sound effects implementation.
     - Real-time chat for online games.
-    - Apple Pay integration.
 
 **3rd Party Integrations**
--   **Stripe**: Actively used for Diamond in-app purchases (to be updated with Apple Pay).
--   **Apple Pay**: **Requested**.
--   **Expo (EAS)**: For mobile app builds.
+-   **Stripe**: For card and Apple Pay payments.
+-   **Apple Pay**: Integrated via Stripe.
+-   **Expo (EAS)**: Used for mobile app builds.
 -   **Google AdMob**: For rewarded ads (currently non-functional).
--   ****: For social logins (iPad functionality is the critical unverified issue).
--   **WebSockets**: For real-time multiplayer and chat.
+-   ****: For social logins (iPad functionality remains the critical unverified issue).
+-   **WebSockets**: Used for real-time multiplayer and pending chat implementation.
 
 **Testing status**
-- Testing agent used after significant changes: YES. Agent used it to validate the major game overhaul, found 3 issues (question count, riddle count, broken image), and fixed them.
+- Testing agent used after significant changes: YES. The agent was used successfully multiple times to validate the new games, economy changes, and password reset flow.
 - Troubleshoot agent used after agent stuck in loop: NO
 - Test files created: None.
-- Known regressions: The iPad social login issue remains the most critical unverified problem.
+- Known regressions: The iPad social login issue is a long-standing, critical problem with an unverified fix.
 
 **What agent forgot to execute**
-- The agent has consistently failed to prioritize or even schedule a test for the original App Store rejection reason: social logins on iPad. Despite acknowledging it in the plan, it gets pushed back by the user's new feature requests. This is the highest-risk item in the project.</analysis>
+- **Real-time Chat:** The agent completed all other tasks from the user's latest requests but has not yet started the chat integration, which is now the top priority.
+- **iPad Login Test:** The agent has consistently deferred testing the critical iPad login fix, despite it being the original App Store blocker.
+- **Stay connected challenge:** The logic for this feature, mentioned in previous handoffs, remains unaddressed.</analysis>

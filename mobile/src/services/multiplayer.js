@@ -1,7 +1,7 @@
 // Multiplayer Game Service - خدمة اللعب الجماعي
 import { Platform } from 'react-native';
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || 'https://gaming-platform-mvp.preview.emergentagent.com';
+const API_BASE = process.env.REACT_APP_BACKEND_URL || 'https://game-economy-launch.preview.emergentagent.com';
 
 class MultiplayerService {
   constructor() {

@@ -209,8 +209,8 @@ eas submit -p android
 
 ## 📞 الدعم والمساعدة
 
-- **الموقع:** https://gaming-platform-mvp.preview.emergentagent.com
-- **API Docs:** https://gaming-platform-mvp.preview.emergentagent.com/docs
+- **الموقع:** https://game-economy-launch.preview.emergentagent.com
+- **API Docs:** https://game-economy-launch.preview.emergentagent.com/docs
 
 ---
 
