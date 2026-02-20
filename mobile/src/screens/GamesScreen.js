@@ -965,14 +965,16 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
         const response = await api.enterOnlineGame(user.id, showModeSelector, true);
         if (response.ok) {
           setShowWaiting(true);
-          // البحث عن منافس (محاكاة)
-          setTimeout(() => {
-            setShowWaiting(false);
-            setActiveGame(showModeSelector);
-            setGameMode('online');
-            setShowModeSelector(null);
-            fetchBalance();
-          }, 2000);
+          fetchBalance();
+          
+          // البحث عن منافس حقيقي عبر WebSocket
+          if (multiplayerService.isConnected()) {
+            multiplayerService.findMatch(showModeSelector);
+          } else {
+            // إعادة الاتصال والبحث
+            await multiplayerService.connect(user.id);
+            multiplayerService.findMatch(showModeSelector);
+          }
         } else {
           const error = await response.json();
           Alert.alert('خطأ', error.detail || 'حدث خطأ');
@@ -987,12 +989,24 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
     }
   };
 
+  const cancelOnlineSearch = () => {
+    multiplayerService.cancelSearch();
+    setShowWaiting(false);
+    setShowModeSelector(null);
+  };
+
   const handleGameComplete = async (points, result) => {
     const isOnline = gameMode === 'online';
     const won = result === 'win';
     
+    // إرسال نتيجة اللعبة للخصم إذا كانت أونلاين
+    if (isOnline) {
+      multiplayerService.endGame({ points }, won ? user.id : onlineOpponent);
+    }
+    
     try {
-      const response = await api.recordGameResult(user.id, activeGame, isOnline, won, isOnline ? 20 : 0);
+      const opponentCost = gameCosts[activeGame] || 20;
+      const response = await api.recordGameResult(user.id, activeGame, isOnline, won, isOnline ? opponentCost : 0);
       if (response.ok) {
         const data = await response.json();
         if (onPointsEarned && data.points_awarded > 0) {
