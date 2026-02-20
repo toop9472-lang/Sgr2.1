@@ -578,8 +578,10 @@ async def get_challenges_stats(user_id: str = Depends(get_current_user_id)):
             'max_points': 69
         },
         'this_month': {
-            'login_reward_points': login_rewards.get('total_claimed', 0) if login_rewards else 0,
-            'max_points': 150
+            'login_reward_points': login_rewards.get('total_claimed_points', login_rewards.get('total_claimed', 0)) if login_rewards else 0,
+            'login_reward_diamonds': login_rewards.get('total_claimed_diamonds', 0) if login_rewards else 0,
+            'max_points': 160,
+            'max_diamonds': 200
         },
         'all_time': {
             'challenge_points': all_time[0]['total'] if all_time else 0
