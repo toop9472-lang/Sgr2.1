@@ -50,6 +50,7 @@ from routes.games_routes import router as games_router
 from routes.websocket_routes import router as websocket_router
 from routes.support_form_routes import router as support_form_router
 from routes.diamonds_routes import router as diamonds_router
+from routes.economy_routes import router as economy_router
 from routes import games_routes
 
 
