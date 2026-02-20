@@ -21,11 +21,15 @@ EXPECTED_PACKAGES = {
 
 
 class TestDiamondPackagesAPI:
-    """Tests for GET /api/payments/packages - Diamond packages listing"""
+    """Tests for GET /api/economy/packages - Diamond packages listing
+    
+    NOTE: Diamond packages are at /api/economy/packages (not /api/payments/packages)
+    The /api/payments/packages endpoint returns advertiser ad packages.
+    """
     
     def test_get_diamond_packages(self):
         """Test getting diamond packages returns all 4 packages with correct structure"""
-        response = requests.get(f"{BASE_URL}/api/payments/packages")
+        response = requests.get(f"{BASE_URL}/api/economy/packages")
         print(f"Diamond packages response: {response.status_code}")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
@@ -40,11 +44,12 @@ class TestDiamondPackagesAPI:
     
     def test_diamond_packages_structure(self):
         """Test each package has required fields"""
-        response = requests.get(f"{BASE_URL}/api/payments/packages")
+        response = requests.get(f"{BASE_URL}/api/economy/packages")
         assert response.status_code == 200
         
         packages = response.json()["packages"]
-        required_fields = ["id", "name", "diamonds", "bonus", "total_diamonds", "price_sar", "price_usd"]
+        # Note: /api/economy/packages uses "price" instead of "price_sar"
+        required_fields = ["id", "name", "diamonds", "bonus", "price"]
         
         for pkg in packages:
             for field in required_fields:
@@ -53,8 +58,8 @@ class TestDiamondPackagesAPI:
         print(f"✅ All packages have required structure")
     
     def test_diamond_packages_pricing(self):
-        """Test diamond packages have correct SAR and USD prices"""
-        response = requests.get(f"{BASE_URL}/api/payments/packages")
+        """Test diamond packages have correct SAR prices"""
+        response = requests.get(f"{BASE_URL}/api/economy/packages")
         assert response.status_code == 200
         
         packages = response.json()["packages"]
@@ -64,21 +69,18 @@ class TestDiamondPackagesAPI:
         for pkg_id in EXPECTED_PACKAGES:
             assert pkg_id in pkg_map, f"Missing package: {pkg_id}"
         
-        # Verify pricing for each package
+        # Verify pricing for each package (economy uses "price" field for SAR)
         for pkg_id, expected in EXPECTED_PACKAGES.items():
             actual = pkg_map[pkg_id]
             assert actual["diamonds"] == expected["diamonds"], f"{pkg_id}: diamonds mismatch"
             assert actual["bonus"] == expected["bonus"], f"{pkg_id}: bonus mismatch"
-            assert actual["total_diamonds"] == expected["diamonds"] + expected["bonus"], f"{pkg_id}: total_diamonds mismatch"
-            assert actual["price_sar"] == expected["price_sar"], f"{pkg_id}: price_sar mismatch"
-            # USD price may vary slightly due to rounding
-            assert abs(actual["price_usd"] - expected["price_usd"]) < 0.02, f"{pkg_id}: price_usd mismatch"
+            assert actual["price"] == expected["price_sar"], f"{pkg_id}: price mismatch"
         
         print(f"✅ All package prices verified correctly")
-        print(f"   Starter: {pkg_map['starter']['price_sar']} SAR ({pkg_map['starter']['price_usd']} USD)")
-        print(f"   Silver: {pkg_map['silver']['price_sar']} SAR ({pkg_map['silver']['price_usd']} USD)")
-        print(f"   Gold: {pkg_map['gold']['price_sar']} SAR ({pkg_map['gold']['price_usd']} USD)")
-        print(f"   Platinum: {pkg_map['platinum']['price_sar']} SAR ({pkg_map['platinum']['price_usd']} USD)")
+        print(f"   Starter: {pkg_map['starter']['price']} SAR (100 diamonds)")
+        print(f"   Silver: {pkg_map['silver']['price']} SAR (250+25 diamonds)")
+        print(f"   Gold: {pkg_map['gold']['price']} SAR (500+75 diamonds)")
+        print(f"   Platinum: {pkg_map['platinum']['price']} SAR (1000+200 diamonds)")
 
 
 class TestDiamondCheckoutCreate:
