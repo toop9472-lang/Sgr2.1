@@ -500,10 +500,9 @@ class ResetPasswordRequest(BaseModel):
 @router.post('/forgot-password', response_model=dict)
 async def forgot_password(data: ForgotPasswordRequest):
     """
-    Send password reset OTP to user's email
+    Send password reset link to user's email (No OTP)
     """
-    import random
-    import string
+    import secrets
     
     db = get_db()
     
@@ -512,51 +511,59 @@ async def forgot_password(data: ForgotPasswordRequest):
     
     if not user:
         # Don't reveal if email exists or not for security
-        return {'message': 'إذا كان البريد الإلكتروني مسجلاً، سيتم إرسال رمز التحقق'}
+        return {'message': 'إذا كان البريد الإلكتروني مسجلاً، سيتم إرسال رابط إعادة التعيين'}
     
-    # Generate 6-digit OTP
-    otp = ''.join(random.choices(string.digits, k=6))
+    # Generate secure reset token
+    reset_token = secrets.token_urlsafe(32)
     
-    # Store OTP with expiration (15 minutes)
+    # Store token with expiration (1 hour)
     await db.password_resets.update_one(
         {'email': data.email},
         {
             '$set': {
                 'email': data.email,
-                'otp': otp,
+                'reset_token': reset_token,
                 'created_at': datetime.utcnow(),
-                'expires_at': datetime.utcnow().replace(second=0, microsecond=0) + __import__('datetime').timedelta(minutes=15),
+                'expires_at': datetime.utcnow().replace(second=0, microsecond=0) + __import__('datetime').timedelta(hours=1),
                 'used': False
             }
         },
         upsert=True
     )
     
-    # Send email with OTP
+    # Build reset URL
+    frontend_url = "https://gaming-platform-mvp.preview.emergentagent.com"
+    reset_url = f"{frontend_url}/forgot-password?token={reset_token}"
+    
+    # Send email with reset link
     try:
         from services.email_service import send_email
         await send_email(
             to_email=data.email,
-            subject='رمز استعادة كلمة المرور - صقر',
+            subject='إعادة تعيين كلمة المرور - صقر',
             html_content=f'''
             <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right; padding: 20px;">
-                <h2 style="color: #3b82f6;">استعادة كلمة المرور</h2>
+                <h2 style="color: #3b82f6;">إعادة تعيين كلمة المرور</h2>
                 <p>مرحباً،</p>
-                <p>رمز التحقق الخاص بك هو:</p>
-                <div style="background: #f3f4f6; padding: 20px; text-align: center; border-radius: 10px; margin: 20px 0;">
-                    <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #1f2937;">{otp}</span>
+                <p>لإعادة تعيين كلمة المرور، اضغط على الزر أدناه:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{reset_url}" style="background: #3b82f6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 10px; font-weight: bold;">
+                        إعادة تعيين كلمة المرور
+                    </a>
                 </div>
-                <p>هذا الرمز صالح لمدة 15 دقيقة فقط.</p>
-                <p>إذا لم تطلب استعادة كلمة المرور، يرجى تجاهل هذه الرسالة.</p>
+                <p>أو انسخ هذا الرابط:</p>
+                <p style="background: #f3f4f6; padding: 10px; border-radius: 5px; word-break: break-all;">{reset_url}</p>
+                <p style="color: #ef4444;">هذا الرابط صالح لمدة ساعة واحدة فقط.</p>
+                <p>إذا لم تطلب إعادة تعيين كلمة المرور، يرجى تجاهل هذه الرسالة.</p>
                 <p style="color: #6b7280; margin-top: 30px;">فريق صقر</p>
             </div>
             '''
         )
     except Exception as e:
         print(f"Failed to send reset email: {e}")
-        # Continue anyway - OTP is stored
+        # Continue anyway - token is stored
     
-    return {'message': 'تم إرسال رمز التحقق إلى بريدك الإلكتروني'}
+    return {'message': 'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني'}
 
 @router.post('/verify-reset-otp', response_model=dict)
 async def verify_reset_otp(data: VerifyResetOTPRequest):
