@@ -40,7 +40,10 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [showAdsViewer, setShowAdsViewer] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
+  const [showDailyRewards, setShowDailyRewards] = useState(false);
+  const [showDiamondShop, setShowDiamondShop] = useState(false);
   const [settings, setSettings] = useState(null);
+  const [balanceRefresh, setBalanceRefresh] = useState(0);
 
   // Initialize app
   useEffect(() => {
