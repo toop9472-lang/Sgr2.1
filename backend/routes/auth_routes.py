@@ -610,13 +610,12 @@ async def verify_reset_otp(data: VerifyResetOTPRequest):
 @router.post('/reset-password', response_model=dict)
 async def reset_password(data: ResetPasswordRequest):
     """
-    Reset user's password using the reset token
+    Reset user's password using the reset token (No OTP)
     """
     db = get_db()
     
     # Verify reset token
     reset_record = await db.password_resets.find_one({
-        'email': data.email,
         'reset_token': data.reset_token,
         'used': False
     })
@@ -628,11 +627,13 @@ async def reset_password(data: ResetPasswordRequest):
         )
     
     # Check if token expired
-    if reset_record.get('token_expires_at') and reset_record['token_expires_at'] < datetime.utcnow():
+    if reset_record.get('expires_at') and reset_record['expires_at'] < datetime.utcnow():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail='انتهت صلاحية رابط إعادة التعيين'
         )
+    
+    email = reset_record['email']
     
     # Validate new password
     if len(data.new_password) < 6:
@@ -646,7 +647,7 @@ async def reset_password(data: ResetPasswordRequest):
     
     # Update user's password
     result = await db.users.update_one(
-        {'email': data.email},
+        {'email': email},
         {
             '$set': {
                 'password_hash': new_password_hash,
@@ -663,7 +664,7 @@ async def reset_password(data: ResetPasswordRequest):
     
     # Mark reset record as used
     await db.password_resets.update_one(
-        {'email': data.email, 'reset_token': data.reset_token},
+        {'reset_token': data.reset_token},
         {'$set': {'used': True}}
     )
     
