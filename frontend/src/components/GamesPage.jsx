@@ -2005,14 +2005,14 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
   if (activeGame === 'trivia') {
     return <TriviaGame onComplete={handleGameComplete} onClose={closeGame} userDiamonds={balance.diamonds} onUseDiamonds={handleUseDiamonds} />;
   }
-  if (activeGame === 'riddles') {
-    return <RiddlesGame onComplete={handleGameComplete} onClose={closeGame} userDiamonds={balance.diamonds} onUseDiamonds={handleUseDiamonds} />;
+  if (activeGame === 'speedmath') {
+    return <SpeedMathGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} userDiamonds={balance.diamonds} onUseDiamonds={handleUseDiamonds} />;
   }
   if (activeGame === 'puzzle') {
     return <PuzzleGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} userDiamonds={balance.diamonds} onUseDiamonds={handleUseDiamonds} />;
   }
-  if (activeGame === 'brickbreaker') {
-    return <BrickBreakerGame onComplete={handleGameComplete} onClose={closeGame} />;
+  if (activeGame === 'wordchain') {
+    return <WordChainGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
   }
 
   // Mode Selector with Online Option
