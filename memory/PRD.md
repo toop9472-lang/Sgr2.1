@@ -101,6 +101,11 @@ Arabic (العربية)
 
 ## 📁 Key Files
 
+### Web Frontend (React)
+- `/app/frontend/src/components/GamesPage.jsx` - All 6 games with economy UI
+- `/app/frontend/src/components/BottomNav.jsx` - Updated navigation bar
+- `/app/frontend/src/App.js` - Main app routing
+
 ### Economy System
 - `/app/backend/routes/economy_routes.py` - Complete economy API
 - `/app/backend/routes/stripe_routes.py` - Stripe payment integration
