@@ -6,9 +6,12 @@ import {
   Users, Cpu, X, ChevronLeft, Zap, Eye, Wifi, Crown,
   HelpCircle, Play, Pause, Volume2, VolumeX, Target,
   Sparkles, Gift, Lock, Unlock, ArrowUp, ArrowDown,
-  ArrowLeft, ArrowRight, RefreshCw, Award, Flame
+  ArrowLeft, ArrowRight, RefreshCw, Award, Flame,
+  MessageCircle, Send, Apple, CreditCard
 } from 'lucide-react';
 import { triviaQuestions, riddles, puzzleImages, INITIAL_CHESS_BOARD } from '../data/gameData';
+import soundManager from '../utils/soundManager';
+import GameChat, { ChatToggleButton, SoundToggleButton } from './GameChat';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
