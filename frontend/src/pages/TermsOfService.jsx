@@ -154,7 +154,7 @@ const TermsOfService = () => {
           {/* Termination */}
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">
-              {isRTL ? '9. إنهاء الحساب' : '9. Termination'}
+              {isRTL ? '10. إنهاء الحساب' : '10. Termination'}
             </h2>
             <p>
               {isRTL 
