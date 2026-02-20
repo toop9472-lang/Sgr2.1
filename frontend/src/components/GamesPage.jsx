@@ -1412,35 +1412,45 @@ const gameIcons = {
 };
 
 // ==================== DIAMOND SHOP ====================
-const DiamondShop = ({ onClose, onPurchase }) => {
+const DiamondShop = ({ onClose, userId }) => {
   const [loading, setLoading] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState('apple_pay');
+  const [error, setError] = useState('');
 
   const packages = [
-    { id: 1, diamonds: 100, price: 3, popular: false },
-    { id: 2, diamonds: 300, price: 7, popular: true },
-    { id: 3, diamonds: 500, price: 10, popular: false },
-    { id: 4, diamonds: 1000, price: 19, popular: false },
+    { id: 'starter', diamonds: 100, bonus: 0, price: 3, popular: false },
+    { id: 'silver', diamonds: 250, bonus: 25, price: 7, popular: true },
+    { id: 'gold', diamonds: 500, bonus: 75, price: 12, popular: false },
+    { id: 'platinum', diamonds: 1000, bonus: 200, price: 19, popular: false },
   ];
 
   const handlePurchase = async (pkg) => {
     setLoading(pkg.id);
+    setError('');
+    
     try {
-      const response = await fetch(`${API_URL}/api/stripe/create-checkout`, {
+      const response = await fetch(`${API_URL}/api/diamond-payments/checkout/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
+          user_id: userId || 'guest',
           package_id: pkg.id,
-          diamonds: pkg.diamonds,
-          amount: pkg.price
+          origin_url: window.location.origin
         }),
       });
+      
       const data = await response.json();
-      if (data.checkout_url) {
-        window.open(data.checkout_url, '_blank');
+      
+      if (data.success && data.checkout_url) {
+        // فتح صفحة الدفع
+        window.location.href = data.checkout_url;
+      } else {
+        setError(data.detail || 'حدث خطأ في عملية الدفع');
       }
     } catch (e) {
       console.error('Purchase error:', e);
+      setError('تعذر الاتصال بخادم الدفع');
     }
     setLoading(null);
   };
@@ -1456,6 +1466,41 @@ const DiamondShop = ({ onClose, onPurchase }) => {
           <button onClick={onClose} className="p-2 rounded-full bg-white/10 hover:bg-white/20">
             <X size={20} />
           </button>
+        </div>
+
+        {error && (
+          <div className="bg-red-500/20 border border-red-500/30 text-red-400 p-3 rounded-xl mb-4 text-center text-sm">
+            {error}
+          </div>
+        )}
+
+        {/* Payment Methods */}
+        <div className="mb-6">
+          <p className="text-center text-gray-400 text-sm mb-3">طريقة الدفع</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPaymentMethod('apple_pay')}
+              className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl transition-all ${
+                paymentMethod === 'apple_pay' 
+                  ? 'bg-black border-2 border-white' 
+                  : 'bg-black/50 border border-white/20'
+              }`}
+            >
+              <Apple size={20} />
+              <span className="text-sm font-semibold">Apple Pay</span>
+            </button>
+            <button
+              onClick={() => setPaymentMethod('card')}
+              className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl transition-all ${
+                paymentMethod === 'card' 
+                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 border-2 border-blue-400' 
+                  : 'bg-white/5 border border-white/10'
+              }`}
+            >
+              <CreditCard size={20} />
+              <span className="text-sm font-semibold">بطاقة</span>
+            </button>
+          </div>
         </div>
 
         <div className="space-y-3">
@@ -1474,46 +1519,27 @@ const DiamondShop = ({ onClose, onPurchase }) => {
                   <Diamond size={24} className="text-blue-400" />
                 </div>
                 <div className="text-right">
-                  <div className="font-bold text-lg">{pkg.diamonds} ماسة</div>
+                  <div className="font-bold text-lg">
+                    {pkg.diamonds + pkg.bonus} ماسة
+                    {pkg.bonus > 0 && <span className="text-xs text-green-400 mr-1">(+{pkg.bonus})</span>}
+                  </div>
                   {pkg.popular && <span className="text-xs text-yellow-400">الأكثر مبيعاً</span>}
                 </div>
               </div>
               <div className="bg-white/20 px-4 py-2 rounded-xl font-bold">
-                {loading === pkg.id ? '...' : `${pkg.price} ر.س`}
+                {loading === pkg.id ? (
+                  <span className="animate-pulse">...</span>
+                ) : (
+                  `${pkg.price} ر.س`
+                )}
               </div>
             </button>
           ))}
         </div>
 
-        {/* Payment Methods */}
-        <div className="mt-6 space-y-3">
-          <p className="text-center text-gray-400 text-sm mb-3">طريقة الدفع</p>
-          <button
-            onClick={() => setPaymentMethod('apple_pay')}
-            className={`w-full flex items-center justify-center gap-3 p-4 rounded-xl transition-all ${
-              paymentMethod === 'apple_pay' 
-                ? 'bg-black border-2 border-white' 
-                : 'bg-black/50 border border-white/20'
-            }`}
-          >
-            <Apple size={24} />
-            <span className="font-semibold">Apple Pay</span>
-          </button>
-          <button
-            onClick={() => setPaymentMethod('card')}
-            className={`w-full flex items-center justify-center gap-3 p-4 rounded-xl transition-all ${
-              paymentMethod === 'card' 
-                ? 'bg-gradient-to-r from-blue-600 to-blue-700 border-2 border-blue-400' 
-                : 'bg-white/5 border border-white/10'
-            }`}
-          >
-            <CreditCard size={24} />
-            <span className="font-semibold">بطاقة ائتمان</span>
-          </button>
-        </div>
-
-        <div className="mt-4 text-center text-gray-500 text-xs">
+        <div className="mt-4 text-center text-gray-500 text-xs space-y-1">
           <p>جميع المعاملات آمنة ومشفرة</p>
+          <p>يتم الدفع عبر Stripe</p>
         </div>
       </div>
     </div>
