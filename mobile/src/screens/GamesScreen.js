@@ -630,50 +630,89 @@ const TriviaGame = ({ mode, onComplete, onClose }) => {
 const RiddlesGame = ({ mode, onComplete, onClose }) => {
   const [currentR, setCurrentR] = useState(0);
   const [score, setScore] = useState(0);
-  const [input, setInput] = useState('');
-  const [revealed, setRevealed] = useState(false);
+  const [answered, setAnswered] = useState(null);
+  const [showResult, setShowResult] = useState(false);
   const [hints, setHints] = useState(3);
+  const [revealed, setRevealed] = useState(false);
+  const [riddles, setRiddles] = useState([]);
+  const [timeLeft, setTimeLeft] = useState(25);
 
-  const riddles = [
-    { r: 'ما هو الشيء الذي يمشي بدون أرجل؟', answer: 'الوقت', hint: 'يتعلق بالساعة' },
-    { r: 'شيء إذا أخذت منه ازداد؟', answer: 'الحفرة', hint: 'في الأرض' },
-    { r: 'ما هو الذي يسمع بلا أذن ويتكلم بلا لسان؟', answer: 'الهاتف', hint: 'جهاز إلكتروني' },
-    { r: 'أنا أطير بلا أجنحة وأبكي بلا عيون؟', answer: 'السحاب', hint: 'في السماء' },
-    { r: 'كلما زاد نقص؟', answer: 'العمر', hint: 'يتعلق بالإنسان' },
-    { r: 'ما هو البيت الذي ليس فيه أبواب ولا نوافذ؟', answer: 'بيت الشعر', hint: 'أدب' },
-    { r: 'شيء يكون أمامك ولا تراه؟', answer: 'المستقبل', hint: 'زمن' },
-    { r: 'له رأس ولا عين له، ولها عين ولا رأس لها؟', answer: 'الدبوس والإبرة', hint: 'أدوات خياطة' },
-  ];
+  // اختيار 12 لغز عشوائي من 50 لغز
+  useEffect(() => {
+    const shuffled = [...riddlesQuestions].sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, 12).map(q => ({
+      r: q.question,
+      options: q.options,
+      correct: q.answer
+    }));
+    setRiddles(selected);
+  }, []);
 
-  const checkAnswer = () => {
-    const userAns = input.trim().toLowerCase();
-    const correctAns = riddles[currentR].answer.toLowerCase();
+  useEffect(() => {
+    if (riddles.length === 0) return;
+    if (timeLeft > 0 && answered === null && !showResult) {
+      const timer = setTimeout(() => setTimeLeft(t => t - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (timeLeft === 0 && answered === null) {
+      handleAnswer(-1);
+    }
+  }, [timeLeft, answered, showResult, riddles]);
+
+  const handleAnswer = (idx) => {
+    if (answered !== null || riddles.length === 0) return;
+    setAnswered(idx);
     
-    if (userAns === correctAns || userAns.includes(correctAns) || correctAns.includes(userAns)) {
-      setScore(s => s + 20);
-      Alert.alert('صحيح!', 'إجابة ممتازة', [{ text: 'التالي', onPress: nextRiddle }]);
-    } else {
-      Alert.alert('خطأ', `الإجابة الصحيحة: ${riddles[currentR].answer}`, [{ text: 'التالي', onPress: nextRiddle }]);
+    if (idx === riddles[currentR].correct) {
+      setScore(s => s + 15 + Math.floor(timeLeft / 5));
     }
-  };
 
-  const nextRiddle = () => {
-    if (currentR < riddles.length - 1) {
-      setCurrentR(c => c + 1);
-      setInput('');
-      setRevealed(false);
-    } else {
-      onComplete(score, currentR + 1);
-      onClose();
-    }
+    setTimeout(() => {
+      if (currentR < riddles.length - 1) {
+        setCurrentR(c => c + 1);
+        setAnswered(null);
+        setTimeLeft(25);
+        setRevealed(false);
+      } else {
+        setShowResult(true);
+        const finalScore = score + (idx === riddles[currentR].correct ? 15 + Math.floor(timeLeft / 5) : 0);
+        onComplete(finalScore, 'win');
+      }
+    }, 1500);
   };
 
   const useHint = () => {
-    if (hints > 0) {
+    if (hints > 0 && answered === null) {
       setHints(h => h - 1);
       setRevealed(true);
     }
   };
+
+  if (riddles.length === 0) {
+    return (
+      <View style={styles.gameContainer}>
+        <ActivityIndicator size="large" color="#8b5cf6" />
+        <Text style={{ color: '#FFF', marginTop: 20 }}>جاري تحميل الألغاز...</Text>
+      </View>
+    );
+  }
+
+  if (showResult) {
+    return (
+      <View style={styles.gameContainer}>
+        <View style={styles.resultScreen}>
+          <Ionicons name="bulb" size={80} color="#fbbf24" />
+          <Text style={styles.finalScore}>{score}</Text>
+          <Text style={styles.finalLabel}>نقطة</Text>
+          <Text style={styles.finalSub}>حللت {riddles.length} لغز</Text>
+          <TouchableOpacity style={styles.exitBtn} onPress={onClose}>
+            <Text style={styles.exitText}>إنهاء</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  const r = riddles[currentR];
 
   return (
     <View style={styles.gameContainer}>
@@ -689,35 +728,62 @@ const RiddlesGame = ({ mode, onComplete, onClose }) => {
 
       <View style={styles.riddleProgress}>
         <Text style={styles.riddleNum}>اللغز {currentR + 1} من {riddles.length}</Text>
-        <View style={styles.hintsBox}>
-          <Ionicons name="bulb" size={18} color="#fbbf24" />
+        <TouchableOpacity style={styles.hintsBox} onPress={useHint} disabled={hints === 0}>
+          <Ionicons name="bulb" size={18} color={hints > 0 ? '#fbbf24' : '#666'} />
           <Text style={styles.hintsText}>{hints}</Text>
-        </View>
+        </TouchableOpacity>
+      </View>
+
+      {/* Timer */}
+      <View style={[styles.timerCircle, timeLeft <= 8 && styles.timerDanger]}>
+        <Ionicons name="time" size={20} color={timeLeft <= 8 ? '#ef4444' : '#8b5cf6'} />
+        <Text style={[styles.timerText, timeLeft <= 8 && styles.timerDangerText]}>{timeLeft}</Text>
       </View>
 
       <View style={styles.riddleCard}>
         <Ionicons name="help-circle" size={40} color="#8b5cf6" style={{ marginBottom: 16 }} />
-        <Text style={styles.riddleText}>{riddles[currentR].r}</Text>
+        <Text style={styles.riddleText}>{r.r}</Text>
         
-        {revealed && (
+        {revealed && hints < 3 && (
           <View style={styles.hintBox}>
             <Ionicons name="bulb" size={16} color="#fbbf24" />
-            <Text style={styles.hintText}>{riddles[currentR].hint}</Text>
+            <Text style={styles.hintText}>تلميح: أحد الخيارات الموجودة</Text>
           </View>
         )}
       </View>
 
-      <View style={styles.answerSection}>
-        <TextInput
-          style={styles.answerInput}
-          placeholder="اكتب إجابتك..."
-          placeholderTextColor="#666"
-          value={input}
-          onChangeText={setInput}
-          onSubmitEditing={checkAnswer}
-        />
-        
-        <View style={styles.riddleBtns}>
+      {/* Options */}
+      <View style={styles.optionsGrid}>
+        {r.options.map((opt, idx) => (
+          <TouchableOpacity
+            key={idx}
+            style={[
+              styles.optionBtn,
+              answered === idx && idx === r.correct && styles.optionCorrect,
+              answered === idx && idx !== r.correct && styles.optionWrong,
+              answered !== null && idx === r.correct && styles.optionCorrect,
+            ]}
+            onPress={() => handleAnswer(idx)}
+            disabled={answered !== null}
+          >
+            <Text style={[
+              styles.optionText,
+              (answered === idx || (answered !== null && idx === r.correct)) && styles.optionTextSelected
+            ]}>
+              {opt}
+            </Text>
+            {answered !== null && idx === r.correct && (
+              <Ionicons name="checkmark-circle" size={20} color="#10b981" />
+            )}
+            {answered === idx && idx !== r.correct && (
+              <Ionicons name="close-circle" size={20} color="#ef4444" />
+            )}
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+};
           <TouchableOpacity style={styles.hintBtn} onPress={useHint} disabled={hints === 0}>
             <Ionicons name="bulb-outline" size={20} color={hints > 0 ? '#fbbf24' : '#444'} />
             <Text style={[styles.hintBtnText, hints === 0 && { color: '#444' }]}>تلميح</Text>
