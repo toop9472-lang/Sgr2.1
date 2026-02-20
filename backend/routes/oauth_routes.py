@@ -82,8 +82,17 @@ async def process_session(request: Request, response: Response):
                 'picture': user_data.get('picture'),
                 'provider': 'google',
                 'points': 0,
+                'saqr_points': 0,
+                'diamonds': 300,  # 300 ألماسة ترحيبية
                 'total_earned': 0,
                 'watched_ads': [],
+                'economy_initialized': True,
+                'diamond_transactions': [{
+                    'id': str(uuid.uuid4()),
+                    'type': 'welcome_bonus',
+                    'amount': 300,
+                    'created_at': datetime.now(timezone.utc).isoformat()
+                }],
                 'created_at': datetime.now(timezone.utc),
                 'updated_at': datetime.now(timezone.utc)
             }
