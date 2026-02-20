@@ -187,6 +187,13 @@ Arabic (العربية)
 
 ## 📝 Change Log
 
+### February 20, 2026 - Web Frontend Update
+- ✅ Updated GamesPage.jsx to show all 6 games on web
+- ✅ Replaced all emojis with lucide-react professional icons
+- ✅ Redesigned bottom navigation: "ألعاب" (green, center), "شاهد" (red)
+- ✅ Added diamond and saqr points balance display to games page
+- ✅ Frontend testing passed (100% success rate)
+
 ### February 20, 2026 - Complete Implementation
 - ✅ Created complete economy routes (/api/economy/*)
 - ✅ Implemented Diamond & Saqr Points system
