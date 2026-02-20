@@ -450,6 +450,26 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
             muted={isMuted}
             playsInline
             preload="auto"
+            onCanPlay={(e) => {
+              // محاولة تشغيل الفيديو تلقائياً
+              e.target.play().catch(err => {
+                console.log('Auto-play prevented, muting...');
+                e.target.muted = true;
+                e.target.play().catch(() => {});
+                setIsMuted(true);
+              });
+            }}
+            onError={(e) => {
+              console.error('Video error:', e);
+            }}
+            onClick={(e) => {
+              // تشغيل/إيقاف الفيديو عند النقر
+              if (e.target.paused) {
+                e.target.play();
+              } else {
+                e.target.pause();
+              }
+            }}
           />
         ) : (
           <div 
