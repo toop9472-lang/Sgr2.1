@@ -120,6 +120,7 @@ const ChessGame = ({ mode, onComplete, onClose, userDiamonds, onUseDiamonds }) =
         newBoard[selRow][selCol] = null;
         
         if (captured) {
+          soundManager.chessCapture(); // صوت الأسر
           const capColor = isWhitePiece(captured) ? 'white' : 'black';
           setCapturedPieces(prev => ({
             ...prev,
@@ -129,8 +130,11 @@ const ChessGame = ({ mode, onComplete, onClose, userDiamonds, onUseDiamonds }) =
           if (captured.toLowerCase() === 'k') {
             setGameOver(true);
             setWinner(turn);
+            soundManager.win(); // صوت الفوز
             onComplete(turn === 'white' ? 30 : 10, turn === 'white' ? 'win' : 'lose');
           }
+        } else {
+          soundManager.chessPiece(); // صوت تحريك القطعة
         }
         
         setBoard(newBoard);
@@ -149,6 +153,7 @@ const ChessGame = ({ mode, onComplete, onClose, userDiamonds, onUseDiamonds }) =
       }
     } else if (piece && ((turn === 'white' && isWhitePiece(piece)) || (turn === 'black' && isBlackPiece(piece)))) {
       if (turn === 'white') {
+        soundManager.click(); // صوت اختيار القطعة
         setSelectedPiece([row, col]);
         setValidMoves(getValidMoves(row, col, piece));
       }
