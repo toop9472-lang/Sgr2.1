@@ -842,6 +842,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
+  adMobBtn: {
+    backgroundColor: 'rgba(251,191,36,0.2)',
+    borderColor: 'rgba(251,191,36,0.5)',
+  },
   actionCount: {
     color: '#fff',
     fontSize: 10,
