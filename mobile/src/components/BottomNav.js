@@ -1,4 +1,4 @@
-// Bottom Navigation Component - Clean & Slim Design
+// Bottom Navigation Component - Transparent Design Like Web
 import React from 'react';
 import {
   View,
@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const hasNotch = Platform.OS === 'ios' && SCREEN_HEIGHT >= 812;
@@ -30,11 +31,13 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress, onGamesPress }) => {
         onPress={() => onNavigate(item.id)}
         activeOpacity={0.7}
       >
-        <Ionicons 
-          name={isActive ? item.icon : item.iconOutline} 
-          size={22} 
-          color={isActive ? '#60a5fa' : 'rgba(255,255,255,0.5)'} 
-        />
+        <View style={[styles.navIconWrapper, isActive && styles.navIconWrapperActive]}>
+          <Ionicons 
+            name={isActive ? item.icon : item.iconOutline} 
+            size={20} 
+            color={isActive ? '#60a5fa' : 'rgba(255,255,255,0.6)'} 
+          />
+        </View>
         <Text style={[styles.navLabel, isActive && styles.navLabelActive]}>
           {item.label}
         </Text>
@@ -44,42 +47,52 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress, onGamesPress }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.navContent}>
-        {navItems.slice(0, 1).map((item) => (
-          <NavButton key={item.id} item={item} />
-        ))}
-        
-        {/* زر الألعاب - مضيء أخضر مصفر */}
-        <TouchableOpacity 
-          onPress={() => onGamesPress ? onGamesPress() : onNavigate('games')}
-          activeOpacity={0.8}
-          style={styles.gamesButton}
-        >
-          <LinearGradient
-            colors={['#84cc16', '#65a30d']}
-            style={styles.gamesButtonGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
+      <BlurView intensity={80} tint="dark" style={styles.blurContainer}>
+        <View style={styles.navContent}>
+          {/* الرئيسية */}
+          <NavButton item={navItems[0]} />
+          
+          {/* زر الألعاب - في المنتصف */}
+          <TouchableOpacity 
+            onPress={() => onGamesPress ? onGamesPress() : onNavigate('games')}
+            activeOpacity={0.8}
+            style={styles.centerButton}
           >
-            <Ionicons name="game-controller" size={18} color="#FFF" />
-            <Text style={styles.gamesButtonText}>ألعاب</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+            <LinearGradient
+              colors={['#84cc16', '#65a30d']}
+              style={styles.gamesButtonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <Ionicons name="game-controller" size={20} color="#FFF" />
+              <Text style={styles.centerButtonText}>ألعاب</Text>
+            </LinearGradient>
+          </TouchableOpacity>
 
-        {navItems.slice(1).map((item) => (
-          <NavButton key={item.id} item={item} />
-        ))}
-        
-        {/* زر المشاهدة */}
-        <TouchableOpacity 
-          onPress={onAdsPress}
-          activeOpacity={0.8}
-          style={styles.watchButton}
-        >
-          <Ionicons name="play-circle" size={20} color="#FFF" />
-          <Text style={styles.watchButtonText}>شاهد</Text>
-        </TouchableOpacity>
-      </View>
+          {/* زر المشاهدة - في المنتصف */}
+          <TouchableOpacity 
+            onPress={onAdsPress}
+            activeOpacity={0.8}
+            style={styles.centerButton}
+          >
+            <LinearGradient
+              colors={['#ef4444', '#dc2626']}
+              style={styles.watchButtonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <Ionicons name="play-circle" size={20} color="#FFF" />
+              <Text style={styles.centerButtonText}>شاهد</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* أعلن */}
+          <NavButton item={navItems[1]} />
+          
+          {/* حسابي */}
+          <NavButton item={navItems[2]} />
+        </View>
+      </BlurView>
     </View>
   );
 };
@@ -90,69 +103,73 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(10, 10, 15, 0.98)',
+    paddingBottom: hasNotch ? 20 : Platform.OS === 'ios' ? 6 : 4,
+  },
+  blurContainer: {
     borderTopWidth: 0.5,
     borderTopColor: 'rgba(255,255,255,0.1)',
-    paddingBottom: hasNotch ? 20 : Platform.OS === 'ios' ? 6 : 4,
+    backgroundColor: 'rgba(10, 10, 15, 0.85)',
   },
   navContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingTop: 6,
-    paddingHorizontal: 8,
-    height: 48,
+    paddingTop: 8,
+    paddingBottom: 4,
+    paddingHorizontal: 10,
   },
   navItem: { 
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 50,
-    paddingVertical: 2,
+  },
+  navIconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navIconWrapperActive: {
+    backgroundColor: 'rgba(96, 165, 250, 0.15)',
   },
   navLabel: { 
     fontSize: 10, 
     color: 'rgba(255,255,255,0.5)', 
-    marginTop: 1,
+    marginTop: 2,
     fontWeight: '500',
   },
   navLabelActive: { 
     color: '#60a5fa', 
     fontWeight: '600',
   },
-  gamesButton: {
-    borderRadius: 16,
+  centerButton: {
+    borderRadius: 20,
     overflow: 'hidden',
-    shadowColor: '#84cc16',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
     elevation: 5,
   },
   gamesButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    gap: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 6,
   },
-  gamesButtonText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  watchButton: {
+  watchButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ef4444',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 16,
-    gap: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 6,
   },
-  watchButtonText: {
+  centerButtonText: {
     color: '#FFF',
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '700',
   },
 });
 
