@@ -1308,6 +1308,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  
+  // Disabled Button State
+  disabledBtn: {
+    opacity: 0.6,
+  },
 
   // Buttons
   primaryBtn: {
