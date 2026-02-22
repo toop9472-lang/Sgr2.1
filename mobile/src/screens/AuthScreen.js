@@ -38,6 +38,8 @@ const AuthScreen = ({ onLogin }) => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [sessionToken, setSessionToken] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   
