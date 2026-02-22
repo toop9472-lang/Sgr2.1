@@ -20,6 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import storage from '../services/storage';
+import admobService from '../services/admobService';
 
 const { width, height } = Dimensions.get('window');
 
