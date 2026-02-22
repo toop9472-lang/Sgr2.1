@@ -209,8 +209,8 @@ eas submit -p android
 
 ## 📞 الدعم والمساعدة
 
-- **الموقع:** https://game-economy-launch.preview.emergentagent.com
-- **API Docs:** https://game-economy-launch.preview.emergentagent.com/docs
+- **الموقع:** https://app-store-revival.preview.emergentagent.com
+- **API Docs:** https://app-store-revival.preview.emergentagent.com/docs
 
 ---
 

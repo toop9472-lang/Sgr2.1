@@ -177,7 +177,7 @@ eas build --platform ios --profile production
 
 ### API URL:
 ```
-https://game-economy-launch.preview.emergentagent.com
+https://app-store-revival.preview.emergentagent.com
 ```
 
 ---

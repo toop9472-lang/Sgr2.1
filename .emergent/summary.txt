@@ -11,13 +11,14 @@ The user's primary goal is to overhaul their application to pass Apple's App Sto
 2.  **Multiplayer & Gameplay:**
     *   Implement real person-vs-person online multiplayer.
     *   Replace Brick Breaker and Riddles with Word Race and Speed Math.
-    *   Cultural Questions game must have over 200 questions.
+    *   Cultural Questions game must have over 200 questions (later updated to 1000).
     *   Puzzle game must use at least 12 real images.
     *   Implement real-time chat for online matches.
     *   Implement sound effects for all games.
 3.  **UI/UX & Auth:**
     *   Redesign the UI to be professional, removing emojis.
     *   Remove OTP from login and password recovery, using a direct email link for recovery.
+    *   Restrict game access for non-logged-in (guest) users.
 4.  **Blocker Fixes:**
     *   Resolve Apple's rejection reason: Google/Apple sign-in is non-functional on iPad.
     *   Fix the ad-watching screen where videos are stuck on loading.
@@ -26,62 +27,114 @@ The user's primary goal is to overhaul their application to pass Apple's App Sto
 **User's preferred language**: العربية
 
 **what currently exists?**
-The application has been significantly transformed into a feature-rich gaming platform. The backend economy, including a 70-point daily cap and a 14-day login bonus system, is complete. The frontend features six fully functional games: Chess, Tic-Tac-Toe, Puzzle (with 12 images), Cultural Questions (with 200+ questions), and the newly added Word Race (سباق الكلمات) and Speed Math (سرعة الحساب). Sound effects have been added to all games. The Diamond Shop is functional with both Card and Apple Pay options. The password recovery flow has been updated to use a secure email link instead of OTP. A weekly limit on changing profile pictures has been implemented on the backend.
+The agent successfully refactored the monolithic  by extracting each game into its own modular component within . A visitor mode was implemented, which correctly locks games for non-logged-in users and shows a login prompt. The  component was integrated into the new .
+
+A major effort was made to resolve a Google AdMob verification failure. The agent guided the user to create a developer website using GitHub Pages and correctly place an  file at the root domain () to meet AdMob's requirements. The agent also identified and corrected a mismatched AdMob App ID in the mobile configuration.
+
+However, after a new build, the user tested the mobile app and reported a significant number of critical bugs and UI/UX regressions.
 
 **Last working item**:
-- Last item agent was working: The user explicitly requested to Finish the chat integration and complained about the agent's speed. The agent was just about to start this task.
-- Status: NOT STARTED
-- Agent Testing Done: N
-- Which testing method agent to use? both. The backend WebSocket endpoint for chat needs to be verified. The frontend  component needs to be integrated into the online game UI and tested for real-time message exchange using the .
-- User Testing Done: N
+- Last item agent was working: The user provided a long list of critical bugs and UI/UX issues found in the latest mobile build (Message #362). The agent had started working on this list by:
+    1.  Investigating the no internet connection error and confirming the backend API was online.
+    2.  Beginning the process of generating 1000 new cultural questions as requested.
+    3.  Viewing UI-related files (, ) to start fixing the visual bugs.
+- Status: IN PROGRESS
+- Agent Testing Done: N (for the new bug fixes)
+- Which testing method agent to use? both. Frontend testing is critical for the numerous UI bugs. The no internet issue might require backend log inspection and frontend network debugging. A full regression test using  is required after all fixes are applied, with a specific focus on mobile viewports.
+- User Testing Done: Y (User testing revealed all the current pending issues).
 
 **All Pending/In progress Issue list**:
-- **Issue 1**: Implement real-time chat for online games (P0)
-- **Issue 2**: Google/Apple login is non-functional on iPad (Apple Rejection 2.1) (P0 - Blocker)
-- **Issue 3**: Ads are stuck on loading and do not work (P2)
+- **Issue 1**: Google AdMob ownership verification is still failing, blocking ads. (P0)
+- **Issue 2**: Mobile app shows a no internet connection error, making it unusable. (P0)
+- **Issue 3**: Major UI bugs on mobile: games are half-visible, nav bar is broken, layout is incorrect. (P0)
+- **Issue 4**: Multiple feature regressions: Online chat and diamond packages are not visible, language/theme switching is broken. (P1)
+- **Issue 5**: Google/Apple login on iPad is a recurring, unverified App Store blocker. (P1)
+- **Issue 6**: Increase cultural questions to 1000. (P2)
 
 **Issues Detail:**
-- **Issue 1: Implement real-time chat for online games**
-    - Attempted fixes: A  component was created, and the backend WebSocket was confirmed to support chat messages. However, the component is not rendered or integrated into any of the online game screens.
+- **Issue 1: Google AdMob ownership verification is still failing**
+    - Attempted fixes:
+        - Created a developer website on GitHub Pages: .
+        - Created  at the root: .
+        - Corrected the  in .
+        - Updated the developer website URL in the Google Play Console.
+        - Identified and corrected a mismatched AdMob  in .
     - Next debug checklist:
-        1.  In , locate the rendering logic for online game sessions.
-        2.  Render the  component within the game view when a user is in an online match.
-        3.  Pass the active WebSocket instance and game session details as props to .
-        4.  Implement the sending and receiving of chat messages within the component.
-        5.  Use the  to simulate a two-player game and verify the chat functionality.
-    - Why fix this issue and what will be achieved with the fix?: This is a direct user request to improve the multiplayer experience.
+        1.  Confirm with the user that the developer website in Google Play Console is **exactly** .
+        2.  Confirm with the user that they have waited at least 48 hours since the last change.
+        3.  Confirm the correct  is being used in the code, not just the . The agent asked for this but never received it.
+        4.  If it still fails, guide the user to contact AdMob support with all the collected information.
+    - Why fix this issue and what will be achieved with the fix?: This is a critical blocker for app monetization.
+    - Status: IN PROGRESS
+    - Is recurring issue?: Y
+    - Should Test frontend/backend/both after fix?: Both (Frontend to trigger the ad, Backend/AdMob console to verify).
+    - Blocked on other issue: None.
+
+- **Issue 2: Mobile app shows a no internet connection error**
+    - Attempted fixes: Agent confirmed backend API is running with .
+    - Next debug checklist:
+        1.  Check the  in the mobile build's environment.
+        2.  Examine the network request logic in the frontend code where the initial data is fetched.
+        3.  Check for CORS errors or other network-related issues in device logs if possible.
+        4.  Verify the API URL is accessible from the public internet, not just within the container.
+    - Why fix this issue and what will be achieved with the fix?: The app is completely non-functional without a server connection.
+    - Status: IN PROGRESS
+    - Is recurring issue?: N
+    - Should Test frontend/backend/both after fix?: Both.
+
+- **Issue 3: Major UI bugs on mobile**
+    - Attempted fixes: None yet.
+    - Next debug checklist:
+        1.  **Half-visible games:** Inspect the CSS for the refactored game components in  and the container in . Check for hardcoded widths/heights or flexbox issues.
+        2.  **Broken Nav Bar:** Fix  so it remains accessible inside games and make its background transparent. The  and  links should be centered.
+        3.  **Diamond Icon:** Redesign the diamond display in  to be professional bubbles.
+        4.  **Chess Pieces:** Investigate the assets/styling for chess pieces to ensure they are uniform.
+        5.  **Remove Logo:** Remove the Saqr logo from the top of the main page.
+    - Why fix this issue and what will be achieved with the fix?: The app is unprofessional and unusable in its current state.
+    - Status: NOT STARTED
+    - Is recurring issue?: Y (UI issues have appeared before).
+    - Should Test frontend/backend/both after fix?: Frontend.
+
+- **Issue 4: Multiple feature regressions**
+    - Attempted fixes: None yet.
+    - Next debug checklist:
+        1.  **Online Chat:** The  component is likely not being rendered correctly in the online game view within . Check the state logic that controls its visibility.
+        2.  **Diamond Packages:** The Diamond Shop modal or component is not being displayed. Check the trigger and visibility logic.
+        3.  **Language/Theme:** The i18n/theme switching logic is broken. This was not a focus of the session and might require a full implementation.
+    - Why fix this issue and what will be achieved with the fix?: Core features are missing, degrading the user experience.
     - Status: NOT STARTED
     - Is recurring issue?: N
-    - Should Test frontend/backend/both after fix?: Both
-    - Blocked on other issue: None.
+    - Should Test frontend/backend/both after fix?: Frontend.
 
-- **Issue 2: Google/Apple login is non-functional on iPad**
-    - Attempted fixes: The agent removed an iOS-specific check from the login logic, assuming a generic web redirect would work. This fix has **never been verified in an actual iPad environment.**
-    - Next debug checklist:
-        1.  Invoke the .
-        2.  Provide an explicit instruction in the test plan to simulate an **iPad user-agent** and test the entire Google and Apple social login flows from start to finish.
-    - Why fix this issue and what will be achieved with the fix?: This is the original, critical App Store rejection reason. Resolving it is mandatory for the app to be published.
+- **Issue 5: Google/Apple login on iPad**
+    - Attempted fixes: A previous fix was applied but never tested on an actual iPad.
+    - Next debug checklist: Use the  with an explicit instruction to simulate an iPad user-agent and test the full social login flows.
+    - Why fix this issue and what will be achieved with the fix?: Resolves the original, critical App Store rejection reason.
     - Status: USER VERIFICATION PENDING
     - Is recurring issue?: Y
-    - Should Test frontend/backend/both after fix?: Frontend (specifically on iPad).
-    - Blocked on other issue: None.
+    - Should Test frontend/backend/both after fix?: Frontend.
 
-- **Issue 3: Ads are stuck on loading**
-    - Attempted fixes: The agent added  and  attributes to the video player in . The effectiveness is unknown.
+- **Issue 6: Increase cultural questions to 1000**
+    - Attempted fixes: Agent was running a command to generate the questions.
     - Next debug checklist:
-        1.  Navigate to the Ads screen in the application.
-        2.  Open the browser developer console and check for any media playback errors or failed network requests related to the ad video.
-    - Why fix this issue and what will be achieved with the fix?: This is a core feature for the app's monetization model.
-    - Status: USER VERIFICATION PENDING
+        1.  Ensure the generation command completes and creates the  file.
+        2.  Update the  to handle the new structure, ensuring 30 non-repeating questions per round with progressive difficulty.
+    - Why fix this issue and what will be achieved with the fix?: Fulfills a direct user request for more content.
+    - Status: IN PROGRESS
     - Is recurring issue?: N
-    - Should Test frontend/backend/both after fix?: Frontend
-    - Blocked on other issue: None.
+    - Should Test frontend/backend/both after fix?: Frontend.
 
 **In progress Task List**:
-- None.
+- **Task 1: Generate 1000 Cultural Questions**
+    - Where to resume: The agent was running a  command with a prompt to generate the questions for . The next agent should check if this file was created and is valid.
+    - What will be achieved with this?: Increases game content as requested.
+    - Status: IN PROGRESS
+    - Should Test frontend/backend/both after fix?: Frontend.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
+    *   (P0) Build and deploy new Android/iOS versions after all critical bugs are fixed and verified.
+    *   (P1) Implement internationalization (i18n) and localization (l10n) for English and other languages, as discussed with the user.
     *   (P1) Fix Stay connected challenge logic.
 *   **Future Tasks:**
     *   Enable Live Twilio SMS functionality.
@@ -90,112 +143,111 @@ The application has been significantly transformed into a feature-rich gaming pl
     *   Perform a general cleanup of all dummy and unused code.
 
 **Completed work in this session**
-- **Major Game Overhaul:**
-    - Replaced Brick Breaker with a new Word Race game ().
-    - Replaced Riddles with a new Speed Math game ().
-    - The new games were created as separate, modular components.
-- **Content and Economy Tuning:**
-    - Increased Cultural Questions content to over 200 questions.
-    - Reduced the daily Saqr Points earning limit to 70.
-    - Implemented a new 14-day daily login reward system (160 points + 200 diamonds).
-    - Increased the number of images in the Puzzle game to 12.
-- **Authentication & Security:**
-    - Removed OTP from the password recovery flow, replacing it with a direct, secure email link.
-    - Implemented a server-side restriction to limit profile picture changes to once per week.
-- **Bug Fixes and Polish:**
-    - Successfully integrated sound effects into all active games.
-    - Fixed a state-related bug in the .
-    - Resolved a critical bug where the Brick Breaker game was unclickable before it was replaced.
-- **Testing:** All of the above completed work was successfully verified by the , which reported 100% success.
+- **Major Refactoring:** Extracted all games (Chess, Tic-Tac-Toe, etc.) from the monolithic  into individual components under the new  directory.
+- **Visitor Mode:** Implemented a feature to lock games for guest users and display a login prompt on click.
+- **Chat Integration:** The  component was wired into the refactored .
+- **AdMob Verification Fix:**
+    - Guided the user to create a valid developer website on GitHub Pages with the correct root domain structure.
+    - Created and deployed the  file to the new site.
+    - Identified and corrected the AdMob App ID in .
 
 **Earlier issues found/mentioned but not fixed**
-- **Stay connected challenge logic:** This task was mentioned in a previous handoff summary but was not addressed or planned in the current session. The logic for this feature is still incomplete.
+- **Stay connected challenge logic:** This task was mentioned in a previous handoff summary but remains unaddressed.
 
 **Known issue recurrence from previous fork**
 - **Issue recurrence in previous fork**: Social logins on iPad.
 - **Recurrence count**: 3+
-- **Status**: USER VERIFICATION PENDING. An attempted fix has been made, but it remains untested on the target platform. This is the highest-risk item in the project.
+- **Status**: USER VERIFICATION PENDING. An attempted fix has been made, but it remains untested on the target platform. This is a high-risk item for App Store submission.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
 - Backend: Python, FastAPI, MongoDB, WebSockets
-- Frontend: React
-- Payments: Stripe, Apple Pay
-- Real-time: WebSockets
+- Frontend: React, Expo (for mobile)
+- Monetization: Google AdMob
+- Deployment: EAS Build
+- Developer Site: GitHub Pages for  hosting
 
 **key DB schema**
-- : { ..., : datetime } - Added to track and enforce the weekly limit on profile picture changes.
+- No changes in this session.
 
 **changes in tech stack**
 - None.
 
 **All files of reference**
 - **Heavily Modified:**
-    - : Contains new business logic for login rewards, daily limits, and password reset.
-    - : The main game container; logic was updated to replace two games and change UI text.
+    - : Completely refactored to use modular game components.
+    - : AdMob App ID was corrected.
 - **Created:**
-    - : New game component.
-    - : New game component.
-- **Modified:**
-    - : Defines the new 14-day reward structure.
-    - : File was overwritten with 200+ new questions.
-    -  & : Authentication flow changed to remove OTP.
+    - All files under .
+    - : For AdMob verification.
+- **Pending Creation/Update:**
+    - : To be overwritten with 1000 questions.
+- **Files to Inspect for Bugs:**
+    - 
+    - All files in  for styling issues.
 
 **Areas that need refactoring**:
--  is a monolithic file exceeding 3000 lines. It still contains the embedded code for Chess, Tic-Tac-Toe, Puzzle, and Trivia. These should be extracted into their own modular components inside , following the pattern used for the new games (, ). This will significantly improve maintainability.
+- The major refactoring of  is complete. However, the styling of the new components is broken on mobile and needs significant rework.
 
 **key api endpoints**
-- : Now sends a tokenized URL via email instead of an OTP.
-- : Now accepts a token from the URL instead of an OTP.
-- : Now enforces a one-week cooldown between updates.
-- : Now correctly returns the daily Saqr Point limit of 70.
-- : Logic updated to handle the new 14-day reward schedule with both points and diamonds.
+-  (Served via frontend's public folder)
 
 **Critical Info for New Agent**
-- **Immediate Priority: Chat Integration.** The user's last instruction was to finish the chat feature, and they expressed impatience. You must start this task first.
-- **Critical Blocker: iPad Login.** The social login issue on iPad is the original reason for App Store rejection and remains unverified. After implementing chat, this MUST be your next priority. Use a testing agent with an iPad user-agent to get a definitive pass/fail.
-- **Refactoring Needed:** Before making significant new changes, propose refactoring the massive  file by extracting the remaining game components into their own files. This will prevent the file from becoming unmanageable.
+- **Highest Priority:** The user's latest message (#362) lists numerous critical bugs that make the mobile app unusable. You must prioritize fixing these issues, starting with the no internet connection error and the severe UI bugs.
+- **AdMob Blocker:** The AdMob verification issue is a parallel top priority. The user has set up the GitHub Pages site. You must confirm with the user that the correct URL () is set in Google Play and that they have waited 48 hours. Also, you need to get the  from the user to ensure it's correct in the code.
+- **Do Not Build Yet:** The user requested a new build and deployment, but you must fix and thoroughly test the reported bugs first.
+- **User Frustration:** The user is clearly frustrated with the state of the mobile app. Be direct, methodical, and communicate your plan to fix the list of bugs clearly.
 
 **documents and test reports created in this job**
--  was updated multiple times to reflect completed tasks.
-- Multiple test reports were generated at , with the latest ones confirming 100% success on all implemented features.
+-  (updated)
+- 
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Fix Brick Breaker, implement online puzzle mode, set daily limit to 70 points, update login rewards, remove OTP auth. (Status: **Resolved**)
-2.  **User:** Accepted the plan. (Status: Acknowledged)
-3.  **User:** Replace Brick Breaker with a hard online co-op game and Riddles with a fun global online game. Remove OTP from password recovery too. (Status: **Resolved**)
-4.  **User:** Suggests Word Race for one game, asks for more options for the other. Wants more trivia questions and functional online chat. (Status: **Resolved**)
-5.  **User:** Chooses Speed Math for the second game. (Status: **Resolved**)
-6.  **User:** Finish integrating the chat. (Status: **Pending**)
-7.  **User:** You are slow. (Status: Acknowledged)
-8.  **User:** I will do it now quickly! (Agent Response) (Status: Acknowledged)
+1.  **User (344):** Shared a screenshot of AdMob status showing app-verification: Not verified and a different App ID (). **(Resolved: Agent identified App ID mismatch)**
+2.  **User (346):** Confirmed there are two apps in AdMob. **(Acknowledged)**
+3.  **User (348):** Provided the other (incorrect) App ID. **(Acknowledged)**
+4.  **User (350):** Confirmed which AdMob app is linked to Google Play and which is not. **(Resolved: Agent identified the correct App ID to use)**
+5.  **User (354 & 355):** Shared the correct App ID again. **(Acknowledged)**
+6.  **User (356-358):** Asked for the active web URL and pointed out the developer site link gives a 404. **(Resolved: Agent explained the root page 404 is fine as long as  works)**
+7.  **User (362):** **CRITICAL:** Reported a long list of bugs after testing the mobile app: no internet connection, games half-visible, broken navbar, missing chat/diamond UI, mismatched chess pieces, non-working themes/languages, and requested 1000 cultural questions. Asked to fix everything and build/deploy for Apple & Android. **(Pending: This is the current main task list)**
+8.  **User (364-382):** A series of very short, one-word messages from the user as the agent was exploring files to address the new bug list. **(Acknowledged)**
+9.  **User (308-316):** Series of messages showing confusion about why a new build wasn't the solution and how the developer website relates to the mobile app's ads. **(Resolved: Agent explained the purpose of )**
+10. **User (317-341):** A back-and-forth where the agent guides the user to create a new GitHub repository with the correct root domain name () to solve the AdMob verification issue. **(Resolved: Site was created successfully)**
 
 **Project Health Check:**
 - **Broken**:
-    - Apple/Google login on iPad (fix is unverified).
-    - Ad-watching screen (fix is unverified).
+    - Mobile app connectivity (No internet connection error).
+    - Google AdMob integration (ads not showing due to verification failure).
+    - Multiple critical UI/UX elements on mobile (game rendering, nav bar, chat visibility).
+    - Language and Theme switching.
+    - Apple/Google login on iPad (status remains unverified).
 - **Mocked**:
     - None.
 - **In Progress**:
-    - Real-time chat for online games.
+    - Fixing all user-reported bugs from message #362.
+    - Generating 1000 new cultural questions.
 
 **3rd Party Integrations**
 -   **Stripe**: For card and Apple Pay payments.
 -   **Apple Pay**: Integrated via Stripe.
--   **Expo (EAS)**: Used for mobile app builds.
--   **Google AdMob**: For rewarded ads (currently non-functional).
--   ****: For social logins (iPad functionality remains the critical unverified issue).
--   **WebSockets**: Used for real-time multiplayer and pending chat implementation.
+-   **Expo (EAS)**: Used for mobile app builds and deployment.
+-   **Google AdMob**: For rewarded ads (currently non-functional due to verification issues).
+-   ****: For social logins (iPad functionality remains unverified).
+-   **WebSockets**: For real-time multiplayer and chat.
+-   **GitHub Pages**: Used to host the  file for AdMob verification.
 
 **Testing status**
-- Testing agent used after significant changes: YES. The agent was used successfully multiple times to validate the new games, economy changes, and password reset flow.
+- Testing agent used after significant changes: YES, the agent ran a test which passed 100% *before* the user's manual testing on a mobile build.
 - Troubleshoot agent used after agent stuck in loop: NO
 - Test files created: None.
-- Known regressions: The iPad social login issue is a long-standing, critical problem with an unverified fix.
+- Known regressions: A long list of UI and functional regressions were discovered by the user on the latest mobile build.
+
+**Credentials to test flow:**
+The agent has previously used a guest flow and a registered user flow. To test all functionalities, a registered user account is required. Credentials have not been explicitly passed down. The agent will need to use the registration flow to create a new user for testing.
 
 **What agent forgot to execute**
-- **Real-time Chat:** The agent completed all other tasks from the user's latest requests but has not yet started the chat integration, which is now the top priority.
-- **iPad Login Test:** The agent has consistently deferred testing the critical iPad login fix, despite it being the original App Store blocker.
-- **Stay connected challenge:** The logic for this feature, mentioned in previous handoffs, remains unaddressed.</analysis>
+- The agent did not forget any specific instructions but was interrupted by the user's major bug report before completing the previous tasks (like building and deploying).
+- The agent requested the  from the user but never received it. This is a crucial piece of information needed to verify the AdMob setup.
+- The Stay connected challenge, a task from a much earlier session, remains unaddressed.</analysis>
