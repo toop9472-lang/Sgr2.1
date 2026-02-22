@@ -619,12 +619,12 @@ const AuthScreen = ({ onLogin }) => {
             {/* Apple Sign In */}
             {Platform.OS === 'ios' && (
               <TouchableOpacity 
-                style={styles.appleBtn} 
+                style={[styles.appleBtn, (isAppleLoading || isGoogleLoading) && styles.disabledBtn]} 
                 onPress={handleAppleSignIn}
                 activeOpacity={0.8}
-                disabled={isLoading}
+                disabled={isAppleLoading || isGoogleLoading}
               >
-                {isLoading ? (
+                {isAppleLoading ? (
                   <ActivityIndicator size="small" color="#FFF" />
                 ) : (
                   <>
@@ -637,12 +637,12 @@ const AuthScreen = ({ onLogin }) => {
 
             {/* Google Sign In */}
             <TouchableOpacity 
-              style={styles.googleBtn} 
+              style={[styles.googleBtn, (isAppleLoading || isGoogleLoading) && styles.disabledBtn]} 
               onPress={handleGoogleSignIn}
               activeOpacity={0.8}
-              disabled={isLoading}
+              disabled={isAppleLoading || isGoogleLoading}
             >
-              {isLoading ? (
+              {isGoogleLoading ? (
                 <ActivityIndicator size="small" color="#FFF" />
               ) : (
                 <>
