@@ -41,8 +41,8 @@
       [
         "react-native-google-mobile-ads",
         {
-          "androidAppId": "ca-app-pub-5132559433385403~8033790572",
-          "iosAppId": "ca-app-pub-5132559433385403~8033790572"
+          "androidAppId": "ca-app-pub-5132559433385403~1073385732",
+          "iosAppId": "ca-app-pub-5132559433385403~1073385732"
         }
       ],
       "expo-font"
@@ -56,7 +56,7 @@
         "NSCameraUsageDescription": "يستخدم التطبيق الكاميرا لتحميل الصور",
         "NSPhotoLibraryUsageDescription": "يستخدم التطبيق مكتبة الصور لتحميل الصور",
         "NSUserTrackingUsageDescription": "يستخدم هذا التطبيق معرّف الإعلان لتقديم إعلانات مخصصة",
-        "GADApplicationIdentifier": "ca-app-pub-5132559433385403~8033790572",
+        "GADApplicationIdentifier": "ca-app-pub-5132559433385403~1073385732",
         "CFBundleURLTypes": [
           {
             "CFBundleURLSchemes": ["saqr"]
