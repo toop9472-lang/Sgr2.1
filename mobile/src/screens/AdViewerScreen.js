@@ -70,6 +70,8 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
   const [totalEarnedSession, setTotalEarnedSession] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [videoLoading, setVideoLoading] = useState(true);
+  const [isAdMobLoading, setIsAdMobLoading] = useState(false);
+  const [adMobReady, setAdMobReady] = useState(false);
   
   // Comments state
   const [showComments, setShowComments] = useState(false);
@@ -85,6 +87,65 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
   const touchStartRef = useRef({ y: 0, x: 0, time: 0 });
 
   const currentAd = ads[currentIndex];
+
+  // Initialize AdMob
+  useEffect(() => {
+    initAdMob();
+  }, []);
+
+  const initAdMob = async () => {
+    try {
+      const initialized = await admobService.initialize();
+      if (initialized) {
+        setAdMobReady(true);
+        console.log('✅ AdMob جاهز');
+      }
+    } catch (error) {
+      console.log('❌ خطأ في تهيئة AdMob:', error);
+    }
+  };
+
+  // Show AdMob Rewarded Ad
+  const showAdMobAd = async () => {
+    if (!adMobReady) {
+      Alert.alert('انتظر', 'جاري تحميل الإعلان...');
+      return;
+    }
+    
+    setIsAdMobLoading(true);
+    try {
+      const result = await admobService.showRewardedAd();
+      if (result.rewarded) {
+        // User earned reward
+        const points = result.amount || 5;
+        setEarnedPoints(points);
+        setTotalEarnedSession(prev => prev + points);
+        setShowPointsAnimation(true);
+        Vibration.vibrate(100);
+        
+        if (onPointsEarned) {
+          onPointsEarned(points);
+        }
+        
+        // Save points to server
+        try {
+          const token = await storage.getItem('userToken');
+          if (token) {
+            await api.recordAdWatch('admob_rewarded', points);
+          }
+        } catch (e) {
+          console.log('Error saving points:', e);
+        }
+        
+        setTimeout(() => setShowPointsAnimation(false), 3000);
+      }
+    } catch (error) {
+      console.log('AdMob error:', error);
+      Alert.alert('خطأ', 'لا تتوفر إعلانات حالياً. حاول لاحقاً.');
+    } finally {
+      setIsAdMobLoading(false);
+    }
+  };
 
   // Load ads
   useEffect(() => {
