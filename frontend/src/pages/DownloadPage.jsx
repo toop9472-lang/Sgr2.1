@@ -173,13 +173,13 @@ const DownloadPage = () => {
             <h3 className="text-xl font-bold mb-4">امسح الرمز بجوالك</h3>
             <div className="w-48 h-48 mx-auto bg-white rounded-2xl p-4 mb-4">
               <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent('https://saqrpointscom.store/download')}`}
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent('https://app-store-revival.preview.emergentagent.com/download')}`}
                 alt="QR Code"
                 className="w-full h-full"
               />
             </div>
             <p className="text-gray-400">أو افتح الرابط من جوالك</p>
-            <p className="text-blue-400 font-mono mt-2">saqrpointscom.store/download</p>
+            <p className="text-blue-400 font-mono mt-2">app-store-revival.preview.emergentagent.com/download</p>
           </div>
         )}
 
