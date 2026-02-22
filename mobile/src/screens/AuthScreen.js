@@ -519,7 +519,8 @@ const AuthScreen = ({ onLogin }) => {
 
   // Google Sign In using WebBrowser
   const handleGoogleSignIn = async () => {
-    setIsLoading(true);
+    if (isAppleLoading || isGoogleLoading) return; // Prevent multiple clicks
+    setIsGoogleLoading(true);
     try {
       const authUrl = `${api.BASE_URL}/api/auth/google?redirect_uri=saqr://auth/callback`;
       
@@ -554,13 +555,14 @@ const AuthScreen = ({ onLogin }) => {
       console.log('Google Sign In Error:', error);
       Alert.alert('خطأ', 'حدث خطأ أثناء تسجيل الدخول بـ Google');
     } finally {
-      setIsLoading(false);
+      setIsGoogleLoading(false);
     }
   };
 
   // Apple Sign In using WebBrowser
   const handleAppleSignIn = async () => {
-    setIsLoading(true);
+    if (isAppleLoading || isGoogleLoading) return; // Prevent multiple clicks
+    setIsAppleLoading(true);
     try {
       const authUrl = `${api.BASE_URL}/api/auth/apple?redirect_uri=saqr://auth/callback`;
       
@@ -593,7 +595,7 @@ const AuthScreen = ({ onLogin }) => {
       console.log('Apple Sign In Error:', error);
       Alert.alert('خطأ', 'حدث خطأ أثناء تسجيل الدخول بـ Apple');
     } finally {
-      setIsLoading(false);
+      setIsAppleLoading(false);
     }
   };
 
