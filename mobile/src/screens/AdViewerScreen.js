@@ -477,6 +477,22 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
 
       {/* Right Side Actions - Always visible */}
       <View style={styles.rightActions}>
+        {/* AdMob Rewarded Ad Button */}
+        <TouchableOpacity 
+          style={[styles.actionBtn, styles.adMobBtn]}
+          onPress={showAdMobAd}
+          disabled={isAdMobLoading}
+        >
+          {isAdMobLoading ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <>
+              <Ionicons name="gift" size={24} color="#fbbf24" />
+              <Text style={[styles.actionCount, { color: '#fbbf24' }]}>+5</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
         {/* Comments Button */}
         <TouchableOpacity 
           style={styles.actionBtn}
