@@ -142,11 +142,11 @@ const ProfileScreen = ({ user, onLogout, onNavigate }) => {
   };
 
   const handlePrivacy = () => {
-    Linking.openURL('https://saqrpointscom.store/privacy');
+    Linking.openURL('https://app-store-revival.preview.emergentagent.com/privacy');
   };
 
   const handleTerms = () => {
-    Linking.openURL('https://saqrpointscom.store/terms');
+    Linking.openURL('https://app-store-revival.preview.emergentagent.com/terms');
   };
 
   const handleSettings = () => {
