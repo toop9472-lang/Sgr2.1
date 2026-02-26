@@ -98,34 +98,48 @@ function AppContent() {
 
   // Setup push notifications
   const setupNotifications = async () => {
+    if (!NotificationService) {
+      console.log('NotificationService not available, skipping setup');
+      return;
+    }
+    
     try {
       // Register for push notifications
-      await NotificationService.registerForPushNotifications();
+      if (NotificationService.registerForPushNotifications) {
+        await NotificationService.registerForPushNotifications();
+      }
       
       // Schedule daily reward reminder
-      await NotificationService.scheduleDailyRewardReminder(10, 0, language);
+      if (NotificationService.scheduleDailyRewardReminder) {
+        await NotificationService.scheduleDailyRewardReminder(10, 0, language);
+      }
       
       // Add notification listeners
-      notificationListenerRef.current = NotificationService.addNotificationListeners(
-        // On notification received
-        (notification) => {
-          console.log('Notification received:', notification);
-        },
-        // On notification response (user tapped)
-        (response) => {
-          const data = response.notification.request.content.data;
-          console.log('Notification response:', data);
-          
-          // Navigate based on notification type
-          if (data.type === NotificationService.NOTIFICATION_TYPES.ACHIEVEMENT) {
-            setShowAchievements(true);
-          } else if (data.type === NotificationService.NOTIFICATION_TYPES.DAILY_REWARD) {
-            setShowDailyRewards(true);
+      if (NotificationService.addNotificationListeners) {
+        notificationListenerRef.current = NotificationService.addNotificationListeners(
+          // On notification received
+          (notification) => {
+            console.log('Notification received:', notification);
+          },
+          // On notification response (user tapped)
+          (response) => {
+            const data = response?.notification?.request?.content?.data;
+            if (!data) return;
+            
+            console.log('Notification response:', data);
+            
+            // Navigate based on notification type
+            const TYPES = NotificationService.NOTIFICATION_TYPES || {};
+            if (data.type === TYPES.ACHIEVEMENT) {
+              setShowAchievements(true);
+            } else if (data.type === TYPES.DAILY_REWARD) {
+              setShowDailyRewards(true);
+            }
           }
-        }
-      );
+        );
+      }
     } catch (error) {
-      console.log('Notification setup error:', error);
+      console.log('Notification setup error:', error.message);
     }
   };
 
