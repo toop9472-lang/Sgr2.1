@@ -136,10 +136,10 @@ export const sendAchievementNotification = async (achievement, language = 'ar') 
 // Send daily reward reminder
 export const sendDailyRewardReminder = async (language = 'ar') => {
   const titles = {
-    ar: 'مكافأتك اليومية بانتظارك! 🎁',
-    en: 'Your daily reward is waiting! 🎁',
-    fr: 'Votre récompense quotidienne vous attend! 🎁',
-    tr: 'Günlük ödülünüz sizi bekliyor! 🎁',
+    ar: 'مكافأتك اليومية بانتظارك',
+    en: 'Your daily reward is waiting',
+    fr: 'Votre récompense quotidienne vous attend',
+    tr: 'Günlük ödülünüz sizi bekliyor',
   };
   
   const bodies = {
