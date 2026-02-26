@@ -469,6 +469,20 @@ function AppContent() {
             language={language}
           />
         )}
+        {currentPage === 'chat' && (
+          <GlobalChatScreen 
+            user={user}
+            onClose={() => setCurrentPage('home')}
+            onNavigateToFortunes={() => setCurrentPage('fortunes')}
+          />
+        )}
+        {currentPage === 'fortunes' && (
+          <SaqrFortunesScreen 
+            user={user}
+            onClose={() => setCurrentPage('home')}
+            onBalanceUpdate={() => setBalanceRefresh(prev => prev + 1)}
+          />
+        )}
       </LinearGradient>
 
       {/* Achievements Screen */}
