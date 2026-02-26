@@ -103,6 +103,11 @@ export const scheduleLocalNotification = async ({
   trigger = null,
   channelId = 'default',
 }) => {
+  if (!notificationsAvailable || !Notifications) {
+    console.log('Cannot schedule notification - not available');
+    return null;
+  }
+  
   try {
     const id = await Notifications.scheduleNotificationAsync({
       content: {
