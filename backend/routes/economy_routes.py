@@ -553,3 +553,185 @@ async def add_diamonds_reward(request: AddDiamondsRequest):
         "new_balance": new_diamonds,
         "message": f"تم إضافة {request.amount} ألماسة بنجاح!"
     }
+
+
+
+# ==================== AD WATCHING REWARDS - 1 Diamond per minute ====================
+
+class AdWatchRewardRequest(BaseModel):
+    user_id: str
+    watch_duration_seconds: int  # مدة المشاهدة بالثواني
+    ad_type: str = "video"  # نوع الإعلان
+
+@router.post("/ad-watch-reward")
+async def claim_ad_watch_reward(request: AdWatchRewardRequest):
+    """مكافأة مشاهدة الإعلان - 1 جوهرة لكل دقيقة"""
+    
+    # حساب عدد الجواهر (1 لكل 60 ثانية)
+    minutes_watched = request.watch_duration_seconds // 60
+    diamonds_earned = max(1, minutes_watched)  # على الأقل جوهرة واحدة
+    
+    # التحقق من وجود المستخدم
+    user = await db.users.find_one(
+        {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]}
+    )
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    current_diamonds = user.get("diamonds", 0)
+    new_diamonds = current_diamonds + diamonds_earned
+    
+    # تحديث رصيد الألماسات
+    await db.users.update_one(
+        {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]},
+        {
+            "$set": {"diamonds": new_diamonds},
+            "$inc": {"total_ads_watched": 1, "total_ad_diamonds": diamonds_earned},
+            "$push": {
+                "diamond_transactions": {
+                    "type": "ad_watch",
+                    "amount": diamonds_earned,
+                    "duration_seconds": request.watch_duration_seconds,
+                    "ad_type": request.ad_type,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "balance_after": new_diamonds
+                }
+            }
+        }
+    )
+    
+    # تسجيل في سجل الإعلانات
+    await db.ad_watch_history.insert_one({
+        "user_id": request.user_id,
+        "diamonds_earned": diamonds_earned,
+        "duration_seconds": request.watch_duration_seconds,
+        "ad_type": request.ad_type,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        "success": True,
+        "diamonds_earned": diamonds_earned,
+        "new_balance": new_diamonds,
+        "message": f"حصلت على {diamonds_earned} ألماسة!"
+    }
+
+
+# ==================== AD STATS ====================
+
+@router.get("/ad-stats/{user_id}")
+async def get_ad_stats(user_id: str):
+    """إحصائيات مشاهدة الإعلانات للمستخدم"""
+    
+    user = await db.users.find_one(
+        {"$or": [{"id": user_id}, {"user_id": user_id}]},
+        {"_id": 0, "total_ads_watched": 1, "total_ad_diamonds": 1, "diamonds": 1}
+    )
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    # إحصائيات اليوم
+    today = datetime.now(timezone.utc).date().isoformat()
+    today_stats = await db.ad_watch_history.aggregate([
+        {
+            "$match": {
+                "user_id": user_id,
+                "timestamp": {"$regex": f"^{today}"}
+            }
+        },
+        {
+            "$group": {
+                "_id": None,
+                "count": {"$sum": 1},
+                "diamonds": {"$sum": "$diamonds_earned"}
+            }
+        }
+    ]).to_list(1)
+    
+    today_count = today_stats[0]["count"] if today_stats else 0
+    today_diamonds = today_stats[0]["diamonds"] if today_stats else 0
+    
+    return {
+        "total_ads_watched": user.get("total_ads_watched", 0),
+        "total_ad_diamonds": user.get("total_ad_diamonds", 0),
+        "today_ads_watched": today_count,
+        "today_diamonds_earned": today_diamonds,
+        "current_diamonds": user.get("diamonds", 0),
+        "exchange_rate": "500 diamonds = $1"
+    }
+
+
+# ==================== TREASURE CHEST REWARDS ====================
+
+class ClaimChestRequest(BaseModel):
+    user_id: str
+    chest_type: str  # bronze, silver, gold, platinum, legendary
+    reward_amount: int
+
+@router.post("/claim-chest-reward")
+async def claim_chest_reward(request: ClaimChestRequest):
+    """استلام مكافأة صندوق الكنز"""
+    
+    # التحقق من صحة نوع الصندوق
+    valid_chests = ["bronze", "silver", "gold", "platinum", "legendary"]
+    if request.chest_type not in valid_chests:
+        raise HTTPException(status_code=400, detail="نوع صندوق غير صالح")
+    
+    # حدود المكافآت لكل نوع
+    chest_limits = {
+        "bronze": (5, 15),
+        "silver": (20, 50),
+        "gold": (60, 150),
+        "platinum": (150, 300),
+        "legendary": (350, 750),
+    }
+    
+    min_reward, max_reward = chest_limits[request.chest_type]
+    if not (min_reward <= request.reward_amount <= max_reward):
+        raise HTTPException(status_code=400, detail="قيمة المكافأة غير صالحة")
+    
+    # التحقق من المستخدم
+    user = await db.users.find_one(
+        {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]}
+    )
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    current_diamonds = user.get("diamonds", 0)
+    new_diamonds = current_diamonds + request.reward_amount
+    
+    # تحديث الرصيد
+    await db.users.update_one(
+        {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]},
+        {
+            "$set": {"diamonds": new_diamonds},
+            "$push": {
+                "diamond_transactions": {
+                    "type": "treasure_chest",
+                    "chest_type": request.chest_type,
+                    "amount": request.reward_amount,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "balance_after": new_diamonds
+                }
+            }
+        }
+    )
+    
+    # تسجيل في سجل الصناديق
+    await db.chest_rewards.insert_one({
+        "user_id": request.user_id,
+        "chest_type": request.chest_type,
+        "reward_amount": request.reward_amount,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        "success": True,
+        "chest_type": request.chest_type,
+        "diamonds_earned": request.reward_amount,
+        "new_balance": new_diamonds,
+        "message": f"حصلت على {request.reward_amount} ألماسة من {request.chest_type}!"
+    }
