@@ -426,6 +426,7 @@ function AppContent() {
             onNavigateToGames={() => setCurrentPage('games')}
             onNavigateToChat={() => setCurrentPage('chat')}
             onNavigateToFortunes={() => setCurrentPage('fortunes')}
+            onNavigateToFriends={() => setCurrentPage('friends')}
             onRefresh={initApp}
           />
         )}
