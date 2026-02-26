@@ -26,30 +26,52 @@ import { triviaQuestions, riddlesQuestions } from '../data/questionsData';
 
 const { width, height } = Dimensions.get('window');
 
-// ==================== GAME CARD COMPONENT ====================
+// ==================== GAME CARD COMPONENT - PROFESSIONAL DESIGN ====================
 const GameCard = ({ game, onPress, pulseAnim, gameCost }) => (
   <Animated.View style={[styles.gameCardWrapper, { transform: [{ scale: pulseAnim }] }]}>
     <TouchableOpacity style={styles.gameCard} onPress={onPress} activeOpacity={0.85}>
       <LinearGradient colors={game.colors} style={styles.gameCardGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-        <View style={styles.gameIconBg}>
-          <Ionicons name={game.icon} size={32} color="#FFF" />
+        {/* Badge */}
+        {game.badge ? (
+          <View style={styles.gameBadge}>
+            <Text style={styles.gameBadgeText}>{game.badge}</Text>
+          </View>
+        ) : null}
+        
+        {/* Icon with glow effect */}
+        <View style={styles.gameIconContainer}>
+          <View style={styles.gameIconGlow} />
+          <View style={styles.gameIconBg}>
+            <Ionicons name={game.icon} size={36} color="#FFF" />
+          </View>
         </View>
+        
+        {/* Game Info */}
         <Text style={styles.gameName}>{game.name}</Text>
         <Text style={styles.gameDesc}>{game.description}</Text>
+        
+        {/* Category Tag */}
+        <View style={styles.categoryTag}>
+          <Text style={styles.categoryText}>{game.category}</Text>
+        </View>
+        
+        {/* Footer */}
         <View style={styles.gameFooter}>
           <View style={styles.pointsBadge}>
-            <Ionicons name="star" size={12} color="#fbbf24" />
+            <Ionicons name="star" size={14} color="#fbbf24" />
             <Text style={styles.pointsText}>+{game.maxPoints}</Text>
           </View>
           {game.online && (
             <View style={styles.onlineBadge}>
-              <Ionicons name="diamond" size={10} color="#60a5fa" />
-              <Text style={styles.onlineText}>{gameCost || game.onlineCost}</Text>
+              <View style={styles.onlineDot} />
+              <Ionicons name="globe" size={12} color="#60a5fa" />
+              <Text style={styles.onlineText}>أونلاين</Text>
             </View>
           )}
           {!game.online && (
             <View style={styles.freeBadge}>
-              <Text style={styles.freeText}>مجاني</Text>
+              <Ionicons name="game-controller" size={12} color="#10b981" />
+              <Text style={styles.freeText}>فردي</Text>
             </View>
           )}
         </View>
