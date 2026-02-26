@@ -52,6 +52,7 @@ function AppContent() {
   const [showDailyRewards, setShowDailyRewards] = useState(false);
   const [showDiamondShop, setShowDiamondShop] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [showShop, setShowShop] = useState(false);
   const [settings, setSettings] = useState(null);
   const [balanceRefresh, setBalanceRefresh] = useState(0);
 
