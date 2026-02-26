@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, Clock, Play, ChevronRight, BarChart3, Award, Calendar, Zap, Lightbulb, Star, Trophy, CheckCircle, Timer, PlayCircle, Film, LogIn, Rocket, Gift, MessageCircle } from 'lucide-react';
+import { TrendingUp, Clock, Play, ChevronRight, BarChart3, Award, Calendar, Zap, Lightbulb, Star, Trophy, CheckCircle, Timer, PlayCircle, Film, LogIn, Rocket, Gift, MessageCircle, Users } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import LanguageSwitcher from './LanguageSwitcher';
 import axios from 'axios';
