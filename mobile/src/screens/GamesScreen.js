@@ -601,9 +601,9 @@ const PuzzleGame = ({ mode, onComplete, onClose }) => {
       </View>
 
       {/* Puzzle Grid */}
-      <View style={[styles.puzzleGrid, { width: width - 40 }]}>
+      <View style={[styles.puzzleGrid, { width: puzzleSize, alignSelf: 'center' }]}>
         {pieces.map((piece, idx) => {
-          const pieceSize = (width - 48) / gridSize;
+          const pieceSize = (puzzleSize - 8) / gridSize;
           const isCorrect = piece === idx;
           const isSelected = selected === idx;
           
@@ -623,18 +623,33 @@ const PuzzleGame = ({ mode, onComplete, onClose }) => {
               onPress={() => handlePiecePress(idx)}
               activeOpacity={0.8}
             >
-              <LinearGradient
-                colors={completed ? ['#10b981', '#059669'] : 
-                        isCorrect ? ['#22c55e', '#16a34a'] : 
-                        isSelected ? ['#3b82f6', '#2563eb'] : 
-                        currentImage.gradient}
-                style={styles.pieceInner}
-              >
+              {currentImage.image ? (
+                <Image
+                  source={{ uri: currentImage.image }}
+                  style={[styles.pieceInner, {
+                    width: puzzleSize - 8,
+                    height: puzzleSize - 8,
+                    position: 'absolute',
+                    top: -(row * pieceSize),
+                    left: -(col * pieceSize),
+                  }]}
+                  resizeMode="cover"
+                />
+              ) : (
+                <LinearGradient
+                  colors={completed ? ['#10b981', '#059669'] : 
+                          isCorrect ? ['#22c55e', '#16a34a'] : 
+                          isSelected ? ['#3b82f6', '#2563eb'] : 
+                          currentImage.gradient}
+                  style={styles.pieceInner}
+                />
+              )}
+              <View style={[styles.pieceOverlay, isSelected && styles.pieceOverlaySelected]}>
                 <Text style={styles.pieceNum}>{piece + 1}</Text>
-                {isCorrect && !completed && (
-                  <Ionicons name="checkmark" size={12} color="#fff" style={styles.correctBadge} />
-                )}
-              </LinearGradient>
+              </View>
+              {isCorrect && !completed && (
+                <Ionicons name="checkmark" size={12} color="#fff" style={styles.correctBadge} />
+              )}
             </TouchableOpacity>
           );
         })}
