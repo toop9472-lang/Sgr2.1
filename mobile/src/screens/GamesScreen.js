@@ -1591,26 +1591,28 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
           <Text style={styles.exchangeText}>500 نقطة صقر = 1 دولار</Text>
         </View>
 
-        {/* Ad Challenges Button - تحديات الإعلانات */}
+        {/* Ad Challenges Button - ثروات صقر */}
         <TouchableOpacity 
           style={styles.adChallengesBtn}
-          onPress={() => setShowAdChallenges(true)}
+          onPress={() => setShowSaqrFortunes(true)}
           activeOpacity={0.85}
         >
           <LinearGradient 
-            colors={['#f97316', '#ea580c']} 
+            colors={['#ec4899', '#9333ea', '#6366f1']} 
             style={styles.adChallengesGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           >
             <View style={styles.adChallengeBtnIcon}>
-              <Ionicons name="gift" size={22} color="#FFF" />
+              <Ionicons name="diamond" size={22} color="#FFF" />
             </View>
             <View style={styles.adChallengesBtnInfo}>
-              <Text style={styles.adChallengesBtnTitle}>تحديات الإعلانات</Text>
-              <Text style={styles.adChallengesBtnSub}>شاهد إعلانات واربح ألماسات مجانية!</Text>
+              <Text style={styles.adChallengesBtnTitle}>ثروات صقر</Text>
+              <Text style={styles.adChallengesBtnSub}>شاهد واربح من 1 إلى 100 ألماسة! عجلة الحظ وصناديق الكنز</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
+            <View style={styles.newBadge}>
+              <Text style={styles.newBadgeText}>جديد</Text>
+            </View>
           </LinearGradient>
         </TouchableOpacity>
 
