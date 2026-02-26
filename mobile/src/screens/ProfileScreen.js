@@ -18,7 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import storage from '../services/storage';
 
-const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenShop }) => {
+const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenShop, onOpenAdminPanel }) => {
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
