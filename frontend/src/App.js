@@ -505,6 +505,13 @@ function MainApp() {
                   onBalanceUpdate={refreshUser}
                 />
               )}
+              {currentPage === 'chat' && !showFullScreenAds && (
+                <GlobalChatPage 
+                  user={user}
+                  onBack={() => setCurrentPage('home')}
+                  onNavigateToFortunes={() => setCurrentPage('fortunes')}
+                />
+              )}
               {currentPage === 'my-ads' && !showFullScreenAds && (
                 <MyAdsPage 
                   onNavigate={handleNavigate}
