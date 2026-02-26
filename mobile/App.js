@@ -393,10 +393,30 @@ function AppContent() {
             user={user}
             onPointsEarned={handlePointsEarned}
             onOpenDiamondShop={() => setShowDiamondShop(true)}
+            onOpenAchievements={() => setShowAchievements(true)}
+            onGameComplete={handleGameComplete}
             balanceRefresh={balanceRefresh}
+            language={language}
           />
         )}
       </LinearGradient>
+
+      {/* Achievements Screen */}
+      {showAchievements && (
+        <View style={StyleSheet.absoluteFill}>
+          <AchievementsScreen 
+            onClose={() => setShowAchievements(false)}
+            language={language}
+          />
+        </View>
+      )}
+
+      {/* Achievement Notification */}
+      <AchievementNotification
+        achievement={newAchievement}
+        language={language}
+        onClose={clearNewAchievement}
+      />
 
       {/* AI Floating Button */}
       <AIFloatingButton onPress={() => setShowAIChat(true)} />
