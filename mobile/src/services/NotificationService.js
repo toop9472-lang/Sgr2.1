@@ -204,10 +204,10 @@ export const scheduleDailyRewardReminder = async (hour = 10, minute = 0, languag
 // Send streak reminder
 export const sendStreakReminder = async (currentStreak, language = 'ar') => {
   const titles = {
-    ar: `حافظ على سلسلتك! 🔥`,
-    en: `Keep your streak going! 🔥`,
-    fr: `Gardez votre série! 🔥`,
-    tr: `Serinizi koruyun! 🔥`,
+    ar: 'حافظ على سلسلتك',
+    en: 'Keep your streak going',
+    fr: 'Gardez votre série',
+    tr: 'Serinizi koruyun',
   };
   
   const bodies = {
