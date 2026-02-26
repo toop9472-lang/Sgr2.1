@@ -1,93 +1,65 @@
 # Saqr Rewards App - PRD
 
 ## Original Problem Statement
-Build a professional gaming platform app (transformed from ad-watching app) to pass Apple's review, with a complete economy system featuring Saqr Points and Diamonds.
+Build a professional gaming platform app (transformed from ad-watching app) to pass Apple's review, with a complete economy system featuring Saqr Points, Diamonds, and Saqr Gems.
 
 ## User's Preferred Language
 Arabic (العربية)
 
 ---
 
-## LATEST UPDATE (February 2026) - Version 5.9.0
+## CRITICAL: Currency System (نظام العملات)
 
-### التحديثات الجديدة - نظام ثروات صقر:
+### عملتان منفصلتان:
 
-#### 1. شاشة ثروات صقر (Saqr Fortunes) - جديد
+1. **جواهر صقر (Saqr Gems)** - للاستبدال بالمال الحقيقي
+   - تحصل عليها من: مشاهدة الإعلانات، عجلة الحظ، صناديق الكنز
+   - 500 جوهرة = 1 دولار أمريكي
+   - لا يمكن إنفاقها داخل التطبيق
+
+2. **الألماس (Diamonds)** - للاستهلاك داخل التطبيق
+   - تحصل عليه من: الألعاب، المكافآت، الإعلانات (بونص)
+   - يستخدم في: الدردشة (5 ألماسات/رسالة)، المتجر، الألعاب
+   - لا يمكن استبداله بمال
+
+---
+
+## LATEST UPDATE (February 2026) - Version 6.0.0
+
+### 1. نظام الدردشة العامة (Global Chat)
 **الملفات:**
-- `/app/mobile/src/screens/SaqrFortunesScreen.js` - جديد
-- `/app/mobile/src/components/AdRewardsCenter.js` - جديد
-- `/app/mobile/src/components/TreasureChests.js` - جديد
-
-**الميزات:**
-- **نظام مكافآت الإعلانات الممتع:**
-  - مشاهدة إعلان = دوران عجلة الحظ
-  - جوائز من 1 إلى 100 ألماسة
-  - 500 ألماسة = 1 دولار أمريكي
-  
-- **عجلة الحظ (Lucky Wheel):**
-  - 8 جوائز مختلفة
-  - رسوم متحركة احترافية
-  - اهتزاز عند الفوز
-  
-- **صناديق الكنز (Treasure Chests):**
-  - برونزي (5 إعلانات): 5-15 ألماسة
-  - فضي (15 إعلان): 20-50 ألماسة
-  - ذهبي (30 إعلان): 60-150 ألماسة
-  - بلاتيني (50 إعلان): 150-300 ألماسة
-  - أسطوري (100 إعلان): 350-750 ألماسة
-
-- **مكافآت الإعلانات المتتالية (Streak Bonuses):**
-  - 3 متتالية = +5 ألماسات
-  - 5 متتالية = +10 ألماسات
-  - 10 متتالية = +25 ألماسة
-  - 20 متتالية = +60 ألماسة
-  - 30 متتالية = +100 ألماسة
-
-- **التحديات اليومية:**
-  - أول إعلان = 3 ألماسات
-  - 5 إعلانات = 10 ألماسات
-  - 10 إعلانات = 25 ألماسة
-  - تحديات الوقت (صباحي/ليلي)
-
-#### 2. تحسينات Backend
-**الملفات:**
+- `/app/mobile/src/screens/GlobalChatScreen.js` - جديد
+- `/app/frontend/src/components/GlobalChatPage.jsx` - جديد
 - `/app/backend/routes/economy_routes.py` - تحديث
 
-**Endpoints جديدة:**
-- `POST /api/economy/ad-watch-reward` - مكافأة مشاهدة (1 ألماسة/دقيقة)
-- `GET /api/economy/ad-stats/{user_id}` - إحصائيات الإعلانات
-- `POST /api/economy/claim-chest-reward` - استلام صندوق الكنز
+**الميزات:**
+- 3 سيرفرات: عربي، إنجليزي، عالمي (متعدد اللغات)
+- تكلفة الرسالة: 5 ألماسات
+- عند انتهاء الألماس: "انتهت ألماساتك! تابع الإعلانات واحصل على الألماس"
+- Polling للرسائل الجديدة كل 3 ثواني
 
-#### 3. تحسينات API
-**الملف:** `/app/mobile/src/services/api.js`
+**APIs:**
+- `POST /api/economy/chat/send` - إرسال رسالة
+- `GET /api/economy/chat/messages/{server_id}` - جلب الرسائل
+- `GET /api/economy/chat/servers` - قائمة السيرفرات
+- `GET /api/economy/chat/check-balance/{user_id}` - التحقق من الرصيد
 
-**دوال جديدة:**
-- `claimAdWatchReward()` - مكافأة المشاهدة
-- `getAdStats()` - إحصائيات الإعلانات
-- `claimChestReward()` - مكافأة الصندوق
+### 2. تحديث نظام ثروات صقر
+**التغييرات:**
+- الآن يعطي "جواهر صقر" بدلاً من "الألماس"
+- إضافة بونص ألماسات عند مشاهدة الإعلانات
+- تفريق واضح بين العملتين في الواجهة
 
----
+**APIs جديدة:**
+- `POST /api/economy/add-saqr-gems` - إضافة جواهر صقر
+- `GET /api/economy/saqr-gems/{user_id}` - رصيد جواهر صقر
 
-## تحديثات سابقة - Version 5.8.0
-
-### تحديث إضافي - نظام ثروات صقر على الويب
-**الملفات:**
-- `/app/frontend/src/components/SaqrFortunesPage.jsx` - جديد
-- `/app/frontend/src/components/HomePage.jsx` - تحديث (زر ثروات صقر)
-- `/app/frontend/src/App.js` - تحديث (routing)
-- `/app/frontend/src/App.css` - تحديث (animations)
-
-**الميزات على الويب:**
-- عجلة الحظ مع Canvas
-- صناديق الكنز الخمسة
-- التحديات اليومية
-- مكافآت المتتالي
-- شريط تقدم الدولار
-- رسوم متحركة وتأثيرات بصرية
+### 3. تحديثات الواجهة
+- إضافة زر "الدردشة العامة" في الصفحة الرئيسية (موبايل + ويب)
+- تحديث وصف "ثروات صقر" ليوضح أنها للاستبدال بالمال
+- شارة "5 ألماسات" على زر الدردشة
 
 ---
-
-### التحديثات في الإصدار 5.8.0:
 
 ### التحديثات الجديدة في هذا الإصدار:
 
