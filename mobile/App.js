@@ -20,6 +20,7 @@ import SupportScreen from './src/screens/SupportScreen';
 import ChallengesScreen from './src/screens/ChallengesScreen';
 import GamesScreen from './src/screens/GamesScreen';
 import AchievementsScreen from './src/screens/AchievementsScreen';
+import ShopScreen from './src/screens/ShopScreen';
 
 // Components
 import BottomNav from './src/components/BottomNav';
