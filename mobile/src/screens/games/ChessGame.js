@@ -12,8 +12,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const { width } = Dimensions.get('window');
-const BOARD_SIZE = width - 32;
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const isTablet = screenWidth > 600;
+const MAX_BOARD_SIZE = isTablet ? 450 : screenWidth - 32;
+const BOARD_SIZE = Math.min(screenWidth - 32, MAX_BOARD_SIZE);
 const SQUARE_SIZE = BOARD_SIZE / 8;
 
 // Chess piece unicode characters
