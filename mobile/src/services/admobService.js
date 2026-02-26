@@ -136,7 +136,7 @@ class AdMobService {
     const unsubscribeEarned = this.rewardedAd.addAdEventListener(
       RewardedAdEventType.EARNED_REWARD,
       (reward) => {
-        console.log('🎁 تم الحصول على المكافأة:', reward);
+        console.log('Reward earned:', reward);
         this.notifyListeners('reward', {
           amount: reward.amount,
           type: reward.type,
