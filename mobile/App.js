@@ -606,7 +606,7 @@ function App() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.dark.bg },
-  mainArea: { flex: 1, paddingBottom: 68 }, // Slim nav bar
+  mainArea: { flex: 1 }, // No fixed padding - handled per screen
   
   loadingContainer: { 
     flex: 1, 
