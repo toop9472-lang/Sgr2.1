@@ -169,7 +169,9 @@ const SettingsScreen = ({ onBack }) => {
                 ]}
                 onPress={() => saveLanguage(lang.code)}
               >
-                <Text style={styles.optionFlag}>{lang.flag}</Text>
+                <View style={styles.langIconContainer}>
+                  <Ionicons name={lang.icon} size={20} color="#60a5fa" />
+                </View>
                 <Text style={styles.optionText}>{lang.name}</Text>
                 {language === lang.code && (
                   <Ionicons name="checkmark" size={20} color="#3b82f6" />
