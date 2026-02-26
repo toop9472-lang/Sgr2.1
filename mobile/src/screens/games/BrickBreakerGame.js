@@ -12,14 +12,18 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const { width, height } = Dimensions.get('window');
-const GAME_WIDTH = width - 32;
-const GAME_HEIGHT = height * 0.6;
-const PADDLE_WIDTH = 80;
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+// Responsive sizing for iPad
+const isTablet = screenWidth > 600;
+const MAX_GAME_WIDTH = isTablet ? 500 : screenWidth - 32;
+const GAME_WIDTH = Math.min(screenWidth - 32, MAX_GAME_WIDTH);
+const GAME_HEIGHT = Math.min(screenHeight * 0.55, 500);
+const PADDLE_WIDTH = isTablet ? 100 : 80;
 const PADDLE_HEIGHT = 12;
 const BALL_SIZE = 14;
 const BRICK_ROWS = 5;
-const BRICK_COLS = 7;
+const BRICK_COLS = isTablet ? 8 : 7;
 const BRICK_WIDTH = (GAME_WIDTH - 20) / BRICK_COLS;
 const BRICK_HEIGHT = 22;
 const BRICK_GAP = 2;
