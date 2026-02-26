@@ -1365,6 +1365,32 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
     setGameMode(null);
   };
 
+  // مشاهدة إعلان
+  const handleWatchAd = async () => {
+    // في الإنتاج: استدعاء Google AdMob
+    // حالياً: محاكاة مشاهدة إعلان
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(true);
+      }, 1500);
+    });
+  };
+
+  // استلام مكافأة التحدي
+  const handleClaimAdReward = async (amount, type) => {
+    if (type === 'diamonds') {
+      // إضافة الألماسات للمستخدم
+      try {
+        const response = await api.addDiamonds(user.id, amount, 'ad_challenge_reward');
+        if (response.ok) {
+          fetchBalance();
+        }
+      } catch (e) {
+        console.log('Error claiming reward:', e);
+      }
+    }
+  };
+
   // Render active game
   if (activeGame) {
     const gameProps = {
