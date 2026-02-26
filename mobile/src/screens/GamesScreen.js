@@ -1679,7 +1679,21 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
         <View style={{ height: 120 }} />
       </ScrollView>
 
-      {/* Ad Challenges Modal */}
+      {/* Saqr Fortunes Screen */}
+      {showSaqrFortunes && (
+        <View style={StyleSheet.absoluteFill}>
+          <SaqrFortunesScreen
+            user={user}
+            onClose={() => {
+              setShowSaqrFortunes(false);
+              fetchBalance();
+            }}
+            onBalanceUpdate={fetchBalance}
+          />
+        </View>
+      )}
+
+      {/* Ad Challenges Modal (Legacy) */}
       <AdChallengesModal
         visible={showAdChallenges}
         onClose={() => setShowAdChallenges(false)}
