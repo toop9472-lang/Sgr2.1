@@ -117,11 +117,21 @@ const HomeScreen = ({ user, onNavigateToAds, onNavigateToGames, settings, onRefr
             </TouchableOpacity>
           </View>
 
-          {/* Main Featured Game */}
+          {/* AI Quest - Featured New Game */}
+          <FeaturedGameCard
+            icon="sparkles"
+            name="AI Quest - جديد!"
+            description="تحدى الذكاء الاصطناعي في 5 أنواع من التحديات الذهنية!"
+            colors={['#ec4899', '#9333ea']}
+            onPress={handleNavigateToGames}
+          />
+          
+          {/* Secondary Featured */}
+          <View style={{ height: 12 }} />
           <FeaturedGameCard
             icon="game-controller"
-            name="ألعاب متعددة"
-            description="شطرنج، X-O، ألغاز، أسئلة ثقافية والمزيد!"
+            name="ألعاب متنوعة"
+            description="شطرنج، تركيب الصور، ألغاز، أسئلة ثقافية والمزيد!"
             colors={['#3b82f6', '#8b5cf6']}
             onPress={handleNavigateToGames}
           />
