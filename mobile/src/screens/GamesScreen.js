@@ -1629,8 +1629,16 @@ const styles = StyleSheet.create({
   userStatDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.1)' },
   
   // Exchange Info
-  exchangeInfo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 20 },
+  exchangeInfo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 16 },
   exchangeText: { fontSize: 12, color: '#10b981' },
+  
+  // Ad Challenges Button
+  adChallengesBtn: { marginHorizontal: 20, marginBottom: 20, borderRadius: 16, overflow: 'hidden' },
+  adChallengesGradient: { flexDirection: 'row', alignItems: 'center', padding: 14, gap: 12 },
+  adChallengeBtnIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
+  adChallengesBtnInfo: { flex: 1 },
+  adChallengesBtnTitle: { fontSize: 15, fontWeight: '700', color: '#FFF' },
+  adChallengesBtnSub: { fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
   
   sectionTitle: { fontSize: 18, fontWeight: '700', color: '#FFF', textAlign: 'right', marginHorizontal: 20, marginBottom: 12 },
   
