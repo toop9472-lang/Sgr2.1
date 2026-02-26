@@ -11,11 +11,16 @@ import {
   RefreshControl,
   Alert,
   Modal,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import storage from '../services/storage';
 
 const API_URL = 'https://premium-quest-app.preview.emergentagent.com';
+
+// معلومات الدعم
+const SUPPORT_EMAIL = 'sky-321@hotmail.com';
+const SUPPORT_WHATSAPP = '+966539999415';
 
 const CATEGORIES = [
   { id: 'general', label: 'استفسار عام', icon: 'help-circle-outline' },
