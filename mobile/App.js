@@ -378,6 +378,7 @@ function AppContent() {
             onNavigate={setCurrentPage}
             onOpenAchievements={() => setShowAchievements(true)}
             onOpenShop={() => setShowShop(true)}
+            onOpenAdminPanel={() => setShowAdminPanel(true)}
           />
         )}
         {currentPage === 'settings' && (
