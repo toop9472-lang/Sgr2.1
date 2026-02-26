@@ -1511,34 +1511,76 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
           </View>
         </View>
 
-        {/* User Stats with Shop Button */}
-        <View style={styles.userCard}>
-          <View style={styles.userStatItem}>
-            <Ionicons name="trophy" size={24} color="#fbbf24" />
-            <Text style={styles.userStatNum}>#{userStats.rank || '-'}</Text>
-            <Text style={styles.userStatLabel}>ترتيبك</Text>
-          </View>
-          <View style={styles.userStatDivider} />
-          <View style={styles.userStatItem}>
-            <Ionicons name="star" size={24} color="#fbbf24" />
-            <Text style={styles.userStatNum}>{balance.saqr_points || 0}</Text>
-            <Text style={styles.userStatLabel}>نقاط صقر</Text>
-          </View>
-          <View style={styles.userStatDivider} />
-          <TouchableOpacity 
-            style={styles.userStatItem}
-            onPress={onOpenDiamondShop}
-            activeOpacity={0.7}
+        {/* Premium Stats Card */}
+        <View style={styles.premiumStatsCard}>
+          <LinearGradient
+            colors={['rgba(30,30,50,0.95)', 'rgba(20,20,35,0.98)']}
+            style={styles.premiumStatsGradient}
           >
-            <View style={styles.diamondWithPlus}>
-              <Ionicons name="diamond" size={24} color="#60a5fa" />
-              <View style={styles.plusBadge}>
-                <Ionicons name="add" size={10} color="#FFF" />
+            {/* Rank */}
+            <View style={styles.premiumStatItem}>
+              <View style={styles.premiumStatIconBg}>
+                <Ionicons name="trophy" size={20} color="#fbbf24" />
+              </View>
+              <View style={styles.premiumStatInfo}>
+                <Text style={styles.premiumStatValue}>#{userStats.rank || '-'}</Text>
+                <Text style={styles.premiumStatLabel}>ترتيبك</Text>
               </View>
             </View>
-            <Text style={styles.userStatNum}>{balance.diamonds || 0}</Text>
-            <Text style={styles.userStatLabel}>ألماسات</Text>
-          </TouchableOpacity>
+
+            {/* Divider */}
+            <View style={styles.premiumStatDivider} />
+
+            {/* Saqr Points */}
+            <View style={styles.premiumStatItem}>
+              <View style={[styles.premiumStatIconBg, { backgroundColor: 'rgba(251, 191, 36, 0.15)' }]}>
+                <Ionicons name="star" size={20} color="#fbbf24" />
+              </View>
+              <View style={styles.premiumStatInfo}>
+                <Text style={styles.premiumStatValue}>{(balance.saqr_points || 0).toLocaleString()}</Text>
+                <Text style={styles.premiumStatLabel}>نقاط صقر</Text>
+              </View>
+            </View>
+
+            {/* Divider */}
+            <View style={styles.premiumStatDivider} />
+
+            {/* Diamonds with Shop Button */}
+            <TouchableOpacity 
+              style={styles.premiumStatItem}
+              onPress={onOpenDiamondShop}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.premiumStatIconBg, { backgroundColor: 'rgba(96, 165, 250, 0.15)' }]}>
+                <Ionicons name="diamond" size={20} color="#60a5fa" />
+                <View style={styles.shopPlusBadge}>
+                  <Ionicons name="add" size={8} color="#FFF" />
+                </View>
+              </View>
+              <View style={styles.premiumStatInfo}>
+                <Text style={[styles.premiumStatValue, { color: '#60a5fa' }]}>{(balance.diamonds || 0).toLocaleString()}</Text>
+                <Text style={styles.premiumStatLabel}>ألماسات</Text>
+              </View>
+            </TouchableOpacity>
+          </LinearGradient>
+
+          {/* Daily Progress Bar */}
+          <View style={styles.dailyProgressContainer}>
+            <View style={styles.dailyProgressInfo}>
+              <Ionicons name="flash" size={14} color="#22c55e" />
+              <Text style={styles.dailyProgressText}>
+                {balance.daily_points_remaining || 0} / 150 نقطة يومية متبقية
+              </Text>
+            </View>
+            <View style={styles.dailyProgressBar}>
+              <View 
+                style={[
+                  styles.dailyProgressFill, 
+                  { width: `${((150 - (balance.daily_points_remaining || 0)) / 150) * 100}%` }
+                ]} 
+              />
+            </View>
+          </View>
         </View>
 
         {/* Exchange Rate Info */}
