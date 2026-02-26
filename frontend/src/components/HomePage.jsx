@@ -176,7 +176,7 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
         {/* Saqr Fortunes Button */}
         <button
           onClick={() => onNavigate('fortunes')}
-          className="w-full bg-gradient-to-r from-[#ec4899] via-[#9333ea] to-[#6366f1] hover:opacity-90 rounded-2xl p-5 mb-6 shadow-xl transform transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden"
+          className="w-full bg-gradient-to-r from-[#ec4899] via-[#9333ea] to-[#6366f1] hover:opacity-90 rounded-2xl p-5 mb-4 shadow-xl transform transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden"
           data-testid="saqr-fortunes-btn"
         >
           <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12" />
@@ -190,7 +190,31 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
                   <p className="text-white font-bold text-lg">ثروات صقر</p>
                   <span className="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">جديد</span>
                 </div>
-                <p className="text-white/80 text-sm">عجلة حظ، صناديق كنز، مكافآت يومية!</p>
+                <p className="text-white/80 text-sm">جواهر صقر للاستبدال بالمال!</p>
+              </div>
+            </div>
+            <ChevronRight className={`w-6 h-6 text-white ${isRTL ? 'rotate-180' : ''}`} />
+          </div>
+        </button>
+
+        {/* Global Chat Button */}
+        <button
+          onClick={() => onNavigate('chat')}
+          className="w-full bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] hover:opacity-90 rounded-2xl p-5 mb-6 shadow-xl transform transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden"
+          data-testid="global-chat-btn"
+        >
+          <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12" />
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center">
+                <MessageCircle className="w-8 h-8 text-white" />
+              </div>
+              <div className={isRTL ? 'text-right' : 'text-left'}>
+                <div className="flex items-center gap-2">
+                  <p className="text-white font-bold text-lg">الدردشة العامة</p>
+                  <span className="bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">5 ألماسات</span>
+                </div>
+                <p className="text-white/80 text-sm">تواصل مع العالم! سيرفرات متعددة</p>
               </div>
             </div>
             <ChevronRight className={`w-6 h-6 text-white ${isRTL ? 'rotate-180' : ''}`} />
