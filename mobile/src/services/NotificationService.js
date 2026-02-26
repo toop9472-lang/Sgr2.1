@@ -348,6 +348,10 @@ export const saveNotificationSettings = async (settings) => {
 
 // Add notification listeners
 export const addNotificationListeners = (onReceive, onResponse) => {
+  if (!notificationsAvailable || !Notifications) {
+    return () => {}; // Return empty cleanup function
+  }
+  
   const receiveSubscription = Notifications.addNotificationReceivedListener(onReceive);
   const responseSubscription = Notifications.addNotificationResponseReceivedListener(onResponse);
   
