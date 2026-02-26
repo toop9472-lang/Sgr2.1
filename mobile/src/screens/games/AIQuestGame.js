@@ -14,7 +14,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const { width } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const isTablet = screenWidth > 600;
+const GAME_WIDTH = isTablet ? Math.min(screenWidth * 0.8, 600) : screenWidth;
 
 // أنواع التحديات المختلفة
 const CHALLENGE_TYPES = ['math', 'pattern', 'logic', 'word', 'memory'];
