@@ -166,7 +166,7 @@ function AppContent() {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
 
     return () => backHandler.remove();
-  }, [showAIChat, showAdsViewer, showAchievements, showShop, currentPage, language]);
+  }, [showAIChat, showAdsViewer, showAchievements, showShop, showAdminPanel, currentPage, language]);
 
   // Send notification when achievement is unlocked
   useEffect(() => {
