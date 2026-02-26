@@ -671,7 +671,7 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
 
       {/* User Stats - Only for logged in users */}
       {!isGuest && (
-        <div className="mx-6 bg-white/5 rounded-2xl p-4 mb-6">
+        <div className="mx-6 bg-white/5 rounded-2xl p-4 mb-4">
           <div className="flex justify-around">
             <div className="text-center">
               <Medal size={24} className="mx-auto text-yellow-400 mb-1" />
@@ -695,6 +695,28 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Saqr Fortunes Button - Only for logged in users */}
+      {!isGuest && (
+        <button 
+          onClick={() => onNavigate && onNavigate('fortunes')}
+          className="mx-6 mb-6 w-[calc(100%-3rem)] rounded-2xl overflow-hidden transition-transform hover:scale-[1.01] active:scale-[0.99]"
+          data-testid="saqr-fortunes-btn"
+        >
+          <div className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 p-4 flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+              <Diamond size={24} />
+            </div>
+            <div className="flex-1 text-right">
+              <div className="font-bold text-lg">ثروات صقر</div>
+              <div className="text-white/80 text-xs">شاهد واربح من 1 الى 100 جوهرة! عجلة الحظ وصناديق الكنز</div>
+            </div>
+            <div className="bg-green-500 px-3 py-1 rounded-lg text-xs font-bold">
+              جديد
+            </div>
+          </div>
+        </button>
       )}
 
       {/* Diamond Shop Modal */}
