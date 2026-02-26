@@ -85,6 +85,9 @@ export const api = {
   // Check connection
   checkConnection,
   
+  // Force refresh connection
+  refreshConnection: refreshConnectionStatus,
+  
   // Set tokens
   setTokens(access, refresh = null) {
     accessToken = access;
