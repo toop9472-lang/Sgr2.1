@@ -698,10 +698,10 @@ const TriviaGame = ({ mode, onComplete, onClose }) => {
   const [timeLeft, setTimeLeft] = useState(20);
   const [questions, setQuestions] = useState([]);
 
-  // اختيار 15 سؤال عشوائي من 100 سؤال
+  // اختيار 50 سؤال عشوائي متغير لكل جولة
   useEffect(() => {
     const shuffled = [...triviaQuestions].sort(() => Math.random() - 0.5);
-    const selected = shuffled.slice(0, 15).map(q => ({
+    const selected = shuffled.slice(0, 50).map(q => ({
       q: q.question,
       options: q.options,
       correct: q.answer,
