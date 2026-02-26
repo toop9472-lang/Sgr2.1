@@ -21,6 +21,10 @@ import storage from '../services/storage';
 const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenShop, onOpenAdminPanel }) => {
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [adminTapCount, setAdminTapCount] = useState(0);
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
   const [editName, setEditName] = useState(user?.name || '');
