@@ -642,7 +642,7 @@ const PuzzleGame = ({ mode, onComplete, onClose }) => {
       {completed && (
         <View style={styles.completedCard}>
           <Ionicons name="trophy" size={50} color="#fbbf24" />
-          <Text style={styles.completedText}>ممتاز! 🎉</Text>
+          <Text style={styles.completedText}>ممتاز</Text>
           <Text style={styles.completedSub}>{moves} حركة في {formatTime(timer)}</Text>
           <TouchableOpacity style={styles.playAgainBtn} onPress={() => {
             setCurrentImage(PUZZLE_IMAGES[Math.floor(Math.random() * PUZZLE_IMAGES.length)]);
