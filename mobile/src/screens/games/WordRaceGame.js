@@ -12,7 +12,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const { width } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const isTablet = screenWidth > 600;
+const GAME_WIDTH = isTablet ? Math.min(screenWidth * 0.7, 500) : screenWidth;
 const GAME_TIME = 90;
 
 // كلمات عربية مع تلميحات
