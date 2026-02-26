@@ -22,6 +22,9 @@ import storage from '../services/storage';
 import multiplayerService from '../services/multiplayer';
 import ChessGame from './games/ChessGame';
 import BrickBreakerGame from './games/BrickBreakerGame';
+import AIQuestGame from './games/AIQuestGame';
+import MemoryGame from './games/MemoryGame';
+import SnakeGame from './games/SnakeGame';
 import { triviaQuestions, riddlesQuestions } from '../data/questionsData';
 
 const { width, height } = Dimensions.get('window');
@@ -1297,7 +1300,6 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
             onSelectMode={handleModeSelect}
             onClose={() => setShowModeSelector(null)}
           />
-        )}
         )}
       </LinearGradient>
     );
