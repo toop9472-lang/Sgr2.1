@@ -3,6 +3,10 @@ import React, { useState } from 'react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
+// معلومات الدعم الحقيقية
+const SUPPORT_EMAIL = 'sky-321@hotmail.com';
+const SUPPORT_WHATSAPP = '+966539999415';
+
 const SupportPage = () => {
   const [formData, setFormData] = useState({
     name: '',
