@@ -87,7 +87,7 @@ class UserBalanceResponse(BaseModel):
     saqr_points: int
     diamonds: int
     saqr_gems: int  # جواهر صقر للاستبدال بالمال
-    saqr_gems_value_usd: float
+    saqr_gems_value_sar: float
     daily_points_earned: int
     daily_points_remaining: int
     daily_limit: int
@@ -140,7 +140,7 @@ async def get_user_balance(user_id: str):
         "saqr_points": saqr_points,
         "diamonds": diamonds,
         "saqr_gems": saqr_gems,
-        "saqr_gems_value_usd": saqr_gems / GEMS_PER_DOLLAR,
+        "saqr_gems_value_sar": saqr_gems / GEMS_PER_RIYAL,
         "daily_points_earned": daily_earned,
         "daily_points_remaining": max(0, DAILY_POINTS_LIMIT - daily_earned),
         "daily_limit": DAILY_POINTS_LIMIT,
