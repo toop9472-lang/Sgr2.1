@@ -1710,6 +1710,22 @@ const styles = StyleSheet.create({
   userStatLabel: { fontSize: 11, color: '#888', marginTop: 2 },
   userStatDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.1)' },
   
+  // Premium Stats Card
+  premiumStatsCard: { marginHorizontal: 20, marginBottom: 16, borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  premiumStatsGradient: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingVertical: 18, paddingHorizontal: 12 },
+  premiumStatItem: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  premiumStatIconBg: { width: 42, height: 42, borderRadius: 12, backgroundColor: 'rgba(251, 191, 36, 0.15)', justifyContent: 'center', alignItems: 'center', position: 'relative' },
+  premiumStatInfo: { alignItems: 'flex-start' },
+  premiumStatValue: { fontSize: 18, fontWeight: '800', color: '#FFF' },
+  premiumStatLabel: { fontSize: 10, color: 'rgba(255,255,255,0.5)', marginTop: 1 },
+  premiumStatDivider: { width: 1, height: 36, backgroundColor: 'rgba(255,255,255,0.08)' },
+  shopPlusBadge: { position: 'absolute', top: -3, right: -3, width: 14, height: 14, borderRadius: 7, backgroundColor: '#22c55e', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: 'rgba(20,20,35,1)' },
+  dailyProgressContainer: { backgroundColor: 'rgba(0,0,0,0.3)', paddingVertical: 10, paddingHorizontal: 16 },
+  dailyProgressInfo: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
+  dailyProgressText: { fontSize: 11, color: 'rgba(255,255,255,0.6)' },
+  dailyProgressBar: { height: 4, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' },
+  dailyProgressFill: { height: '100%', backgroundColor: '#22c55e', borderRadius: 2 },
+  
   // Exchange Info
   exchangeInfo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 16 },
   exchangeText: { fontSize: 12, color: '#10b981' },
