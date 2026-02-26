@@ -690,7 +690,7 @@ async def get_ad_stats(user_id: str):
         "today_ads_watched": today_count,
         "today_diamonds_earned": today_diamonds,
         "current_diamonds": user.get("diamonds", 0),
-        "exchange_rate": "500 diamonds = $1"
+        "exchange_rate": "500 جوهرة صقر = 1 ريال سعودي"
     }
 
 
