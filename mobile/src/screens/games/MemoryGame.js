@@ -12,10 +12,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const { width } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const isTablet = screenWidth > 600;
+const MAX_GRID_WIDTH = isTablet ? 400 : screenWidth - 40;
 const CARD_MARGIN = 4;
 const GRID_SIZE = 4; // 4x4 grid = 16 cards = 8 pairs
-const CARD_SIZE = (width - 40 - (CARD_MARGIN * 2 * GRID_SIZE)) / GRID_SIZE;
+const CARD_SIZE = (MAX_GRID_WIDTH - (CARD_MARGIN * 2 * GRID_SIZE)) / GRID_SIZE;
 
 // إيموجي الأيقونات للبطاقات
 const CARD_ICONS = [
