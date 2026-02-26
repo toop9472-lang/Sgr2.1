@@ -222,12 +222,18 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
   const wsRef = useRef(null);
 
   const games = [
-    { id: 'chess', name: 'الشطرنج', colors: ['#8b5cf6', '#6d28d9'], description: 'لعبة الملوك الاستراتيجية', maxPoints: 30, online: true, onlineCost: 30 },
-    { id: 'tictactoe', name: 'اكس او', colors: ['#f59e0b', '#d97706'], description: 'تحدى منافسك', maxPoints: 25, online: true, onlineCost: 20 },
-    { id: 'wordchain', name: 'سباق الكلمات', colors: ['#f97316', '#ea580c'], description: 'تحدي الكلمات المتسلسلة', maxPoints: 50, online: true, onlineCost: 20 },
-    { id: 'puzzle', name: 'تركيب الصور', colors: ['#3b82f6', '#1d4ed8'], description: 'صور حقيقية للتركيب', maxPoints: 50, online: true, onlineCost: 25 },
-    { id: 'trivia', name: 'أسئلة ثقافية', colors: ['#10b981', '#059669'], description: '200+ سؤال متنوع', maxPoints: 50, online: true, onlineCost: 15 },
-    { id: 'speedmath', name: 'سرعة الحساب', colors: ['#06b6d4', '#0891b2'], description: 'تحدي الرياضيات', maxPoints: 50, online: true, onlineCost: 15 },
+    { id: 'aiquest', name: 'AI Quest', colors: ['#ec4899', '#9333ea'], description: 'تحدى الذكاء الاصطناعي', maxPoints: 30, online: false, onlineCost: 0, category: 'ذكاء اصطناعي', badge: 'جديد' },
+    { id: 'chess', name: 'الشطرنج', colors: ['#7c3aed', '#4c1d95'], description: 'لعبة الملوك والاستراتيجية', maxPoints: 25, online: true, onlineCost: 30, category: 'استراتيجية', badge: 'مميز' },
+    { id: 'tictactoe', name: 'اكس او', colors: ['#f97316', '#c2410c'], description: 'تحدى منافسك وفكر بذكاء', maxPoints: 20, online: true, onlineCost: 20, category: 'سريعة', badge: 'شعبي' },
+    { id: 'memory', name: 'الذاكرة', colors: ['#14b8a6', '#0f766e'], description: 'اختبر ذاكرتك وركز', maxPoints: 18, online: false, onlineCost: 0, category: 'ذهنية', badge: '' },
+    { id: 'snake', name: 'الثعبان', colors: ['#22c55e', '#15803d'], description: 'اللعبة الكلاسيكية المحبوبة', maxPoints: 20, online: false, onlineCost: 0, category: 'كلاسيكية', badge: 'كلاسيك' },
+    { id: 'trivia', name: 'اسئلة ثقافية', colors: ['#10b981', '#047857'], description: 'اختبر معلوماتك العامة', maxPoints: 25, online: true, onlineCost: 20, category: 'ثقافية', badge: '250+ سؤال' },
+    { id: 'puzzle', name: 'تركيب الصور', colors: ['#3b82f6', '#1e40af'], description: 'رتب القطع لتكمل الصورة', maxPoints: 20, online: true, onlineCost: 25, category: 'ذهنية', badge: '' },
+    { id: 'riddles', name: 'الالغاز', colors: ['#eab308', '#ca8a04'], description: 'حل الالغاز الذكية', maxPoints: 20, online: false, onlineCost: 0, category: 'ذهنية', badge: '' },
+    { id: 'brickbreaker', name: 'تكسير الطوب', colors: ['#ec4899', '#be185d'], description: 'كسر كل الطوب واربح', maxPoints: 20, online: false, onlineCost: 0, category: 'اركيد', badge: '' },
+    { id: 'speedmath', name: 'سباق الحساب', colors: ['#8b5cf6', '#6d28d9'], description: 'حل المعادلات بسرعة', maxPoints: 22, online: true, onlineCost: 20, category: 'رياضيات', badge: 'تحدي' },
+    { id: 'wordchain', name: 'سباق الكلمات', colors: ['#06b6d4', '#0891b2'], description: 'اكتشف الكلمات المخفية', maxPoints: 22, online: true, onlineCost: 25, category: 'لغوية', badge: '' },
+    { id: 'colorswitch', name: 'تبديل الالوان', colors: ['#f43f5e', '#e11d48'], description: 'سرعة التفاعل مع الالوان', maxPoints: 18, online: false, onlineCost: 0, category: 'سريعة', badge: '' },
   ];
 
   // Check if user is guest
