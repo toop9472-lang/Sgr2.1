@@ -404,31 +404,50 @@ const TicTacToeGame = ({ mode, onComplete, onClose, isOnline, opponent, isMyTurn
 };
 
 // ==================== PUZZLE GAME ====================
+// ==================== PUZZLE GAME (PROFESSIONAL IMAGE PUZZLE) ====================
+const PUZZLE_IMAGES = [
+  { id: 1, name: 'الطبيعة', emoji: '🏔️', gradient: ['#22c55e', '#15803d'] },
+  { id: 2, name: 'المحيط', emoji: '🌊', gradient: ['#3b82f6', '#1d4ed8'] },
+  { id: 3, name: 'الغروب', emoji: '🌅', gradient: ['#f97316', '#ea580c'] },
+  { id: 4, name: 'الفضاء', emoji: '🚀', gradient: ['#8b5cf6', '#7c3aed'] },
+  { id: 5, name: 'الصحراء', emoji: '🏜️', gradient: ['#fbbf24', '#d97706'] },
+  { id: 6, name: 'الزهور', emoji: '🌸', gradient: ['#ec4899', '#db2777'] },
+];
+
 const PuzzleGame = ({ mode, onComplete, onClose }) => {
   const [pieces, setPieces] = useState([]);
   const [moves, setMoves] = useState(0);
   const [timer, setTimer] = useState(0);
   const [selected, setSelected] = useState(null);
   const [completed, setCompleted] = useState(false);
-  const [difficulty, setDifficulty] = useState(3); // 3x3, 4x4, 5x5
+  const [difficulty, setDifficulty] = useState(3);
+  const [currentImage, setCurrentImage] = useState(PUZZLE_IMAGES[0]);
+  const [showPreview, setShowPreview] = useState(true);
+  const [hintUsed, setHintUsed] = useState(0);
   const gridSize = difficulty;
 
   useEffect(() => {
-    initPuzzle();
-  }, [difficulty]);
+    // عرض الصورة الأصلية لمدة 3 ثواني قبل البدء
+    setShowPreview(true);
+    const previewTimer = setTimeout(() => {
+      setShowPreview(false);
+      initPuzzle();
+    }, 3000);
+    return () => clearTimeout(previewTimer);
+  }, [difficulty, currentImage]);
 
   useEffect(() => {
     let interval;
-    if (!completed && pieces.length > 0) {
+    if (!completed && pieces.length > 0 && !showPreview) {
       interval = setInterval(() => setTimer(t => t + 1), 1000);
     }
     return () => clearInterval(interval);
-  }, [completed, pieces]);
+  }, [completed, pieces, showPreview]);
 
   const initPuzzle = () => {
     const total = gridSize * gridSize;
     let arr = [...Array(total).keys()];
-    // Shuffle
+    // Fisher-Yates Shuffle للتأكد من قابلية الحل
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [arr[i], arr[j]] = [arr[j], arr[i]];
@@ -438,10 +457,11 @@ const PuzzleGame = ({ mode, onComplete, onClose }) => {
     setTimer(0);
     setCompleted(false);
     setSelected(null);
+    setHintUsed(0);
   };
 
   const handlePiecePress = (idx) => {
-    if (completed) return;
+    if (completed || showPreview) return;
     
     if (selected === null) {
       setSelected(idx);
@@ -455,13 +475,64 @@ const PuzzleGame = ({ mode, onComplete, onClose }) => {
       if (newPieces.every((p, i) => p === i)) {
         setCompleted(true);
         const basePoints = { 3: 50, 4: 100, 5: 150 }[gridSize] || 50;
-        const bonus = Math.max(0, 50 - Math.floor(moves / 5) - Math.floor(timer / 30));
-        onComplete(basePoints + bonus, moves, timer);
+        const timeBonus = Math.max(0, 30 - Math.floor(timer / 10));
+        const movesBonus = Math.max(0, 20 - Math.floor(moves / 5));
+        const hintPenalty = hintUsed * 10;
+        const totalPoints = Math.max(10, basePoints + timeBonus + movesBonus - hintPenalty);
+        onComplete(totalPoints, 'win');
       }
     }
   };
 
+  const useHint = () => {
+    if (hintUsed >= 3 || completed) return;
+    // عرض الصورة الأصلية لمدة 2 ثانية
+    setShowPreview(true);
+    setHintUsed(h => h + 1);
+    setTimeout(() => setShowPreview(false), 2000);
+  };
+
+  const changeImage = () => {
+    const currentIdx = PUZZLE_IMAGES.findIndex(img => img.id === currentImage.id);
+    const nextIdx = (currentIdx + 1) % PUZZLE_IMAGES.length;
+    setCurrentImage(PUZZLE_IMAGES[nextIdx]);
+  };
+
   const formatTime = (s) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
+
+  // شاشة المعاينة
+  if (showPreview) {
+    return (
+      <View style={styles.gameContainer}>
+        <View style={styles.gameHeader}>
+          <TouchableOpacity onPress={onClose} style={styles.headerBtn}>
+            <Ionicons name="arrow-back" size={24} color="#FFF" />
+          </TouchableOpacity>
+          <Text style={styles.gameTitle}>تركيب الصور</Text>
+          <View style={{ width: 44 }} />
+        </View>
+        
+        <View style={styles.previewContainer}>
+          <Text style={styles.previewTitle}>احفظ هذه الصورة!</Text>
+          <LinearGradient
+            colors={currentImage.gradient}
+            style={[styles.previewImage, { width: width - 80, height: width - 80 }]}
+          >
+            <Text style={styles.previewEmoji}>{currentImage.emoji}</Text>
+            <Text style={styles.previewName}>{currentImage.name}</Text>
+            <View style={styles.previewGrid}>
+              {[...Array(gridSize * gridSize).keys()].map((num) => (
+                <View key={num} style={[styles.previewPiece, { width: (width - 100) / gridSize, height: (width - 100) / gridSize }]}>
+                  <Text style={styles.previewPieceNum}>{num + 1}</Text>
+                </View>
+              ))}
+            </View>
+          </LinearGradient>
+          <Text style={styles.previewCountdown}>تبدأ اللعبة خلال ثوانٍ...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.gameContainer}>
@@ -475,6 +546,15 @@ const PuzzleGame = ({ mode, onComplete, onClose }) => {
         </TouchableOpacity>
       </View>
 
+      {/* Current Image Indicator */}
+      <TouchableOpacity onPress={changeImage} style={styles.imageIndicator}>
+        <LinearGradient colors={currentImage.gradient} style={styles.imageIndicatorGradient}>
+          <Text style={styles.imageIndicatorEmoji}>{currentImage.emoji}</Text>
+          <Text style={styles.imageIndicatorName}>{currentImage.name}</Text>
+          <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.7)" />
+        </LinearGradient>
+      </TouchableOpacity>
+
       {/* Difficulty Selector */}
       <View style={styles.difficultyRow}>
         {[3, 4, 5].map(d => (
@@ -483,7 +563,7 @@ const PuzzleGame = ({ mode, onComplete, onClose }) => {
             style={[styles.diffBtn, difficulty === d && styles.diffBtnActive]}
             onPress={() => setDifficulty(d)}
           >
-            <Text style={[styles.diffText, difficulty === d && styles.diffTextActive]}>{d}x{d}</Text>
+            <Text style={[styles.diffText, difficulty === d && styles.diffTextActive]}>{d}×{d}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -496,41 +576,80 @@ const PuzzleGame = ({ mode, onComplete, onClose }) => {
         </View>
         <View style={styles.statItem}>
           <Ionicons name="swap-horizontal" size={18} color="#f59e0b" />
-          <Text style={styles.statText}>{moves}</Text>
+          <Text style={styles.statText}>{moves} حركة</Text>
         </View>
+        <TouchableOpacity style={styles.hintBtn} onPress={useHint} disabled={hintUsed >= 3}>
+          <Ionicons name="bulb" size={18} color={hintUsed >= 3 ? '#666' : '#fbbf24'} />
+          <Text style={[styles.hintText, hintUsed >= 3 && { color: '#666' }]}>{3 - hintUsed}</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Puzzle Grid */}
       <View style={[styles.puzzleGrid, { width: width - 40 }]}>
         {pieces.map((piece, idx) => {
           const pieceSize = (width - 48) / gridSize;
+          const isCorrect = piece === idx;
+          const isSelected = selected === idx;
+          
+          // حساب موقع القطعة في الشبكة الأصلية
+          const row = Math.floor(piece / gridSize);
+          const col = piece % gridSize;
+          
           return (
             <TouchableOpacity
               key={idx}
               style={[
                 styles.puzzlePiece,
                 { width: pieceSize, height: pieceSize },
-                selected === idx && styles.pieceSelected,
-                completed && piece === idx && styles.pieceCorrect,
+                isSelected && styles.pieceSelected,
+                completed && styles.pieceCorrect,
               ]}
               onPress={() => handlePiecePress(idx)}
+              activeOpacity={0.8}
             >
               <LinearGradient
-                colors={completed ? ['#10b981', '#059669'] : (piece === idx ? ['#3b82f6', '#2563eb'] : ['#1e293b', '#334155'])}
+                colors={completed ? ['#10b981', '#059669'] : 
+                        isCorrect ? ['#22c55e', '#16a34a'] : 
+                        isSelected ? ['#3b82f6', '#2563eb'] : 
+                        currentImage.gradient}
                 style={styles.pieceInner}
               >
                 <Text style={styles.pieceNum}>{piece + 1}</Text>
+                {isCorrect && !completed && (
+                  <Ionicons name="checkmark" size={12} color="#fff" style={styles.correctBadge} />
+                )}
               </LinearGradient>
             </TouchableOpacity>
           );
         })}
       </View>
 
+      {/* Progress Indicator */}
+      <View style={styles.progressContainer}>
+        <Text style={styles.progressText}>
+          {pieces.filter((p, i) => p === i).length} / {gridSize * gridSize} قطعة صحيحة
+        </Text>
+        <View style={styles.progressBar}>
+          <View 
+            style={[
+              styles.progressFill, 
+              { width: `${(pieces.filter((p, i) => p === i).length / (gridSize * gridSize)) * 100}%` }
+            ]} 
+          />
+        </View>
+      </View>
+
       {completed && (
         <View style={styles.completedCard}>
-          <Ionicons name="checkmark-circle" size={50} color="#10b981" />
-          <Text style={styles.completedText}>ممتاز!</Text>
+          <Ionicons name="trophy" size={50} color="#fbbf24" />
+          <Text style={styles.completedText}>ممتاز! 🎉</Text>
           <Text style={styles.completedSub}>{moves} حركة في {formatTime(timer)}</Text>
+          <TouchableOpacity style={styles.playAgainBtn} onPress={() => {
+            setCurrentImage(PUZZLE_IMAGES[Math.floor(Math.random() * PUZZLE_IMAGES.length)]);
+          }}>
+            <Ionicons name="refresh" size={18} color="#FFF" />
+            <Text style={styles.playAgainText}>صورة جديدة</Text>
+          </TouchableOpacity>
         </View>
       )}
     </View>
