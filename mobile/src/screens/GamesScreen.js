@@ -1507,6 +1507,29 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
           <Text style={styles.exchangeText}>500 نقطة صقر = 1 دولار</Text>
         </View>
 
+        {/* Ad Challenges Button - تحديات الإعلانات */}
+        <TouchableOpacity 
+          style={styles.adChallengesBtn}
+          onPress={() => setShowAdChallenges(true)}
+          activeOpacity={0.85}
+        >
+          <LinearGradient 
+            colors={['#f97316', '#ea580c']} 
+            style={styles.adChallengesGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <View style={styles.adChallengeBtnIcon}>
+              <Ionicons name="gift" size={22} color="#FFF" />
+            </View>
+            <View style={styles.adChallengesBtnInfo}>
+              <Text style={styles.adChallengesBtnTitle}>تحديات الإعلانات</Text>
+              <Text style={styles.adChallengesBtnSub}>شاهد إعلانات واربح ألماسات مجانية!</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
+          </LinearGradient>
+        </TouchableOpacity>
+
         {/* Games */}
         <Text style={styles.sectionTitle}>اختر لعبة</Text>
         <View style={styles.gamesContainer}>
