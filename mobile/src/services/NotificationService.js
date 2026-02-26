@@ -252,10 +252,10 @@ export const sendPointsEarnedNotification = async (points, source, language = 'a
 // Send new game notification
 export const sendNewGameNotification = async (gameName, language = 'ar') => {
   const titles = {
-    ar: 'لعبة جديدة متاحة! 🎮',
-    en: 'New game available! 🎮',
-    fr: 'Nouveau jeu disponible! 🎮',
-    tr: 'Yeni oyun mevcut! 🎮',
+    ar: 'لعبة جديدة متاحة',
+    en: 'New game available',
+    fr: 'Nouveau jeu disponible',
+    tr: 'Yeni oyun mevcut',
   };
   
   const bodies = {
