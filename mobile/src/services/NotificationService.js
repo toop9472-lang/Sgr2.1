@@ -181,6 +181,11 @@ export const sendDailyRewardReminder = async (language = 'ar') => {
 
 // Schedule daily reward reminder (every day at specific time)
 export const scheduleDailyRewardReminder = async (hour = 10, minute = 0, language = 'ar') => {
+  if (!notificationsAvailable || !Notifications) {
+    console.log('Cannot schedule daily reminder - notifications not available');
+    return null;
+  }
+  
   // Cancel existing daily reminders
   await cancelScheduledNotifications('daily_reminder');
   
