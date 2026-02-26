@@ -327,8 +327,13 @@ const styles = StyleSheet.create({
   optionItemSelected: {
     backgroundColor: 'rgba(59, 130, 246, 0.1)',
   },
-  optionFlag: {
-    fontSize: 24,
+  langIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(96, 165, 250, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 12,
   },
   optionText: {
