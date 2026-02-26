@@ -1,6 +1,6 @@
 // مركز مكافآت الإعلانات - Ad Rewards Center
 // نظام متكامل وممتع لمشاهدة الإعلانات والحصول على المكافآت
-// 1 جوهرة لكل دقيقة مشاهدة - 500 جوهرة = 1 دولار
+// 1 جوهرة لكل دقيقة مشاهدة - 500 جوهرة = 1 ريال سعودي
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -26,7 +26,7 @@ const { width, height } = Dimensions.get('window');
 
 // ==================== ثوابت النظام ====================
 const DIAMOND_PER_MINUTE = 1; // جوهرة واحدة لكل دقيقة
-const DIAMONDS_PER_DOLLAR = 500;
+const GEMS_PER_RIYAL = 500; // 500 جوهرة = 1 ريال سعودي
 const AD_DURATION_SECONDS = 30; // مدة الإعلان
 const MAX_DAILY_ADS = 50; // الحد الأقصى للإعلانات اليومية
 
@@ -568,7 +568,7 @@ const RewardResultModal = ({ visible, diamonds, onClose, isBonus, bonusReason })
 
             <View style={resultStyles.valueInfo}>
               <Text style={resultStyles.valueText}>
-                قيمتها: ${(diamonds / DIAMONDS_PER_DOLLAR).toFixed(3)}
+                قيمتها: {(diamonds / GEMS_PER_RIYAL).toFixed(3)} ريال
               </Text>
             </View>
 
@@ -886,7 +886,7 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
               >
                 <Ionicons name="swap-horizontal" size={20} color="#10b981" />
                 <Text style={styles.exchangeText}>
-                  500 جوهرة = 1 دولار أمريكي
+                  500 جوهرة = 1 ريال سعودي
                 </Text>
               </LinearGradient>
 
