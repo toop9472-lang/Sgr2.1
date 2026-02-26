@@ -159,6 +159,50 @@ const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenS
     }
   };
 
+  // معالجة الضغط المتكرر على رقم الإصدار لفتح تسجيل دخول الأدمن
+  const handleVersionTap = () => {
+    const newCount = adminTapCount + 1;
+    setAdminTapCount(newCount);
+    
+    if (newCount >= 7) {
+      setShowAdminLogin(true);
+      setAdminTapCount(0);
+    }
+    
+    // إعادة تعيين العداد بعد 3 ثواني
+    setTimeout(() => setAdminTapCount(0), 3000);
+  };
+
+  // تسجيل دخول الأدمن
+  const handleAdminLogin = async () => {
+    if (!adminEmail.trim() || !adminPassword.trim()) {
+      Alert.alert('خطأ', 'يرجى إدخال البريد وكلمة المرور');
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const response = await api.adminLogin(adminEmail.trim(), adminPassword);
+      const data = await response.json();
+      
+      if (response.ok && data.token) {
+        await storage.setItem('admin_token', data.token);
+        setShowAdminLogin(false);
+        setAdminEmail('');
+        setAdminPassword('');
+        if (onOpenAdminPanel) {
+          onOpenAdminPanel();
+        }
+      } else {
+        Alert.alert('خطأ', data.detail || 'فشل تسجيل الدخول');
+      }
+    } catch (error) {
+      Alert.alert('خطأ', 'حدث خطأ في الاتصال');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const confirmLogout = () => {
     Alert.alert(
       'تسجيل الخروج',
