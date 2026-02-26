@@ -438,7 +438,9 @@ const PuzzleGame = ({ mode, onComplete, onClose }) => {
   const [currentImage, setCurrentImage] = useState(PUZZLE_IMAGES[0]);
   const [showPreview, setShowPreview] = useState(true);
   const [hintUsed, setHintUsed] = useState(0);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const gridSize = difficulty;
+  const puzzleSize = getPuzzleSize();
 
   useEffect(() => {
     // عرض الصورة الأصلية لمدة 3 ثواني قبل البدء
