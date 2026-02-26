@@ -11,9 +11,11 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const { width } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const isTablet = screenWidth > 600;
+const MAX_GAME_SIZE = isTablet ? 400 : screenWidth - 40;
 const GRID_SIZE = 15;
-const CELL_SIZE = Math.floor((width - 40) / GRID_SIZE);
+const CELL_SIZE = Math.floor(MAX_GAME_SIZE / GRID_SIZE);
 const INITIAL_SPEED = 200;
 
 const SnakeGame = ({ mode, onComplete, onClose }) => {
