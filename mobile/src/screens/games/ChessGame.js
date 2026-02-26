@@ -432,7 +432,15 @@ const ChessGame = ({ mode, onComplete, onClose }) => {
         activeOpacity={0.8}
       >
         {pieceData && (
-          <Text style={[styles.pieceText, { color: pieceData.color === 'white' ? '#FFF' : '#1a1a2e' }]}>
+          <Text style={[
+            styles.pieceText, 
+            { 
+              color: pieceData.color === 'white' ? '#FAFAFA' : '#1a1a2e',
+              textShadowColor: pieceData.color === 'white' ? '#000' : 'rgba(255,255,255,0.3)',
+              textShadowOffset: { width: 1, height: 1 },
+              textShadowRadius: pieceData.color === 'white' ? 4 : 2,
+            }
+          ]}>
             {pieceData.char}
           </Text>
         )}
