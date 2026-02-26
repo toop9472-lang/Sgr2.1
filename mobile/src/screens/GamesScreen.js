@@ -862,6 +862,18 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
   // قائمة الألعاب المحسنة مع أيقونات متطورة
   const games = [
     { 
+      id: 'aiquest', 
+      name: 'AI Quest', 
+      icon: 'sparkles', 
+      colors: ['#ec4899', '#9333ea'], 
+      description: 'تحدى الذكاء الاصطناعي في مغامرة ذهنية', 
+      maxPoints: 30, 
+      online: false, 
+      onlineCost: 0,
+      category: 'ذكاء اصطناعي',
+      badge: 'جديد ومميز'
+    },
+    { 
       id: 'chess', 
       name: 'الشطرنج', 
       icon: 'game-controller', 
@@ -895,19 +907,31 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
       online: false, 
       onlineCost: 0,
       category: 'ذهنية',
-      badge: 'جديد'
+      badge: ''
     },
     { 
-      id: 'wordrace', 
-      name: 'سباق الكلمات', 
-      icon: 'text', 
-      colors: ['#06b6d4', '#0891b2'], 
-      description: 'اكتشف الكلمات المخفية', 
-      maxPoints: 22, 
+      id: 'snake', 
+      name: 'الثعبان', 
+      icon: 'git-branch', 
+      colors: ['#22c55e', '#15803d'], 
+      description: 'اللعبة الكلاسيكية المحبوبة', 
+      maxPoints: 20, 
+      online: false, 
+      onlineCost: 0,
+      category: 'كلاسيكية',
+      badge: 'كلاسيك'
+    },
+    { 
+      id: 'trivia', 
+      name: 'أسئلة ثقافية', 
+      icon: 'school', 
+      colors: ['#10b981', '#047857'], 
+      description: 'اختبر معلوماتك العامة', 
+      maxPoints: 25, 
       online: true, 
-      onlineCost: 25,
-      category: 'لغوية',
-      badge: 'ذكاء'
+      onlineCost: 20,
+      category: 'ثقافية',
+      badge: '250+ سؤال'
     },
     { 
       id: 'puzzle', 
@@ -920,30 +944,6 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
       onlineCost: 25,
       category: 'ذهنية',
       badge: ''
-    },
-    { 
-      id: 'trivia', 
-      name: 'أسئلة ثقافية', 
-      icon: 'school', 
-      colors: ['#10b981', '#047857'], 
-      description: 'اختبر معلوماتك العامة', 
-      maxPoints: 25, 
-      online: true, 
-      onlineCost: 20,
-      category: 'ثقافية',
-      badge: '1000+ سؤال'
-    },
-    { 
-      id: 'mathrace', 
-      name: 'سباق الحساب', 
-      icon: 'calculator', 
-      colors: ['#8b5cf6', '#6d28d9'], 
-      description: 'حل المعادلات بسرعة', 
-      maxPoints: 22, 
-      online: true, 
-      onlineCost: 20,
-      category: 'رياضيات',
-      badge: 'تحدي'
     },
     { 
       id: 'riddles', 
@@ -970,16 +970,28 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
       badge: ''
     },
     { 
-      id: 'snake', 
-      name: 'الثعبان', 
-      icon: 'git-branch', 
-      colors: ['#22c55e', '#15803d'], 
-      description: 'اللعبة الكلاسيكية المحبوبة', 
-      maxPoints: 20, 
-      online: false, 
-      onlineCost: 0,
-      category: 'كلاسيكية',
-      badge: 'كلاسيك'
+      id: 'mathrace', 
+      name: 'سباق الحساب', 
+      icon: 'calculator', 
+      colors: ['#8b5cf6', '#6d28d9'], 
+      description: 'حل المعادلات بسرعة', 
+      maxPoints: 22, 
+      online: true, 
+      onlineCost: 20,
+      category: 'رياضيات',
+      badge: 'تحدي'
+    },
+    { 
+      id: 'wordrace', 
+      name: 'سباق الكلمات', 
+      icon: 'text', 
+      colors: ['#06b6d4', '#0891b2'], 
+      description: 'اكتشف الكلمات المخفية', 
+      maxPoints: 22, 
+      online: true, 
+      onlineCost: 25,
+      category: 'لغوية',
+      badge: ''
     },
     { 
       id: 'colorswitch', 
@@ -990,18 +1002,6 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
       maxPoints: 18, 
       online: false, 
       onlineCost: 0,
-      category: 'سريعة',
-      badge: ''
-    },
-    { 
-      id: 'reaction', 
-      name: 'سرعة الرد', 
-      icon: 'flash', 
-      colors: ['#fbbf24', '#d97706'], 
-      description: 'اختبر سرعة ردك', 
-      maxPoints: 15, 
-      online: true, 
-      onlineCost: 15,
       category: 'سريعة',
       badge: ''
     },
