@@ -622,10 +622,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   lightSquare: {
-    backgroundColor: '#b8c5d6',
+    backgroundColor: '#e8dcc8',
   },
   darkSquare: {
-    backgroundColor: '#6b7b8c',
+    backgroundColor: '#8b7355',
   },
   selectedSquare: {
     backgroundColor: 'rgba(96,165,250,0.6)',
@@ -634,10 +634,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(34,197,94,0.4)',
   },
   pieceText: {
-    fontSize: SQUARE_SIZE * 0.7,
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+    fontSize: SQUARE_SIZE * 0.75,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 1, height: 2 },
+    textShadowRadius: 3,
+    fontWeight: 'bold',
   },
   validMoveDot: {
     width: SQUARE_SIZE * 0.25,
