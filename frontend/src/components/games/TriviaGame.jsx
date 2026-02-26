@@ -5,7 +5,8 @@ import soundManager from '../../utils/soundManager';
 import { triviaQuestions } from '../../data/gameData';
 
 const TriviaGame = ({ onComplete, onClose, userDiamonds, onUseDiamonds }) => {
-  const [questions] = useState(() => [...triviaQuestions].sort(() => Math.random() - 0.5).slice(0, 15));
+  // 50 سؤال عشوائي متغير لكل جولة
+  const [questions] = useState(() => [...triviaQuestions].sort(() => Math.random() - 0.5).slice(0, 50));
   const [currentQ, setCurrentQ] = useState(0);
   const [score, setScore] = useState(0);
   const [answered, setAnswered] = useState(null);
