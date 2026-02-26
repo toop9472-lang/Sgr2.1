@@ -1755,6 +1755,8 @@ const styles = StyleSheet.create({
   adChallengesBtnInfo: { flex: 1 },
   adChallengesBtnTitle: { fontSize: 15, fontWeight: '700', color: '#FFF' },
   adChallengesBtnSub: { fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+  newBadge: { backgroundColor: '#22c55e', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  newBadgeText: { color: '#FFF', fontSize: 10, fontWeight: 'bold' },
   
   sectionTitle: { fontSize: 18, fontWeight: '700', color: '#FFF', textAlign: 'right', marginHorizontal: 20, marginBottom: 12 },
   
