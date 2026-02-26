@@ -121,6 +121,11 @@ function AppContent() {
   // Handle back button press
   useEffect(() => {
     const backAction = () => {
+      if (showAdminPanel) {
+        setShowAdminPanel(false);
+        return true;
+      }
+      
       if (showAchievements) {
         setShowAchievements(false);
         return true;
