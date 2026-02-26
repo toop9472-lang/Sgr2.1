@@ -488,7 +488,7 @@ const AIQuestGame = ({ mode, onComplete, onClose }) => {
           </LinearGradient>
           
           <Text style={styles.gameOverTitle}>
-            {won ? 'تهانينا! 🎉' : 'انتهت اللعبة'}
+            {won ? 'تهانينا' : 'انتهت اللعبة'}
           </Text>
           <Text style={styles.gameOverSubtitle}>
             {won ? 'لقد هزمت الذكاء الاصطناعي!' : 'الذكاء الاصطناعي فاز هذه المرة'}
