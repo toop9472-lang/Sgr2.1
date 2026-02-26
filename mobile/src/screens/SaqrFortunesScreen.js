@@ -355,27 +355,32 @@ const SaqrFortunesScreen = ({ user, onClose, onBalanceUpdate }) => {
             <Text style={styles.headerTitle}>ثروات صقر</Text>
             <Text style={styles.headerSub}>شاهد واربح الجواهر</Text>
           </View>
-          <View style={styles.diamondHeader}>
-            <Ionicons name="diamond" size={18} color="#60a5fa" />
-            <Text style={styles.diamondHeaderText}>{diamonds}</Text>
+          <View style={styles.gemsHeader}>
+            <LinearGradient
+              colors={['#f472b6', '#c084fc']}
+              style={styles.gemIconSmall}
+            >
+              <Ionicons name="sparkles" size={14} color="#FFF" />
+            </LinearGradient>
+            <Text style={styles.gemsHeaderText}>{saqrGems}</Text>
           </View>
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* Main Stats */}
           <View style={styles.statsRow}>
-            <StatsCard icon="tv" value={todayAds} label="إعلانات اليوم" color="#60a5fa" />
-            <StatsCard icon="videocam" value={totalAds} label="إجمالي الإعلانات" color="#ec4899" />
-            <StatsCard icon="cash" value={`$${(diamonds / DIAMONDS_PER_DOLLAR).toFixed(2)}`} label="القيمة" color="#22c55e" />
+            <StatsCard icon="tv" value={todayAds} label="اعلانات اليوم" color="#60a5fa" />
+            <StatsCard icon="videocam" value={totalAds} label="اجمالي الاعلانات" color="#ec4899" />
+            <StatsCard icon="cash" value={`$${(saqrGems / GEMS_PER_DOLLAR).toFixed(2)}`} label="القيمة" color="#22c55e" />
           </View>
 
           {/* Dollar Progress */}
-          <DollarProgress diamonds={diamonds} />
+          <DollarProgress saqrGems={saqrGems} />
 
           {/* Main Watch Button */}
           <MainWatchButton
             onPress={() => setShowRewardsCenter(true)}
-            diamonds={diamonds}
+            saqrGems={saqrGems}
             loading={false}
           />
 
@@ -396,14 +401,14 @@ const SaqrFortunesScreen = ({ user, onClose, onBalanceUpdate }) => {
 
             <TouchableOpacity 
               style={styles.quickAction}
-              onPress={() => Alert.alert('قريباً', 'هذه الميزة قيد التطوير!')}
+              onPress={() => Alert.alert('قريبا', 'هذه الميزة قيد التطوير!')}
             >
               <LinearGradient
                 colors={['rgba(236,72,153,0.2)', 'rgba(236,72,153,0.05)']}
                 style={styles.quickActionGradient}
               >
                 <Ionicons name="trophy" size={24} color="#ec4899" />
-                <Text style={styles.quickActionText}>سباق الإعلانات</Text>
+                <Text style={styles.quickActionText}>سباق الاعلانات</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
@@ -438,10 +443,10 @@ const SaqrFortunesScreen = ({ user, onClose, onBalanceUpdate }) => {
             <View style={styles.tipCard}>
               <Ionicons name="bulb" size={20} color="#fbbf24" />
               <View style={styles.tipContent}>
-                <Text style={styles.tipTitle}>نصيحة للربح الأقصى</Text>
+                <Text style={styles.tipTitle}>نصيحة للربح الاقصى</Text>
                 <Text style={styles.tipText}>
-                  شاهد الإعلانات بشكل متتالي للحصول على مكافآت إضافية. 
-                  كل 5 إعلانات متتالية = مكافأة خاصة!
+                  شاهد الاعلانات بشكل متتالي للحصول على مكافات اضافية. 
+                  كل 5 اعلانات متتالية = مكافاة خاصة!
                 </Text>
               </View>
             </View>
