@@ -124,6 +124,11 @@ function AppContent() {
         return true;
       }
       
+      if (showShop) {
+        setShowShop(false);
+        return true;
+      }
+      
       if (showAIChat) {
         setShowAIChat(false);
         return true;
