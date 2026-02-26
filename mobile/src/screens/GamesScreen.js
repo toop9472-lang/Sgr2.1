@@ -549,7 +549,7 @@ const PuzzleGame = ({ mode, onComplete, onClose }) => {
       {/* Current Image Indicator */}
       <TouchableOpacity onPress={changeImage} style={styles.imageIndicator}>
         <LinearGradient colors={currentImage.gradient} style={styles.imageIndicatorGradient}>
-          <Text style={styles.imageIndicatorEmoji}>{currentImage.emoji}</Text>
+          <Ionicons name={currentImage.icon} size={20} color="#FFF" />
           <Text style={styles.imageIndicatorName}>{currentImage.name}</Text>
           <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.7)" />
         </LinearGradient>
