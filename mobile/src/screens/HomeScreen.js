@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  Image,
   RefreshControl,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
