@@ -708,7 +708,7 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
           <Gamepad2 size={20} />
           اختر لعبة
         </h2>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {games.map(game => {
             const GameIcon = gameIcons[game.id] || Gamepad2;
             return (
@@ -721,6 +721,13 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
                 style={{ background: `linear-gradient(135deg, ${game.colors[0]}, ${game.colors[1]})` }}
                 data-testid={`game-card-${game.id}`}
               >
+                {/* Badge */}
+                {game.badge && (
+                  <div className="absolute top-2 left-2 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full text-[10px] font-bold">
+                    {game.badge}
+                  </div>
+                )}
+                
                 {/* Lock overlay for guests */}
                 {isGuest && (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
@@ -728,20 +735,38 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
                   </div>
                 )}
                 <div className="p-4 text-center">
-                  <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-white/20 flex items-center justify-center">
-                    <GameIcon size={24} />
-                  </div>
-                  <div className="font-bold">{game.name}</div>
-                  <div className="text-white/80 text-xs mb-2">{game.description}</div>
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="inline-flex items-center gap-1 bg-black/20 px-2 py-0.5 rounded-full text-xs">
-                      <Star size={10} />
-                      +{game.maxPoints}
+                  {/* Icon with glow */}
+                  <div className="relative w-14 h-14 mx-auto mb-3">
+                    <div className="absolute inset-0 bg-white/20 rounded-full blur-lg" />
+                    <div className="relative w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
+                      <GameIcon size={28} />
                     </div>
-                    {game.online && (
-                      <div className="inline-flex items-center gap-1 bg-blue-500/30 px-2 py-0.5 rounded-full text-xs">
+                  </div>
+                  
+                  <div className="font-bold text-base">{game.name}</div>
+                  <div className="text-white/70 text-xs mb-2 line-clamp-1">{game.description}</div>
+                  
+                  {/* Category Tag */}
+                  <div className="inline-block bg-black/20 px-2 py-0.5 rounded-full text-[10px] mb-2">
+                    {game.category}
+                  </div>
+                  
+                  {/* Footer */}
+                  <div className="flex items-center justify-center gap-2 mt-1">
+                    <div className="inline-flex items-center gap-1 bg-black/30 px-2 py-0.5 rounded-full text-xs">
+                      <Star size={10} className="text-yellow-400" />
+                      <span>+{game.maxPoints}</span>
+                    </div>
+                    {game.online ? (
+                      <div className="inline-flex items-center gap-1 bg-blue-500/40 px-2 py-0.5 rounded-full text-xs">
+                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
                         <Wifi size={10} />
-                        أونلاين
+                        <span>اونلاين</span>
+                      </div>
+                    ) : (
+                      <div className="inline-flex items-center gap-1 bg-green-500/30 px-2 py-0.5 rounded-full text-xs">
+                        <Gamepad2 size={10} />
+                        <span>فردي</span>
                       </div>
                     )}
                   </div>
