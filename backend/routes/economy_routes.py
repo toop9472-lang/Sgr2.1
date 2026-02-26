@@ -115,10 +115,10 @@ class ClaimDailyRewardRequest(BaseModel):
 
 @router.get("/balance/{user_id}")
 async def get_user_balance(user_id: str):
-    """الحصول على رصيد المستخدم من النقاط والألماسات"""
+    """الحصول على رصيد المستخدم من النقاط والألماسات وجواهر صقر"""
     user = await db.users.find_one(
         {"$or": [{"id": user_id}, {"user_id": user_id}]},
-        {"_id": 0, "saqr_points": 1, "diamonds": 1, "points": 1}
+        {"_id": 0, "saqr_points": 1, "diamonds": 1, "saqr_gems": 1, "points": 1}
     )
     
     if not user:
@@ -134,15 +134,18 @@ async def get_user_balance(user_id: str):
     daily_earned = daily_record.get("points", 0) if daily_record else 0
     saqr_points = user.get("saqr_points", user.get("points", 0))
     diamonds = user.get("diamonds", INITIAL_DIAMONDS)
+    saqr_gems = user.get("saqr_gems", INITIAL_SAQR_GEMS)
     
     return {
         "saqr_points": saqr_points,
         "diamonds": diamonds,
-        "saqr_points_value_sar": saqr_points / POINTS_PER_DOLLAR,
+        "saqr_gems": saqr_gems,
+        "saqr_gems_value_usd": saqr_gems / GEMS_PER_DOLLAR,
         "daily_points_earned": daily_earned,
         "daily_points_remaining": max(0, DAILY_POINTS_LIMIT - daily_earned),
         "daily_limit": DAILY_POINTS_LIMIT,
-        "points_per_dollar": POINTS_PER_DOLLAR
+        "gems_per_dollar": GEMS_PER_DOLLAR,
+        "chat_message_cost": CHAT_MESSAGE_COST
     }
 
 @router.get("/packages")
