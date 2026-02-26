@@ -309,10 +309,31 @@ const HomeScreen = ({ user, onNavigateToAds, onNavigateToGames, onNavigateToChat
           </LinearGradient>
         </TouchableOpacity>
 
+        {/* Friends Section */}
+        <TouchableOpacity 
+          style={styles.friendsCard}
+          onPress={onNavigateToFriends}
+          activeOpacity={0.9}
+        >
+          <LinearGradient 
+            colors={['#22c55e', '#16a34a']} 
+            style={styles.friendsGradient}
+          >
+            <View style={styles.friendsIcon}>
+              <Ionicons name="people" size={26} color="#FFF" />
+            </View>
+            <View style={styles.friendsInfo}>
+              <Text style={styles.friendsTitle}>الأصدقاء والبريد</Text>
+              <Text style={styles.friendsDesc}>أضف أصدقاء، تراسل، وادعهم للألعاب!</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={22} color="rgba(255,255,255,0.8)" />
+          </LinearGradient>
+        </TouchableOpacity>
+
         {/* Tips Card */}
         <View style={styles.tipsCard}>
           <Ionicons name="bulb-outline" size={20} color="#fbbf24" />
-          <Text style={styles.tipsText}>العب يومياً للحصول على مكافآت حصرية!</Text>
+          <Text style={styles.tipsText}>ادعُ أصدقاءك للألعاب مجاناً واربح جوائز مضاعفة!</Text>
         </View>
       </View>
     </ScrollView>
