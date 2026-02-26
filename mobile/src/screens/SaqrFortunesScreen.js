@@ -106,8 +106,8 @@ const DailyChallenge = ({ challenge, progress, claimed, onClaim }) => {
   );
 };
 
-// مكون زر المشاهدة الرئيسي
-const MainWatchButton = ({ onPress, diamonds, loading }) => {
+// مكون زر المشاهدة الرئيسي - يعرض جواهر صقر
+const MainWatchButton = ({ onPress, saqrGems, loading }) => {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
 
@@ -151,8 +151,8 @@ const MainWatchButton = ({ onPress, diamonds, loading }) => {
                 <Ionicons name="play-circle" size={50} color="#FFF" />
                 <Text style={styles.mainButtonTitle}>شاهد واربح!</Text>
                 <View style={styles.rewardPreview}>
-                  <Ionicons name="diamond" size={16} color="#FFF" />
-                  <Text style={styles.rewardPreviewText}>من 1 إلى 100</Text>
+                  <Ionicons name="sparkles" size={16} color="#FFF" />
+                  <Text style={styles.rewardPreviewText}>من 1 الى 100 جوهرة</Text>
                 </View>
               </>
             )}
@@ -160,21 +160,26 @@ const MainWatchButton = ({ onPress, diamonds, loading }) => {
         </TouchableOpacity>
       </Animated.View>
 
-      {/* Current Balance */}
+      {/* Current Saqr Gems Balance */}
       <View style={styles.balanceDisplay}>
-        <Ionicons name="diamond" size={24} color="#60a5fa" />
-        <Text style={styles.balanceText}>{diamonds.toLocaleString()}</Text>
-        <Text style={styles.balanceLabel}>ألماسة</Text>
+        <LinearGradient
+          colors={['#f472b6', '#c084fc']}
+          style={styles.gemIconBg}
+        >
+          <Ionicons name="sparkles" size={18} color="#FFF" />
+        </LinearGradient>
+        <Text style={styles.balanceText}>{saqrGems.toLocaleString()}</Text>
+        <Text style={styles.balanceLabel}>جوهرة صقر</Text>
       </View>
     </View>
   );
 };
 
-// مكون تقدم الدولار
-const DollarProgress = ({ diamonds }) => {
-  const progress = (diamonds % DIAMONDS_PER_DOLLAR) / DIAMONDS_PER_DOLLAR * 100;
-  const dollarsEarned = Math.floor(diamonds / DIAMONDS_PER_DOLLAR);
-  const diamondsToNext = DIAMONDS_PER_DOLLAR - (diamonds % DIAMONDS_PER_DOLLAR);
+// مكون تقدم الدولار - يعرض جواهر صقر
+const DollarProgress = ({ saqrGems }) => {
+  const progress = (saqrGems % GEMS_PER_DOLLAR) / GEMS_PER_DOLLAR * 100;
+  const dollarsEarned = Math.floor(saqrGems / GEMS_PER_DOLLAR);
+  const gemsToNext = GEMS_PER_DOLLAR - (saqrGems % GEMS_PER_DOLLAR);
 
   return (
     <View style={styles.dollarProgressCard}>
@@ -198,13 +203,13 @@ const DollarProgress = ({ diamonds }) => {
           />
         </View>
         <Text style={styles.diamondsToNext}>
-          {diamondsToNext} ألماسة للدولار التالي
+          {gemsToNext} جوهرة للدولار التالي
         </Text>
       </View>
 
       <View style={styles.exchangeRate}>
         <Ionicons name="swap-horizontal" size={14} color="#10b981" />
-        <Text style={styles.exchangeText}>500 ألماسة = 1 دولار</Text>
+        <Text style={styles.exchangeText}>500 جوهرة صقر = 1 دولار</Text>
       </View>
     </View>
   );
