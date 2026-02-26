@@ -578,12 +578,15 @@ function AppContent() {
         onPurchaseComplete={handleDiamondPurchase}
       />
 
-      {/* Bottom Navigation */}
-      <BottomNav
-        currentPage={currentPage}
-        onNavigate={setCurrentPage}
-        onAdsPress={() => setShowAdsViewer(true)}
-      />
+      {/* Bottom Navigation - إخفاء عند فتح الألعاب أو الدردشة أو الأصدقاء */}
+      {!['games', 'chat', 'fortunes', 'friends', 'messages'].includes(currentPage) && (
+        <BottomNav
+          currentPage={currentPage}
+          onNavigate={setCurrentPage}
+          onAdsPress={() => setShowAdsViewer(true)}
+          onGamesPress={() => setCurrentPage('games')}
+        />
+      )}
 
       <StatusBar style="light" />
     </View>
