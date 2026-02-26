@@ -1,6 +1,6 @@
 // Saqr Mobile App - Main Entry Point
 import { StatusBar } from 'expo-status-bar';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, ActivityIndicator, Text, BackHandler, Alert, Image, I18nManager } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -19,6 +19,7 @@ import SettingsScreen from './src/screens/SettingsScreen';
 import SupportScreen from './src/screens/SupportScreen';
 import ChallengesScreen from './src/screens/ChallengesScreen';
 import GamesScreen from './src/screens/GamesScreen';
+import AchievementsScreen from './src/screens/AchievementsScreen';
 
 // Components
 import BottomNav from './src/components/BottomNav';
@@ -28,12 +29,19 @@ import DailyRewardsModal from './src/components/DailyRewardsModal';
 import DiamondShopModal from './src/components/DiamondShopModal';
 import BalanceHeader from './src/components/BalanceHeader';
 
+// Contexts
+import { LanguageProvider, useLanguage } from './src/i18n/LanguageContext';
+import { AchievementsProvider, useAchievements } from './src/services/AchievementsContext';
+import { AchievementNotification } from './src/screens/AchievementsScreen';
+
 // Services
 import api from './src/services/api';
 import storage from './src/services/storage';
 import colors from './src/styles/colors';
+import NotificationService from './src/services/NotificationService';
 
-export default function App() {
+// Main App Content (wrapped with providers)
+function AppContent() {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,17 +50,78 @@ export default function App() {
   const [showAIChat, setShowAIChat] = useState(false);
   const [showDailyRewards, setShowDailyRewards] = useState(false);
   const [showDiamondShop, setShowDiamondShop] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
   const [settings, setSettings] = useState(null);
   const [balanceRefresh, setBalanceRefresh] = useState(0);
+
+  // Language context
+  const { language, t } = useLanguage();
+  
+  // Achievements context
+  const { 
+    newAchievement, 
+    clearNewAchievement, 
+    updateCurrency,
+    recordGameWin,
+    recordGameLoss,
+  } = useAchievements();
+
+  // Notification listener ref
+  const notificationListenerRef = useRef(null);
 
   // Initialize app
   useEffect(() => {
     initApp();
+    setupNotifications();
+    
+    return () => {
+      if (notificationListenerRef.current) {
+        notificationListenerRef.current();
+      }
+    };
   }, []);
+
+  // Setup push notifications
+  const setupNotifications = async () => {
+    try {
+      // Register for push notifications
+      await NotificationService.registerForPushNotifications();
+      
+      // Schedule daily reward reminder
+      await NotificationService.scheduleDailyRewardReminder(10, 0, language);
+      
+      // Add notification listeners
+      notificationListenerRef.current = NotificationService.addNotificationListeners(
+        // On notification received
+        (notification) => {
+          console.log('Notification received:', notification);
+        },
+        // On notification response (user tapped)
+        (response) => {
+          const data = response.notification.request.content.data;
+          console.log('Notification response:', data);
+          
+          // Navigate based on notification type
+          if (data.type === NotificationService.NOTIFICATION_TYPES.ACHIEVEMENT) {
+            setShowAchievements(true);
+          } else if (data.type === NotificationService.NOTIFICATION_TYPES.DAILY_REWARD) {
+            setShowDailyRewards(true);
+          }
+        }
+      );
+    } catch (error) {
+      console.log('Notification setup error:', error);
+    }
+  };
 
   // Handle back button press
   useEffect(() => {
     const backAction = () => {
+      if (showAchievements) {
+        setShowAchievements(false);
+        return true;
+      }
+      
       if (showAIChat) {
         setShowAIChat(false);
         return true;
@@ -70,11 +139,11 @@ export default function App() {
 
       // Show exit confirmation dialog
       Alert.alert(
-        'الخروج من التطبيق',
-        'هل أنت متأكد من الخروج؟',
+        language === 'ar' ? 'الخروج من التطبيق' : 'Exit App',
+        language === 'ar' ? 'هل أنت متأكد من الخروج؟' : 'Are you sure you want to exit?',
         [
-          { text: 'إلغاء', style: 'cancel', onPress: () => null },
-          { text: 'خروج', style: 'destructive', onPress: () => BackHandler.exitApp() }
+          { text: language === 'ar' ? 'إلغاء' : 'Cancel', style: 'cancel', onPress: () => null },
+          { text: language === 'ar' ? 'خروج' : 'Exit', style: 'destructive', onPress: () => BackHandler.exitApp() }
         ]
       );
       return true;
@@ -83,7 +152,14 @@ export default function App() {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
 
     return () => backHandler.remove();
-  }, [showAIChat, showAdsViewer, currentPage]);
+  }, [showAIChat, showAdsViewer, showAchievements, currentPage, language]);
+
+  // Send notification when achievement is unlocked
+  useEffect(() => {
+    if (newAchievement) {
+      NotificationService.sendAchievementNotification(newAchievement, language);
+    }
+  }, [newAchievement, language]);
 
   const initApp = async () => {
     try {
