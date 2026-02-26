@@ -163,10 +163,10 @@ export const scheduleDailyRewardReminder = async (hour = 10, minute = 0, languag
   await cancelScheduledNotifications('daily_reminder');
   
   const titles = {
-    ar: 'لا تنسَ مكافأتك اليومية! 🎁',
-    en: "Don't forget your daily reward! 🎁",
-    fr: "N'oubliez pas votre récompense quotidienne! 🎁",
-    tr: 'Günlük ödülünüzü unutmayın! 🎁',
+    ar: 'لا تنسَ مكافأتك اليومية',
+    en: "Don't forget your daily reward",
+    fr: "N'oubliez pas votre récompense quotidienne",
+    tr: 'Günlük ödülünüzü unutmayın',
   };
   
   const bodies = {
