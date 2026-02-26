@@ -596,3 +596,54 @@ const styles = StyleSheet.create({
     fontSize: 16 
   },
 });
+
+// Error Boundary Component
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.log('App Error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={errorStyles.container}>
+          <LinearGradient colors={['#0a0a0f', '#1a1a2e']} style={errorStyles.gradient}>
+            <Text style={errorStyles.icon}>⚠️</Text>
+            <Text style={errorStyles.title}>حدث خطأ غير متوقع</Text>
+            <Text style={errorStyles.message}>نعتذر عن هذا الخطأ. يرجى إعادة تشغيل التطبيق.</Text>
+            <Text style={errorStyles.support}>للدعم: sky-321@hotmail.com</Text>
+          </LinearGradient>
+        </View>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+const errorStyles = StyleSheet.create({
+  container: { flex: 1 },
+  gradient: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  icon: { fontSize: 60, marginBottom: 20 },
+  title: { fontSize: 22, fontWeight: 'bold', color: '#FFF', marginBottom: 10, textAlign: 'center' },
+  message: { fontSize: 16, color: 'rgba(255,255,255,0.7)', textAlign: 'center', marginBottom: 20 },
+  support: { fontSize: 14, color: '#60a5fa', textAlign: 'center' },
+});
+
+// Export with Error Boundary
+export default function AppWithErrorBoundary() {
+  return (
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  );
+}
