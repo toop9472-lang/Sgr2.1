@@ -258,7 +258,49 @@ const SupportScreen = ({ navigation }) => {
               <Ionicons name="headset" size={32} color="#60a5fa" />
             </View>
             <Text style={styles.headerTitle}>الدعم الفني</Text>
-            <Text style={styles.headerSubtitle}>نحن هنا لمساعدتك</Text>
+            <Text style={styles.headerSubtitle}>نحن هنا لمساعدتك على مدار الساعة</Text>
+          </View>
+
+          {/* طرق التواصل المباشر */}
+          <View style={styles.contactSection}>
+            <Text style={styles.contactTitle}>تواصل معنا مباشرة</Text>
+            
+            <TouchableOpacity 
+              style={styles.contactCard}
+              onPress={() => Linking.openURL(`https://wa.me/${SUPPORT_WHATSAPP.replace('+', '')}`)}
+            >
+              <View style={[styles.contactIcon, { backgroundColor: 'rgba(37, 211, 102, 0.15)' }]}>
+                <Ionicons name="logo-whatsapp" size={24} color="#25D366" />
+              </View>
+              <View style={styles.contactInfo}>
+                <Text style={styles.contactLabel}>واتساب</Text>
+                <Text style={styles.contactValue}>{SUPPORT_WHATSAPP}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.3)" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.contactCard}
+              onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=طلب دعم - تطبيق صقر`)}
+            >
+              <View style={[styles.contactIcon, { backgroundColor: 'rgba(59, 130, 246, 0.15)' }]}>
+                <Ionicons name="mail" size={24} color="#3b82f6" />
+              </View>
+              <View style={styles.contactInfo}>
+                <Text style={styles.contactLabel}>البريد الإلكتروني</Text>
+                <Text style={styles.contactValue}>{SUPPORT_EMAIL}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.3)" />
+            </TouchableOpacity>
+          </View>
+
+          {/* أوقات العمل */}
+          <View style={styles.workingHoursCard}>
+            <Ionicons name="time-outline" size={20} color="#fbbf24" />
+            <View style={styles.workingHoursInfo}>
+              <Text style={styles.workingHoursTitle}>أوقات الدعم</Text>
+              <Text style={styles.workingHoursText}>24 ساعة / 7 أيام في الأسبوع</Text>
+            </View>
           </View>
 
           {/* New Ticket Button */}
