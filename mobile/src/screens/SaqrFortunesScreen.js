@@ -526,19 +526,34 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.5)',
     marginTop: 2,
   },
-  diamondHeader: {
+  gemsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(96,165,250,0.15)',
+    backgroundColor: 'rgba(244,114,182,0.15)',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
     gap: 6,
   },
-  diamondHeaderText: {
-    color: '#60a5fa',
+  gemIconSmall: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  gemsHeaderText: {
+    color: '#f472b6',
     fontWeight: 'bold',
     fontSize: 14,
+  },
+  gemIconBg: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
   },
   statsRow: {
     flexDirection: 'row',
