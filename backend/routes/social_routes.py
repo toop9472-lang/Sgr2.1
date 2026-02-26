@@ -373,18 +373,18 @@ async def get_inbox(user_id: str):
 async def send_game_invite(request: GameInviteRequest):
     """إرسال دعوة لعب"""
     
-    # التحقق من المستخدم
+    # التحقق من المستخدم (اختياري للدعوات المجانية)
     user = await db.users.find_one(
         {"$or": [{"id": request.from_user_id}, {"user_id": request.from_user_id}]}
     )
-    
-    if not user:
-        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
     
     cost = 0
     
     if request.invite_type == "public":
         # دعوة عامة = 25 ألماسة
+        if not user:
+            raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+            
         cost = INVITE_TO_CHAT_COST
         current_diamonds = user.get("diamonds", 0)
         
