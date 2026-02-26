@@ -344,7 +344,7 @@ const BrickBreakerGame = ({ difficulty = 'medium', onComplete, onClose }) => {
                 color={gameState === 'won' ? '#fbbf24' : '#ef4444'}
               />
               <Text style={styles.resultTitle}>
-                {gameState === 'won' ? 'فوز! 🎉' : 'انتهت اللعبة'}
+                {gameState === 'won' ? 'فوز' : 'انتهت اللعبة'}
               </Text>
               <Text style={styles.resultScore}>النقاط: {score}</Text>
               <View style={styles.resultBtns}>
