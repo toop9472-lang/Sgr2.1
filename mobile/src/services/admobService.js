@@ -36,7 +36,7 @@ class AdMobService {
     if (this.isInitialized) return true;
     
     try {
-      console.log('🎯 جاري تهيئة AdMob SDK...');
+      console.log('Initializing AdMob SDK...');
       
       // إعداد التكوين
       await mobileAds().setRequestConfiguration({
