@@ -994,7 +994,7 @@ const RiddlesGame = ({ mode, onComplete, onClose }) => {
 };
 
 // ==================== MAIN GAMES SCREEN ====================
-const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }) => {
+const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, onClose }) => {
   const [activeGame, setActiveGame] = useState(null);
   const [gameMode, setGameMode] = useState(null);
   const [showModeSelector, setShowModeSelector] = useState(null);
