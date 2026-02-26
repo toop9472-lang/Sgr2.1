@@ -1,11 +1,11 @@
 // Multi-language Support System - دعم اللغات المتعددة
-// Supported Languages: العربية (ar), English (en), Français (fr), Türkçe (tr)
+// Supported Languages: العربية (ar), English (en), Francais (fr), Turkce (tr)
 
 export const SUPPORTED_LANGUAGES = [
-  { code: 'ar', name: 'العربية', flag: '🇸🇦', rtl: true },
-  { code: 'en', name: 'English', flag: '🇺🇸', rtl: false },
-  { code: 'fr', name: 'Français', flag: '🇫🇷', rtl: false },
-  { code: 'tr', name: 'Türkçe', flag: '🇹🇷', rtl: false },
+  { code: 'ar', name: 'العربية', icon: 'globe', rtl: true },
+  { code: 'en', name: 'English', icon: 'globe', rtl: false },
+  { code: 'fr', name: 'Francais', icon: 'globe', rtl: false },
+  { code: 'tr', name: 'Turkce', icon: 'globe', rtl: false },
 ];
 
 export const translations = {
