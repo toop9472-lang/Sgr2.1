@@ -200,7 +200,7 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
         {/* Global Chat Button */}
         <button
           onClick={() => onNavigate('chat')}
-          className="w-full bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] hover:opacity-90 rounded-2xl p-5 mb-6 shadow-xl transform transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden"
+          className="w-full bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] hover:opacity-90 rounded-2xl p-5 mb-4 shadow-xl transform transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden"
           data-testid="global-chat-btn"
         >
           <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12" />
@@ -215,6 +215,27 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
                   <span className="bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">5 ألماسات</span>
                 </div>
                 <p className="text-white/80 text-sm">تواصل مع العالم! سيرفرات متعددة</p>
+              </div>
+            </div>
+            <ChevronRight className={`w-6 h-6 text-white ${isRTL ? 'rotate-180' : ''}`} />
+          </div>
+        </button>
+
+        {/* Friends Button */}
+        <button
+          onClick={() => onNavigate('friends')}
+          className="w-full bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:opacity-90 rounded-2xl p-5 mb-6 shadow-xl transform transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden"
+          data-testid="friends-btn"
+        >
+          <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12" />
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center">
+                <Users className="w-8 h-8 text-white" />
+              </div>
+              <div className={isRTL ? 'text-right' : 'text-left'}>
+                <p className="text-white font-bold text-lg">الأصدقاء والبريد</p>
+                <p className="text-white/80 text-sm">أضف أصدقاء، تراسل، وادعهم للألعاب مجاناً!</p>
               </div>
             </div>
             <ChevronRight className={`w-6 h-6 text-white ${isRTL ? 'rotate-180' : ''}`} />
