@@ -494,3 +494,62 @@ async def initialize_user_economy(user_id: str):
         "initial_diamonds": INITIAL_DIAMONDS,
         "message": f"تم منحك {INITIAL_DIAMONDS} ألماسة ترحيبية!"
     }
+
+
+# ==================== ADD DIAMONDS (Ad Rewards) ====================
+
+class AddDiamondsRequest(BaseModel):
+    user_id: str
+    amount: int
+    source: str = "ad_reward"  # مصدر الألماسات: ad_reward, challenge_reward, etc.
+
+@router.post("/add-diamonds")
+async def add_diamonds_reward(request: AddDiamondsRequest):
+    """إضافة ألماسات كمكافأة (من الإعلانات أو التحديات)"""
+    
+    # التحقق من صحة القيمة
+    if request.amount <= 0 or request.amount > 500:
+        raise HTTPException(status_code=400, detail="قيمة الألماسات غير صالحة")
+    
+    # الحصول على بيانات المستخدم
+    user = await db.users.find_one(
+        {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]}
+    )
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    current_diamonds = user.get("diamonds", 0)
+    new_diamonds = current_diamonds + request.amount
+    
+    # تحديث رصيد الألماسات
+    await db.users.update_one(
+        {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]},
+        {
+            "$set": {"diamonds": new_diamonds},
+            "$push": {
+                "diamond_transactions": {
+                    "type": "reward",
+                    "amount": request.amount,
+                    "source": request.source,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "balance_after": new_diamonds
+                }
+            }
+        }
+    )
+    
+    # تسجيل المكافأة
+    await db.ad_rewards.insert_one({
+        "user_id": request.user_id,
+        "amount": request.amount,
+        "source": request.source,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        "success": True,
+        "diamonds_added": request.amount,
+        "new_balance": new_diamonds,
+        "message": f"تم إضافة {request.amount} ألماسة بنجاح!"
+    }
