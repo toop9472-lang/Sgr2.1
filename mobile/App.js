@@ -261,13 +261,25 @@ function AppContent() {
     setCurrentPage('home');
   };
 
-  const handlePointsEarned = (points) => {
+  const handlePointsEarned = async (points) => {
     if (user && !user.isGuest) {
       setUser(prev => ({ 
         ...prev, 
         points: (prev.points || 0) + points 
       }));
       setBalanceRefresh(prev => prev + 1);
+      
+      // Update achievements
+      await updateCurrency(points, 0);
+    }
+  };
+
+  // Handle game completion for achievements
+  const handleGameComplete = async (gameId, won, timeInSeconds = null) => {
+    if (won) {
+      await recordGameWin(gameId, timeInSeconds);
+    } else {
+      await recordGameLoss(gameId);
     }
   };
 
