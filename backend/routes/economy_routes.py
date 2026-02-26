@@ -747,3 +747,260 @@ async def claim_chest_reward(request: ClaimChestRequest):
         "new_balance": new_diamonds,
         "message": f"حصلت على {request.reward_amount} ألماسة من {request.chest_type}!"
     }
+
+
+
+# ==================== SAQR GEMS - جواهر صقر للاستبدال بالمال ====================
+
+class AddSaqrGemsRequest(BaseModel):
+    user_id: str
+    amount: int
+    source: str  # ad_watch, wheel_spin, chest_reward, etc.
+
+@router.post("/add-saqr-gems")
+async def add_saqr_gems(request: AddSaqrGemsRequest):
+    """إضافة جواهر صقر (للاستبدال بالمال) من مشاهدة الإعلانات"""
+    
+    user = await db.users.find_one(
+        {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]}
+    )
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    current_gems = user.get("saqr_gems", 0)
+    new_gems = current_gems + request.amount
+    
+    await db.users.update_one(
+        {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]},
+        {
+            "$set": {"saqr_gems": new_gems},
+            "$push": {
+                "saqr_gems_transactions": {
+                    "type": request.source,
+                    "amount": request.amount,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "balance_after": new_gems
+                }
+            }
+        }
+    )
+    
+    return {
+        "success": True,
+        "gems_earned": request.amount,
+        "new_balance": new_gems,
+        "value_usd": new_gems / GEMS_PER_DOLLAR,
+        "message": f"حصلت على {request.amount} جوهرة صقر!"
+    }
+
+
+@router.get("/saqr-gems/{user_id}")
+async def get_saqr_gems(user_id: str):
+    """الحصول على رصيد جواهر صقر"""
+    
+    user = await db.users.find_one(
+        {"$or": [{"id": user_id}, {"user_id": user_id}]},
+        {"_id": 0, "saqr_gems": 1}
+    )
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    gems = user.get("saqr_gems", 0)
+    
+    return {
+        "saqr_gems": gems,
+        "value_usd": gems / GEMS_PER_DOLLAR,
+        "gems_per_dollar": GEMS_PER_DOLLAR
+    }
+
+
+# ==================== CHAT SYSTEM - نظام الدردشة ====================
+
+class SendChatMessageRequest(BaseModel):
+    user_id: str
+    server_id: str  # arabic, english, global
+    message: str
+    user_name: str
+    user_avatar: Optional[str] = None
+
+class ChatMessage(BaseModel):
+    id: str
+    user_id: str
+    user_name: str
+    user_avatar: Optional[str]
+    message: str
+    server_id: str
+    timestamp: str
+    translated: Optional[dict] = None
+
+
+@router.post("/chat/send")
+async def send_chat_message(request: SendChatMessageRequest):
+    """إرسال رسالة في الدردشة (تكلفة 5 ألماسات)"""
+    
+    # التحقق من المستخدم ورصيده
+    user = await db.users.find_one(
+        {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]}
+    )
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    current_diamonds = user.get("diamonds", 0)
+    
+    # التحقق من الرصيد
+    if current_diamonds < CHAT_MESSAGE_COST:
+        raise HTTPException(
+            status_code=400, 
+            detail={
+                "error": "insufficient_diamonds",
+                "message": "انتهت ألماساتك! تابع الإعلانات واحصل على الألماس",
+                "required": CHAT_MESSAGE_COST,
+                "current": current_diamonds
+            }
+        )
+    
+    # خصم الألماسات
+    new_diamonds = current_diamonds - CHAT_MESSAGE_COST
+    
+    await db.users.update_one(
+        {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]},
+        {
+            "$set": {"diamonds": new_diamonds},
+            "$push": {
+                "diamond_transactions": {
+                    "type": "chat_message",
+                    "amount": -CHAT_MESSAGE_COST,
+                    "server_id": request.server_id,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "balance_after": new_diamonds
+                }
+            }
+        }
+    )
+    
+    # إنشاء الرسالة
+    message_id = str(uuid.uuid4())
+    timestamp = datetime.now(timezone.utc).isoformat()
+    
+    chat_message = {
+        "id": message_id,
+        "user_id": request.user_id,
+        "user_name": request.user_name,
+        "user_avatar": request.user_avatar,
+        "message": request.message,
+        "server_id": request.server_id,
+        "timestamp": timestamp,
+    }
+    
+    # حفظ الرسالة
+    await db.chat_messages.insert_one(chat_message)
+    
+    return {
+        "success": True,
+        "message_id": message_id,
+        "diamonds_spent": CHAT_MESSAGE_COST,
+        "new_balance": new_diamonds,
+        "chat_message": {
+            "id": message_id,
+            "user_id": request.user_id,
+            "user_name": request.user_name,
+            "user_avatar": request.user_avatar,
+            "message": request.message,
+            "server_id": request.server_id,
+            "timestamp": timestamp,
+        }
+    }
+
+
+@router.get("/chat/messages/{server_id}")
+async def get_chat_messages(server_id: str, limit: int = 50, before: Optional[str] = None):
+    """الحصول على رسائل السيرفر"""
+    
+    query = {"server_id": server_id}
+    
+    if before:
+        query["timestamp"] = {"$lt": before}
+    
+    messages = await db.chat_messages.find(
+        query,
+        {"_id": 0}
+    ).sort("timestamp", -1).limit(limit).to_list(limit)
+    
+    # Reverse to get chronological order
+    messages.reverse()
+    
+    return {
+        "server_id": server_id,
+        "messages": messages,
+        "count": len(messages)
+    }
+
+
+@router.get("/chat/servers")
+async def get_chat_servers():
+    """الحصول على قائمة السيرفرات"""
+    
+    servers = [
+        {
+            "id": "arabic",
+            "name": "السيرفر العربي",
+            "icon": "flag",
+            "language": "ar",
+            "description": "دردشة باللغة العربية"
+        },
+        {
+            "id": "english",
+            "name": "English Server",
+            "icon": "globe",
+            "language": "en",
+            "description": "Chat in English"
+        },
+        {
+            "id": "global",
+            "name": "السيرفر العالمي",
+            "icon": "earth",
+            "language": "multi",
+            "description": "دردشة متعددة اللغات مع ترجمة تلقائية"
+        }
+    ]
+    
+    # Get online count per server
+    for server in servers:
+        count = await db.chat_messages.count_documents({
+            "server_id": server["id"],
+            "timestamp": {"$gte": (datetime.now(timezone.utc) - timedelta(minutes=30)).isoformat()}
+        })
+        server["recent_messages"] = count
+    
+    return {
+        "servers": servers,
+        "message_cost": CHAT_MESSAGE_COST
+    }
+
+
+@router.get("/chat/check-balance/{user_id}")
+async def check_chat_balance(user_id: str):
+    """التحقق من رصيد الألماسات للدردشة"""
+    
+    user = await db.users.find_one(
+        {"$or": [{"id": user_id}, {"user_id": user_id}]},
+        {"_id": 0, "diamonds": 1}
+    )
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    diamonds = user.get("diamonds", 0)
+    can_send = diamonds >= CHAT_MESSAGE_COST
+    messages_available = diamonds // CHAT_MESSAGE_COST
+    
+    return {
+        "diamonds": diamonds,
+        "can_send": can_send,
+        "messages_available": messages_available,
+        "message_cost": CHAT_MESSAGE_COST,
+        "message": "يمكنك الإرسال" if can_send else "انتهت ألماساتك! تابع الإعلانات واحصل على الألماس"
+    }
