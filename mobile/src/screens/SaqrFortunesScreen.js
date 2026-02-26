@@ -218,7 +218,7 @@ const DollarProgress = ({ saqrGems }) => {
 // ==================== الشاشة الرئيسية ====================
 const SaqrFortunesScreen = ({ user, onClose, onBalanceUpdate }) => {
   const [loading, setLoading] = useState(true);
-  const [diamonds, setDiamonds] = useState(0);
+  const [saqrGems, setSaqrGems] = useState(0);
   const [totalAds, setTotalAds] = useState(0);
   const [todayAds, setTodayAds] = useState(0);
   const [showRewardsCenter, setShowRewardsCenter] = useState(false);
@@ -231,11 +231,11 @@ const SaqrFortunesScreen = ({ user, onClose, onBalanceUpdate }) => {
 
   const loadData = async () => {
     try {
-      // Load balance
+      // Load balance - جلب جواهر صقر
       const balanceResponse = await api.getBalance(user.id);
       if (balanceResponse.ok) {
         const data = await balanceResponse.json();
-        setDiamonds(data.diamonds || 0);
+        setSaqrGems(data.saqr_gems || 0);
       }
 
       // Load stats from storage
@@ -270,7 +270,7 @@ const SaqrFortunesScreen = ({ user, onClose, onBalanceUpdate }) => {
       const response = await api.getBalance(user.id);
       if (response.ok) {
         const data = await response.json();
-        setDiamonds(data.diamonds || 0);
+        setSaqrGems(data.saqr_gems || 0);
       }
     } catch (e) {
       console.log('Error refreshing balance:', e);
@@ -279,10 +279,11 @@ const SaqrFortunesScreen = ({ user, onClose, onBalanceUpdate }) => {
 
   const handleClaimChallenge = async (challenge) => {
     try {
-      const response = await api.addDiamonds(user.id, challenge.reward, `daily_challenge_${challenge.id}`);
+      // اضافة جواهر صقر بدلا من الالماس
+      const response = await api.addSaqrGems(user.id, challenge.reward, `daily_challenge_${challenge.id}`);
       if (response.ok) {
         const data = await response.json();
-        setDiamonds(data.new_balance);
+        setSaqrGems(data.new_balance);
         setClaimedChallenges(prev => [...prev, challenge.id]);
         
         // Save to storage
@@ -291,10 +292,10 @@ const SaqrFortunesScreen = ({ user, onClose, onBalanceUpdate }) => {
           claimedChallenges: [...claimedChallenges, challenge.id],
         });
 
-        Alert.alert('مبروك!', `حصلت على ${challenge.reward} ألماسة!`);
+        Alert.alert('مبروك!', `حصلت على ${challenge.reward} جوهرة صقر!`);
       }
     } catch (e) {
-      Alert.alert('خطأ', 'حدث خطأ، حاول مرة أخرى');
+      Alert.alert('خطا', 'حدث خطا، حاول مرة اخرى');
     }
   };
 
