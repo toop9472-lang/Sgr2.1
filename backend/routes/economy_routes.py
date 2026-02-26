@@ -144,7 +144,7 @@ async def get_user_balance(user_id: str):
         "daily_points_earned": daily_earned,
         "daily_points_remaining": max(0, DAILY_POINTS_LIMIT - daily_earned),
         "daily_limit": DAILY_POINTS_LIMIT,
-        "gems_per_dollar": GEMS_PER_DOLLAR,
+        "gems_per_dollar": GEMS_PER_RIYAL,
         "chat_message_cost": CHAT_MESSAGE_COST
     }
 
@@ -644,7 +644,7 @@ async def claim_ad_watch_reward(request: AdWatchRewardRequest):
         "diamonds_earned": diamonds_earned,
         "new_gems_balance": new_gems,
         "new_diamonds_balance": new_diamonds,
-        "gems_value_usd": new_gems / GEMS_PER_DOLLAR,
+        "gems_value_usd": new_gems / GEMS_PER_RIYAL,
         "message": f"حصلت على {gems_earned} جوهرة صقر و {diamonds_earned} ألماسة!"
     }
 
@@ -809,7 +809,7 @@ async def add_saqr_gems(request: AddSaqrGemsRequest):
         "success": True,
         "gems_earned": request.amount,
         "new_balance": new_gems,
-        "value_usd": new_gems / GEMS_PER_DOLLAR,
+        "value_usd": new_gems / GEMS_PER_RIYAL,
         "message": f"حصلت على {request.amount} جوهرة صقر!"
     }
 
@@ -830,8 +830,8 @@ async def get_saqr_gems(user_id: str):
     
     return {
         "saqr_gems": gems,
-        "value_usd": gems / GEMS_PER_DOLLAR,
-        "gems_per_dollar": GEMS_PER_DOLLAR
+        "value_usd": gems / GEMS_PER_RIYAL,
+        "gems_per_dollar": GEMS_PER_RIYAL
     }
 
 
