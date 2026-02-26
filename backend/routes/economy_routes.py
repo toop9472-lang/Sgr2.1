@@ -86,7 +86,8 @@ DAILY_LOGIN_REWARDS = [
 class UserBalanceResponse(BaseModel):
     saqr_points: int
     diamonds: int
-    saqr_points_value_sar: float
+    saqr_gems: int  # جواهر صقر للاستبدال بالمال
+    saqr_gems_value_usd: float
     daily_points_earned: int
     daily_points_remaining: int
     daily_limit: int
