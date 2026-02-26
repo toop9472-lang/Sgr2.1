@@ -597,6 +597,73 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.5)',
   },
 
+  // Contact Section
+  contactSection: {
+    marginBottom: 16,
+  },
+  contactTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.7)',
+    marginBottom: 12,
+    textAlign: 'right',
+  },
+  contactCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  contactIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  contactInfo: {
+    flex: 1,
+    marginHorizontal: 12,
+  },
+  contactLabel: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.5)',
+    marginBottom: 2,
+  },
+  contactValue: {
+    fontSize: 15,
+    color: '#FFF',
+    fontWeight: '500',
+  },
+  workingHoursCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(251, 191, 36, 0.1)',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(251, 191, 36, 0.2)',
+    gap: 12,
+  },
+  workingHoursInfo: {
+    flex: 1,
+  },
+  workingHoursTitle: {
+    fontSize: 13,
+    color: '#fbbf24',
+    fontWeight: '600',
+  },
+  workingHoursText: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 2,
+  },
+
   // New Ticket Button
   newTicketBtn: {
     backgroundColor: '#3b82f6',
