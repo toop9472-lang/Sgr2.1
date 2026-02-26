@@ -12,8 +12,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const { width: screenWidth } = Dimensions.get('window');
-const BOARD_SIZE = Math.min(screenWidth - 24, 400);
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+// Make board larger - use more screen space
+const BOARD_SIZE = Math.min(screenWidth - 16, screenHeight * 0.55, 450);
 const SQUARE_SIZE = BOARD_SIZE / 8;
 
 // Chess piece unicode - larger and clearer
@@ -392,20 +393,21 @@ const styles = StyleSheet.create({
   darkSquare: { backgroundColor: '#8B4513' },
   selectedSquare: { backgroundColor: 'rgba(96,165,250,0.6)' },
   validSquare: { backgroundColor: 'rgba(34,197,94,0.4)' },
-  piece: { fontSize: SQUARE_SIZE * 0.85, fontWeight: 'bold' },
-  // القطع البيضاء - لون كريمي واضح مع حدود
+  // القطع أكبر وأوضح
+  piece: { fontSize: SQUARE_SIZE * 0.92, fontWeight: 'bold', lineHeight: SQUARE_SIZE },
+  // القطع البيضاء - كريمي مع حدود سوداء واضحة جداً
   whitePiece: { 
-    color: '#FFFAF0', 
+    color: '#FFF8E7', 
     textShadowColor: '#000',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
   },
-  // القطع السوداء - لون اسود واضح
+  // القطع السوداء - أسود غامق مع حدود فاتحة
   blackPiece: { 
-    color: '#1a1a1a',
-    textShadowColor: 'rgba(255,255,255,0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 1,
+    color: '#0a0a0a',
+    textShadowColor: 'rgba(255,255,255,0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   validDot: { width: SQUARE_SIZE * 0.25, height: SQUARE_SIZE * 0.25, borderRadius: SQUARE_SIZE * 0.125, backgroundColor: 'rgba(34,197,94,0.7)' },
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', zIndex: 100 },
