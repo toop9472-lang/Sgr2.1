@@ -514,16 +514,21 @@ const AuthScreen = ({ onLogin }) => {
     );
   };
 
-  // Google Sign In using WebBrowser
+  // Google Sign In using WebBrowser (improved for iPad)
   const handleGoogleSignIn = async () => {
-    if (isAppleLoading || isGoogleLoading) return; // Prevent multiple clicks
+    if (isAppleLoading || isGoogleLoading) return;
     setIsGoogleLoading(true);
     try {
       const authUrl = `${api.BASE_URL}/api/auth/google?redirect_uri=saqr://auth/callback`;
       
+      // Use preferEphemeralSession for better iPad compatibility
       const result = await WebBrowser.openAuthSessionAsync(
         authUrl,
-        'saqr://auth/callback'
+        'saqr://auth/callback',
+        {
+          preferEphemeralSession: true, // Better for iPad
+          showInRecents: true,
+        }
       );
       
       if (result.type === 'success' && result.url) {
@@ -534,7 +539,10 @@ const AuthScreen = ({ onLogin }) => {
         if (sessionMatch) {
           const sessionId = sessionMatch[1];
           // Get user data from session
-          const response = await fetch(`${api.BASE_URL}/api/auth/session/${sessionId}`);
+          const response = await fetch(`${api.BASE_URL}/api/auth/session/${sessionId}`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+          });
           const data = await response.json();
           
           if (response.ok && data.user) {
@@ -542,30 +550,38 @@ const AuthScreen = ({ onLogin }) => {
             await storage.setUserData(data.user);
             onLogin(data.user);
           } else {
-            Alert.alert('خطأ', 'فشل تسجيل الدخول');
+            Alert.alert('خطأ', data.detail || 'فشل تسجيل الدخول، حاول مرة أخرى');
           }
+        } else {
+          Alert.alert('خطأ', 'لم نتمكن من استلام بيانات الجلسة');
         }
       } else if (result.type === 'cancel') {
         // User cancelled, do nothing
+      } else if (result.type === 'dismiss') {
+        // Browser was dismissed
       }
     } catch (error) {
       console.log('Google Sign In Error:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء تسجيل الدخول بـ Google');
+      Alert.alert('خطأ', 'حدث خطأ أثناء تسجيل الدخول بـ Google. تأكد من اتصالك بالإنترنت.');
     } finally {
       setIsGoogleLoading(false);
     }
   };
 
-  // Apple Sign In using WebBrowser
+  // Apple Sign In using WebBrowser (improved for iPad)
   const handleAppleSignIn = async () => {
-    if (isAppleLoading || isGoogleLoading) return; // Prevent multiple clicks
+    if (isAppleLoading || isGoogleLoading) return;
     setIsAppleLoading(true);
     try {
       const authUrl = `${api.BASE_URL}/api/auth/apple?redirect_uri=saqr://auth/callback`;
       
       const result = await WebBrowser.openAuthSessionAsync(
         authUrl,
-        'saqr://auth/callback'
+        'saqr://auth/callback',
+        {
+          preferEphemeralSession: true,
+          showInRecents: true,
+        }
       );
       
       if (result.type === 'success' && result.url) {
@@ -574,7 +590,10 @@ const AuthScreen = ({ onLogin }) => {
         
         if (sessionMatch) {
           const sessionId = sessionMatch[1];
-          const response = await fetch(`${api.BASE_URL}/api/auth/session/${sessionId}`);
+          const response = await fetch(`${api.BASE_URL}/api/auth/session/${sessionId}`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+          });
           const data = await response.json();
           
           if (response.ok && data.user) {
@@ -582,15 +601,17 @@ const AuthScreen = ({ onLogin }) => {
             await storage.setUserData(data.user);
             onLogin(data.user);
           } else {
-            Alert.alert('خطأ', 'فشل تسجيل الدخول');
+            Alert.alert('خطأ', data.detail || 'فشل تسجيل الدخول، حاول مرة أخرى');
           }
+        } else {
+          Alert.alert('خطأ', 'لم نتمكن من استلام بيانات الجلسة');
         }
       } else if (result.type === 'cancel') {
         // User cancelled
       }
     } catch (error) {
       console.log('Apple Sign In Error:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء تسجيل الدخول بـ Apple');
+      Alert.alert('خطأ', 'حدث خطأ أثناء تسجيل الدخول بـ Apple. تأكد من اتصالك بالإنترنت.');
     } finally {
       setIsAppleLoading(false);
     }
