@@ -21,6 +21,7 @@ import ChallengesScreen from './src/screens/ChallengesScreen';
 import GamesScreen from './src/screens/GamesScreen';
 import AchievementsScreen from './src/screens/AchievementsScreen';
 import ShopScreen from './src/screens/ShopScreen';
+import AdminWebViewScreen from './src/screens/AdminWebViewScreen';
 
 // Components
 import BottomNav from './src/components/BottomNav';
