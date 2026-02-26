@@ -518,7 +518,7 @@ const PuzzleGame = ({ mode, onComplete, onClose }) => {
             colors={currentImage.gradient}
             style={[styles.previewImage, { width: width - 80, height: width - 80 }]}
           >
-            <Text style={styles.previewEmoji}>{currentImage.emoji}</Text>
+            <Ionicons name={currentImage.icon} size={60} color="#FFF" />
             <Text style={styles.previewName}>{currentImage.name}</Text>
             <View style={styles.previewGrid}>
               {[...Array(gridSize * gridSize).keys()].map((num) => (
