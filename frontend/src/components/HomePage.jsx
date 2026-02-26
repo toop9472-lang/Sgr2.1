@@ -156,7 +156,7 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
         {/* Watch Button */}
         <button
           onClick={onNavigateToAds}
-          className="w-full bg-gradient-to-r from-[#ef4444] to-[#ec4899] hover:from-[#dc2626] hover:to-[#db2777] rounded-2xl p-5 mb-6 shadow-xl transform transition-all hover:scale-[1.02] active:scale-[0.98]"
+          className="w-full bg-gradient-to-r from-[#ef4444] to-[#ec4899] hover:from-[#dc2626] hover:to-[#db2777] rounded-2xl p-5 mb-4 shadow-xl transform transition-all hover:scale-[1.02] active:scale-[0.98]"
           data-testid="start-watching-btn"
         >
           <div className="flex items-center justify-between">
@@ -167,6 +167,30 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
               <div className={isRTL ? 'text-right' : 'text-left'}>
                 <p className="text-white font-bold text-lg">{t('startWatching')}</p>
                 <p className="text-white/80 text-sm">{t('earnPerAd')}</p>
+              </div>
+            </div>
+            <ChevronRight className={`w-6 h-6 text-white ${isRTL ? 'rotate-180' : ''}`} />
+          </div>
+        </button>
+
+        {/* Saqr Fortunes Button */}
+        <button
+          onClick={() => onNavigate('fortunes')}
+          className="w-full bg-gradient-to-r from-[#ec4899] via-[#9333ea] to-[#6366f1] hover:opacity-90 rounded-2xl p-5 mb-6 shadow-xl transform transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden"
+          data-testid="saqr-fortunes-btn"
+        >
+          <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12" />
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center">
+                <Gift className="w-8 h-8 text-white" />
+              </div>
+              <div className={isRTL ? 'text-right' : 'text-left'}>
+                <div className="flex items-center gap-2">
+                  <p className="text-white font-bold text-lg">ثروات صقر</p>
+                  <span className="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">جديد</span>
+                </div>
+                <p className="text-white/80 text-sm">عجلة حظ، صناديق كنز، مكافآت يومية!</p>
               </div>
             </div>
             <ChevronRight className={`w-6 h-6 text-white ${isRTL ? 'rotate-180' : ''}`} />
