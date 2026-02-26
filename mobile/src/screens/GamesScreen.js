@@ -28,6 +28,7 @@ import MemoryGame from './games/MemoryGame';
 import SnakeGame from './games/SnakeGame';
 import { triviaQuestions, riddlesQuestions } from '../data/questionsData';
 import AdChallengesModal from '../components/AdChallengesModal';
+import SaqrFortunesScreen from './SaqrFortunesScreen';
 
 const { width, height } = Dimensions.get('window');
 
