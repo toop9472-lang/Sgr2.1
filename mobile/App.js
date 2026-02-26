@@ -455,6 +455,17 @@ function AppContent() {
   );
 }
 
+// Main App with Providers
+export default function App() {
+  return (
+    <LanguageProvider>
+      <AchievementsProvider>
+        <AppContent />
+      </AchievementsProvider>
+    </LanguageProvider>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.dark.bg },
   mainArea: { flex: 1, paddingBottom: 68 }, // Slim nav bar
