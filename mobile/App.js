@@ -549,7 +549,7 @@ function AppContent() {
 }
 
 // Main App with Providers
-export default function App() {
+function App() {
   return (
     <LanguageProvider>
       <AchievementsProvider>
