@@ -407,13 +407,26 @@ const TicTacToeGame = ({ mode, onComplete, onClose, isOnline, opponent, isMyTurn
 // ==================== PUZZLE GAME ====================
 // ==================== PUZZLE GAME (PROFESSIONAL IMAGE PUZZLE) ====================
 const PUZZLE_IMAGES = [
-  { id: 1, name: 'الطبيعة', icon: 'leaf', gradient: ['#22c55e', '#15803d'] },
-  { id: 2, name: 'المحيط', icon: 'water', gradient: ['#3b82f6', '#1d4ed8'] },
-  { id: 3, name: 'الغروب', icon: 'sunny', gradient: ['#f97316', '#ea580c'] },
-  { id: 4, name: 'الفضاء', icon: 'rocket', gradient: ['#8b5cf6', '#7c3aed'] },
-  { id: 5, name: 'الصحراء', icon: 'partly-sunny', gradient: ['#fbbf24', '#d97706'] },
-  { id: 6, name: 'الزهور', icon: 'flower', gradient: ['#ec4899', '#db2777'] },
+  { id: 1, name: 'الطبيعة', icon: 'leaf', gradient: ['#22c55e', '#15803d'], 
+    image: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=400&fit=crop' },
+  { id: 2, name: 'المحيط', icon: 'water', gradient: ['#3b82f6', '#1d4ed8'],
+    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=400&fit=crop' },
+  { id: 3, name: 'الغروب', icon: 'sunny', gradient: ['#f97316', '#ea580c'],
+    image: 'https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=400&h=400&fit=crop' },
+  { id: 4, name: 'الفضاء', icon: 'rocket', gradient: ['#8b5cf6', '#7c3aed'],
+    image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=400&fit=crop' },
+  { id: 5, name: 'الجبال', icon: 'partly-sunny', gradient: ['#fbbf24', '#d97706'],
+    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=400&fit=crop' },
+  { id: 6, name: 'الزهور', icon: 'flower', gradient: ['#ec4899', '#db2777'],
+    image: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400&h=400&fit=crop' },
 ];
+
+// Responsive puzzle size
+const getPuzzleSize = () => {
+  const screenWidth = Dimensions.get('window').width;
+  const isTablet = screenWidth > 600;
+  return isTablet ? 350 : screenWidth - 48;
+};
 
 const PuzzleGame = ({ mode, onComplete, onClose }) => {
   const [pieces, setPieces] = useState([]);
