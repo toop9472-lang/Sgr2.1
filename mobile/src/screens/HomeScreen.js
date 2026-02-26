@@ -255,6 +255,60 @@ const HomeScreen = ({ user, onNavigateToAds, onNavigateToGames, onNavigateToChat
           </View>
         </View>
 
+        {/* Saqr Fortunes Section */}
+        <TouchableOpacity 
+          style={styles.fortunesCard}
+          onPress={onNavigateToFortunes}
+          activeOpacity={0.9}
+        >
+          <LinearGradient 
+            colors={['#ec4899', '#9333ea', '#6366f1']} 
+            style={styles.fortunesGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <View style={styles.fortunesIcon}>
+              <Ionicons name="diamond" size={28} color="#FFF" />
+            </View>
+            <View style={styles.fortunesInfo}>
+              <View style={styles.fortunesHeader}>
+                <Text style={styles.fortunesTitle}>ثروات صقر</Text>
+                <View style={styles.newBadge}>
+                  <Text style={styles.newBadgeText}>جديد</Text>
+                </View>
+              </View>
+              <Text style={styles.fortunesDesc}>جواهر صقر للاستبدال بالمال! عجلة حظ وصناديق كنز</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={22} color="rgba(255,255,255,0.8)" />
+          </LinearGradient>
+        </TouchableOpacity>
+
+        {/* Global Chat Section */}
+        <TouchableOpacity 
+          style={styles.chatCard}
+          onPress={onNavigateToChat}
+          activeOpacity={0.9}
+        >
+          <LinearGradient 
+            colors={['#3b82f6', '#06b6d4']} 
+            style={styles.chatGradient}
+          >
+            <View style={styles.chatIcon}>
+              <Ionicons name="chatbubbles" size={26} color="#FFF" />
+            </View>
+            <View style={styles.chatInfo}>
+              <View style={styles.chatHeader}>
+                <Text style={styles.chatTitle}>الدردشة العامة</Text>
+                <View style={styles.costBadge}>
+                  <Text style={styles.costBadgeText}>5 ألماسات</Text>
+                </View>
+              </View>
+              <Text style={styles.chatDesc}>تواصل مع العالم! سيرفرات متعددة اللغات</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={22} color="rgba(255,255,255,0.8)" />
+          </LinearGradient>
+        </TouchableOpacity>
+
         {/* Tips Card */}
         <View style={styles.tipsCard}>
           <Ionicons name="bulb-outline" size={20} color="#fbbf24" />
