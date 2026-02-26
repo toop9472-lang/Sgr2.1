@@ -1259,6 +1259,8 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
     };
     
     switch (activeGame) {
+      case 'aiquest':
+        return <AIQuestGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
       case 'chess':
         return <ChessGame {...gameProps} />;
       case 'tictactoe':
@@ -1281,8 +1283,6 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
         return <WordRaceGame {...gameProps} />;
       case 'colorswitch':
         return <ColorSwitchGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
-      case 'reaction':
-        return <ReactionGame {...gameProps} />;
       default:
         return <ComingSoonGame name={games.find(g => g.id === activeGame)?.name || 'لعبة'} onClose={closeGame} />;
     }
