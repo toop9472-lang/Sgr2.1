@@ -268,13 +268,11 @@ const styles = StyleSheet.create({
     alignItems: 'center', 
     gap: 12 
   },
-  logoImage: { 
-    width: 48, 
-    height: 48, 
-    borderRadius: 24 
+  welcomeContainer: {
+    flexDirection: 'column',
   },
   welcomeText: { 
-    fontSize: 18, 
+    fontSize: 20, 
     fontWeight: 'bold', 
     color: '#FFF' 
   },
