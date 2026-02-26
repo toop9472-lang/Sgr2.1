@@ -419,6 +419,24 @@ function AppContent() {
         </View>
       )}
 
+      {/* Shop Screen */}
+      {showShop && (
+        <View style={StyleSheet.absoluteFill}>
+          <ShopScreen
+            user={user}
+            userDiamonds={user?.diamonds || 0}
+            onClose={() => setShowShop(false)}
+            onUpdateDiamonds={(newBalance) => {
+              setUser(prev => ({ ...prev, diamonds: newBalance }));
+              setBalanceRefresh(prev => prev + 1);
+            }}
+            onPurchaseItem={(item) => {
+              console.log('Item purchased:', item);
+            }}
+          />
+        </View>
+      )}
+
       {/* Achievement Notification */}
       <AchievementNotification
         achievement={newAchievement}
