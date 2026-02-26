@@ -195,7 +195,7 @@ function AppContent() {
 
   // Send notification when achievement is unlocked
   useEffect(() => {
-    if (newAchievement) {
+    if (newAchievement && NotificationService && NotificationService.sendAchievementNotification) {
       NotificationService.sendAchievementNotification(newAchievement, language);
     }
   }, [newAchievement, language]);
