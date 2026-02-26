@@ -93,6 +93,20 @@ const generatePatternChallenge = (level) => {
     { seq: [100, 90, 80, 70], next: 60, hint: 'طرح 10' },
     { seq: [1, 8, 27, 64], next: 125, hint: 'مكعبات' },
     { seq: [5, 10, 20, 40], next: 80, hint: 'ضرب في 2' },
+    { seq: [2, 3, 5, 7, 11], next: 13, hint: 'أعداد أولية' },
+    { seq: [1, 3, 6, 10], next: 15, hint: 'أرقام مثلثية' },
+    { seq: [0, 1, 1, 2, 3, 5], next: 8, hint: 'فيبوناتشي من الصفر' },
+    { seq: [2, 4, 8, 16], next: 32, hint: 'قوى العدد 2' },
+    { seq: [3, 9, 27, 81], next: 243, hint: 'قوى العدد 3' },
+    { seq: [1, 2, 6, 24], next: 120, hint: 'المضروب (!)' },
+    { seq: [10, 20, 30, 40], next: 50, hint: 'جمع 10' },
+    { seq: [99, 88, 77, 66], next: 55, hint: 'طرح 11' },
+    { seq: [5, 10, 15, 20], next: 25, hint: 'جمع 5' },
+    { seq: [1, 4, 7, 10], next: 13, hint: 'جمع 3' },
+    { seq: [64, 32, 16, 8], next: 4, hint: 'قسمة على 2' },
+    { seq: [1000, 100, 10], next: 1, hint: 'قسمة على 10' },
+    { seq: [2, 5, 10, 17], next: 26, hint: 'n² + 1' },
+    { seq: [0, 3, 8, 15], next: 24, hint: 'n² - 1' },
   ];
   
   const pattern = patterns[Math.floor(Math.random() * patterns.length)];
@@ -100,7 +114,7 @@ const generatePatternChallenge = (level) => {
   
   while (options.length < 4) {
     const wrong = pattern.next + (Math.floor(Math.random() * 30) - 15);
-    if (wrong !== pattern.next && !options.includes(wrong) && wrong > 0) {
+    if (wrong !== pattern.next && !options.includes(wrong) && wrong >= 0) {
       options.push(wrong);
     }
   }
