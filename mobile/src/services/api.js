@@ -480,6 +480,14 @@ export const api = {
       method: 'POST',
     });
   },
+
+  // Admin login
+  async adminLogin(email, password) {
+    return this.fetch('/api/admin/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  },
 };
 
 export default api;
