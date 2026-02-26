@@ -1511,7 +1511,7 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
           </View>
         </View>
 
-        {/* User Stats */}
+        {/* User Stats with Shop Button */}
         <View style={styles.userCard}>
           <View style={styles.userStatItem}>
             <Ionicons name="trophy" size={24} color="#fbbf24" />
@@ -1525,11 +1525,20 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
             <Text style={styles.userStatLabel}>نقاط صقر</Text>
           </View>
           <View style={styles.userStatDivider} />
-          <View style={styles.userStatItem}>
-            <Ionicons name="diamond" size={24} color="#60a5fa" />
+          <TouchableOpacity 
+            style={styles.userStatItem}
+            onPress={onOpenDiamondShop}
+            activeOpacity={0.7}
+          >
+            <View style={styles.diamondWithPlus}>
+              <Ionicons name="diamond" size={24} color="#60a5fa" />
+              <View style={styles.plusBadge}>
+                <Ionicons name="add" size={10} color="#FFF" />
+              </View>
+            </View>
             <Text style={styles.userStatNum}>{balance.diamonds || 0}</Text>
             <Text style={styles.userStatLabel}>ألماسات</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Exchange Rate Info */}
