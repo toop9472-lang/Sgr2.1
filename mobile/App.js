@@ -487,6 +487,26 @@ function AppContent() {
             onBalanceUpdate={() => setBalanceRefresh(prev => prev + 1)}
           />
         )}
+        {currentPage === 'friends' && (
+          <FriendsScreen 
+            user={user}
+            onClose={() => setCurrentPage('home')}
+            onOpenMessages={(friend) => {
+              setSelectedFriend(friend);
+              setCurrentPage('messages');
+            }}
+            onOpenGameInvite={(friend) => {
+              // TODO: Open game invite modal
+            }}
+          />
+        )}
+        {currentPage === 'messages' && (
+          <PrivateMessagesScreen 
+            user={user}
+            onClose={() => setCurrentPage('friends')}
+            initialFriend={selectedFriend}
+          />
+        )}
       </LinearGradient>
 
       {/* Achievements Screen */}
