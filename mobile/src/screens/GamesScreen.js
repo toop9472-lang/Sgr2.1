@@ -1592,6 +1592,15 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
 
         <View style={{ height: 120 }} />
       </ScrollView>
+
+      {/* Ad Challenges Modal */}
+      <AdChallengesModal
+        visible={showAdChallenges}
+        onClose={() => setShowAdChallenges(false)}
+        onWatchAd={handleWatchAd}
+        onClaimReward={handleClaimAdReward}
+        userDiamonds={balance.diamonds || 0}
+      />
     </LinearGradient>
   );
 };
