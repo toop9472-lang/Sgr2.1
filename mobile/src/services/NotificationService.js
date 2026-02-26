@@ -228,10 +228,10 @@ export const sendStreakReminder = async (currentStreak, language = 'ar') => {
 // Send points earned notification
 export const sendPointsEarnedNotification = async (points, source, language = 'ar') => {
   const titles = {
-    ar: `+${points} نقطة! ⭐`,
-    en: `+${points} points! ⭐`,
-    fr: `+${points} points! ⭐`,
-    tr: `+${points} puan! ⭐`,
+    ar: `+${points} نقطة`,
+    en: `+${points} points`,
+    fr: `+${points} points`,
+    tr: `+${points} puan`,
   };
   
   const bodies = {
