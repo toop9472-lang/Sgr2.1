@@ -1268,6 +1268,20 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
         return <TriviaGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
       case 'riddles':
         return <RiddlesGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
+      case 'memory':
+        return <MemoryGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
+      case 'snake':
+        return <SnakeGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
+      case 'mathrace':
+        return <MathRaceGame {...gameProps} />;
+      case 'wordrace':
+        return <WordRaceGame {...gameProps} />;
+      case 'colorswitch':
+        return <ColorSwitchGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
+      case 'reaction':
+        return <ReactionGame {...gameProps} />;
+      default:
+        return <ComingSoonGame name={games.find(g => g.id === activeGame)?.name || 'لعبة'} onClose={closeGame} />;
     }
   }
 
