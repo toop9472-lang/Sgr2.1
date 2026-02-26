@@ -334,7 +334,7 @@ const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenS
 
         {/* App Version - اضغط 7 مرات لفتح لوحة الأدمن */}
         <TouchableOpacity onPress={handleVersionTap} activeOpacity={0.7}>
-          <Text style={styles.versionText}>الإصدار 5.0.0</Text>
+          <Text style={styles.versionText}>الإصدار 5.8.0</Text>
         </TouchableOpacity>
       </View>
 
