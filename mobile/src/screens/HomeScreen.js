@@ -135,6 +135,16 @@ const HomeScreen = ({ user, onNavigateToAds, onNavigateToGames, settings, onRefr
             colors={['#3b82f6', '#8b5cf6']}
             onPress={handleNavigateToGames}
           />
+
+          {/* Saqr Fortunes - Ad Rewards */}
+          <View style={{ height: 12 }} />
+          <FeaturedGameCard
+            icon="diamond"
+            name="ثروات صقر - جديد!"
+            description="شاهد واربح! عجلة حظ، صناديق كنز، ومكافآت يومية"
+            colors={['#ec4899', '#9333ea', '#6366f1']}
+            onPress={handleNavigateToGames}
+          />
         </View>
 
         {/* Quick Games Grid */}
