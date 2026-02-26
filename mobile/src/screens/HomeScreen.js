@@ -52,7 +52,7 @@ const StatsCard = memo(({ icon, value, label, color }) => (
   </View>
 ));
 
-const HomeScreen = ({ user, onNavigateToAds, onNavigateToGames, settings, onRefresh }) => {
+const HomeScreen = ({ user, onNavigateToAds, onNavigateToGames, onNavigateToChat, onNavigateToFortunes, settings, onRefresh }) => {
   const [refreshing, setRefreshing] = useState(false);
 
   // User data
