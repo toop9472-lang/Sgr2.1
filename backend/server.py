@@ -205,6 +205,7 @@ api_router.include_router(support_form_router)
 api_router.include_router(diamonds_router)
 api_router.include_router(economy_router)
 api_router.include_router(stripe_router)
+api_router.include_router(social_router)
 
 # Include WebSocket router (at app level, not api_router)
 app.include_router(websocket_router)
