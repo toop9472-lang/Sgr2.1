@@ -231,7 +231,7 @@ const MemoryGame = ({ mode, onComplete, onClose }) => {
         <View style={styles.gameOverOverlay}>
           <LinearGradient colors={['rgba(0,0,0,0.95)', 'rgba(0,0,0,0.9)']} style={styles.gameOverContent}>
             <Ionicons name="trophy" size={60} color="#fbbf24" />
-            <Text style={styles.gameOverTitle}>مبروك! 🎉</Text>
+            <Text style={styles.gameOverTitle}>مبروك</Text>
             <Text style={styles.gameOverText}>أكملت اللعبة في {formatTime(time)}</Text>
             <Text style={styles.gameOverText}>عدد الحركات: {moves}</Text>
             <TouchableOpacity style={styles.playAgainBtn} onPress={startNewGame}>
