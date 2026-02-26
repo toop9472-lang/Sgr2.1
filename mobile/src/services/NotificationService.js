@@ -112,10 +112,10 @@ export const sendAchievementNotification = async (achievement, language = 'ar') 
   const name = achievement.name[language] || achievement.name.ar;
   
   const titles = {
-    ar: 'إنجاز جديد! 🏆',
-    en: 'Achievement Unlocked! 🏆',
-    fr: 'Succès débloqué! 🏆',
-    tr: 'Başarı Kazanıldı! 🏆',
+    ar: 'إنجاز جديد',
+    en: 'Achievement Unlocked',
+    fr: 'Succès débloqué',
+    tr: 'Başarı Kazanıldı',
   };
   
   const bodies = {
