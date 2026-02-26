@@ -601,6 +601,106 @@ const styles = StyleSheet.create({
     fontSize: 13, 
     flex: 1 
   },
+
+  // Saqr Fortunes Card
+  fortunesCard: {
+    marginTop: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  fortunesGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 12,
+  },
+  fortunesIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fortunesInfo: {
+    flex: 1,
+  },
+  fortunesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  fortunesTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  newBadge: {
+    backgroundColor: '#22c55e',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  newBadgeText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  fortunesDesc: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 12,
+  },
+
+  // Global Chat Card
+  chatCard: {
+    marginTop: 12,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  chatGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 12,
+  },
+  chatIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  chatInfo: {
+    flex: 1,
+  },
+  chatHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  chatTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  costBadge: {
+    backgroundColor: '#f59e0b',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  costBadgeText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  chatDesc: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 12,
+  },
 });
 
 export default HomeScreen;
