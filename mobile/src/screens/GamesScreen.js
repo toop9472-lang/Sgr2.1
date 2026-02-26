@@ -1490,8 +1490,17 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.mainHeader}>
-          <Text style={styles.mainTitle}>الألعاب</Text>
-          <Text style={styles.mainSub}>العب وتنافس واكسب النقاط</Text>
+          <TouchableOpacity 
+            onPress={onClose} 
+            style={styles.backBtn}
+          >
+            <Ionicons name="arrow-back" size={24} color="#FFF" />
+          </TouchableOpacity>
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.mainTitle}>الألعاب</Text>
+            <Text style={styles.mainSub}>العب وتنافس واكسب النقاط</Text>
+          </View>
+          <View style={{ width: 44 }} />
         </View>
 
         {/* Daily Points Progress */}
