@@ -1,6 +1,6 @@
 // شاشة ثروات صقر - Saqr Fortunes Screen
 // تجربة مشاهدة إعلانات ممتعة وتفاعلية
-// جواهر صقر = للاستبدال بالمال (500 جوهرة = 1 دولار)
+// جواهر صقر = للاستبدال بالمال (500 جوهرة = 1 ريال سعودي)
 // الالماس = للاستهلاك داخل التطبيق (دردشة، العاب)
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -25,8 +25,8 @@ import TreasureChestsSection from '../components/TreasureChests';
 const { width, height } = Dimensions.get('window');
 
 // ==================== ثوابت النظام ====================
-// جواهر صقر = للاستبدال بالمال
-const GEMS_PER_DOLLAR = 500;
+// جواهر صقر = للاستبدال بالمال (ريال سعودي)
+const GEMS_PER_RIYAL = 500;
 const GEM_PER_MINUTE = 1;
 
 // التحديات اليومية (تعطي جواهر صقر)
@@ -175,21 +175,21 @@ const MainWatchButton = ({ onPress, saqrGems, loading }) => {
   );
 };
 
-// مكون تقدم الدولار - يعرض جواهر صقر
-const DollarProgress = ({ saqrGems }) => {
-  const progress = (saqrGems % GEMS_PER_DOLLAR) / GEMS_PER_DOLLAR * 100;
-  const dollarsEarned = Math.floor(saqrGems / GEMS_PER_DOLLAR);
-  const gemsToNext = GEMS_PER_DOLLAR - (saqrGems % GEMS_PER_DOLLAR);
+// مكون تقدم الريال - يعرض جواهر صقر
+const RiyalProgress = ({ saqrGems }) => {
+  const progress = (saqrGems % GEMS_PER_RIYAL) / GEMS_PER_RIYAL * 100;
+  const riyalsEarned = Math.floor(saqrGems / GEMS_PER_RIYAL);
+  const gemsToNext = GEMS_PER_RIYAL - (saqrGems % GEMS_PER_RIYAL);
 
   return (
     <View style={styles.dollarProgressCard}>
       <View style={styles.dollarHeader}>
         <View style={styles.dollarIcon}>
-          <Text style={styles.dollarSign}>$</Text>
+          <Text style={styles.dollarSign}>ر.س</Text>
         </View>
         <View style={styles.dollarInfo}>
-          <Text style={styles.dollarTitle}>تقدمك نحو الدولار التالي</Text>
-          <Text style={styles.dollarValue}>${dollarsEarned.toFixed(2)} مكتسب</Text>
+          <Text style={styles.dollarTitle}>تقدمك نحو الريال التالي</Text>
+          <Text style={styles.dollarValue}>{riyalsEarned} ريال مكتسب</Text>
         </View>
       </View>
 
@@ -203,13 +203,13 @@ const DollarProgress = ({ saqrGems }) => {
           />
         </View>
         <Text style={styles.diamondsToNext}>
-          {gemsToNext} جوهرة للدولار التالي
+          {gemsToNext} جوهرة للريال التالي
         </Text>
       </View>
 
       <View style={styles.exchangeRate}>
         <Ionicons name="swap-horizontal" size={14} color="#10b981" />
-        <Text style={styles.exchangeText}>500 جوهرة صقر = 1 دولار</Text>
+        <Text style={styles.exchangeText}>500 جوهرة صقر = 1 ريال سعودي</Text>
       </View>
     </View>
   );
