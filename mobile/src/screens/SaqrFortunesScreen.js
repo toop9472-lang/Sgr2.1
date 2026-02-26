@@ -371,11 +371,11 @@ const SaqrFortunesScreen = ({ user, onClose, onBalanceUpdate }) => {
           <View style={styles.statsRow}>
             <StatsCard icon="tv" value={todayAds} label="اعلانات اليوم" color="#60a5fa" />
             <StatsCard icon="videocam" value={totalAds} label="اجمالي الاعلانات" color="#ec4899" />
-            <StatsCard icon="cash" value={`$${(saqrGems / GEMS_PER_DOLLAR).toFixed(2)}`} label="القيمة" color="#22c55e" />
+            <StatsCard icon="cash" value={`${Math.floor(saqrGems / GEMS_PER_RIYAL)} ر.س`} label="القيمة" color="#22c55e" />
           </View>
 
           {/* Dollar Progress */}
-          <DollarProgress saqrGems={saqrGems} />
+          <RiyalProgress saqrGems={saqrGems} />
 
           {/* Main Watch Button */}
           <MainWatchButton
