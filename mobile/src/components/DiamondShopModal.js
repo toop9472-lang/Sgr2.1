@@ -81,7 +81,7 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
               // الحصول على URL الأصلي
               const originUrl = typeof window !== 'undefined' 
                 ? window.location.origin 
-                : 'https://premium-quest-app.preview.emergentagent.com';
+                : 'https://gaming-platform-v2-1.preview.emergentagent.com';
               
               // إنشاء جلسة دفع Stripe
               const response = await api.fetch('/api/diamond-payments/checkout/create', {

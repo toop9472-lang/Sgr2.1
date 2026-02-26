@@ -531,7 +531,7 @@ async def forgot_password(data: ForgotPasswordRequest):
     )
     
     # Build reset URL
-    frontend_url = "https://premium-quest-app.preview.emergentagent.com"
+    frontend_url = "https://gaming-platform-v2-1.preview.emergentagent.com"
     reset_url = f"{frontend_url}/forgot-password?token={reset_token}"
     
     # Send email with reset link

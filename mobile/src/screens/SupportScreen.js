@@ -16,7 +16,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import storage from '../services/storage';
 
-const API_URL = 'https://premium-quest-app.preview.emergentagent.com';
+const API_URL = 'https://gaming-platform-v2-1.preview.emergentagent.com';
 
 // معلومات الدعم
 const SUPPORT_EMAIL = 'sky-321@hotmail.com';
