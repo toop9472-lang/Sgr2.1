@@ -16,7 +16,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import storage from '../services/storage';
 
-const API_URL = 'https://dual-currency-chat.preview.emergentagent.com';
+const API_URL = 'https://nav-games-refine.preview.emergentagent.com';
 
 // معلومات الدعم
 const SUPPORT_EMAIL = 'sky-321@hotmail.com';

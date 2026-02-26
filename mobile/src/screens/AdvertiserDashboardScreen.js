@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const API_URL = 'https://dual-currency-chat.preview.emergentagent.com';
+const API_URL = 'https://nav-games-refine.preview.emergentagent.com';
 
 const AdvertiserDashboardScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');

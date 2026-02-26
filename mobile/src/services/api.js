@@ -1,6 +1,6 @@
 // API Service - Lightweight API handler with enhanced security
 // Production URL - الرابط الثابت للسيرفر الجديد
-const API_URL = 'https://dual-currency-chat.preview.emergentagent.com';
+const API_URL = 'https://nav-games-refine.preview.emergentagent.com';
 
 // Connection check timeout
 const CONNECTION_TIMEOUT = 15000; // 15 seconds

@@ -9,7 +9,7 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://dual-currency-chat.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://nav-games-refine.preview.emergentagent.com').rstrip('/')
 
 # Test fixtures
 @pytest.fixture

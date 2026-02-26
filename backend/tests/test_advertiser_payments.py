@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://dual-currency-chat.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://nav-games-refine.preview.emergentagent.com')
 
 class TestPackagesAPI:
     """Test pricing packages API"""

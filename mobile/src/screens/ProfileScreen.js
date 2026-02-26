@@ -146,11 +146,11 @@ const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenS
   };
 
   const handlePrivacy = () => {
-    Linking.openURL('https://dual-currency-chat.preview.emergentagent.com/privacy');
+    Linking.openURL('https://nav-games-refine.preview.emergentagent.com/privacy');
   };
 
   const handleTerms = () => {
-    Linking.openURL('https://dual-currency-chat.preview.emergentagent.com/terms');
+    Linking.openURL('https://nav-games-refine.preview.emergentagent.com/terms');
   };
 
   const handleSettings = () => {

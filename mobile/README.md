@@ -209,8 +209,8 @@ eas submit -p android
 
 ## 📞 الدعم والمساعدة
 
-- **الموقع:** https://dual-currency-chat.preview.emergentagent.com
-- **API Docs:** https://dual-currency-chat.preview.emergentagent.com/docs
+- **الموقع:** https://nav-games-refine.preview.emergentagent.com
+- **API Docs:** https://nav-games-refine.preview.emergentagent.com/docs
 
 ---
 
