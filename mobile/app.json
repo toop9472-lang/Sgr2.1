@@ -102,7 +102,7 @@
         "backgroundColor": "#0a0a0f"
       },
       "package": "com.saqr.rewards",
-      "versionCode": 55,
+      "versionCode": 57,
       "intentFilters": [
         {
           "action": "VIEW",
