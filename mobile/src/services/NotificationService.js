@@ -7,23 +7,31 @@ let Notifications = null;
 let Device = null;
 let notificationsAvailable = false;
 
-// Try to import notifications modules
-try {
-  Notifications = require('expo-notifications');
-  Device = require('expo-device');
-  notificationsAvailable = true;
-  
-  // Configure notification handling only if available
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: true,
-    }),
-  });
-} catch (error) {
-  console.log('Notifications not available:', error.message);
-}
+// Try to import notifications modules safely
+const initNotifications = async () => {
+  try {
+    Notifications = require('expo-notifications');
+    Device = require('expo-device');
+    notificationsAvailable = true;
+    
+    // Configure notification handling only if available
+    if (Notifications && Notifications.setNotificationHandler) {
+      Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: true,
+        }),
+      });
+    }
+  } catch (error) {
+    console.log('Notifications not available:', error.message);
+    notificationsAvailable = false;
+  }
+};
+
+// Initialize on load
+initNotifications();
 
 // Notification types
 export const NOTIFICATION_TYPES = {
