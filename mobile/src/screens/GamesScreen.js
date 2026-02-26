@@ -1717,9 +1717,26 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, 
 // ==================== STYLES ====================
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  mainHeader: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16 },
-  mainTitle: { fontSize: 28, fontWeight: '700', color: '#FFF', textAlign: 'right' },
-  mainSub: { fontSize: 14, color: '#888', textAlign: 'right', marginTop: 4 },
+  mainHeader: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingHorizontal: 16, 
+    paddingTop: 50, 
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
+  },
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTitleContainer: { flex: 1, marginLeft: 12 },
+  mainTitle: { fontSize: 20, fontWeight: '700', color: '#FFF' },
+  mainSub: { fontSize: 12, color: '#888', marginTop: 2 },
   
   // Daily Progress Card
   dailyProgressCard: { marginHorizontal: 20, backgroundColor: 'rgba(16,185,129,0.1)', borderRadius: 16, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(16,185,129,0.2)' },
