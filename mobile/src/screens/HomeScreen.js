@@ -89,15 +89,10 @@ const HomeScreen = ({ user, onNavigateToAds, onNavigateToGames, settings, onRefr
       }
     >
       <View style={styles.content}>
-        {/* Header with Logo */}
+        {/* Header - بدون شعار */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Image 
-              source={require('../../assets/logo_saqr.png')} 
-              style={styles.logoImage}
-              resizeMode="contain"
-            />
-            <View>
+            <View style={styles.welcomeContainer}>
               <Text style={styles.welcomeText}>أهلاً {userName}</Text>
               <Text style={styles.subText}>جاهز للتحدي؟</Text>
             </View>
