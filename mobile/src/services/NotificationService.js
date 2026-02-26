@@ -302,12 +302,14 @@ export const sendNewGameNotification = async (gameName, language = 'ar') => {
 
 // Cancel all scheduled notifications
 export const cancelAllNotifications = async () => {
+  if (!notificationsAvailable || !Notifications) return;
   await Notifications.cancelAllScheduledNotificationsAsync();
   console.log('All notifications cancelled');
 };
 
 // Cancel specific scheduled notifications
 export const cancelScheduledNotifications = async (type) => {
+  if (!notificationsAvailable || !Notifications) return;
   const scheduled = await Notifications.getAllScheduledNotificationsAsync();
   
   for (const notification of scheduled) {
