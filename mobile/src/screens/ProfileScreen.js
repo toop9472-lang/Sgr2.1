@@ -169,7 +169,6 @@ const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenS
   const menuItems = [
     { id: 'shop', icon: 'cart', label: 'المتجر', action: onOpenShop, color: '#3b82f6' },
     { id: 'achievements', icon: 'trophy', label: 'الإنجازات', action: onOpenAchievements, color: '#fbbf24' },
-    { id: 'admin', icon: 'shield-checkmark', label: 'لوحة تحكم الأدمن', action: onOpenAdminPanel, color: '#ef4444' },
     { id: 'settings', icon: 'settings-outline', label: 'الإعدادات', action: handleSettings, color: '#94a3b8' },
     { id: 'withdraw', icon: 'wallet-outline', label: 'سحب الأرباح', action: handleWithdraw, color: '#22c55e' },
     { id: 'history', icon: 'receipt-outline', label: 'سجل المعاملات', action: handleHistory, color: '#60a5fa' },
@@ -180,6 +179,12 @@ const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenS
     { id: 'privacy', icon: 'shield-checkmark-outline', label: 'سياسة الخصوصية', action: handlePrivacy, color: '#14b8a6' },
     { id: 'terms', icon: 'document-text-outline', label: 'شروط الاستخدام', action: handleTerms, color: '#06b6d4' },
   ];
+  
+  // إضافة زر الأدمن فقط إذا كان المستخدم مدير (role = admin أو super_admin)
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin' || user?.is_admin === true;
+  if (isAdmin && onOpenAdminPanel) {
+    menuItems.splice(2, 0, { id: 'admin', icon: 'shield-checkmark', label: 'لوحة تحكم الأدمن', action: onOpenAdminPanel, color: '#ef4444' });
+  }
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
