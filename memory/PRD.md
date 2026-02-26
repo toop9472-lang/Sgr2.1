@@ -8,7 +8,41 @@ Arabic (العربية)
 
 ---
 
-## ✅ LATEST UPDATE (February 20, 2026) - Version 5.3.0
+## ✅ LATEST UPDATE (February 26, 2026) - Version 5.4.0
+
+### NEW: AI Quest Game & Mobile Redesign - IMPLEMENTED
+- [x] **AI Quest Game (لعبة جديدة مبتكرة)**
+  - لعبة ذكاء اصطناعي جديدة تماماً تتحدى اللاعب في 5 أنواع من التحديات
+  - تحديات رياضية (Math)
+  - تحديات الأنماط (Pattern)
+  - تحديات منطقية (Logic)
+  - تحديات كلمات (Word)
+  - تحديات الذاكرة (Memory)
+  - نظام نقاط VS AI
+  - مستويات صعوبة متزايدة
+  - ملف: `/app/mobile/src/screens/games/AIQuestGame.js`
+
+- [x] **إزالة شعار صقر من الصفحات**
+  - الشعار موجود فقط في صفحة تسجيل الدخول (AuthScreen)
+  - تم إزالته من HomeScreen
+  - تم تحسين Header لعرض اسم المستخدم والنقاط
+
+- [x] **تحسين لعبة الشطرنج**
+  - تحسين ألوان الرقعة للوضوح
+  - تحسين حجم وظلال القطع
+  - ألوان جديدة: فاتح (#e8dcc8) / داكن (#8b7355)
+
+- [x] **إصلاح Syntax في GamesScreen**
+  - إزالة `)}` المكررة التي كانت تسبب خطأ
+
+### Mobile-Only Focus
+- التطبيق الآن يركز على الموبايل فقط (React Native/Expo)
+- مجلد `/app/mobile/` هو الأساسي
+- مجلد `/app/frontend/` للويب (متوقف)
+
+---
+
+## ✅ UPDATE (February 20, 2026) - Version 5.3.0
 
 ### NEW: Games Page Refactoring & Guest Restriction - IMPLEMENTED
 - [x] **Guest Restriction System**
