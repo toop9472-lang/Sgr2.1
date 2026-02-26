@@ -24,7 +24,75 @@ Arabic (العربية)
 
 ---
 
-## LATEST UPDATE (February 2026) - Version 6.0.0
+## LATEST UPDATE (February 2026) - Version 6.1.0
+
+### تحديث 26 فبراير 2026 - النظام الاجتماعي الكامل
+
+#### 1. نظام الأصدقاء (Friends System)
+**الملفات:**
+- `/app/mobile/src/screens/FriendsScreen.js` - شاشة الأصدقاء
+- `/app/mobile/src/screens/PrivateMessagesScreen.js` - شاشة الرسائل الخاصة
+- `/app/backend/routes/social_routes.py` - APIs الاجتماعية
+
+**الميزات:**
+- البحث عن مستخدمين وإرسال طلبات صداقة
+- قبول/رفض طلبات الصداقة
+- قائمة الأصدقاء مع معلومات تاريخ الصداقة
+- إزالة الأصدقاء
+
+**APIs:**
+- `GET /api/social/users/search?query={query}` - البحث عن مستخدمين
+- `POST /api/social/friends/request` - إرسال طلب صداقة
+- `POST /api/social/friends/accept` - قبول طلب صداقة
+- `POST /api/social/friends/reject` - رفض طلب صداقة
+- `GET /api/social/friends/list/{user_id}` - قائمة الأصدقاء
+- `GET /api/social/friends/requests/{user_id}` - طلبات الصداقة المعلقة
+- `DELETE /api/social/friends/remove/{user_id}/{friend_id}` - إزالة صديق
+
+#### 2. الرسائل الخاصة (Private Messages)
+**الميزات:**
+- إرسال رسائل خاصة للأصدقاء فقط (مجاناً)
+- البريد الوارد مع عدد الرسائل غير المقروءة
+- محادثات منظمة حسب الصديق
+
+**APIs:**
+- `POST /api/social/messages/send` - إرسال رسالة خاصة
+- `GET /api/social/messages/conversation/{user_id}/{friend_id}` - جلب المحادثة
+- `GET /api/social/messages/inbox/{user_id}` - البريد الوارد
+
+#### 3. دعوات الألعاب والتحديات (Game Invites & Challenges)
+**الميزات:**
+- دعوة الأصدقاء للألعاب مجاناً
+- دعوات عامة في الدردشة (25 ألماسة)
+- نظام تحديات مع جوائز مضاعفة للفائز (جواهر صقر)
+
+**APIs:**
+- `POST /api/social/game/invite` - إرسال دعوة لعب
+- `POST /api/social/game/accept-invite/{invite_id}/{user_id}` - قبول الدعوة
+- `POST /api/social/game/complete-challenge` - إتمام التحدي وتوزيع الجوائز
+
+#### 4. نظام البلاغات (Reports System)
+**الميزات:**
+- الإبلاغ عن مستخدمين أو رسائل مخالفة
+- أنواع البلاغات: spam, harassment, inappropriate, other
+- تتبع عدد البلاغات على المستخدمين
+
+**APIs:**
+- `POST /api/social/report` - تقديم بلاغ
+- `GET /api/social/reports/user/{user_id}` - بلاغات المستخدم (للأدمن)
+
+#### 5. إخفاء شريط التنقل (BottomNav)
+**التعديل:**
+- يتم إخفاء شريط التنقل عند فتح: الألعاب، الدردشة، ثروات صقر، الأصدقاء، الرسائل
+- زر رجوع واضح في كل شاشة داخلية
+
+**الملفات المعدلة:**
+- `/app/mobile/App.js` - التحكم في إظهار/إخفاء BottomNav
+- `/app/mobile/src/screens/GamesScreen.js` - إضافة header مع زر رجوع
+
+---
+
+## PREVIOUS UPDATE (February 2026) - Version 6.0.0
 
 ### 1. نظام الدردشة العامة (Global Chat)
 **الملفات:**
