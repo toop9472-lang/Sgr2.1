@@ -332,9 +332,73 @@ const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenS
           </TouchableOpacity>
         </View>
 
-        {/* App Version */}
-        <Text style={styles.versionText}>الإصدار 5.0.0</Text>
+        {/* App Version - اضغط 7 مرات لفتح لوحة الأدمن */}
+        <TouchableOpacity onPress={handleVersionTap} activeOpacity={0.7}>
+          <Text style={styles.versionText}>الإصدار 5.0.0</Text>
+        </TouchableOpacity>
       </View>
+
+      {/* Admin Login Modal */}
+      <Modal visible={showAdminLogin} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>تسجيل دخول الأدمن</Text>
+              <TouchableOpacity onPress={() => {
+                setShowAdminLogin(false);
+                setAdminEmail('');
+                setAdminPassword('');
+              }}>
+                <Ionicons name="close" size={24} color="#FFF" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.adminLoginIcon}>
+              <Ionicons name="shield-checkmark" size={40} color="#ef4444" />
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>البريد الإلكتروني</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="أدخل بريد الأدمن"
+                placeholderTextColor="rgba(255,255,255,0.3)"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={adminEmail}
+                onChangeText={setAdminEmail}
+              />
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>كلمة المرور</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="أدخل كلمة المرور"
+                placeholderTextColor="rgba(255,255,255,0.3)"
+                secureTextEntry
+                value={adminPassword}
+                onChangeText={setAdminPassword}
+              />
+            </View>
+            
+            <TouchableOpacity 
+              style={[styles.adminLoginBtn, isLoading && styles.modalButtonDisabled]}
+              onPress={handleAdminLogin}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <>
+                  <Ionicons name="enter-outline" size={20} color="#FFF" />
+                  <Text style={styles.adminLoginBtnText}>دخول لوحة التحكم</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Change Password Modal */}
       <Modal visible={showChangePassword} animationType="slide" transparent>
