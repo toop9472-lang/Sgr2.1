@@ -32,6 +32,8 @@ import GamesScreen from './src/screens/GamesScreen';
 import AchievementsScreen from './src/screens/AchievementsScreen';
 import ShopScreen from './src/screens/ShopScreen';
 import AdminWebViewScreen from './src/screens/AdminWebViewScreen';
+import GlobalChatScreen from './src/screens/GlobalChatScreen';
+import SaqrFortunesScreen from './src/screens/SaqrFortunesScreen';
 
 // Components
 import BottomNav from './src/components/BottomNav';
