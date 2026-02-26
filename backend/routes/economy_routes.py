@@ -1,7 +1,7 @@
 # Economy Routes - Complete Saqr Points & Diamonds System
 # نظام نقاط صقر والألماسات وجواهر صقر
 # الألماسات = للاستهلاك داخل التطبيق (دردشة، ألعاب)
-# جواهر صقر = للاستبدال بالمال (500 جوهرة = 1 دولار)
+# جواهر صقر = للاستبدال بالمال (500 جوهرة = 1 ريال سعودي)
 from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel
 from typing import Optional, List
@@ -29,8 +29,8 @@ INITIAL_SAQR_GEMS = 0
 # الحد اليومي للنقاط من الألعاب
 DAILY_POINTS_LIMIT = 70  # الحد اليومي من الألعاب فقط
 
-# قيمة جواهر صقر بالدولار (500 جوهرة = 1 دولار)
-GEMS_PER_DOLLAR = 500
+# قيمة جواهر صقر بالريال السعودي (500 جوهرة = 1 ريال)
+GEMS_PER_RIYAL = 500
 
 # تكلفة الرسالة في الدردشة (بالألماسات)
 CHAT_MESSAGE_COST = 5
