@@ -497,6 +497,14 @@ export const api = {
     });
   },
 
+  // Add Saqr Gems (for ad rewards - exchangeable for cash)
+  async addSaqrGems(userId, amount, source = 'ad_reward') {
+    return this.fetch(`/api/economy/add-saqr-gems`, {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId, amount, source }),
+    });
+  },
+
   // ==================== Ad Watch Rewards ====================
   
   // Claim ad watch reward (1 diamond per minute)
