@@ -497,6 +497,13 @@ function MainApp() {
                   onPointsEarned={handlePointsEarned}
                 />
               )}
+              {currentPage === 'fortunes' && !showFullScreenAds && (
+                <SaqrFortunesPage 
+                  user={user}
+                  onBack={() => setCurrentPage('home')}
+                  onBalanceUpdate={refreshUser}
+                />
+              )}
               {currentPage === 'my-ads' && !showFullScreenAds && (
                 <MyAdsPage 
                   onNavigate={handleNavigate}
