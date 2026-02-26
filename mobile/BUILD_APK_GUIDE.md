@@ -177,7 +177,7 @@ eas build --platform ios --profile production
 
 ### API URL:
 ```
-https://mobile-game-redesign.preview.emergentagent.com
+https://premium-quest-app.preview.emergentagent.com
 ```
 
 ---

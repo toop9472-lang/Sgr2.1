@@ -173,7 +173,7 @@ const DownloadPage = () => {
             <h3 className="text-xl font-bold mb-4">امسح الرمز بجوالك</h3>
             <div className="w-48 h-48 mx-auto bg-white rounded-2xl p-4 mb-4">
               <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent('https://mobile-game-redesign.preview.emergentagent.com/download')}`}
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent('https://premium-quest-app.preview.emergentagent.com/download')}`}
                 alt="QR Code"
                 className="w-full h-full"
               />

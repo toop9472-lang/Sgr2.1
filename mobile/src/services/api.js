@@ -1,6 +1,6 @@
 // API Service - Lightweight API handler with enhanced security
 // Production URL - الرابط الثابت للسيرفر الجديد
-const API_URL = 'https://mobile-game-redesign.preview.emergentagent.com';
+const API_URL = 'https://premium-quest-app.preview.emergentagent.com';
 
 // Connection check timeout
 const CONNECTION_TIMEOUT = 15000; // 15 seconds

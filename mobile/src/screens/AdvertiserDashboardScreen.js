@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const API_URL = 'https://mobile-game-redesign.preview.emergentagent.com';
+const API_URL = 'https://premium-quest-app.preview.emergentagent.com';
 
 const AdvertiserDashboardScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');

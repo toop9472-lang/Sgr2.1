@@ -15,7 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import storage from '../services/storage';
 
-const API_URL = 'https://mobile-game-redesign.preview.emergentagent.com';
+const API_URL = 'https://premium-quest-app.preview.emergentagent.com';
 
 const CATEGORIES = [
   { id: 'general', label: 'استفسار عام', icon: 'help-circle-outline' },

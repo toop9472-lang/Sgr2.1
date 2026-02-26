@@ -142,11 +142,11 @@ const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenS
   };
 
   const handlePrivacy = () => {
-    Linking.openURL('https://mobile-game-redesign.preview.emergentagent.com/privacy');
+    Linking.openURL('https://premium-quest-app.preview.emergentagent.com/privacy');
   };
 
   const handleTerms = () => {
-    Linking.openURL('https://mobile-game-redesign.preview.emergentagent.com/terms');
+    Linking.openURL('https://premium-quest-app.preview.emergentagent.com/terms');
   };
 
   const handleSettings = () => {

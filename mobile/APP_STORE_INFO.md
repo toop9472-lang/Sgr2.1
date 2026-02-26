@@ -95,12 +95,12 @@ rewards,earn,points,ads,money,cashback,gift,withdraw,wallet,saqr
 
 ### رابط سياسة الخصوصية
 ```
-https://mobile-game-redesign.preview.emergentagent.com/privacy
+https://premium-quest-app.preview.emergentagent.com/privacy
 ```
 
 ### رابط الدعم
 ```
-https://mobile-game-redesign.preview.emergentagent.com
+https://premium-quest-app.preview.emergentagent.com
 ```
 
 ### البريد الإلكتروني للدعم
