@@ -167,6 +167,7 @@ const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenS
   };
 
   const menuItems = [
+    { id: 'shop', icon: 'cart', label: 'المتجر', action: onOpenShop, color: '#3b82f6' },
     { id: 'achievements', icon: 'trophy', label: 'الإنجازات', action: onOpenAchievements, color: '#fbbf24' },
     { id: 'settings', icon: 'settings-outline', label: 'الإعدادات', action: handleSettings, color: '#94a3b8' },
     { id: 'withdraw', icon: 'wallet-outline', label: 'سحب الأرباح', action: handleWithdraw, color: '#22c55e' },
