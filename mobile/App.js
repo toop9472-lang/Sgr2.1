@@ -445,6 +445,13 @@ function AppContent() {
         </View>
       )}
 
+      {/* Admin Panel WebView */}
+      {showAdminPanel && (
+        <View style={StyleSheet.absoluteFill}>
+          <AdminWebViewScreen onClose={() => setShowAdminPanel(false)} />
+        </View>
+      )}
+
       {/* Achievement Notification */}
       <AchievementNotification
         achievement={newAchievement}
