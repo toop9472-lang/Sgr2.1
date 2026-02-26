@@ -55,6 +55,7 @@ function AppContent() {
   const [showAchievements, setShowAchievements] = useState(false);
   const [showShop, setShowShop] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [networkStatus, setNetworkStatus] = useState('checking');
   const [settings, setSettings] = useState(null);
   const [balanceRefresh, setBalanceRefresh] = useState(0);
 
