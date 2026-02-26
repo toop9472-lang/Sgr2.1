@@ -496,6 +496,37 @@ export const api = {
       body: JSON.stringify({ user_id: userId, amount, source }),
     });
   },
+
+  // ==================== Ad Watch Rewards ====================
+  
+  // Claim ad watch reward (1 diamond per minute)
+  async claimAdWatchReward(userId, watchDurationSeconds, adType = 'video') {
+    return this.fetch('/api/economy/ad-watch-reward', {
+      method: 'POST',
+      body: JSON.stringify({
+        user_id: userId,
+        watch_duration_seconds: watchDurationSeconds,
+        ad_type: adType,
+      }),
+    });
+  },
+
+  // Get ad watching stats
+  async getAdStats(userId) {
+    return this.fetch(`/api/economy/ad-stats/${userId}`);
+  },
+
+  // Claim treasure chest reward
+  async claimChestReward(userId, chestType, rewardAmount) {
+    return this.fetch('/api/economy/claim-chest-reward', {
+      method: 'POST',
+      body: JSON.stringify({
+        user_id: userId,
+        chest_type: chestType,
+        reward_amount: rewardAmount,
+      }),
+    });
+  },
 };
 
 export default api;
