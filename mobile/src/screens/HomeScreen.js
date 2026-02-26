@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
   content: { 
     padding: 20, 
     paddingTop: 50, 
-    paddingBottom: 100 
+    paddingBottom: 120 // مساحة للـ BottomNav
   },
 
   // Header
