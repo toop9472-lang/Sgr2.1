@@ -1,7 +1,7 @@
 // شاشة ثروات صقر - Saqr Fortunes Screen
 // تجربة مشاهدة إعلانات ممتعة وتفاعلية
 // جواهر صقر = للاستبدال بالمال (500 جوهرة = 1 دولار)
-// الألماس = للاستهلاك داخل التطبيق (دردشة، ألعاب)
+// الالماس = للاستهلاك داخل التطبيق (دردشة، العاب)
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -31,21 +31,21 @@ const GEM_PER_MINUTE = 1;
 
 // التحديات اليومية (تعطي جواهر صقر)
 const DAILY_CHALLENGES = [
-  { id: 'first_ad', title: 'أول إعلان', desc: 'شاهد إعلانك الأول اليوم', target: 1, reward: 3, icon: 'play' },
-  { id: 'watch_5', title: 'مشاهد نشط', desc: 'شاهد 5 إعلانات', target: 5, reward: 10, icon: 'eye' },
-  { id: 'watch_10', title: 'مشاهد محترف', desc: 'شاهد 10 إعلانات', target: 10, reward: 25, icon: 'star' },
-  { id: 'streak_3', title: 'المثابر', desc: 'شاهد 3 إعلانات متتالية', target: 3, reward: 15, icon: 'flame' },
-  { id: 'morning', title: 'الباكر', desc: 'شاهد إعلان قبل الظهر', target: 1, reward: 5, icon: 'sunny' },
-  { id: 'night', title: 'السهران', desc: 'شاهد إعلان بعد منتصف الليل', target: 1, reward: 8, icon: 'moon' },
+  { id: 'first_ad', title: 'اول اعلان', desc: 'شاهد اعلانك الاول اليوم', target: 1, reward: 3, icon: 'play' },
+  { id: 'watch_5', title: 'مشاهد نشط', desc: 'شاهد 5 اعلانات', target: 5, reward: 10, icon: 'eye' },
+  { id: 'watch_10', title: 'مشاهد محترف', desc: 'شاهد 10 اعلانات', target: 10, reward: 25, icon: 'star' },
+  { id: 'streak_3', title: 'المثابر', desc: 'شاهد 3 اعلانات متتالية', target: 3, reward: 15, icon: 'flame' },
+  { id: 'morning', title: 'الباكر', desc: 'شاهد اعلان قبل الظهر', target: 1, reward: 5, icon: 'sunny' },
+  { id: 'night', title: 'السهران', desc: 'شاهد اعلان بعد منتصف الليل', target: 1, reward: 8, icon: 'moon' },
 ];
 
-// الإنجازات الخاصة بالإعلانات (تعطي جواهر صقر)
+// الانجازات الخاصة بالاعلانات (تعطي جواهر صقر)
 const AD_ACHIEVEMENTS = [
-  { id: 'total_50', title: 'مشاهد مبتدئ', desc: '50 إعلان إجمالي', target: 50, reward: 50, icon: 'medal-outline' },
-  { id: 'total_100', title: 'مشاهد متوسط', desc: '100 إعلان إجمالي', target: 100, reward: 100, icon: 'medal' },
-  { id: 'total_500', title: 'مشاهد خبير', desc: '500 إعلان إجمالي', target: 500, reward: 300, icon: 'trophy-outline' },
-  { id: 'total_1000', title: 'مشاهد أسطوري', desc: '1000 إعلان إجمالي', target: 1000, reward: 750, icon: 'trophy' },
-  { id: 'gems_1000', title: 'جامع الجواهر', desc: '1000 جوهرة من الإعلانات', target: 1000, reward: 200, icon: 'diamond' },
+  { id: 'total_50', title: 'مشاهد مبتدئ', desc: '50 اعلان اجمالي', target: 50, reward: 50, icon: 'medal-outline' },
+  { id: 'total_100', title: 'مشاهد متوسط', desc: '100 اعلان اجمالي', target: 100, reward: 100, icon: 'medal' },
+  { id: 'total_500', title: 'مشاهد خبير', desc: '500 اعلان اجمالي', target: 500, reward: 300, icon: 'trophy-outline' },
+  { id: 'total_1000', title: 'مشاهد اسطوري', desc: '1000 اعلان اجمالي', target: 1000, reward: 750, icon: 'trophy' },
+  { id: 'gems_1000', title: 'جامع الجواهر', desc: '1000 جوهرة من الاعلانات', target: 1000, reward: 200, icon: 'diamond' },
 ];
 
 // مكون بطاقة الإحصائيات
