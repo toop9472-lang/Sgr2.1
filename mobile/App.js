@@ -82,6 +82,7 @@ function AppContent() {
   const [networkStatus, setNetworkStatus] = useState('checking');
   const [settings, setSettings] = useState(null);
   const [balanceRefresh, setBalanceRefresh] = useState(0);
+  const [selectedFriend, setSelectedFriend] = useState(null);
 
   // Language context
   const { language, t } = useLanguage();
