@@ -40,7 +40,17 @@ import { AchievementNotification } from './src/screens/AchievementsScreen';
 import api from './src/services/api';
 import storage from './src/services/storage';
 import colors from './src/styles/colors';
-import NotificationService from './src/services/NotificationService';
+
+// Safe notification import
+let NotificationService = null;
+try {
+  NotificationService = require('./src/services/NotificationService');
+  if (NotificationService.default) {
+    NotificationService = NotificationService.default;
+  }
+} catch (e) {
+  console.log('Notifications not available');
+}
 
 // Main App Content (wrapped with providers)
 function AppContent() {
