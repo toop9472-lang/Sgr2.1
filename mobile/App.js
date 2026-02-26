@@ -177,6 +177,19 @@ function AppContent() {
 
   const initApp = async () => {
     try {
+      // Check network connection first
+      const isConnected = await api.checkConnection();
+      setNetworkStatus(isConnected ? 'connected' : 'disconnected');
+      
+      if (!isConnected) {
+        console.log('No network connection, trying again...');
+        // Retry after 2 seconds
+        setTimeout(async () => {
+          const retryConnected = await api.checkConnection();
+          setNetworkStatus(retryConnected ? 'connected' : 'disconnected');
+        }, 2000);
+      }
+      
       // Load saved user data
       const [savedToken, savedUser] = await Promise.all([
         storage.getToken(),
@@ -187,48 +200,51 @@ function AppContent() {
         setUser(savedUser);
         setIsAuthenticated(true);
         
-        // Fetch latest user data from server to sync points
-        try {
-          api.setTokens(savedToken, null);
-          const response = await api.getCurrentUser();
-          if (response.ok) {
-            const userData = await response.json();
-            if (userData.user) {
-              const updatedUser = {
-                ...savedUser,
-                ...userData.user,
-                points: userData.user.points || savedUser.points || 0,
-                total_earned: userData.user.total_earned || savedUser.total_earned || 0,
-              };
-              setUser(updatedUser);
-              await storage.setUserData(updatedUser);
-              
-              // Initialize economy for user if needed
-              try {
-                await api.initializeUserEconomy(updatedUser.id);
-              } catch (e) {
-                console.log('Economy init skipped');
-              }
-              
-              // Check daily login rewards
-              try {
-                const dailyResponse = await api.getDailyLoginStatus(updatedUser.id);
-                if (dailyResponse.ok) {
-                  const dailyData = await dailyResponse.json();
-                  if (dailyData.should_show_reward && !dailyData.today_claimed) {
-                    // Show daily rewards modal after a short delay
-                    setTimeout(() => {
-                      setShowDailyRewards(true);
-                    }, 1000);
-                  }
+        // Only sync if connected
+        if (isConnected) {
+          // Fetch latest user data from server to sync points
+          try {
+            api.setTokens(savedToken, null);
+            const response = await api.getCurrentUser();
+            if (response.ok) {
+              const userData = await response.json();
+              if (userData.user) {
+                const updatedUser = {
+                  ...savedUser,
+                  ...userData.user,
+                  points: userData.user.points || savedUser.points || 0,
+                  total_earned: userData.user.total_earned || savedUser.total_earned || 0,
+                };
+                setUser(updatedUser);
+                await storage.setUserData(updatedUser);
+                
+                // Initialize economy for user if needed
+                try {
+                  await api.initializeUserEconomy(updatedUser.id);
+                } catch (e) {
+                  console.log('Economy init skipped');
                 }
-              } catch (e) {
-                console.log('Daily check skipped');
+                
+                // Check daily login rewards
+                try {
+                  const dailyResponse = await api.getDailyLoginStatus(updatedUser.id);
+                  if (dailyResponse.ok) {
+                    const dailyData = await dailyResponse.json();
+                    if (dailyData.should_show_reward && !dailyData.today_claimed) {
+                      // Show daily rewards modal after a short delay
+                      setTimeout(() => {
+                        setShowDailyRewards(true);
+                      }, 1000);
+                    }
+                  }
+                } catch (e) {
+                  console.log('Daily check skipped');
+                }
               }
             }
+          } catch (syncError) {
+            console.log('User sync skipped:', syncError.message);
           }
-        } catch (syncError) {
-          console.log('User sync skipped:', syncError.message);
         }
       }
 
