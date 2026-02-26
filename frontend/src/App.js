@@ -400,6 +400,10 @@ function MainApp() {
       <Route path="/support" element={<SupportPage />} />
       <Route path="/help" element={<SupportPage />} />
       
+      {/* Documentation Page */}
+      <Route path="/docs" element={<AppDocumentation />} />
+      <Route path="/documentation" element={<AppDocumentation />} />
+      
       {/* Download Page */}
       <Route path="/download" element={<DownloadPage />} />
       
