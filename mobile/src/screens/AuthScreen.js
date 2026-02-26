@@ -46,15 +46,12 @@ const AuthScreen = ({ onLogin }) => {
   // OTP input refs
   const otpRefs = useRef([]);
   
-  // Handle connection errors
+  // Handle connection errors - simplified version
   const handleConnectionError = (error) => {
     console.log('Connection Error:', error.message);
-    if (error.message === 'CONNECTION_TIMEOUT') {
-      Alert.alert('خطأ في الاتصال', 'انتهت مهلة الاتصال بالسيرفر. يرجى المحاولة مرة أخرى.');
-    } else if (error.message === 'NO_CONNECTION') {
-      Alert.alert('لا يوجد اتصال', 'تحقق من اتصالك بالإنترنت وحاول مرة أخرى.');
-    } else {
-      Alert.alert('خطأ في الاتصال', 'حدث خطأ غير متوقع. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.');
+    // Only show alert for critical errors, not network timeout
+    if (error.message !== 'CONNECTION_TIMEOUT' && error.message !== 'NO_CONNECTION') {
+      Alert.alert('خطأ', 'حدث خطأ. يرجى المحاولة مرة أخرى.');
     }
   };
   
