@@ -264,7 +264,9 @@ export default function App() {
           <HomeScreen 
             user={user} 
             settings={settings}
-            onNavigateToAds={() => setShowAdsViewer(true)} 
+            onNavigateToAds={() => setShowAdsViewer(true)}
+            onNavigateToGames={() => setCurrentPage('games')}
+            onRefresh={initApp}
           />
         )}
         {currentPage === 'profile' && (
