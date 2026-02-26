@@ -362,6 +362,7 @@ function AppContent() {
             user={user} 
             onLogout={handleLogout}
             onNavigate={setCurrentPage}
+            onOpenAchievements={() => setShowAchievements(true)}
           />
         )}
         {currentPage === 'settings' && (
