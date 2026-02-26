@@ -45,6 +45,14 @@
           "iosAppId": "ca-app-pub-5132559433385403~1073385732"
         }
       ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#3b82f6",
+          "sounds": []
+        }
+      ],
       "expo-font"
     ],
     "ios": {
