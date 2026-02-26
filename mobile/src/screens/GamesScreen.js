@@ -406,12 +406,12 @@ const TicTacToeGame = ({ mode, onComplete, onClose, isOnline, opponent, isMyTurn
 // ==================== PUZZLE GAME ====================
 // ==================== PUZZLE GAME (PROFESSIONAL IMAGE PUZZLE) ====================
 const PUZZLE_IMAGES = [
-  { id: 1, name: 'الطبيعة', emoji: '🏔️', gradient: ['#22c55e', '#15803d'] },
-  { id: 2, name: 'المحيط', emoji: '🌊', gradient: ['#3b82f6', '#1d4ed8'] },
-  { id: 3, name: 'الغروب', emoji: '🌅', gradient: ['#f97316', '#ea580c'] },
-  { id: 4, name: 'الفضاء', emoji: '🚀', gradient: ['#8b5cf6', '#7c3aed'] },
-  { id: 5, name: 'الصحراء', emoji: '🏜️', gradient: ['#fbbf24', '#d97706'] },
-  { id: 6, name: 'الزهور', emoji: '🌸', gradient: ['#ec4899', '#db2777'] },
+  { id: 1, name: 'الطبيعة', icon: 'leaf', gradient: ['#22c55e', '#15803d'] },
+  { id: 2, name: 'المحيط', icon: 'water', gradient: ['#3b82f6', '#1d4ed8'] },
+  { id: 3, name: 'الغروب', icon: 'sunny', gradient: ['#f97316', '#ea580c'] },
+  { id: 4, name: 'الفضاء', icon: 'rocket', gradient: ['#8b5cf6', '#7c3aed'] },
+  { id: 5, name: 'الصحراء', icon: 'partly-sunny', gradient: ['#fbbf24', '#d97706'] },
+  { id: 6, name: 'الزهور', icon: 'flower', gradient: ['#ec4899', '#db2777'] },
 ];
 
 const PuzzleGame = ({ mode, onComplete, onClose }) => {
