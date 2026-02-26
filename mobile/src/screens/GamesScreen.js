@@ -834,13 +834,152 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
 
+  // قائمة الألعاب المحسنة مع أيقونات متطورة
   const games = [
-    { id: 'chess', name: 'الشطرنج', icon: 'trophy-outline', colors: ['#8b5cf6', '#6d28d9'], description: 'لعبة الملوك', maxPoints: 25, online: true, onlineCost: 30 },
-    { id: 'tictactoe', name: 'إكس أو', icon: 'grid-outline', colors: ['#f59e0b', '#d97706'], description: 'تحدى منافسك', maxPoints: 20, online: true, onlineCost: 20 },
-    { id: 'brickbreaker', name: 'تكسير الطوب', icon: 'apps', colors: ['#ec4899', '#db2777'], description: 'كسّر كل الطوب', maxPoints: 20, online: false, onlineCost: 0 },
-    { id: 'puzzle', name: 'تركيب الصور', icon: 'apps-outline', colors: ['#3b82f6', '#1d4ed8'], description: 'رتب القطع', maxPoints: 20, online: true, onlineCost: 25 },
-    { id: 'trivia', name: 'أسئلة ثقافية', icon: 'school-outline', colors: ['#10b981', '#059669'], description: 'اختبر معلوماتك', maxPoints: 25, online: false, onlineCost: 0 },
-    { id: 'riddles', name: 'الألغاز', icon: 'bulb-outline', colors: ['#ef4444', '#dc2626'], description: 'حل الألغاز', maxPoints: 20, online: false, onlineCost: 0 },
+    { 
+      id: 'chess', 
+      name: 'الشطرنج', 
+      icon: 'game-controller', 
+      colors: ['#7c3aed', '#4c1d95'], 
+      description: 'لعبة الملوك والاستراتيجية', 
+      maxPoints: 25, 
+      online: true, 
+      onlineCost: 30,
+      category: 'استراتيجية',
+      badge: 'مميز'
+    },
+    { 
+      id: 'tictactoe', 
+      name: 'إكس أو', 
+      icon: 'grid', 
+      colors: ['#f97316', '#c2410c'], 
+      description: 'تحدى منافسك وفكر بذكاء', 
+      maxPoints: 20, 
+      online: true, 
+      onlineCost: 20,
+      category: 'سريعة',
+      badge: 'شعبي'
+    },
+    { 
+      id: 'memory', 
+      name: 'الذاكرة', 
+      icon: 'copy', 
+      colors: ['#14b8a6', '#0f766e'], 
+      description: 'اختبر ذاكرتك وركز', 
+      maxPoints: 18, 
+      online: false, 
+      onlineCost: 0,
+      category: 'ذهنية',
+      badge: 'جديد'
+    },
+    { 
+      id: 'wordrace', 
+      name: 'سباق الكلمات', 
+      icon: 'text', 
+      colors: ['#06b6d4', '#0891b2'], 
+      description: 'اكتشف الكلمات المخفية', 
+      maxPoints: 22, 
+      online: true, 
+      onlineCost: 25,
+      category: 'لغوية',
+      badge: 'ذكاء'
+    },
+    { 
+      id: 'puzzle', 
+      name: 'تركيب الصور', 
+      icon: 'extension-puzzle', 
+      colors: ['#3b82f6', '#1e40af'], 
+      description: 'رتب القطع لتكمل الصورة', 
+      maxPoints: 20, 
+      online: true, 
+      onlineCost: 25,
+      category: 'ذهنية',
+      badge: ''
+    },
+    { 
+      id: 'trivia', 
+      name: 'أسئلة ثقافية', 
+      icon: 'school', 
+      colors: ['#10b981', '#047857'], 
+      description: 'اختبر معلوماتك العامة', 
+      maxPoints: 25, 
+      online: true, 
+      onlineCost: 20,
+      category: 'ثقافية',
+      badge: '1000+ سؤال'
+    },
+    { 
+      id: 'mathrace', 
+      name: 'سباق الحساب', 
+      icon: 'calculator', 
+      colors: ['#8b5cf6', '#6d28d9'], 
+      description: 'حل المعادلات بسرعة', 
+      maxPoints: 22, 
+      online: true, 
+      onlineCost: 20,
+      category: 'رياضيات',
+      badge: 'تحدي'
+    },
+    { 
+      id: 'riddles', 
+      name: 'الألغاز', 
+      icon: 'bulb', 
+      colors: ['#eab308', '#ca8a04'], 
+      description: 'حل الألغاز الذكية', 
+      maxPoints: 20, 
+      online: false, 
+      onlineCost: 0,
+      category: 'ذهنية',
+      badge: ''
+    },
+    { 
+      id: 'brickbreaker', 
+      name: 'تكسير الطوب', 
+      icon: 'cube', 
+      colors: ['#ec4899', '#be185d'], 
+      description: 'كسّر كل الطوب واربح', 
+      maxPoints: 20, 
+      online: false, 
+      onlineCost: 0,
+      category: 'آركيد',
+      badge: ''
+    },
+    { 
+      id: 'snake', 
+      name: 'الثعبان', 
+      icon: 'git-branch', 
+      colors: ['#22c55e', '#15803d'], 
+      description: 'اللعبة الكلاسيكية المحبوبة', 
+      maxPoints: 20, 
+      online: false, 
+      onlineCost: 0,
+      category: 'كلاسيكية',
+      badge: 'كلاسيك'
+    },
+    { 
+      id: 'colorswitch', 
+      name: 'تبديل الألوان', 
+      icon: 'color-palette', 
+      colors: ['#f43f5e', '#e11d48'], 
+      description: 'سرعة التفاعل مع الألوان', 
+      maxPoints: 18, 
+      online: false, 
+      onlineCost: 0,
+      category: 'سريعة',
+      badge: ''
+    },
+    { 
+      id: 'reaction', 
+      name: 'سرعة الرد', 
+      icon: 'flash', 
+      colors: ['#fbbf24', '#d97706'], 
+      description: 'اختبر سرعة ردك', 
+      maxPoints: 15, 
+      online: true, 
+      onlineCost: 15,
+      category: 'سريعة',
+      badge: ''
+    },
   ];
 
   // Multiplayer event handlers
