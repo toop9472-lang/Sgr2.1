@@ -370,6 +370,7 @@ function AppContent() {
             onLogout={handleLogout}
             onNavigate={setCurrentPage}
             onOpenAchievements={() => setShowAchievements(true)}
+            onOpenShop={() => setShowShop(true)}
           />
         )}
         {currentPage === 'settings' && (
