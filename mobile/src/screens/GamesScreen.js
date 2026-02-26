@@ -1697,6 +1697,10 @@ const styles = StyleSheet.create({
   freeBadge: { backgroundColor: 'rgba(16,185,129,0.2)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   freeText: { fontSize: 10, color: '#10b981', fontWeight: '600' },
   
+  // Diamond with plus badge
+  diamondWithPlus: { position: 'relative' },
+  plusBadge: { position: 'absolute', top: -4, right: -8, width: 16, height: 16, borderRadius: 8, backgroundColor: '#22c55e', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#0a0a0f' },
+  
   // Rewards Info
   rewardsInfoCard: { marginHorizontal: 20, backgroundColor: 'rgba(251,191,36,0.08)', borderRadius: 16, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: 'rgba(251,191,36,0.15)' },
   rewardsInfoHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
