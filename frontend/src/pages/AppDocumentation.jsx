@@ -642,7 +642,7 @@ const AppDocumentation = () => {
               
               <div className="mt-6 bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
                 <p className="text-blue-400 text-sm">
-                  <strong>Base URL:</strong> https://gaming-platform-v2-1.preview.emergentagent.com/api
+                  <strong>Base URL:</strong> https://dual-currency-chat.preview.emergentagent.com/api
                 </p>
               </div>
             </section>

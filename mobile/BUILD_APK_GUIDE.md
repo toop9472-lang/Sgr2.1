@@ -177,7 +177,7 @@ eas build --platform ios --profile production
 
 ### API URL:
 ```
-https://gaming-platform-v2-1.preview.emergentagent.com
+https://dual-currency-chat.preview.emergentagent.com
 ```
 
 ---

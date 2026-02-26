@@ -28,7 +28,7 @@ eas login
 
 ```bash
 # تحميل ملف المشروع
-curl -o mobile-project.zip https://gaming-platform-v2-1.preview.emergentagent.com/mobile-project.zip
+curl -o mobile-project.zip https://dual-currency-chat.preview.emergentagent.com/mobile-project.zip
 
 # فك الضغط
 unzip mobile-project.zip -d mobile-project
