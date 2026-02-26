@@ -142,11 +142,11 @@ const ProfileScreen = ({ user, onLogout, onNavigate }) => {
   };
 
   const handlePrivacy = () => {
-    Linking.openURL('https://app-store-revival.preview.emergentagent.com/privacy');
+    Linking.openURL('https://mobile-game-redesign.preview.emergentagent.com/privacy');
   };
 
   const handleTerms = () => {
-    Linking.openURL('https://app-store-revival.preview.emergentagent.com/terms');
+    Linking.openURL('https://mobile-game-redesign.preview.emergentagent.com/terms');
   };
 
   const handleSettings = () => {

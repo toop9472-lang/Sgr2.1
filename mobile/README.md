@@ -209,8 +209,8 @@ eas submit -p android
 
 ## 📞 الدعم والمساعدة
 
-- **الموقع:** https://app-store-revival.preview.emergentagent.com
-- **API Docs:** https://app-store-revival.preview.emergentagent.com/docs
+- **الموقع:** https://mobile-game-redesign.preview.emergentagent.com
+- **API Docs:** https://mobile-game-redesign.preview.emergentagent.com/docs
 
 ---
 

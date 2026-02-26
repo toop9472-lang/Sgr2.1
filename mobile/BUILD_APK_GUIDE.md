@@ -177,7 +177,7 @@ eas build --platform ios --profile production
 
 ### API URL:
 ```
-https://app-store-revival.preview.emergentagent.com
+https://mobile-game-redesign.preview.emergentagent.com
 ```
 
 ---
