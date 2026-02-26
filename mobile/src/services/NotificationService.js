@@ -38,6 +38,11 @@ export const NOTIFICATION_TYPES = {
 
 // Register for push notifications
 export const registerForPushNotifications = async () => {
+  if (!notificationsAvailable || !Device || !Notifications) {
+    console.log('Notifications not available on this build');
+    return null;
+  }
+  
   let token;
   
   if (Device.isDevice) {
