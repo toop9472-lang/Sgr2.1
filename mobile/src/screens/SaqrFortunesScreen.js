@@ -1,6 +1,7 @@
 // شاشة ثروات صقر - Saqr Fortunes Screen
 // تجربة مشاهدة إعلانات ممتعة وتفاعلية
-// 1 جوهرة لكل دقيقة - 500 جوهرة = 1 دولار
+// جواهر صقر = للاستبدال بالمال (500 جوهرة = 1 دولار)
+// الألماس = للاستهلاك داخل التطبيق (دردشة، ألعاب)
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -24,11 +25,11 @@ import TreasureChestsSection from '../components/TreasureChests';
 const { width, height } = Dimensions.get('window');
 
 // ==================== ثوابت النظام ====================
-const DIAMONDS_PER_DOLLAR = 500;
-const AD_DURATION_MINUTES = 1;
-const DIAMOND_PER_MINUTE = 1;
+// جواهر صقر = للاستبدال بالمال
+const GEMS_PER_DOLLAR = 500;
+const GEM_PER_MINUTE = 1;
 
-// التحديات اليومية
+// التحديات اليومية (تعطي جواهر صقر)
 const DAILY_CHALLENGES = [
   { id: 'first_ad', title: 'أول إعلان', desc: 'شاهد إعلانك الأول اليوم', target: 1, reward: 3, icon: 'play' },
   { id: 'watch_5', title: 'مشاهد نشط', desc: 'شاهد 5 إعلانات', target: 5, reward: 10, icon: 'eye' },
@@ -38,13 +39,13 @@ const DAILY_CHALLENGES = [
   { id: 'night', title: 'السهران', desc: 'شاهد إعلان بعد منتصف الليل', target: 1, reward: 8, icon: 'moon' },
 ];
 
-// الإنجازات الخاصة بالإعلانات
+// الإنجازات الخاصة بالإعلانات (تعطي جواهر صقر)
 const AD_ACHIEVEMENTS = [
   { id: 'total_50', title: 'مشاهد مبتدئ', desc: '50 إعلان إجمالي', target: 50, reward: 50, icon: 'medal-outline' },
   { id: 'total_100', title: 'مشاهد متوسط', desc: '100 إعلان إجمالي', target: 100, reward: 100, icon: 'medal' },
   { id: 'total_500', title: 'مشاهد خبير', desc: '500 إعلان إجمالي', target: 500, reward: 300, icon: 'trophy-outline' },
   { id: 'total_1000', title: 'مشاهد أسطوري', desc: '1000 إعلان إجمالي', target: 1000, reward: 750, icon: 'trophy' },
-  { id: 'diamonds_1000', title: 'جامع الماس', desc: '1000 ألماسة من الإعلانات', target: 1000, reward: 200, icon: 'diamond' },
+  { id: 'gems_1000', title: 'جامع الجواهر', desc: '1000 جوهرة من الإعلانات', target: 1000, reward: 200, icon: 'diamond' },
 ];
 
 // مكون بطاقة الإحصائيات
