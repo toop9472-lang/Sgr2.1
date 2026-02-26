@@ -1,8 +1,18 @@
 // Saqr Mobile App - Main Entry Point
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, ActivityIndicator, Text, BackHandler, Alert, Image, I18nManager } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Text, BackHandler, Alert, Image, I18nManager, LogBox } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+
+// Ignore specific warnings that don't affect functionality
+LogBox.ignoreLogs([
+  'Non-serializable values were found in the navigation state',
+  'Sending `onAnimatedValueUpdate`',
+  'componentWillReceiveProps has been renamed',
+  'componentWillMount has been renamed',
+  'expo-notifications',
+  'expo-device',
+]);
 
 // Force RTL for Arabic
 I18nManager.allowRTL(true);
