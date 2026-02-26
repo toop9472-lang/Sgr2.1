@@ -473,6 +473,7 @@ function AppContent() {
             onGameComplete={handleGameComplete}
             balanceRefresh={balanceRefresh}
             language={language}
+            onClose={() => setCurrentPage('home')}
           />
         )}
         {currentPage === 'chat' && (
