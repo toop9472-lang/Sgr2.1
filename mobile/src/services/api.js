@@ -488,6 +488,14 @@ export const api = {
       body: JSON.stringify({ email, password }),
     });
   },
+
+  // Add diamonds (for ad rewards)
+  async addDiamonds(userId, amount, source = 'ad_reward') {
+    return this.fetch(`/api/economy/add-diamonds`, {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId, amount, source }),
+    });
+  },
 };
 
 export default api;
