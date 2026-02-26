@@ -513,6 +513,16 @@ function MainApp() {
                   onNavigateToFortunes={() => setCurrentPage('fortunes')}
                 />
               )}
+              {currentPage === 'friends' && !showFullScreenAds && (
+                <FriendsPage 
+                  user={user}
+                  onBack={() => setCurrentPage('home')}
+                  onOpenMessages={(friend) => {
+                    // TODO: Open messages
+                    console.log('Open messages with', friend);
+                  }}
+                />
+              )}
               {currentPage === 'my-ads' && !showFullScreenAds && (
                 <MyAdsPage 
                   onNavigate={handleNavigate}
