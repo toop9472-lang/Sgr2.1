@@ -62,12 +62,12 @@ const SettingsScreen = ({ onBack }) => {
   ];
 
   const languages = [
-    { code: 'ar', name: 'العربية', flag: '🇸🇦' },
-    { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'fr', name: 'Français', flag: '🇫🇷' },
-    { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
-    { code: 'ur', name: 'اردو', flag: '🇵🇰' },
-    { code: 'hi', name: 'हिन्दी', flag: '🇮🇳' },
+    { code: 'ar', name: 'العربية', icon: 'globe' },
+    { code: 'en', name: 'English', icon: 'globe' },
+    { code: 'fr', name: 'Francais', icon: 'globe' },
+    { code: 'tr', name: 'Turkce', icon: 'globe' },
+    { code: 'ur', name: 'اردو', icon: 'globe' },
+    { code: 'hi', name: 'Hindi', icon: 'globe' },
   ];
 
   const getThemeName = () => themes.find(t => t.id === theme)?.name || 'داكن';
