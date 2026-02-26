@@ -421,6 +421,8 @@ function AppContent() {
             settings={settings}
             onNavigateToAds={() => setShowAdsViewer(true)}
             onNavigateToGames={() => setCurrentPage('games')}
+            onNavigateToChat={() => setCurrentPage('chat')}
+            onNavigateToFortunes={() => setCurrentPage('fortunes')}
             onRefresh={initApp}
           />
         )}
