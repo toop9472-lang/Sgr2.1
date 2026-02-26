@@ -26,6 +26,7 @@ import SettingsPage from "./components/SettingsPage";
 import ChallengesPage from "./components/ChallengesPage";
 import GamesPage from "./components/GamesPage";
 import SaqrFortunesPage from "./components/SaqrFortunesPage";
+import GlobalChatPage from "./components/GlobalChatPage";
 import BottomNav from "./components/BottomNav";
 import { Toaster } from "./components/ui/toaster";
 import { toast } from "./hooks/use-toast";
