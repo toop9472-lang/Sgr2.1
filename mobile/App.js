@@ -34,6 +34,8 @@ import ShopScreen from './src/screens/ShopScreen';
 import AdminWebViewScreen from './src/screens/AdminWebViewScreen';
 import GlobalChatScreen from './src/screens/GlobalChatScreen';
 import SaqrFortunesScreen from './src/screens/SaqrFortunesScreen';
+import FriendsScreen from './src/screens/FriendsScreen';
+import PrivateMessagesScreen from './src/screens/PrivateMessagesScreen';
 
 // Components
 import BottomNav from './src/components/BottomNav';
