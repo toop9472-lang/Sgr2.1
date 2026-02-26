@@ -9,45 +9,73 @@ const CONNECTION_TIMEOUT = 15000; // 15 seconds
 let accessToken = null;
 let refreshToken = null;
 
-// Check if API is reachable
+// Connection status cache
+let lastConnectionCheck = null;
+let lastConnectionResult = null;
+const CONNECTION_CACHE_DURATION = 30000; // 30 seconds
+
+// Check if API is reachable - Real implementation
 const checkConnection = async () => {
+  // Use cached result if recent
+  const now = Date.now();
+  if (lastConnectionCheck && (now - lastConnectionCheck) < CONNECTION_CACHE_DURATION) {
+    console.log('Using cached connection result:', lastConnectionResult);
+    return lastConnectionResult;
+  }
+
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
     
     console.log('Checking connection to:', API_URL);
     
-    // Try multiple endpoints
-    const endpoints = ['/api/health', '/api/'];
-    
-    for (const endpoint of endpoints) {
-      try {
-        const response = await fetch(`${API_URL}${endpoint}`, {
-          method: 'GET',
-          signal: controller.signal,
-          headers: {
-            'Accept': 'application/json',
-          },
-        });
-        
-        if (response.ok) {
-          clearTimeout(timeoutId);
-          console.log('Connection successful via:', endpoint);
-          return true;
-        }
-      } catch (e) {
-        continue;
-      }
-    }
+    const response = await fetch(`${API_URL}/api/health`, {
+      method: 'GET',
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
     
     clearTimeout(timeoutId);
-    // Return true anyway to allow app to work
-    return true;
+    
+    if (response.ok) {
+      const data = await response.json();
+      const isConnected = data.status === 'healthy' && data.database === 'connected';
+      
+      // Cache the result
+      lastConnectionCheck = now;
+      lastConnectionResult = isConnected;
+      
+      console.log('Connection check result:', isConnected);
+      return isConnected;
+    }
+    
+    // Server responded but not healthy
+    lastConnectionCheck = now;
+    lastConnectionResult = false;
+    return false;
   } catch (error) {
     console.log('Connection check failed:', error.message);
-    // Return true to allow app to work even if check fails
-    return true;
+    
+    // Cache the failure
+    lastConnectionCheck = now;
+    lastConnectionResult = false;
+    
+    // For AbortError (timeout) or network errors
+    if (error.name === 'AbortError') {
+      console.log('Connection timeout');
+      return false;
+    }
+    
+    return false;
   }
+};
+
+// Force refresh connection status
+const refreshConnectionStatus = () => {
+  lastConnectionCheck = null;
+  lastConnectionResult = null;
 };
 
 export const api = {
