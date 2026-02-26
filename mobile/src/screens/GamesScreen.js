@@ -975,6 +975,7 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh }
   const [onlineOpponent, setOnlineOpponent] = useState(null);
   const [isMyTurn, setIsMyTurn] = useState(false);
   const [matchData, setMatchData] = useState(null);
+  const [showAdChallenges, setShowAdChallenges] = useState(false);
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
