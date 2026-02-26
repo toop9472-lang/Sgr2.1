@@ -383,14 +383,14 @@ const styles = StyleSheet.create({
   thinkText: { color: '#f59e0b', fontSize: 12, marginLeft: 4 },
   capturedRow: { flexDirection: 'row', flexWrap: 'wrap', maxWidth: 140 },
   capturedPiece: { fontSize: 18, marginRight: 2 },
-  boardWrap: { alignItems: 'center', marginVertical: 8 },
-  board: { borderRadius: 8, overflow: 'hidden', borderWidth: 3, borderColor: '#5c4033' },
+  boardWrap: { alignItems: 'center', marginVertical: 12, paddingHorizontal: 8 },
+  board: { borderRadius: 12, overflow: 'hidden', borderWidth: 4, borderColor: '#5c4033', elevation: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8 },
   boardRow: { flexDirection: 'row' },
   square: { width: SQUARE_SIZE, height: SQUARE_SIZE, justifyContent: 'center', alignItems: 'center' },
-  // خشبي فاتح
-  lightSquare: { backgroundColor: '#DEB887' },
-  // خشبي غامق
-  darkSquare: { backgroundColor: '#8B4513' },
+  // خشبي فاتح - أكثر إشراقاً
+  lightSquare: { backgroundColor: '#E8C88E' },
+  // خشبي غامق - أعمق
+  darkSquare: { backgroundColor: '#6B3E26' },
   selectedSquare: { backgroundColor: 'rgba(96,165,250,0.6)' },
   validSquare: { backgroundColor: 'rgba(34,197,94,0.4)' },
   // القطع أكبر وأوضح
