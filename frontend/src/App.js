@@ -21,6 +21,7 @@ import TermsOfService from "./pages/TermsOfService";
 import DownloadPage from "./pages/DownloadPage";
 import SupportPage from "./pages/SupportPage";
 import AppDocumentation from "./pages/AppDocumentation";
+import DeleteAccountPage from "./pages/DeleteAccountPage";
 import AISupportPage from "./components/SupportPage";
 import SettingsPage from "./components/SettingsPage";
 import ChallengesPage from "./components/ChallengesPage";
