@@ -411,6 +411,9 @@ function MainApp() {
       {/* Download Page */}
       <Route path="/download" element={<DownloadPage />} />
       
+      {/* Delete Account Page */}
+      <Route path="/delete-account" element={<DeleteAccountPage />} />
+      
       {/* Forgot Password */}
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       
