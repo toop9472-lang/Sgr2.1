@@ -183,14 +183,17 @@ const WordRaceGame = ({ mode, isOnline, onComplete, onClose }) => {
 
   if (!currentWord) {
     return (
-      <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
-        <Text style={styles.loadingText}>جاري التحميل...</Text>
-      </LinearGradient>
+      <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
+        <View style={styles.overlay}>
+          <Text style={styles.loadingText}>جاري التحميل...</Text>
+        </View>
+      </ImageBackground>
     );
   }
 
   return (
-    <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
+    <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
+      <View style={styles.overlay}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={onClose} style={styles.headerBtn}>
