@@ -1,62 +1,62 @@
-// إيموجي صقر الخاصة بالتطبيق للويب
-// Saqr Custom Emojis - Used across all web chat interfaces
+// إيموجي صقر الخاصة بالتطبيق للويب - ملصقات مربعة بدون خلفية
+// Saqr Custom Stickers - Square format without background
 
-// قائمة الإيموجي
+// قائمة الإيموجي الجديدة (مربعة بدون خلفية)
 export const SAQR_EMOJIS = [
   { 
     id: 'thumbsup', 
     name: 'أعجبني', 
     nameEn: 'Like',
-    url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/4d62725e93babb5fe8ec023f841834fe43aecf6361ef5bf793c75b94b1b5e20d.png', 
+    url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/f22b7d699297f76a166f1e960d062f79e7683bf0793eb49ebed98517bc4ac4be.png', 
     code: ':saqr_thumbsup:' 
   },
   { 
     id: 'love', 
     name: 'حب', 
     nameEn: 'Love',
-    url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/6580ae2a5333cd4a0f2787e85ab783d07cc5261beecc9f9304a2b637a048b7a7.png', 
+    url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/1986500ba27ff6f8bc3238238c83c5a153cd88c6d06be7d21bde5759d04e8b74.png', 
     code: ':saqr_love:' 
   },
   { 
     id: 'laugh', 
     name: 'ضحك', 
     nameEn: 'Laugh',
-    url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/9722ea13091c46c14aec75a1a36ffb6b0dad77eeda8254f0a11e0fbf196288e9.png', 
+    url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/ad26704f95a65c309b106a20abe826fffeddf3b546d7cb84212d8d8c27239fd2.png', 
     code: ':saqr_laugh:' 
   },
   { 
     id: 'sad', 
     name: 'حزين', 
     nameEn: 'Sad',
-    url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/245522f2b2b34d3062879420cdb77fe5af504615844ad07a91cb95c0cd7c7d79.png', 
+    url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/85503815583adf764d273a3c420c0bf8d5cb76ed9e6707a9ae47ee3c3f33f4ca.png', 
     code: ':saqr_sad:' 
   },
   { 
     id: 'cool', 
     name: 'كول', 
     nameEn: 'Cool',
-    url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/d4d238b8ddb24961fc823e4eb44d26bde7a0b4506bb25ad70a3794c5689a5c06.png', 
+    url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/a0fcd10be8e9d67e883f695ce00ed136e6d130347fb3e3853198894a50dae715.png', 
     code: ':saqr_cool:' 
   },
   { 
     id: 'wow', 
     name: 'واو', 
     nameEn: 'Wow',
-    url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/093a29ed69c6ec8128f3f97247b9273943080bf9d3735605f2b063670e2666e7.png', 
+    url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/104eaa1feb35860efe174495bb5b919b46395645b4923abf89a01199c9e12d28.png', 
     code: ':saqr_wow:' 
   },
   { 
     id: 'think', 
     name: 'تفكير', 
     nameEn: 'Think',
-    url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/4a8a1d2bb75e0d70313d691c5500779575c0d25d0f729fa30a3960000eb25da5.png', 
+    url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/8af48afde2fd0a07cb8726c6d7f0a88466cd419e06709f1f4b065e895780e565.png', 
     code: ':saqr_think:' 
   },
   { 
     id: 'win', 
     name: 'فوز', 
     nameEn: 'Win',
-    url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/a4d252dd324e9a46c6165c934a67e15f6d42700b34b495fdcfc05203d3f6d74b.png', 
+    url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/a71a67e5191b570ad0a9c06dbc9db72140b663b6c7535f9fe79a7b0ccf1ba95a.png', 
     code: ':saqr_win:' 
   },
 ];
