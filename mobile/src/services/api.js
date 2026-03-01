@@ -1,18 +1,20 @@
 // API Service - Lightweight API handler with enhanced security
-// Production URL - الرابط الثابت للسيرفر الجديد
+// ⚠️ IMPORTANT: Change this URL to your production server before building!
+// For production builds, replace with your actual server URL
+// Example: const API_URL = 'https://api.saqr-app.com';
 const API_URL = 'https://saqr-ui-sync.preview.emergentagent.com';
 
-// Connection check timeout
-const CONNECTION_TIMEOUT = 15000; // 15 seconds
+// Connection check timeout - increased for better reliability
+const CONNECTION_TIMEOUT = 20000; // 20 seconds
 
 // Token storage
 let accessToken = null;
 let refreshToken = null;
 
-// Connection status cache
+// Connection status cache - longer cache to avoid frequent checks
 let lastConnectionCheck = null;
 let lastConnectionResult = null;
-const CONNECTION_CACHE_DURATION = 30000; // 30 seconds
+const CONNECTION_CACHE_DURATION = 60000; // 60 seconds (increased from 30s)
 
 // Check if API is reachable - Real implementation
 const checkConnection = async () => {
