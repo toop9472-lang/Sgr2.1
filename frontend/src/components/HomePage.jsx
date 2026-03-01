@@ -319,20 +319,20 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
                 <div className={`w-11 h-11 rounded-full ${isDark ? 'bg-green-500/20' : 'bg-green-100'} flex items-center justify-center mx-auto mb-2`}>
                   <TrendingUp className="w-5 h-5 text-green-400" />
                 </div>
-                <p className="text-2xl font-bold text-white">
+                <p className={`text-2xl font-bold ${textClass}`}>
                   {(user?.games_played || 0) > 0 ? Math.round(((user?.games_won || 0) / (user?.games_played || 1)) * 100) : 0}%
                 </p>
-                <p className="text-xs text-white/60">نسبة الفوز</p>
+                <p className={`text-xs ${textMutedClass}`}>{isRTL ? 'نسبة الفوز' : 'Win Rate'}</p>
               </div>
             </div>
             
             {/* Progress Bar */}
-            <div className="bg-black/20 rounded-xl p-3">
+            <div className={`${isDark ? 'bg-black/20' : 'bg-gray-100'} rounded-xl p-3`}>
               <div className="flex justify-between items-center mb-2">
-                <span className="text-xs text-white/70">تقدمك نحو المستوى التالي</span>
+                <span className={`text-xs ${textMutedClass}`}>{isRTL ? 'تقدمك نحو المستوى التالي' : 'Progress to next level'}</span>
                 <span className="text-xs text-blue-400 font-semibold">{Math.min(userPoints % 100, 100)}/100</span>
               </div>
-              <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+              <div className={`h-1.5 ${isDark ? 'bg-white/10' : 'bg-gray-200'} rounded-full overflow-hidden`}>
                 <div 
                   className="h-full bg-blue-500 rounded-full transition-all"
                   style={{ width: `${Math.min(userPoints % 100, 100)}%` }}
@@ -346,15 +346,15 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
         <button className="w-full rounded-2xl mb-4 shadow-xl transform transition-all hover:scale-[1.02] relative overflow-hidden h-24 group">
           <img 
             src="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/9571396ba276f9f9cf70ce0622c4303850d05054256c99581ef235eec62d9760.png"
-            alt="التحدي اليومي"
+            alt={t('dailyChallenge')}
             className="absolute inset-0 w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 group-hover:from-black/80 transition-all" />
           <div className="absolute inset-0 flex items-end p-4">
             <div className="flex items-center justify-between w-full">
               <div className={isRTL ? 'text-right' : 'text-left'}>
-                <p className="text-white font-bold text-lg drop-shadow-lg">{language === 'ar' ? 'التحدي اليومي' : 'Daily Challenge'}</p>
-                <p className="text-white/90 text-sm">{language === 'ar' ? 'اربح نقاط إضافية!' : 'Earn bonus points!'}</p>
+                <p className="text-white font-bold text-lg drop-shadow-lg">{t('dailyChallenge')}</p>
+                <p className="text-white/90 text-sm">{t('dailyChallengeDesc')}</p>
               </div>
               <div className="bg-amber-500 p-3 rounded-xl">
                 <Flame className="w-5 h-5 text-white" />
@@ -370,14 +370,14 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
         >
           <img 
             src="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/45a8a3fbd10c46b785a5178ca02ae00c0c4aa43973b95689ebf41e18eb5cbada.png"
-            alt="اللعب الجماعي"
+            alt={t('games')}
             className="absolute inset-0 w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 group-hover:from-black/80 transition-all" />
           <div className="absolute inset-0 flex items-end p-4">
             <div className="flex items-center justify-between w-full">
               <div className={isRTL ? 'text-right' : 'text-left'}>
-                <p className="text-white font-bold text-lg drop-shadow-lg">{language === 'ar' ? 'اللعب الجماعي' : 'Multiplayer'}</p>
+                <p className="text-white font-bold text-lg drop-shadow-lg">{isRTL ? 'اللعب الجماعي' : 'Multiplayer'}</p>
                 <p className="text-white/90 text-sm">{language === 'ar' ? 'تحدى لاعبين من حول العالم!' : 'Challenge players worldwide!'}</p>
               </div>
               <div className="bg-purple-500 px-4 py-2.5 rounded-xl flex items-center gap-2">
