@@ -327,25 +327,32 @@ const HomeScreen = ({ user, onNavigateToAds, onNavigateToGames, onNavigateToChat
           </ImageBackground>
         </TouchableOpacity>
 
-        {/* Friends Section */}
+        {/* Friends Section - New Design with Image */}
         <TouchableOpacity 
           style={styles.friendsCard}
           onPress={onNavigateToFriends}
           activeOpacity={0.9}
         >
-          <LinearGradient 
-            colors={['#22c55e', '#16a34a']} 
-            style={styles.friendsGradient}
+          <ImageBackground 
+            source={{ uri: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/7f2948052c933ae7604200fd2c98d91f4504fce293deb36ce108cba1d36f062a.png' }}
+            style={styles.friendsBanner}
+            imageStyle={styles.friendsBannerImage}
           >
-            <View style={styles.friendsIcon}>
-              <Ionicons name="people" size={26} color="#FFF" />
-            </View>
-            <View style={styles.friendsInfo}>
-              <Text style={styles.friendsTitle}>الأصدقاء والبريد</Text>
-              <Text style={styles.friendsDesc}>أضف أصدقاء، تراسل، وادعهم للألعاب!</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={22} color="rgba(255,255,255,0.8)" />
-          </LinearGradient>
+            <LinearGradient 
+              colors={['rgba(0,0,0,0.2)', 'rgba(0,0,0,0.7)']} 
+              style={styles.friendsOverlay}
+            >
+              <View style={styles.friendsContent}>
+                <View style={styles.friendsTextArea}>
+                  <Text style={styles.friendsTitle}>الأصدقاء والبريد</Text>
+                  <Text style={styles.friendsDesc}>أضف أصدقاء وادعهم للألعاب!</Text>
+                </View>
+                <View style={styles.inviteBtn}>
+                  <Ionicons name="person-add" size={16} color="#FFF" />
+                </View>
+              </View>
+            </LinearGradient>
+          </ImageBackground>
         </TouchableOpacity>
 
         {/* Tips Card */}
