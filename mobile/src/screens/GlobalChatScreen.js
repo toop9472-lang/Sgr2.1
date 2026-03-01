@@ -955,9 +955,9 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   emojiImage: {
-    width: 48,
-    height: 48,
-    marginBottom: 4,
+    width: 56,
+    height: 56,
+    marginBottom: 6,
   },
   emojiName: {
     color: '#888',
