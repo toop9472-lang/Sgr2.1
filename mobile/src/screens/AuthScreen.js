@@ -1,5 +1,5 @@
 // Auth Screen - Login / Register with Email & Social
-// Professional Design with Ionicons
+// Professional Design with Premium Background
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -14,6 +14,8 @@ import {
   Linking,
   StyleSheet,
   Image,
+  ImageBackground,
+  Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +23,9 @@ import * as WebBrowser from 'expo-web-browser';
 import api from '../services/api';
 import storage from '../services/storage';
 import colors from '../styles/colors';
+
+// Premium Background Image
+const AUTH_BG_IMAGE = 'https://static.prod-images.emergentagent.com/jobs/40eca190-5242-4463-8c95-bc5f66df29cb/images/e35d59ccd161791b6e9cbecdfa426302685267afa2c8e806fa233976816403de.png';
 
 // Warm up browser for faster OAuth
 WebBrowser.maybeCompleteAuthSession();
