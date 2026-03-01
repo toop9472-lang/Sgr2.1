@@ -24,9 +24,49 @@ Arabic (العربية)
 
 ---
 
-## LATEST UPDATE (March 2026) - Version 6.2.0
+## LATEST UPDATE (March 2026) - Version 6.3.0
 
-### تحديث 1 مارس 2026 - تحسين شاشة تسجيل الدخول
+### تحديث 1 مارس 2026 - إصلاحات الويب والترجمات
+
+#### إصلاحات صفحة تسجيل الدخول على الويب:
+**الملفات المعدلة:**
+- `/app/frontend/src/components/AuthPage.jsx`
+
+**التحسينات:**
+- إزالة Card وجعل الخلفية موحدة (لا يوجد مربع كبير)
+- استخدام AUTH_BG_IMAGE كخلفية موحدة مع gradient overlay
+- تحسين تصميم أزرار تسجيل الدخول
+
+#### إصلاحات الترجمة:
+**الملفات المعدلة:**
+- `/app/frontend/src/i18n/translations.js`
+
+**المفاتيح الجديدة:**
+- `saqrFortunes` / `saqrFortunesDesc`
+- `globalChat` / `globalChatDesc`
+- `friends` / `friendsDesc`
+- `dailyChallenge` / `dailyChallengeDesc`
+- `start`, `new`, `games`
+
+#### دعم الوضع الفاتح (Light Mode):
+**الملفات المعدلة:**
+- `/app/frontend/src/components/HomePage.jsx`
+- `/app/frontend/src/components/GamesPage.jsx`
+- `/app/frontend/src/components/ProfilePage.jsx`
+- `/app/frontend/src/components/SaqrFortunesPage.jsx`
+- `/app/frontend/src/components/FriendsPage.jsx`
+- `/app/frontend/src/components/GlobalChatPage.jsx`
+
+**التحسينات:**
+- إضافة `useTheme` hook لجميع الصفحات
+- إضافة `isDark` متغير لتبديل الألوان بناءً على الثيم
+- تحسين الألوان للوضع الفاتح
+
+---
+
+## PREVIOUS UPDATE (March 2026) - Version 6.2.0
+
+### تحديث 1 مارس 2026 - تحسين شاشة تسجيل الدخول (موبايل)
 
 #### تحسينات شاشة AuthScreen:
 **الملفات المعدلة:**
