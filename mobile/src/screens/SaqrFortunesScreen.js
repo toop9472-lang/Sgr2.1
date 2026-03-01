@@ -384,32 +384,42 @@ const SaqrFortunesScreen = ({ user, onClose, onBalanceUpdate }) => {
             loading={false}
           />
 
-          {/* Quick Actions */}
+          {/* Quick Actions - New Image Design */}
           <View style={styles.quickActions}>
             <TouchableOpacity 
-              style={styles.quickAction}
+              style={styles.quickActionNew}
               onPress={() => setShowRewardsCenter(true)}
             >
-              <LinearGradient
-                colors={['rgba(96,165,250,0.2)', 'rgba(96,165,250,0.05)']}
-                style={styles.quickActionGradient}
+              <ImageBackground
+                source={{ uri: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/ef4c12b55d42df2a8a6af51757efa04a8471c202f4cf7500803dec45a3a0b3e7.png' }}
+                style={styles.quickActionImageBg}
+                imageStyle={styles.quickActionImageStyle}
               >
-                <Ionicons name="gift" size={24} color="#60a5fa" />
-                <Text style={styles.quickActionText}>عجلة الحظ</Text>
-              </LinearGradient>
+                <LinearGradient
+                  colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.7)']}
+                  style={styles.quickActionOverlay}
+                >
+                  <Text style={styles.quickActionTextNew}>عجلة الحظ</Text>
+                </LinearGradient>
+              </ImageBackground>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={styles.quickAction}
+              style={styles.quickActionNew}
               onPress={() => Alert.alert('قريبا', 'هذه الميزة قيد التطوير!')}
             >
-              <LinearGradient
-                colors={['rgba(236,72,153,0.2)', 'rgba(236,72,153,0.05)']}
-                style={styles.quickActionGradient}
+              <ImageBackground
+                source={{ uri: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e7465c5916e65832b7442a2d8e0a6e9704c872117300e46de5f12b06c5fde836.png' }}
+                style={styles.quickActionImageBg}
+                imageStyle={styles.quickActionImageStyle}
               >
-                <Ionicons name="trophy" size={24} color="#ec4899" />
-                <Text style={styles.quickActionText}>سباق الاعلانات</Text>
-              </LinearGradient>
+                <LinearGradient
+                  colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.7)']}
+                  style={styles.quickActionOverlay}
+                >
+                  <Text style={styles.quickActionTextNew}>سباق الاعلانات</Text>
+                </LinearGradient>
+              </ImageBackground>
             </TouchableOpacity>
           </View>
 
