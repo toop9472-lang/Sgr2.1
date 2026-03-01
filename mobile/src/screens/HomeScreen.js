@@ -16,6 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import colors from '../styles/colors';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 const { width } = Dimensions.get('window');
 
