@@ -1,8 +1,6 @@
 // API Service - Lightweight API handler with enhanced security
-// ⚠️ IMPORTANT: Change this URL to your production server before building!
-// For production builds, replace with your actual server URL
-// Example: const API_URL = 'https://api.saqr-app.com';
-const API_URL = 'https://saqr-ui-sync.preview.emergentagent.com';
+// Production Server - Emergent Host
+const API_URL = 'https://saqr-live.emergent.host';
 
 // Connection check timeout - increased for better reliability
 const CONNECTION_TIMEOUT = 20000; // 20 seconds
