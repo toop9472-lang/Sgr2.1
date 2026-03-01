@@ -113,6 +113,8 @@ const SearchResultCard = ({ user, onAddFriend, pending }) => (
 
 // المكون الرئيسي
 const FriendsPage = ({ user, onBack, onOpenMessages }) => {
+  const { isDark } = useTheme();
+  const { isRTL, t } = useLanguage();
   const [activeTab, setActiveTab] = useState('friends');
   const [friends, setFriends] = useState([]);
   const [requests, setRequests] = useState({ incoming: [], outgoing: [] });
