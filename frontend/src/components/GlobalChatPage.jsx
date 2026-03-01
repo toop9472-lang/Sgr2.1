@@ -3,6 +3,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Send, Diamond, MessageCircle, Globe, Flag, AlertCircle, Play, Sparkles } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
