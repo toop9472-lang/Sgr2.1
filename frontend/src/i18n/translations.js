@@ -38,6 +38,20 @@ export const translations = {
     notifications: 'الإشعارات',
     withdraw: 'سحب الرصيد',
     watch: 'شاهد',
+    games: 'الألعاب',
+    
+    // Home Page Features
+    saqrFortunes: 'ثروات صقر',
+    saqrFortunesDesc: 'جواهر صقر للاستبدال بالمال!',
+    globalChat: 'الدردشة العامة',
+    globalChatDesc: 'تواصل مع لاعبين من حول العالم!',
+    friends: 'الأصدقاء',
+    friendsDesc: 'أضف أصدقاء وتنافس معهم',
+    currentBalance: 'الرصيد الحالي',
+    dailyChallenge: 'تحدي اليوم',
+    dailyChallengeDesc: 'أكمل التحدي واربح مكافآت إضافية',
+    start: 'ابدأ',
+    new: 'جديد',
     
     // Home/Ads
     yourPoints: 'نقاطك',
