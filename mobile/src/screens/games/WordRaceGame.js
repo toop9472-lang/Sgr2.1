@@ -300,12 +300,14 @@ const WordRaceGame = ({ mode, isOnline, onComplete, onClose }) => {
           </LinearGradient>
         </View>
       )}
-    </LinearGradient>
+      </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' },
   loadingText: { color: '#FFF', fontSize: 18, textAlign: 'center', marginTop: 100 },
   
   header: {
