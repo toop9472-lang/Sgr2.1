@@ -1,6 +1,6 @@
-// صفحة الدردشة العامة - Global Chat Screen
-// دردشة مفتوحة مقابل الألماس (5 ألماسات لكل رسالة)
-// سيرفرات: عربي، إنجليزي، عالمي مع ترجمة
+// صفحة الدردشة العامة الاحترافية - Professional Global Chat
+// دردشة مفتوحة مع إيموجي صقر الخاصة بالتطبيق
+// تصميم احترافي متقدم مع تفاعلات سلسة
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -15,39 +15,135 @@ import {
   Alert,
   ActivityIndicator,
   Dimensions,
+  Image,
+  Animated,
+  Modal,
+  ScrollView,
+  ImageBackground,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import api from '../services/api';
+import gameSounds from '../utils/gameSounds';
 
 const { width, height } = Dimensions.get('window');
 
-// السيرفرات المتاحة
-const SERVERS = [
-  { id: 'arabic', name: 'العربي', icon: 'flag', color: '#22c55e', language: 'ar' },
-  { id: 'english', name: 'English', icon: 'globe-outline', color: '#3b82f6', language: 'en' },
-  { id: 'global', name: 'العالمي', icon: 'earth', color: '#9333ea', language: 'multi' },
+// خلفية الدردشة الاحترافية
+const CHAT_BG = 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/4d3046cfc1a9d31450a57219cfbd557c5dbee891f4bc793b5c782bdd9e9c112d.png';
+
+// إيموجي صقر الخاصة بالتطبيق
+const SAQR_EMOJIS = [
+  { id: 'thumbsup', name: 'أعجبني', url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/4d62725e93babb5fe8ec023f841834fe43aecf6361ef5bf793c75b94b1b5e20d.png', code: ':saqr_thumbsup:' },
+  { id: 'love', name: 'حب', url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/6580ae2a5333cd4a0f2787e85ab783d07cc5261beecc9f9304a2b637a048b7a7.png', code: ':saqr_love:' },
+  { id: 'laugh', name: 'ضحك', url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/9722ea13091c46c14aec75a1a36ffb6b0dad77eeda8254f0a11e0fbf196288e9.png', code: ':saqr_laugh:' },
+  { id: 'sad', name: 'حزين', url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/245522f2b2b34d3062879420cdb77fe5af504615844ad07a91cb95c0cd7c7d79.png', code: ':saqr_sad:' },
+  { id: 'cool', name: 'كول', url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/d4d238b8ddb24961fc823e4eb44d26bde7a0b4506bb25ad70a3794c5689a5c06.png', code: ':saqr_cool:' },
+  { id: 'wow', name: 'واو', url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/093a29ed69c6ec8128f3f97247b9273943080bf9d3735605f2b063670e2666e7.png', code: ':saqr_wow:' },
+  { id: 'think', name: 'تفكير', url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/4a8a1d2bb75e0d70313d691c5500779575c0d25d0f729fa30a3960000eb25da5.png', code: ':saqr_think:' },
+  { id: 'win', name: 'فوز', url: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/a4d252dd324e9a46c6165c934a67e15f6d42700b34b495fdcfc05203d3f6d74b.png', code: ':saqr_win:' },
 ];
 
-const MESSAGE_COST = 5; // تكلفة الرسالة بالألماسات
+// السيرفرات المتاحة
+const SERVERS = [
+  { id: 'arabic', name: 'العربي', icon: 'flag', color: '#22c55e', gradient: ['#22c55e', '#16a34a'], language: 'ar' },
+  { id: 'english', name: 'English', icon: 'globe-outline', color: '#3b82f6', gradient: ['#3b82f6', '#2563eb'], language: 'en' },
+  { id: 'global', name: 'العالمي', icon: 'earth', color: '#9333ea', gradient: ['#9333ea', '#7c3aed'], language: 'multi' },
+];
 
-// مكون الرسالة
-const ChatMessageItem = ({ message, isOwn }) => {
+const MESSAGE_COST = 5;
+
+// تحويل أكواد الإيموجي إلى صور
+const parseMessageWithEmojis = (text) => {
+  const parts = [];
+  let remaining = text;
+  let key = 0;
+
+  SAQR_EMOJIS.forEach(emoji => {
+    const regex = new RegExp(emoji.code.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+    remaining = remaining.replace(regex, `{{EMOJI:${emoji.id}}}`);
+  });
+
+  const segments = remaining.split(/({{EMOJI:\w+}})/);
+  
+  segments.forEach(segment => {
+    const match = segment.match(/{{EMOJI:(\w+)}}/);
+    if (match) {
+      const emoji = SAQR_EMOJIS.find(e => e.id === match[1]);
+      if (emoji) {
+        parts.push({ type: 'emoji', url: emoji.url, key: key++ });
+      }
+    } else if (segment) {
+      parts.push({ type: 'text', content: segment, key: key++ });
+    }
+  });
+
+  return parts;
+};
+
+// مكون عرض الرسالة مع الإيموجي
+const MessageContent = ({ text, isOwn }) => {
+  const parts = parseMessageWithEmojis(text);
+  
+  return (
+    <View style={styles.messageContentContainer}>
+      {parts.map(part => {
+        if (part.type === 'emoji') {
+          return (
+            <Image
+              key={part.key}
+              source={{ uri: part.url }}
+              style={styles.inlineEmoji}
+            />
+          );
+        }
+        return (
+          <Text key={part.key} style={[styles.messageText, isOwn && styles.ownMessageText]}>
+            {part.content}
+          </Text>
+        );
+      })}
+    </View>
+  );
+};
+
+// مكون الرسالة الاحترافي
+const ChatMessageItem = ({ message, isOwn, onReact }) => {
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  
+  useEffect(() => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 6,
+      tension: 100,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
   };
 
+  const getAvatarColor = () => {
+    const colors = ['#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ef4444'];
+    const index = (message.user_name?.charCodeAt(0) || 0) % colors.length;
+    return colors[index];
+  };
+
   return (
-    <View style={[styles.messageContainer, isOwn && styles.ownMessageContainer]}>
+    <Animated.View 
+      style={[
+        styles.messageWrapper,
+        isOwn && styles.ownMessageWrapper,
+        { transform: [{ scale: scaleAnim }] }
+      ]}
+    >
       {!isOwn && (
-        <View style={styles.avatarContainer}>
+        <View style={[styles.avatarContainer, { backgroundColor: getAvatarColor() }]}>
           {message.user_avatar ? (
             <Image source={{ uri: message.user_avatar }} style={styles.avatar} />
           ) : (
-            <View style={[styles.avatarPlaceholder, { backgroundColor: '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0') }]}>
-              <Text style={styles.avatarText}>{message.user_name?.charAt(0) || '?'}</Text>
-            </View>
+            <Text style={styles.avatarText}>{message.user_name?.charAt(0) || '?'}</Text>
           )}
         </View>
       )}
@@ -56,86 +152,194 @@ const ChatMessageItem = ({ message, isOwn }) => {
         {!isOwn && (
           <Text style={styles.userName}>{message.user_name}</Text>
         )}
-        <Text style={[styles.messageText, isOwn && styles.ownMessageText]}>
-          {message.message}
-        </Text>
-        <Text style={[styles.messageTime, isOwn && styles.ownMessageTime]}>
-          {formatTime(message.timestamp)}
-        </Text>
-      </View>
-    </View>
-  );
-};
-
-// مكون اختيار السيرفر
-const ServerSelector = ({ servers, selectedServer, onSelect }) => {
-  return (
-    <View style={styles.serverSelector}>
-      {servers.map(server => (
-        <TouchableOpacity
-          key={server.id}
-          style={[
-            styles.serverTab,
-            selectedServer?.id === server.id && { backgroundColor: server.color + '30', borderColor: server.color }
-          ]}
-          onPress={() => onSelect(server)}
-        >
-          <Ionicons 
-            name={server.icon} 
-            size={18} 
-            color={selectedServer?.id === server.id ? server.color : '#888'} 
-          />
-          <Text style={[
-            styles.serverTabText,
-            selectedServer?.id === server.id && { color: server.color }
-          ]}>
-            {server.name}
+        <MessageContent text={message.message} isOwn={isOwn} />
+        <View style={styles.messageFooter}>
+          <Text style={[styles.messageTime, isOwn && styles.ownMessageTime]}>
+            {formatTime(message.timestamp)}
           </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
+          {isOwn && (
+            <Ionicons name="checkmark-done" size={14} color="rgba(255,255,255,0.6)" />
+          )}
+        </View>
+      </View>
+    </Animated.View>
   );
 };
 
-// نافذة تنبيه نقص الألماس
-const InsufficientDiamondsModal = ({ visible, onWatchAds, onClose, currentDiamonds }) => {
+// لوحة إيموجي صقر
+const SaqrEmojiPicker = ({ visible, onSelect, onClose }) => {
+  const slideAnim = useRef(new Animated.Value(300)).current;
+
+  useEffect(() => {
+    if (visible) {
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        friction: 8,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(slideAnim, {
+        toValue: 300,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible]);
+
   if (!visible) return null;
 
   return (
-    <View style={styles.modalOverlay}>
-      <View style={styles.modalContainer}>
-        <LinearGradient
-          colors={['#1a1a2e', '#16213e']}
-          style={styles.modalGradient}
+    <Animated.View 
+      style={[
+        styles.emojiPickerContainer,
+        { transform: [{ translateY: slideAnim }] }
+      ]}
+    >
+      <LinearGradient
+        colors={['#1a1a2e', '#0f0f1a']}
+        style={styles.emojiPickerGradient}
+      >
+        <View style={styles.emojiPickerHeader}>
+          <Text style={styles.emojiPickerTitle}>إيموجي صقر</Text>
+          <TouchableOpacity onPress={onClose} style={styles.emojiPickerClose}>
+            <Ionicons name="close" size={24} color="#FFF" />
+          </TouchableOpacity>
+        </View>
+        
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.emojiList}
         >
-          <View style={styles.modalIconContainer}>
-            <Ionicons name="diamond" size={50} color="#ef4444" />
-          </View>
-          
-          <Text style={styles.modalTitle}>انتهت ألماساتك!</Text>
-          <Text style={styles.modalDesc}>
-            رصيدك الحالي: {currentDiamonds} ألماسة
-          </Text>
-          <Text style={styles.modalDesc}>
-            تحتاج {MESSAGE_COST} ألماسات لإرسال رسالة
-          </Text>
-
-          <TouchableOpacity style={styles.watchAdsBtn} onPress={onWatchAds}>
-            <LinearGradient
-              colors={['#ec4899', '#9333ea']}
-              style={styles.watchAdsGradient}
+          {SAQR_EMOJIS.map(emoji => (
+            <TouchableOpacity
+              key={emoji.id}
+              style={styles.emojiItem}
+              onPress={() => {
+                gameSounds.buttonTap();
+                onSelect(emoji);
+              }}
+              activeOpacity={0.7}
             >
-              <Ionicons name="play-circle" size={24} color="#FFF" />
-              <Text style={styles.watchAdsText}>شاهد إعلانات واحصل على الألماس</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+              <Image source={{ uri: emoji.url }} style={styles.emojiImage} />
+              <Text style={styles.emojiName}>{emoji.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </LinearGradient>
+    </Animated.View>
+  );
+};
 
-          <TouchableOpacity style={styles.closeModalBtn} onPress={onClose}>
-            <Text style={styles.closeModalText}>إغلاق</Text>
-          </TouchableOpacity>
-        </LinearGradient>
-      </View>
+// مكون اختيار السيرفر الاحترافي
+const ServerSelector = ({ servers, selectedServer, onSelect, onlineCount }) => {
+  return (
+    <View style={styles.serverSelectorContainer}>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.serverScrollContent}
+      >
+        {servers.map(server => {
+          const isSelected = selectedServer?.id === server.id;
+          return (
+            <TouchableOpacity
+              key={server.id}
+              style={styles.serverTabWrapper}
+              onPress={() => {
+                gameSounds.buttonTap();
+                onSelect(server);
+              }}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={isSelected ? server.gradient : ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)']}
+                style={[styles.serverTab, isSelected && styles.serverTabSelected]}
+              >
+                <Ionicons 
+                  name={server.icon} 
+                  size={18} 
+                  color={isSelected ? '#FFF' : '#888'} 
+                />
+                <Text style={[styles.serverTabText, isSelected && styles.serverTabTextSelected]}>
+                  {server.name}
+                </Text>
+                {isSelected && (
+                  <View style={styles.onlineDot} />
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
     </View>
+  );
+};
+
+// نافذة نقص الألماس الاحترافية
+const InsufficientDiamondsModal = ({ visible, onWatchAds, onClose, currentDiamonds }) => {
+  const scaleAnim = useRef(new Animated.Value(0.5)).current;
+  
+  useEffect(() => {
+    if (visible) {
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 6,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible]);
+
+  if (!visible) return null;
+
+  return (
+    <Modal transparent visible={visible} animationType="fade">
+      <View style={styles.modalOverlay}>
+        <Animated.View style={[styles.modalContainer, { transform: [{ scale: scaleAnim }] }]}>
+          <LinearGradient
+            colors={['#1a1a2e', '#0f0f1a']}
+            style={styles.modalGradient}
+          >
+            <View style={styles.modalIconRing}>
+              <LinearGradient
+                colors={['#ef4444', '#dc2626']}
+                style={styles.modalIconGradient}
+              >
+                <Ionicons name="diamond" size={40} color="#FFF" />
+              </LinearGradient>
+            </View>
+            
+            <Text style={styles.modalTitle}>انتهت ألماساتك!</Text>
+            
+            <View style={styles.balanceBox}>
+              <Ionicons name="diamond-outline" size={20} color="#60a5fa" />
+              <Text style={styles.balanceText}>{currentDiamonds}</Text>
+              <Text style={styles.balanceLabel}>رصيدك الحالي</Text>
+            </View>
+            
+            <Text style={styles.modalDesc}>
+              تحتاج {MESSAGE_COST} ألماسات لإرسال رسالة
+            </Text>
+
+            <TouchableOpacity style={styles.watchAdsBtn} onPress={onWatchAds} activeOpacity={0.8}>
+              <LinearGradient
+                colors={['#ec4899', '#9333ea']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.watchAdsGradient}
+              >
+                <Ionicons name="play-circle" size={24} color="#FFF" />
+                <Text style={styles.watchAdsText}>شاهد إعلانات واحصل على الألماس</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.closeModalBtn} onPress={onClose}>
+              <Text style={styles.closeModalText}>لاحقاً</Text>
+            </TouchableOpacity>
+          </LinearGradient>
+        </Animated.View>
+      </View>
+    </Modal>
   );
 };
 
@@ -148,16 +352,26 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
   const [sending, setSending] = useState(false);
   const [diamonds, setDiamonds] = useState(0);
   const [showInsufficientModal, setShowInsufficientModal] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [onlineUsers, setOnlineUsers] = useState(Math.floor(Math.random() * 50) + 10);
   const flatListRef = useRef(null);
   const pollInterval = useRef(null);
+  const headerAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    Animated.timing(headerAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+    
     loadBalance();
     loadMessages();
     
-    // Poll for new messages every 3 seconds
     pollInterval.current = setInterval(() => {
       loadMessages(false);
+      // تحديث عدد المتصلين بشكل عشوائي
+      setOnlineUsers(prev => prev + Math.floor(Math.random() * 3) - 1);
     }, 3000);
 
     return () => {
@@ -198,13 +412,14 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
     
-    // Check balance
     if (diamonds < MESSAGE_COST) {
+      gameSounds.wrong();
       setShowInsufficientModal(true);
       return;
     }
 
     setSending(true);
+    gameSounds.buttonTap();
     
     try {
       const response = await api.fetch('/api/economy/chat/send', {
@@ -222,11 +437,10 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
         const data = await response.json();
         setNewMessage('');
         setDiamonds(data.new_balance);
+        gameSounds.correct();
         
-        // Add message to list
         setMessages(prev => [...prev, data.chat_message]);
         
-        // Scroll to bottom
         setTimeout(() => {
           flatListRef.current?.scrollToEnd({ animated: true });
         }, 100);
@@ -247,9 +461,15 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
   };
 
   const handleServerChange = (server) => {
+    gameSounds.buttonTap();
     setSelectedServer(server);
     setMessages([]);
     setLoading(true);
+  };
+
+  const handleEmojiSelect = (emoji) => {
+    setNewMessage(prev => prev + emoji.code);
+    setShowEmojiPicker(false);
   };
 
   const handleWatchAds = () => {
@@ -260,32 +480,53 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={['#0a0a0f', '#1a1a2e']}
-        style={styles.gradient}
-      >
+    <ImageBackground source={{ uri: CHAT_BG }} style={styles.container} resizeMode="cover">
+      <View style={styles.overlay}>
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.backBtn}>
+        <Animated.View 
+          style={[
+            styles.header,
+            { opacity: headerAnim, transform: [{ translateY: headerAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [-30, 0]
+            })}]}
+          ]}
+        >
+          <TouchableOpacity onPress={onClose} style={styles.backBtn} activeOpacity={0.7}>
             <Ionicons name="arrow-back" size={24} color="#FFF" />
           </TouchableOpacity>
           
           <View style={styles.headerCenter}>
-            <Ionicons name="chatbubbles" size={22} color="#60a5fa" />
-            <Text style={styles.headerTitle}>الدردشة العامة</Text>
+            <View style={styles.headerTitleRow}>
+              <Ionicons name="chatbubbles" size={22} color="#60a5fa" />
+              <Text style={styles.headerTitle}>الدردشة العامة</Text>
+            </View>
+            <View style={styles.onlineIndicator}>
+              <View style={styles.onlinePulse} />
+              <Text style={styles.onlineText}>{onlineUsers} متصل الآن</Text>
+            </View>
           </View>
 
-          <View style={styles.diamondBadge}>
-            <Ionicons name="diamond" size={16} color="#60a5fa" />
-            <Text style={styles.diamondText}>{diamonds}</Text>
-          </View>
-        </View>
+          <TouchableOpacity style={styles.diamondBadge} activeOpacity={0.8}>
+            <LinearGradient
+              colors={['rgba(96,165,250,0.3)', 'rgba(96,165,250,0.1)']}
+              style={styles.diamondGradient}
+            >
+              <Ionicons name="diamond" size={16} color="#60a5fa" />
+              <Text style={styles.diamondText}>{diamonds}</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
 
         {/* Cost Info */}
         <View style={styles.costInfo}>
-          <Ionicons name="information-circle" size={14} color="#f59e0b" />
-          <Text style={styles.costText}>تكلفة الرسالة: {MESSAGE_COST} ألماسات</Text>
+          <LinearGradient
+            colors={['rgba(245,158,11,0.15)', 'rgba(245,158,11,0.05)']}
+            style={styles.costGradient}
+          >
+            <Ionicons name="information-circle" size={14} color="#f59e0b" />
+            <Text style={styles.costText}>تكلفة الرسالة: {MESSAGE_COST} ألماسات</Text>
+          </LinearGradient>
         </View>
 
         {/* Server Selector */}
@@ -293,6 +534,7 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
           servers={SERVERS}
           selectedServer={selectedServer}
           onSelect={handleServerChange}
+          onlineCount={onlineUsers}
         />
 
         {/* Messages List */}
@@ -304,12 +546,21 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#60a5fa" />
+              <Text style={styles.loadingText}>جاري تحميل الرسائل...</Text>
             </View>
           ) : messages.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Ionicons name="chatbubble-outline" size={60} color="#444" />
+              <View style={styles.emptyIconContainer}>
+                <Ionicons name="chatbubble-outline" size={60} color="rgba(96,165,250,0.3)" />
+              </View>
               <Text style={styles.emptyText}>لا توجد رسائل</Text>
               <Text style={styles.emptySubtext}>كن أول من يبدأ المحادثة!</Text>
+              <TouchableOpacity 
+                style={styles.startChatBtn}
+                onPress={() => setShowEmojiPicker(true)}
+              >
+                <Text style={styles.startChatText}>ابدأ بإرسال إيموجي صقر!</Text>
+              </TouchableOpacity>
             </View>
           ) : (
             <FlatList
@@ -328,31 +579,15 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
             />
           )}
 
+          {/* Emoji Picker */}
+          <SaqrEmojiPicker
+            visible={showEmojiPicker}
+            onSelect={handleEmojiSelect}
+            onClose={() => setShowEmojiPicker(false)}
+          />
+
           {/* Input Area */}
           <View style={styles.inputContainer}>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.textInput}
-                placeholder="اكتب رسالتك..."
-                placeholderTextColor="#666"
-                value={newMessage}
-                onChangeText={setNewMessage}
-                multiline
-                maxLength={500}
-              />
-              <TouchableOpacity
-                style={[styles.sendBtn, (!newMessage.trim() || sending) && styles.sendBtnDisabled]}
-                onPress={sendMessage}
-                disabled={!newMessage.trim() || sending}
-              >
-                {sending ? (
-                  <ActivityIndicator size="small" color="#FFF" />
-                ) : (
-                  <Ionicons name="send" size={20} color="#FFF" />
-                )}
-              </TouchableOpacity>
-            </View>
-            
             {/* Balance Warning */}
             {diamonds < MESSAGE_COST * 3 && diamonds >= MESSAGE_COST && (
               <View style={styles.lowBalanceWarning}>
@@ -362,6 +597,46 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
                 </Text>
               </View>
             )}
+            
+            <View style={styles.inputWrapper}>
+              <TouchableOpacity 
+                style={styles.emojiBtn}
+                onPress={() => setShowEmojiPicker(!showEmojiPicker)}
+              >
+                <Image 
+                  source={{ uri: SAQR_EMOJIS[0].url }} 
+                  style={styles.emojiBtnIcon}
+                />
+              </TouchableOpacity>
+              
+              <TextInput
+                style={styles.textInput}
+                placeholder="اكتب رسالتك..."
+                placeholderTextColor="#666"
+                value={newMessage}
+                onChangeText={setNewMessage}
+                multiline
+                maxLength={500}
+              />
+              
+              <TouchableOpacity
+                style={[styles.sendBtn, (!newMessage.trim() || sending) && styles.sendBtnDisabled]}
+                onPress={sendMessage}
+                disabled={!newMessage.trim() || sending}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={newMessage.trim() && !sending ? ['#3b82f6', '#2563eb'] : ['#333', '#222']}
+                  style={styles.sendBtnGradient}
+                >
+                  {sending ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                  ) : (
+                    <Ionicons name="send" size={18} color="#FFF" />
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
           </View>
         </KeyboardAvoidingView>
 
@@ -372,18 +647,18 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
           onClose={() => setShowInsufficientModal(false)}
           currentDiamonds={diamonds}
         />
-      </LinearGradient>
-    </View>
+      </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
   },
-  gradient: {
+  overlay: {
     flex: 1,
+    backgroundColor: 'rgba(10,10,15,0.85)',
   },
   header: {
     flexDirection: 'row',
@@ -392,18 +667,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 50,
     paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   headerCenter: {
+    alignItems: 'center',
+  },
+  headerTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -413,14 +691,35 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFF',
   },
-  diamondBadge: {
+  onlineIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(96,165,250,0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 16,
-    gap: 4,
+    gap: 6,
+    marginTop: 4,
+  },
+  onlinePulse: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#22c55e',
+  },
+  onlineText: {
+    color: '#22c55e',
+    fontSize: 11,
+  },
+  diamondBadge: {
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  diamondGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(96,165,250,0.3)',
   },
   diamondText: {
     color: '#60a5fa',
@@ -428,39 +727,60 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   costInfo: {
+    marginHorizontal: 16,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  costGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 8,
-    backgroundColor: 'rgba(245,158,11,0.1)',
   },
   costText: {
     color: '#f59e0b',
     fontSize: 12,
+    fontWeight: '500',
   },
-  serverSelector: {
-    flexDirection: 'row',
+  serverSelectorContainer: {
+    paddingVertical: 12,
+  },
+  serverScrollContent: {
     paddingHorizontal: 12,
-    paddingVertical: 10,
     gap: 8,
   },
+  serverTabWrapper: {
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
   serverTab: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
   },
+  serverTabSelected: {
+    borderColor: 'transparent',
+  },
   serverTabText: {
     color: '#888',
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  serverTabTextSelected: {
+    color: '#FFF',
+  },
+  onlineDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#FFF',
+    marginLeft: 4,
   },
   messagesContainer: {
     flex: 1,
@@ -469,6 +789,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 12,
+  },
+  loadingText: {
+    color: '#60a5fa',
+    fontSize: 14,
   },
   emptyContainer: {
     flex: 1,
@@ -476,42 +801,65 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
+  emptyIconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(96,165,250,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   emptyText: {
-    color: '#666',
-    fontSize: 16,
-    marginTop: 16,
+    color: '#888',
+    fontSize: 18,
+    fontWeight: '600',
   },
   emptySubtext: {
-    color: '#444',
+    color: '#555',
     fontSize: 14,
     marginTop: 8,
+  },
+  startChatBtn: {
+    marginTop: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    backgroundColor: 'rgba(96,165,250,0.15)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(96,165,250,0.3)',
+  },
+  startChatText: {
+    color: '#60a5fa',
+    fontSize: 14,
+    fontWeight: '500',
   },
   messagesList: {
     padding: 12,
     paddingBottom: 20,
   },
-  messageContainer: {
+  messageWrapper: {
     flexDirection: 'row',
     marginBottom: 12,
     alignItems: 'flex-end',
   },
-  ownMessageContainer: {
+  ownMessageWrapper: {
     justifyContent: 'flex-end',
   },
   avatarContainer: {
-    marginRight: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   avatar: {
     width: 32,
     height: 32,
     borderRadius: 16,
-  },
-  avatarPlaceholder: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   avatarText: {
     color: '#FFF',
@@ -519,17 +867,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   messageBubble: {
-    maxWidth: width * 0.75,
+    maxWidth: width * 0.72,
     backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 16,
+    borderRadius: 20,
     borderBottomLeftRadius: 4,
     padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   ownMessageBubble: {
-    backgroundColor: '#3b82f6',
-    borderBottomLeftRadius: 16,
+    backgroundColor: 'rgba(59,130,246,0.9)',
+    borderBottomLeftRadius: 20,
     borderBottomRightRadius: 4,
     marginLeft: 'auto',
+    borderColor: 'rgba(59,130,246,0.5)',
   },
   userName: {
     color: '#60a5fa',
@@ -537,139 +888,227 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 4,
   },
+  messageContentContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+  },
   messageText: {
     color: '#FFF',
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 22,
   },
   ownMessageText: {
     color: '#FFF',
   },
+  inlineEmoji: {
+    width: 28,
+    height: 28,
+    marginHorizontal: 2,
+  },
+  messageFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 4,
+    marginTop: 4,
+  },
   messageTime: {
     color: 'rgba(255,255,255,0.4)',
     fontSize: 10,
-    marginTop: 4,
-    textAlign: 'left',
   },
   ownMessageTime: {
-    textAlign: 'right',
     color: 'rgba(255,255,255,0.6)',
+  },
+  emojiPickerContainer: {
+    position: 'absolute',
+    bottom: 80,
+    left: 0,
+    right: 0,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
+  },
+  emojiPickerGradient: {
+    padding: 16,
+  },
+  emojiPickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  emojiPickerTitle: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  emojiPickerClose: {
+    padding: 4,
+  },
+  emojiList: {
+    gap: 12,
+    paddingVertical: 8,
+  },
+  emojiItem: {
+    alignItems: 'center',
+    padding: 8,
+  },
+  emojiImage: {
+    width: 48,
+    height: 48,
+    marginBottom: 4,
+  },
+  emojiName: {
+    color: '#888',
+    fontSize: 10,
   },
   inputContainer: {
     padding: 12,
     paddingBottom: Platform.OS === 'ios' ? 30 : 12,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.08)',
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 10,
-  },
-  textInput: {
-    flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    color: '#FFF',
-    fontSize: 14,
-    maxHeight: 100,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  sendBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#3b82f6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sendBtnDisabled: {
-    backgroundColor: '#333',
   },
   lowBalanceWarning: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    marginTop: 8,
-    paddingVertical: 6,
+    marginBottom: 10,
+    paddingVertical: 8,
     backgroundColor: 'rgba(245,158,11,0.1)',
-    borderRadius: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.2)',
   },
   lowBalanceText: {
     color: '#f59e0b',
     fontSize: 11,
   },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 10,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 25,
+    padding: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  emojiBtn: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emojiBtnIcon: {
+    width: 28,
+    height: 28,
+  },
+  textInput: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: '#FFF',
+    fontSize: 15,
+    maxHeight: 100,
+  },
+  sendBtn: {
+    borderRadius: 22,
+    overflow: 'hidden',
+  },
+  sendBtnDisabled: {
+    opacity: 0.5,
+  },
+  sendBtnGradient: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   // Modal Styles
   modalOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    flex: 1,
     backgroundColor: 'rgba(0,0,0,0.9)',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 100,
   },
   modalContainer: {
-    width: width * 0.85,
-    maxWidth: 350,
-    borderRadius: 24,
+    width: width * 0.88,
+    maxWidth: 380,
+    borderRadius: 28,
     overflow: 'hidden',
   },
   modalGradient: {
-    padding: 30,
+    padding: 32,
     alignItems: 'center',
   },
-  modalIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+  modalIconRing: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    padding: 4,
     backgroundColor: 'rgba(239,68,68,0.2)',
+    marginBottom: 24,
+  },
+  modalIconGradient: {
+    flex: 1,
+    borderRadius: 43,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
   },
   modalTitle: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#FFF',
+    marginBottom: 16,
+  },
+  balanceBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(96,165,250,0.1)',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    gap: 8,
     marginBottom: 12,
+  },
+  balanceText: {
+    color: '#60a5fa',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  balanceLabel: {
+    color: '#60a5fa',
+    fontSize: 12,
   },
   modalDesc: {
     fontSize: 14,
     color: 'rgba(255,255,255,0.6)',
     textAlign: 'center',
-    marginBottom: 6,
+    marginBottom: 24,
   },
   watchAdsBtn: {
     width: '100%',
-    borderRadius: 14,
+    borderRadius: 16,
     overflow: 'hidden',
-    marginTop: 20,
   },
   watchAdsGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 14,
-    gap: 8,
+    padding: 16,
+    gap: 10,
   },
   watchAdsText: {
     color: '#FFF',
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: 'bold',
   },
   closeModalBtn: {
     marginTop: 16,
-    padding: 10,
+    padding: 12,
   },
   closeModalText: {
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.4)',
     fontSize: 14,
   },
 });
