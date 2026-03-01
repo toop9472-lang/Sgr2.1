@@ -1259,27 +1259,40 @@ const styles = StyleSheet.create({
   scroll: { flexGrow: 1, justifyContent: 'center', paddingVertical: 40 },
   content: { paddingHorizontal: 24 },
   
-  // Logo
+  // Logo with Glow
   logoContainer: {
     alignItems: 'center',
     marginBottom: 16,
   },
+  logoGlow: {
+    shadowColor: '#60a5fa',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 10,
+    borderRadius: 30,
+    padding: 4,
+  },
   logoImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 25,
+    width: 110,
+    height: 110,
+    borderRadius: 28,
   },
   appName: {
-    fontSize: 36,
+    fontSize: 42,
     fontWeight: 'bold',
     color: '#FFF',
     textAlign: 'center',
+    textShadowColor: 'rgba(96, 165, 250, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 10,
   },
   tagline: {
     fontSize: 16,
-    color: '#888',
+    color: 'rgba(255,255,255,0.7)',
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: 36,
+    letterSpacing: 0.5,
   },
 
   // Header
