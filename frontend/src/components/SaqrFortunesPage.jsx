@@ -297,7 +297,7 @@ const RewardResultModal = ({ visible, diamonds, onClose, bonusReason }) => {
         )}
 
         <div className="text-green-400 text-sm mb-6">
-          قيمتها: ${(diamonds / DIAMONDS_PER_DOLLAR).toFixed(3)}
+          قيمتها: ${(diamonds / GEMS_PER_RIYAL).toFixed(3)}
         </div>
 
         <button 
@@ -663,7 +663,7 @@ const SaqrFortunesPage = ({ user, onBack, onBalanceUpdate }) => {
         {/* Exchange Rate */}
         <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 flex items-center justify-center gap-3">
           <TrendingUp className="w-5 h-5 text-green-400" />
-          <span className="text-green-400 font-semibold">500 ألماسة = 1 دولار أمريكي</span>
+          <span className="text-green-400 font-semibold">500 ألماسة = 1 ريال سعودي</span>
         </div>
 
         {/* Stats */}
@@ -686,7 +686,7 @@ const SaqrFortunesPage = ({ user, onBack, onBalanceUpdate }) => {
             <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-green-500/20 flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-green-400" />
             </div>
-            <div className="text-xl font-bold">${(diamonds / DIAMONDS_PER_DOLLAR).toFixed(2)}</div>
+            <div className="text-xl font-bold">${(diamonds / GEMS_PER_RIYAL).toFixed(2)}</div>
             <div className="text-xs text-gray-500">القيمة</div>
           </div>
         </div>
@@ -699,9 +699,9 @@ const SaqrFortunesPage = ({ user, onBack, onBalanceUpdate }) => {
                 <span className="text-xl font-bold text-green-400">$</span>
               </div>
               <div>
-                <div className="text-sm text-gray-400">تقدمك نحو الدولار التالي</div>
+                <div className="text-sm text-gray-400">تقدمك نحو الريال التالي</div>
                 <div className="text-lg font-bold text-green-400">
-                  ${Math.floor(diamonds / DIAMONDS_PER_DOLLAR).toFixed(2)} مكتسب
+                  ${Math.floor(diamonds / GEMS_PER_RIYAL).toFixed(2)} مكتسب
                 </div>
               </div>
             </div>
@@ -709,11 +709,11 @@ const SaqrFortunesPage = ({ user, onBack, onBalanceUpdate }) => {
           <div className="h-2 bg-gray-700 rounded-full overflow-hidden mb-2">
             <div 
               className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full transition-all"
-              style={{ width: `${(diamonds % DIAMONDS_PER_DOLLAR) / DIAMONDS_PER_DOLLAR * 100}%` }}
+              style={{ width: `${(diamonds % GEMS_PER_RIYAL) / GEMS_PER_RIYAL * 100}%` }}
             />
           </div>
           <p className="text-center text-sm text-gray-400">
-            {DIAMONDS_PER_DOLLAR - (diamonds % DIAMONDS_PER_DOLLAR)} ألماسة للدولار التالي
+            {GEMS_PER_RIYAL - (diamonds % GEMS_PER_RIYAL)} جوهرة للريال التالي
           </p>
         </div>
 
