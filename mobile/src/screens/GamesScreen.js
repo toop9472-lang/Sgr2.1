@@ -1013,7 +1013,7 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, 
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
 
-  // قائمة الألعاب المحسنة مع أيقونات متطورة
+  // قائمة الألعاب المحسنة مع صور جذابة
   const games = [
     { 
       id: 'aiquest', 
@@ -1025,7 +1025,8 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, 
       online: false, 
       onlineCost: 0,
       category: 'ذكاء اصطناعي',
-      badge: 'جديد ومميز'
+      badge: 'جديد ومميز',
+      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/06c2b9af28e999d11dc9acb5d070338281a993c4674d4d7d0b6ab3e3924d1af0.png'
     },
     { 
       id: 'chess', 
@@ -1037,7 +1038,8 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, 
       online: true, 
       onlineCost: 30,
       category: 'استراتيجية',
-      badge: 'مميز'
+      badge: 'مميز',
+      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/0500bcacbed800176055c4bfd28202347eb75abe6213e15f19f8214fd6f6934d.png'
     },
     { 
       id: 'tictactoe', 
@@ -1049,7 +1051,8 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, 
       online: true, 
       onlineCost: 20,
       category: 'سريعة',
-      badge: 'شعبي'
+      badge: 'شعبي',
+      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/33709ad279c09e5cbaf629cd65397cd2a03bdecb4a5f09b043937f27adce9655.png'
     },
     { 
       id: 'memory', 
@@ -1061,7 +1064,8 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, 
       online: false, 
       onlineCost: 0,
       category: 'ذهنية',
-      badge: ''
+      badge: '',
+      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/d95bce93defbebf9a6d2636f84df8aeb947c97057c22f296d5ca555efcda590a.png'
     },
     { 
       id: 'snake', 
@@ -1073,7 +1077,8 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, 
       online: false, 
       onlineCost: 0,
       category: 'كلاسيكية',
-      badge: 'كلاسيك'
+      badge: 'كلاسيك',
+      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8eef33008cf96dbd01341bd90a1df8c5494d684ed2338f0ec60cbfaea7916d94.png'
     },
     { 
       id: 'trivia', 
@@ -1085,7 +1090,8 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, 
       online: true, 
       onlineCost: 20,
       category: 'ثقافية',
-      badge: '250+ سؤال'
+      badge: '250+ سؤال',
+      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/2e924ada5224a07199229ac54b22bc84571b59dd3494a46bdf0fb78324571ebe.png'
     },
     { 
       id: 'puzzle', 
@@ -1097,7 +1103,8 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, 
       online: true, 
       onlineCost: 25,
       category: 'ذهنية',
-      badge: ''
+      badge: '',
+      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/bd130ce79e7d79d40534d82131b67692c7a04e98d0df4b307a820569e59db691.png'
     },
     { 
       id: 'riddles', 
@@ -1109,7 +1116,8 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, 
       online: false, 
       onlineCost: 0,
       category: 'ذهنية',
-      badge: ''
+      badge: '',
+      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/6061e4d9950403e2f315a7c6107f5d29edc233cdaf36be8b85729592b42204fa.png'
     },
     { 
       id: 'brickbreaker', 
@@ -1121,7 +1129,8 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, 
       online: false, 
       onlineCost: 0,
       category: 'آركيد',
-      badge: ''
+      badge: '',
+      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/2c127006856812b413c3027b7f9ba09fd5e94799f03b1e60073bd5ac01db192e.png'
     },
     { 
       id: 'mathrace', 
@@ -1133,7 +1142,8 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, 
       online: true, 
       onlineCost: 20,
       category: 'رياضيات',
-      badge: 'تحدي'
+      badge: 'تحدي',
+      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/fb08724fcfd075f573cb6caa85234087c2f60b88557963d258dde0df765d428e.png'
     },
     { 
       id: 'wordrace', 
@@ -1145,7 +1155,8 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, 
       online: true, 
       onlineCost: 25,
       category: 'لغوية',
-      badge: ''
+      badge: '',
+      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/2fc4dbd204a4ac22336dd2ff47174c2615ad00a97496165b44ede71820f884e3.png'
     },
     { 
       id: 'colorswitch', 
@@ -1157,7 +1168,8 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, 
       online: false, 
       onlineCost: 0,
       category: 'سريعة',
-      badge: ''
+      badge: '',
+      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/3a0211bd8e37c202ba475214f6cd4a78086e29615fbe36f18fa7b822d0ec5faf.png'
     },
   ];
 
