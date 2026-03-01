@@ -262,7 +262,8 @@ const BrickBreakerGame = ({ difficulty = 'medium', onComplete, onClose }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
+      <View style={styles.overlay}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={onClose} style={styles.headerBtn}>
