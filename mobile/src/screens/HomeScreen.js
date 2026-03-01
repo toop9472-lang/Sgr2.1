@@ -648,27 +648,34 @@ const styles = StyleSheet.create({
     flex: 1 
   },
 
-  // Saqr Fortunes Card
+  // Saqr Fortunes Card - New Image Design
   fortunesCard: {
     marginTop: 16,
-    borderRadius: 16,
+    borderRadius: 20,
     overflow: 'hidden',
+    elevation: 8,
+    shadowColor: '#ec4899',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
-  fortunesGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  fortunesBanner: {
+    height: 140,
+  },
+  fortunesBannerImage: {
+    borderRadius: 20,
+  },
+  fortunesOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
     padding: 16,
-    gap: 12,
   },
-  fortunesIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
+  fortunesContent: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
   },
-  fortunesInfo: {
+  fortunesTextArea: {
     flex: 1,
   },
   fortunesHeader: {
@@ -678,15 +685,18 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   fortunesTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 20,
+    fontWeight: '800',
     color: '#FFF',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   newBadge: {
     backgroundColor: '#22c55e',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   newBadgeText: {
     color: '#FFF',
@@ -694,31 +704,61 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   fortunesDesc: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: '600',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  fortunesSubDesc: {
     color: 'rgba(255,255,255,0.8)',
-    fontSize: 12,
+    fontSize: 11,
+    marginTop: 2,
   },
-
-  // Global Chat Card
-  chatCard: {
-    marginTop: 12,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  chatGradient: {
+  playNowBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    gap: 12,
-  },
-  chatIcon: {
-    width: 50,
-    height: 50,
+    backgroundColor: '#ec4899',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    gap: 6,
   },
-  chatInfo: {
+  playNowText: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+
+  // Global Chat Card - New Image Design
+  chatCard: {
+    marginTop: 12,
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 6,
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  chatBanner: {
+    height: 120,
+  },
+  chatBannerImage: {
+    borderRadius: 20,
+  },
+  chatOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    padding: 16,
+  },
+  chatContent: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+  },
+  chatTextArea: {
     flex: 1,
   },
   chatHeader: {
@@ -728,58 +768,93 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   chatTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '800',
     color: '#FFF',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   costBadge: {
-    backgroundColor: '#f59e0b',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(96, 165, 250, 0.3)',
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderRadius: 10,
+    gap: 4,
   },
   costBadgeText: {
     color: '#FFF',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: 'bold',
   },
   chatDesc: {
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.9)',
     fontSize: 12,
   },
-
-  // Friends Card
-  friendsCard: {
-    marginTop: 12,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  friendsGradient: {
+  joinBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    gap: 12,
-  },
-  friendsIcon: {
-    width: 50,
-    height: 50,
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    gap: 6,
   },
-  friendsInfo: {
+  joinBtnText: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+
+  // Friends Card - New Image Design
+  friendsCard: {
+    marginTop: 12,
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 6,
+    shadowColor: '#22c55e',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  friendsBanner: {
+    height: 110,
+  },
+  friendsBannerImage: {
+    borderRadius: 20,
+  },
+  friendsOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    padding: 16,
+  },
+  friendsContent: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+  },
+  friendsTextArea: {
     flex: 1,
   },
   friendsTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '800',
     color: '#FFF',
     marginBottom: 4,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   friendsDesc: {
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.9)',
     fontSize: 12,
+  },
+  inviteBtn: {
+    backgroundColor: '#22c55e',
+    padding: 12,
+    borderRadius: 14,
   },
 });
 
