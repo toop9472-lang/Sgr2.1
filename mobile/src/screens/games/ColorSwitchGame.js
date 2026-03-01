@@ -117,30 +117,33 @@ const ColorSwitchGame = ({ mode, onComplete, onClose }) => {
 
   if (!gameStarted) {
     return (
-      <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
-        <View style={styles.startContainer}>
-          <Ionicons name="color-palette" size={80} color="#f43f5e" />
-          <Text style={styles.startTitle}>تبديل الألوان</Text>
-          <Text style={styles.startDesc}>
-            سيظهر لك اسم لون بلون مختلف{'\n'}
-            اضغط ✓ إذا تطابق الاسم مع اللون{'\n'}
-            اضغط ✗ إذا لم يتطابق
-          </Text>
-          <TouchableOpacity style={styles.startBtn} onPress={startGame}>
-            <Ionicons name="play" size={24} color="#FFF" />
-            <Text style={styles.startBtnText}>ابدأ اللعب</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <Ionicons name="arrow-back" size={20} color="rgba(255,255,255,0.6)" />
-            <Text style={styles.closeBtnText}>رجوع</Text>
-          </TouchableOpacity>
+      <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
+        <View style={styles.overlay}>
+          <View style={styles.startContainer}>
+            <Ionicons name="color-palette" size={80} color="#f43f5e" />
+            <Text style={styles.startTitle}>تبديل الألوان</Text>
+            <Text style={styles.startDesc}>
+              سيظهر لك اسم لون بلون مختلف{'\n'}
+              اضغط ✓ إذا تطابق الاسم مع اللون{'\n'}
+              اضغط ✗ إذا لم يتطابق
+            </Text>
+            <TouchableOpacity style={styles.startBtn} onPress={startGame}>
+              <Ionicons name="play" size={24} color="#FFF" />
+              <Text style={styles.startBtnText}>ابدأ اللعب</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+              <Ionicons name="arrow-back" size={20} color="rgba(255,255,255,0.6)" />
+              <Text style={styles.closeBtnText}>رجوع</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </LinearGradient>
+      </ImageBackground>
     );
   }
 
   return (
-    <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
+    <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
+      <View style={styles.overlay}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={onClose} style={styles.headerBtn}>
