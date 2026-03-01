@@ -17,7 +17,7 @@ import gameSounds from '../../utils/gameSounds';
 const { width: screenWidth } = Dimensions.get('window');
 
 // خلفية اللعبة
-const BG_IMAGE = 'https://static.prod-images.emergentagent.com/jobs/40eca190-5242-4463-8c95-bc5f66df29cb/images/4d62f78a9d58ddecdb382580143e38423b0ebc89009baffee37a41a52abe79e5.png';
+const GAME_BG = 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/859703c501805508bde619abff117e247072d5e95f5d1c5713f5c43febcc9c87.png';
 
 const GAME_DURATION = 60; // ثانية
 const OPERATIONS = ['+', '-', '×', '÷'];
@@ -199,7 +199,7 @@ const MathRaceGame = ({ mode, onComplete, onClose }) => {
   };
 
   return (
-    <ImageBackground source={{ uri: BG_IMAGE }} style={styles.container} resizeMode="cover">
+    <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
       <View style={styles.overlay}>
         {/* Header */}
         <View style={styles.header}>
