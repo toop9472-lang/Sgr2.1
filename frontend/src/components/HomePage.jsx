@@ -189,7 +189,7 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
               </div>
               <div className="bg-gradient-to-r from-red-500 to-pink-500 px-5 py-3 rounded-xl flex items-center gap-2">
                 <Play className="w-5 h-5 text-white fill-white" />
-                <span className="text-white font-bold">ابدأ</span>
+                <span className="text-white font-bold">{t('start')}</span>
               </div>
             </div>
           </div>
@@ -203,7 +203,7 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
         >
           <img 
             src="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png"
-            alt="ثروات صقر"
+            alt={t('saqrFortunes')}
             className="absolute inset-0 w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 group-hover:from-black/80 transition-all" />
@@ -211,13 +211,13 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
             <div className="flex items-center justify-between w-full">
               <div className={isRTL ? 'text-right' : 'text-left'}>
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="text-white font-bold text-xl drop-shadow-lg">ثروات صقر</p>
-                  <span className="bg-green-500 text-white text-xs px-2.5 py-1 rounded-full font-bold">جديد</span>
+                  <p className="text-white font-bold text-xl drop-shadow-lg">{t('saqrFortunes')}</p>
+                  <span className="bg-green-500 text-white text-xs px-2.5 py-1 rounded-full font-bold">{t('new')}</span>
                 </div>
-                <p className="text-white/90 text-sm">جواهر صقر للاستبدال بالمال!</p>
+                <p className="text-white/90 text-sm">{t('saqrFortunesDesc')}</p>
               </div>
               <div className="bg-pink-500 px-4 py-2.5 rounded-xl flex items-center gap-2">
-                <span className="text-white font-bold text-sm">ابدأ</span>
+                <span className="text-white font-bold text-sm">{t('start')}</span>
                 <ChevronRight className={`w-5 h-5 text-white ${isRTL ? 'rotate-180' : ''}`} />
               </div>
             </div>
@@ -232,7 +232,7 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
         >
           <img 
             src="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/bcdacd75d090c4626f5432d13b9b6c4c4560cc34282e9424de1cbc6732f06abf.png"
-            alt="الدردشة العامة"
+            alt={t('globalChat')}
             className="absolute inset-0 w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 group-hover:from-black/80 transition-all" />
@@ -240,12 +240,12 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
             <div className="flex items-center justify-between w-full">
               <div className={isRTL ? 'text-right' : 'text-left'}>
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="text-white font-bold text-lg drop-shadow-lg">الدردشة العامة</p>
+                  <p className="text-white font-bold text-lg drop-shadow-lg">{t('globalChat')}</p>
                   <span className="bg-blue-500/60 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
                     <Gift className="w-3 h-3" />5
                   </span>
                 </div>
-                <p className="text-white/90 text-sm">تواصل مع لاعبين من حول العالم!</p>
+                <p className="text-white/90 text-sm">{t('globalChatDesc')}</p>
               </div>
               <div className="bg-blue-500 px-4 py-2.5 rounded-xl flex items-center gap-2">
                 <span className="text-white font-bold text-sm">انضم</span>
