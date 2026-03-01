@@ -38,6 +38,12 @@ const gameIcons = {
   puzzle: Puzzle,
   trivia: Brain,
   speedmath: Calculator,
+  memory: Gamepad2,
+  snake: Zap,
+  brickbreaker: Diamond,
+  colorswitch: Palette,
+  aiquest: Sparkles,
+  riddles: Lightbulb,
 };
 
 // Diamond Shop Component
