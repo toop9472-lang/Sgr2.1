@@ -248,7 +248,7 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
                 <p className="text-white/90 text-sm">{t('globalChatDesc')}</p>
               </div>
               <div className="bg-blue-500 px-4 py-2.5 rounded-xl flex items-center gap-2">
-                <span className="text-white font-bold text-sm">انضم</span>
+                <span className="text-white font-bold text-sm">{isRTL ? 'انضم' : 'Join'}</span>
                 <MessageCircle className="w-4 h-4 text-white" />
               </div>
             </div>
@@ -263,15 +263,15 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
         >
           <img 
             src="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/7f2948052c933ae7604200fd2c98d91f4504fce293deb36ce108cba1d36f062a.png"
-            alt="الأصدقاء"
+            alt={t('friends')}
             className="absolute inset-0 w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 group-hover:from-black/80 transition-all" />
           <div className="absolute inset-0 flex items-end p-5">
             <div className="flex items-center justify-between w-full">
               <div className={isRTL ? 'text-right' : 'text-left'}>
-                <p className="text-white font-bold text-lg drop-shadow-lg mb-1">الأصدقاء والبريد</p>
-                <p className="text-white/90 text-sm">أضف أصدقاء وادعهم للألعاب!</p>
+                <p className="text-white font-bold text-lg drop-shadow-lg mb-1">{t('friends')}</p>
+                <p className="text-white/90 text-sm">{t('friendsDesc')}</p>
               </div>
               <div className="bg-green-500 p-3 rounded-xl">
                 <Users className="w-5 h-5 text-white" />
@@ -281,42 +281,42 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
         </button>
 
         {/* Stats - New Professional Design */}
-        <div className="rounded-2xl mb-6 overflow-hidden shadow-xl" style={{ background: 'linear-gradient(135deg, #1a1a2e, #16213e)' }}>
+        <div className="rounded-2xl mb-6 overflow-hidden shadow-xl" style={{ background: isDark ? 'linear-gradient(135deg, #1a1a2e, #16213e)' : 'linear-gradient(135deg, #f8fafc, #e2e8f0)' }}>
           <div className="p-5">
             <div className="flex items-center gap-2 mb-5">
-              <BarChart3 className="w-5 h-5 text-[#60a5fa]" />
-              <h3 className="text-white font-bold">{t('yourStats')}</h3>
+              <BarChart3 className={`w-5 h-5 ${isDark ? 'text-[#60a5fa]' : 'text-blue-600'}`} />
+              <h3 className={`font-bold ${textClass}`}>{t('yourStats')}</h3>
             </div>
             
             {/* Stats Row */}
             <div className="flex items-center justify-around mb-5">
               {/* Games Played */}
               <div className="text-center">
-                <div className="w-11 h-11 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto mb-2">
+                <div className={`w-11 h-11 rounded-full ${isDark ? 'bg-blue-500/20' : 'bg-blue-100'} flex items-center justify-center mx-auto mb-2`}>
                   <Gamepad2 className="w-5 h-5 text-blue-400" />
                 </div>
-                <p className="text-2xl font-bold text-white">{user?.games_played || 0}</p>
-                <p className="text-xs text-white/60">مباراة لُعبت</p>
+                <p className={`text-2xl font-bold ${textClass}`}>{user?.games_played || 0}</p>
+                <p className={`text-xs ${textMutedClass}`}>{isRTL ? 'مباراة لُعبت' : 'Games Played'}</p>
               </div>
               
               {/* Divider */}
-              <div className="w-px h-12 bg-white/10" />
+              <div className={`w-px h-12 ${isDark ? 'bg-white/10' : 'bg-gray-200'}`} />
               
               {/* Wins */}
               <div className="text-center">
-                <div className="w-11 h-11 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-2">
+                <div className={`w-11 h-11 rounded-full ${isDark ? 'bg-yellow-500/20' : 'bg-yellow-100'} flex items-center justify-center mx-auto mb-2`}>
                   <Trophy className="w-5 h-5 text-yellow-400" />
                 </div>
-                <p className="text-2xl font-bold text-white">{user?.games_won || 0}</p>
-                <p className="text-xs text-white/60">انتصار</p>
+                <p className={`text-2xl font-bold ${textClass}`}>{user?.games_won || 0}</p>
+                <p className={`text-xs ${textMutedClass}`}>{isRTL ? 'انتصار' : 'Wins'}</p>
               </div>
               
               {/* Divider */}
-              <div className="w-px h-12 bg-white/10" />
+              <div className={`w-px h-12 ${isDark ? 'bg-white/10' : 'bg-gray-200'}`} />
               
               {/* Win Rate */}
               <div className="text-center">
-                <div className="w-11 h-11 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-2">
+                <div className={`w-11 h-11 rounded-full ${isDark ? 'bg-green-500/20' : 'bg-green-100'} flex items-center justify-center mx-auto mb-2`}>
                   <TrendingUp className="w-5 h-5 text-green-400" />
                 </div>
                 <p className="text-2xl font-bold text-white">
