@@ -1828,7 +1828,28 @@ const styles = StyleSheet.create({
   
   gamesContainer: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 12, justifyContent: 'space-between', marginBottom: 20 },
   gameCardWrapper: { width: (width - 48) / 2, marginHorizontal: 4, marginBottom: 12 },
-  gameCard: { borderRadius: 18, overflow: 'hidden' },
+  gameCard: { borderRadius: 20, overflow: 'hidden', height: 180, position: 'relative' },
+  gameCardImage: { width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, justifyContent: 'center', alignItems: 'center' },
+  gameCardOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.1)' },
+  gameCardOverlayActive: { backgroundColor: 'rgba(0,0,0,0.6)' },
+  gameCardBottomGradient: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingVertical: 12, paddingHorizontal: 12, alignItems: 'center' },
+  gameNameSmall: { fontSize: 14, fontWeight: '700', color: '#FFF', textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 },
+  
+  // New Professional Styles
+  gameBadgeNew: { position: 'absolute', top: 10, left: 10, backgroundColor: '#f59e0b', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, zIndex: 20 },
+  gameBadgeTextNew: { fontSize: 10, fontWeight: '800', color: '#000' },
+  onlineIndicator: { position: 'absolute', top: 10, right: 10, zIndex: 20 },
+  onlineDotNew: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#22c55e', borderWidth: 2, borderColor: '#FFF' },
+  gameInfoOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', padding: 16, zIndex: 15 },
+  gameNameNew: { fontSize: 18, fontWeight: '800', color: '#FFF', marginBottom: 6, textAlign: 'center', textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4 },
+  gameDescNew: { fontSize: 12, color: 'rgba(255,255,255,0.9)', marginBottom: 12, textAlign: 'center' },
+  gameTagsRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  pointsTagNew: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, gap: 4 },
+  pointsTextNew: { fontSize: 12, color: '#fbbf24', fontWeight: '700' },
+  categoryTagNew: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12 },
+  categoryTextNew: { fontSize: 11, color: '#FFF', fontWeight: '600' },
+  
+  // Old styles kept for compatibility
   gameCardGradient: { padding: 16, alignItems: 'center', minHeight: 180 },
   gameImageContainer: { width: 80, height: 80, borderRadius: 16, overflow: 'hidden', marginBottom: 10, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: 'rgba(255,255,255,0.2)' },
   gameImage: { width: '100%', height: '100%', borderRadius: 14 },
