@@ -153,7 +153,7 @@ const SaqrEmojiPicker = ({ visible, onSelect, onClose }) => {
             onClick={() => onSelect(emoji)}
             className="flex flex-col items-center p-2 hover:bg-white/10 rounded-xl transition-all hover:scale-110"
           >
-            <img src={emoji.url} alt={emoji.name} className="w-12 h-12 mb-1" />
+            <img src={emoji.url} alt={emoji.name} className="w-14 h-14 mb-1" />
             <span className="text-gray-400 text-xs">{emoji.name}</span>
           </button>
         ))}
