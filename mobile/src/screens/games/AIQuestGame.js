@@ -460,12 +460,14 @@ const AIQuestGame = ({ mode, onComplete, onClose }) => {
     
     if (correct) {
       // إجابة صحيحة
+      gameSounds.correct();
       const bonus = Math.floor(timeLeft * 2);
       const streakBonus = streak >= 3 ? 10 : 0;
       setScore(s => s + currentChallenge.points + bonus + streakBonus);
       setStreak(s => {
         const newStreak = s + 1;
         if (newStreak > highestStreak) setHighestStreak(newStreak);
+        if (newStreak >= 3) gameSounds.levelUp();
         return newStreak;
       });
       
@@ -480,6 +482,7 @@ const AIQuestGame = ({ mode, onComplete, onClose }) => {
       }, 1500);
     } else {
       // إجابة خاطئة
+      gameSounds.wrong();
       setStreak(0);
       setLives(l => l - 1);
       setAiScore(s => s + currentChallenge.points);
@@ -495,6 +498,7 @@ const AIQuestGame = ({ mode, onComplete, onClose }) => {
       if (lives <= 1) {
         setGameOver(true);
         const won = score > aiScore;
+        if (won) gameSounds.win(); else gameSounds.lose();
         setTimeout(() => {
           onComplete(Math.floor(score / 10), won ? 'win' : 'lose');
         }, 1000);
