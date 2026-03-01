@@ -19,19 +19,35 @@ import colors from '../styles/colors';
 
 const { width } = Dimensions.get('window');
 
-// Featured Game Card
-const FeaturedGameCard = memo(({ icon, name, description, colors: gradColors, onPress }) => (
+// Featured Game Card - New Design with Image Support
+const FeaturedGameCard = memo(({ icon, name, description, colors: gradColors, onPress, image }) => (
   <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={styles.featuredCard}>
-    <LinearGradient colors={gradColors} style={styles.featuredGradient}>
-      <View style={styles.featuredIcon}>
-        <Ionicons name={icon} size={32} color="#FFF" />
-      </View>
-      <View style={styles.featuredInfo}>
-        <Text style={styles.featuredName}>{name}</Text>
-        <Text style={styles.featuredDesc}>{description}</Text>
-      </View>
-      <Ionicons name="chevron-forward" size={24} color="rgba(255,255,255,0.7)" />
-    </LinearGradient>
+    {image ? (
+      <ImageBackground source={{ uri: image }} style={styles.featuredImageBg} imageStyle={styles.featuredImageStyle}>
+        <LinearGradient colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.7)']} style={styles.featuredOverlay}>
+          <View style={styles.featuredContent}>
+            <View style={styles.featuredInfo}>
+              <Text style={styles.featuredNameNew}>{name}</Text>
+              <Text style={styles.featuredDescNew}>{description}</Text>
+            </View>
+            <View style={styles.playIconBtn}>
+              <Ionicons name="play" size={20} color="#FFF" />
+            </View>
+          </View>
+        </LinearGradient>
+      </ImageBackground>
+    ) : (
+      <LinearGradient colors={gradColors} style={styles.featuredGradient}>
+        <View style={styles.featuredIcon}>
+          <Ionicons name={icon} size={32} color="#FFF" />
+        </View>
+        <View style={styles.featuredInfo}>
+          <Text style={styles.featuredName}>{name}</Text>
+          <Text style={styles.featuredDesc}>{description}</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={24} color="rgba(255,255,255,0.7)" />
+      </LinearGradient>
+    )}
   </TouchableOpacity>
 ));
 
