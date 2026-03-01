@@ -663,7 +663,7 @@ const SaqrFortunesPage = ({ user, onBack, onBalanceUpdate }) => {
         {/* Exchange Rate */}
         <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 flex items-center justify-center gap-3">
           <TrendingUp className="w-5 h-5 text-green-400" />
-          <span className="text-green-400 font-semibold">500 ألماسة = 1 ريال سعودي</span>
+          <span className="text-green-400 font-semibold">500 جوهرة صقر = 1 ريال سعودي</span>
         </div>
 
         {/* Stats */}
