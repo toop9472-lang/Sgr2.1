@@ -366,6 +366,8 @@ const TreasureChestCard = ({ chest, progress, onOpen }) => {
 
 // ==================== المكون الرئيسي ====================
 const SaqrFortunesPage = ({ user, onBack, onBalanceUpdate }) => {
+  const { isDark } = useTheme();
+  const { isRTL, t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [diamonds, setDiamonds] = useState(0);
   const [todayAds, setTodayAds] = useState(0);
