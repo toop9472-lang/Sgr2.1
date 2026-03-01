@@ -373,17 +373,21 @@ const BrickBreakerGame = ({ difficulty = 'medium', onComplete, onClose }) => {
 
       {/* Instructions */}
       <View style={styles.instructions}>
-        <Ionicons name="finger-print" size={20} color="#666" />
+        <Ionicons name="finger-print" size={20} color="#FFF" />
         <Text style={styles.instructionText}>حرّك إصبعك لتحريك المضرب</Text>
       </View>
-    </View>
+      </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     paddingTop: 50,
   },
   header: {
