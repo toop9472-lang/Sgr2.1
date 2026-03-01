@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Clock, Play, ChevronRight, BarChart3, Award, Calendar, Zap, Lightbulb, Star, Trophy, CheckCircle, Timer, PlayCircle, Film, LogIn, Rocket, Gift, MessageCircle, Users, Flame, Gamepad2 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 import LanguageSwitcher from './LanguageSwitcher';
 import axios from 'axios';
 
@@ -8,6 +9,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
   const { t, isRTL, language } = useLanguage();
+  const { isDark } = useTheme();
   const [currentTip, setCurrentTip] = useState(0);
   const [settings, setSettings] = useState(null);
   const [userAnalytics, setUserAnalytics] = useState(null);
