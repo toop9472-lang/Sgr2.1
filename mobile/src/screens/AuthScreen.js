@@ -1320,26 +1320,28 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
 
-  // Apple Button
+  // Apple Button - Glass Effect
   appleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: '#000',
+    backgroundColor: 'rgba(0,0,0,0.8)',
     paddingVertical: 16,
-    borderRadius: 14,
+    borderRadius: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: 'rgba(255,255,255,0.2)',
+    backdropFilter: 'blur(10px)',
   },
   appleBtnText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
+    letterSpacing: 0.3,
   },
 
-  // Google Button
+  // Google Button - Premium Style
   googleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1347,13 +1349,19 @@ const styles = StyleSheet.create({
     gap: 10,
     backgroundColor: '#4285F4',
     paddingVertical: 16,
-    borderRadius: 14,
+    borderRadius: 16,
     marginBottom: 12,
+    shadowColor: '#4285F4',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   googleBtnText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
+    letterSpacing: 0.3,
   },
   
   // Disabled Button State
