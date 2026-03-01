@@ -105,11 +105,16 @@ const ProfilePage = ({ user, onLogout, onNavigate }) => {
   const totalEarned = user?.totalEarned || user?.total_earned || 0;
   const referralCode = 'SAQR' + (user?.id?.slice(-6) || '123456').toUpperCase();
 
+  // Theme classes
+  const bgClass = isDark ? 'bg-[#0a0a0f]' : 'bg-gray-50';
+  const cardClass = isDark ? 'bg-[#111118]/80 border-white/10' : 'bg-white border-gray-200';
+  const textClass = isDark ? 'text-white' : 'text-gray-900';
+
   return (
-    <div className="min-h-screen bg-[#0a0a0f] pb-20 relative overflow-hidden">
+    <div className={`min-h-screen ${bgClass} pb-20 relative overflow-hidden`}>
       {/* Decorative Blue Circles */}
-      <div className="absolute top-[-200px] left-[-200px] w-[500px] h-[500px] rounded-full bg-[#3b82f6]/20 blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-[-150px] right-[-150px] w-[400px] h-[400px] rounded-full bg-[#3b82f6]/15 blur-3xl pointer-events-none"></div>
+      {isDark && <div className="absolute top-[-200px] left-[-200px] w-[500px] h-[500px] rounded-full bg-[#3b82f6]/20 blur-3xl pointer-events-none"></div>}
+      {isDark && <div className="absolute bottom-[-150px] right-[-150px] w-[400px] h-[400px] rounded-full bg-[#3b82f6]/15 blur-3xl pointer-events-none"></div>}
       
       {/* Header */}
       <div className="relative z-10 bg-gradient-to-r from-[#3b82f6] to-[#6366f1] px-4 pt-8 pb-24 rounded-b-3xl shadow-lg shadow-[#3b82f6]/20">
