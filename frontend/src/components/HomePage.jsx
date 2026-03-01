@@ -86,18 +86,19 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
     { icon: 'bulb', text: t('watchAdsEarnPoints'), enabled: true },
   ];
 
-  const bgClass = 'bg-[#0a0a0f]';
-  const cardClass = 'bg-[#111118]/80 backdrop-blur-xl border-white/10';
-  const textClass = 'text-white';
-  const textMutedClass = 'text-gray-400';
-  const textDimClass = 'text-gray-500';
+  // Dynamic theme classes
+  const bgClass = isDark ? 'bg-[#0a0a0f]' : 'bg-gray-50';
+  const cardClass = isDark ? 'bg-[#111118]/80 backdrop-blur-xl border-white/10' : 'bg-white border-gray-200 shadow-sm';
+  const textClass = isDark ? 'text-white' : 'text-gray-900';
+  const textMutedClass = isDark ? 'text-gray-400' : 'text-gray-600';
+  const textDimClass = isDark ? 'text-gray-500' : 'text-gray-500';
 
   if (isLoading) {
     return (
       <div className={`min-h-screen ${bgClass} flex flex-col items-center justify-center relative overflow-hidden`}>
-        <div className="absolute top-[-200px] left-[-200px] w-[500px] h-[500px] rounded-full bg-[#3b82f6]/20 blur-3xl"></div>
-        <div className="absolute bottom-[-150px] right-[-150px] w-[400px] h-[400px] rounded-full bg-[#3b82f6]/15 blur-3xl"></div>
-        <div className="w-24 h-24 rounded-full bg-[#0a0a0f] border-2 border-[#3b82f6]/30 flex items-center justify-center overflow-hidden mb-4 animate-pulse shadow-lg shadow-[#3b82f6]/20">
+        {isDark && <div className="absolute top-[-200px] left-[-200px] w-[500px] h-[500px] rounded-full bg-[#3b82f6]/20 blur-3xl"></div>}
+        {isDark && <div className="absolute bottom-[-150px] right-[-150px] w-[400px] h-[400px] rounded-full bg-[#3b82f6]/15 blur-3xl"></div>}
+        <div className={`w-24 h-24 rounded-full ${isDark ? 'bg-[#0a0a0f] border-[#3b82f6]/30' : 'bg-white border-blue-200'} border-2 flex items-center justify-center overflow-hidden mb-4 animate-pulse shadow-lg ${isDark ? 'shadow-[#3b82f6]/20' : 'shadow-blue-100'}`}>
           <img src="/logo_saqr.png" alt={t('appName')} className="w-20 h-20 object-contain" />
         </div>
         <div className={`${textClass} text-lg`}>{t('loading')}</div>
@@ -107,8 +108,8 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
 
   return (
     <div className={`min-h-screen ${bgClass} pb-28 relative overflow-y-auto overflow-x-hidden`} dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="fixed top-[-200px] left-[-200px] w-[500px] h-[500px] rounded-full bg-[#3b82f6]/20 blur-3xl pointer-events-none"></div>
-      <div className="fixed bottom-[-150px] right-[-150px] w-[400px] h-[400px] rounded-full bg-[#3b82f6]/15 blur-3xl pointer-events-none"></div>
+      {isDark && <div className="fixed top-[-200px] left-[-200px] w-[500px] h-[500px] rounded-full bg-[#3b82f6]/20 blur-3xl pointer-events-none"></div>}
+      {isDark && <div className="fixed bottom-[-150px] right-[-150px] w-[400px] h-[400px] rounded-full bg-[#3b82f6]/15 blur-3xl pointer-events-none"></div>}
       
       {/* Language Switcher - Fixed Position */}
       <div className="fixed top-4 left-4 z-50">
@@ -119,10 +120,10 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
         {/* Logo */}
         <div className="flex items-center justify-center mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-14 h-14 rounded-full bg-[#0a0a0f] border-2 border-[#3b82f6]/30 flex items-center justify-center overflow-hidden shadow-lg shadow-[#3b82f6]/20">
+            <div className={`w-14 h-14 rounded-full ${isDark ? 'bg-[#0a0a0f] border-[#3b82f6]/30' : 'bg-white border-blue-200'} border-2 flex items-center justify-center overflow-hidden shadow-lg ${isDark ? 'shadow-[#3b82f6]/20' : 'shadow-blue-100'}`}>
               <img src="/logo_saqr.png" alt={t('appName')} className="w-11 h-11 object-contain" />
             </div>
-            <h1 className="text-3xl font-bold text-[#60a5fa]">{t('appName')}</h1>
+            <h1 className={`text-3xl font-bold ${isDark ? 'text-[#60a5fa]' : 'text-blue-600'}`}>{t('appName')}</h1>
           </div>
         </div>
         
