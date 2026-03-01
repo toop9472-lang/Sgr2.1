@@ -142,6 +142,7 @@ const MathRaceGame = ({ mode, onComplete, onClose }) => {
       ]).start();
     } else {
       gameSounds.wrong();
+      gameSounds.wrong();
       setStreak(0);
       
       // أنيميشن الخطأ
