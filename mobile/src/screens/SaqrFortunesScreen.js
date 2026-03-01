@@ -748,6 +748,36 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
   },
+  quickActionNew: {
+    flex: 1,
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 6,
+    shadowColor: '#60a5fa',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  quickActionImageBg: {
+    height: 120,
+  },
+  quickActionImageStyle: {
+    borderRadius: 20,
+  },
+  quickActionOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    padding: 14,
+    borderRadius: 20,
+  },
+  quickActionTextNew: {
+    fontSize: 14,
+    color: '#FFF',
+    fontWeight: '700',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
   quickActionGradient: {
     padding: 16,
     alignItems: 'center',
