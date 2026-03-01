@@ -710,6 +710,27 @@ async def complete_challenge(
     }
 
 
+@router.get('/challenges/my-challenges')
+async def get_my_challenges(user_id: str = Depends(get_current_user_id)):
+    """Get user's challenges (both sent and received)"""
+    db = get_db()
+    
+    challenges = await db.challenges.find(
+        {
+            '$or': [
+                {'challenger_id': user_id},
+                {'opponent_id': user_id}
+            ]
+        },
+        {'_id': 0}
+    ).sort('created_at', -1).limit(50).to_list(50)
+    
+    return {
+        'challenges': challenges,
+        'total': len(challenges)
+    }
+
+
 # ============ ACHIEVEMENT ROUTES ============
 
 @router.get('/achievements')
