@@ -277,63 +277,113 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
           </div>
         </button>
 
-        {/* Stats */}
-        <div className={`${cardClass} rounded-2xl p-5 mb-6 border`}>
-          <div className="flex items-center gap-2 mb-4">
-            <BarChart3 className="w-5 h-5 text-[#60a5fa]" />
-            <h3 className={`${textClass} font-bold`}>{t('yourStats')}</h3>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <Calendar className="w-4 h-4 text-green-400" />
-                <span className={`${textDimClass} text-xs`}>{t('today')}</span>
+        {/* Stats - New Professional Design */}
+        <div className="rounded-2xl mb-6 overflow-hidden shadow-xl" style={{ background: 'linear-gradient(135deg, #1a1a2e, #16213e)' }}>
+          <div className="p-5">
+            <div className="flex items-center gap-2 mb-5">
+              <BarChart3 className="w-5 h-5 text-[#60a5fa]" />
+              <h3 className="text-white font-bold">{t('yourStats')}</h3>
+            </div>
+            
+            {/* Stats Row */}
+            <div className="flex items-center justify-around mb-5">
+              {/* Games Played */}
+              <div className="text-center">
+                <div className="w-11 h-11 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto mb-2">
+                  <Gamepad2 className="w-5 h-5 text-blue-400" />
+                </div>
+                <p className="text-2xl font-bold text-white">{user?.games_played || 0}</p>
+                <p className="text-xs text-white/60">مباراة لُعبت</p>
               </div>
-              <p className={`${textClass} text-xl font-bold`}>{watchedToday}</p>
-              <p className={`${textDimClass} text-xs`}>{dailyLimit} {t('available')}</p>
-              <div className="mt-2 bg-white/10 rounded-full h-1.5">
+              
+              {/* Divider */}
+              <div className="w-px h-12 bg-white/10" />
+              
+              {/* Wins */}
+              <div className="text-center">
+                <div className="w-11 h-11 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-2">
+                  <Trophy className="w-5 h-5 text-yellow-400" />
+                </div>
+                <p className="text-2xl font-bold text-white">{user?.games_won || 0}</p>
+                <p className="text-xs text-white/60">انتصار</p>
+              </div>
+              
+              {/* Divider */}
+              <div className="w-px h-12 bg-white/10" />
+              
+              {/* Win Rate */}
+              <div className="text-center">
+                <div className="w-11 h-11 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-2">
+                  <TrendingUp className="w-5 h-5 text-green-400" />
+                </div>
+                <p className="text-2xl font-bold text-white">
+                  {(user?.games_played || 0) > 0 ? Math.round(((user?.games_won || 0) / (user?.games_played || 1)) * 100) : 0}%
+                </p>
+                <p className="text-xs text-white/60">نسبة الفوز</p>
+              </div>
+            </div>
+            
+            {/* Progress Bar */}
+            <div className="bg-black/20 rounded-xl p-3">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs text-white/70">تقدمك نحو المستوى التالي</span>
+                <span className="text-xs text-blue-400 font-semibold">{Math.min(userPoints % 100, 100)}/100</span>
+              </div>
+              <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
                 <div 
-                  className="bg-green-400 h-1.5 rounded-full transition-all"
-                  style={{ width: `${Math.min((watchedToday / dailyLimit) * 100, 100)}%` }}
+                  className="h-full bg-blue-500 rounded-full transition-all"
+                  style={{ width: `${Math.min(userPoints % 100, 100)}%` }}
                 />
               </div>
-            </div>
-
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <Trophy className="w-4 h-4 text-amber-400" />
-                <span className={`${textDimClass} text-xs`}>{language === 'ar' ? 'نقاط التحديات' : 'Challenge Points'}</span>
-              </div>
-              <p className={`${textClass} text-xl font-bold`}>{challengeStats.earned_today}/{challengeStats.max_daily_points}</p>
-              <p className={`${textDimClass} text-xs`}>{language === 'ar' ? 'اليوم' : 'Today'}</p>
-              <div className="mt-2 bg-white/10 rounded-full h-1.5">
-                <div 
-                  className="bg-amber-400 h-1.5 rounded-full transition-all"
-                  style={{ width: `${Math.min((challengeStats.earned_today / challengeStats.max_daily_points) * 100, 100)}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <Award className="w-4 h-4 text-yellow-400" />
-                <span className={`${textDimClass} text-xs`}>{t('totalPoints')}</span>
-              </div>
-              <p className={`${textClass} text-xl font-bold`}>{user?.total_earned || userPoints}</p>
-              <p className={`${textDimClass} text-xs`}>{t('points')}</p>
-            </div>
-
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <Clock className="w-4 h-4 text-[#60a5fa]" />
-                <span className={`${textDimClass} text-xs`}>{t('remaining')}</span>
-              </div>
-              <p className={`${textClass} text-xl font-bold`}>{Math.max(dailyLimit - watchedToday, 0)}</p>
-              <p className={`${textDimClass} text-xs`}>{t('available')}</p>
             </div>
           </div>
         </div>
+
+        {/* Daily Challenges - New Image Design */}
+        <button className="w-full rounded-2xl mb-4 shadow-xl transform transition-all hover:scale-[1.02] relative overflow-hidden h-24 group">
+          <img 
+            src="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/9571396ba276f9f9cf70ce0622c4303850d05054256c99581ef235eec62d9760.png"
+            alt="التحدي اليومي"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 group-hover:from-black/80 transition-all" />
+          <div className="absolute inset-0 flex items-end p-4">
+            <div className="flex items-center justify-between w-full">
+              <div className={isRTL ? 'text-right' : 'text-left'}>
+                <p className="text-white font-bold text-lg drop-shadow-lg">{language === 'ar' ? 'التحدي اليومي' : 'Daily Challenge'}</p>
+                <p className="text-white/90 text-sm">{language === 'ar' ? 'اربح نقاط إضافية!' : 'Earn bonus points!'}</p>
+              </div>
+              <div className="bg-amber-500 p-3 rounded-xl">
+                <Flame className="w-5 h-5 text-white" />
+              </div>
+            </div>
+          </div>
+        </button>
+
+        {/* Multiplayer - New Image Design */}
+        <button 
+          onClick={() => onNavigate('games')}
+          className="w-full rounded-2xl mb-6 shadow-xl transform transition-all hover:scale-[1.02] relative overflow-hidden h-28 group"
+        >
+          <img 
+            src="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/45a8a3fbd10c46b785a5178ca02ae00c0c4aa43973b95689ebf41e18eb5cbada.png"
+            alt="اللعب الجماعي"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 group-hover:from-black/80 transition-all" />
+          <div className="absolute inset-0 flex items-end p-4">
+            <div className="flex items-center justify-between w-full">
+              <div className={isRTL ? 'text-right' : 'text-left'}>
+                <p className="text-white font-bold text-lg drop-shadow-lg">{language === 'ar' ? 'اللعب الجماعي' : 'Multiplayer'}</p>
+                <p className="text-white/90 text-sm">{language === 'ar' ? 'تحدى لاعبين من حول العالم!' : 'Challenge players worldwide!'}</p>
+              </div>
+              <div className="bg-purple-500 px-4 py-2.5 rounded-xl flex items-center gap-2">
+                <span className="text-white font-bold text-sm">{language === 'ar' ? 'ابدأ' : 'Start'}</span>
+                <ChevronRight className={`w-4 h-4 text-white ${isRTL ? 'rotate-180' : ''}`} />
+              </div>
+            </div>
+          </div>
+        </button>
 
         {/* Daily Challenges from API */}
         {dailyChallenges.length > 0 && (
