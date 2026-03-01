@@ -177,7 +177,7 @@ eas build --platform ios --profile production
 
 ### API URL:
 ```
-https://nav-games-refine.preview.emergentagent.com
+https://saqr-ui-sync.preview.emergentagent.com
 ```
 
 ---

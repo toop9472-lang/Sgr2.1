@@ -209,8 +209,8 @@ eas submit -p android
 
 ## 📞 الدعم والمساعدة
 
-- **الموقع:** https://nav-games-refine.preview.emergentagent.com
-- **API Docs:** https://nav-games-refine.preview.emergentagent.com/docs
+- **الموقع:** https://saqr-ui-sync.preview.emergentagent.com
+- **API Docs:** https://saqr-ui-sync.preview.emergentagent.com/docs
 
 ---
 
