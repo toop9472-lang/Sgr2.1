@@ -24,7 +24,41 @@ Arabic (العربية)
 
 ---
 
-## LATEST UPDATE (March 2026) - Version 6.3.0
+## LATEST UPDATE (March 2026) - Version 6.4.0
+
+### تحديث 1 مارس 2026 - تحسينات الموبايل الشاملة
+
+#### 1. أيقونة اللغة الدائرية الجديدة:
+**ملف جديد:** `/app/mobile/src/components/LanguageSwitcher.js`
+- تصميم دائري احترافي مع علم الدولة
+- دعم 6 لغات: العربية، الإنجليزية، الفرنسية، التركية، الأردية، الهندية
+- حفظ اللغة في AsyncStorage
+- تكامل مع HomeScreen
+
+#### 2. تحديث المساعد الذكي (AI Chat):
+**الملف:** `/app/mobile/src/components/AIChatModal.js`
+- إضافة SYSTEM_CONTEXT شامل عن التطبيق
+- شرح نظام العملات (جواهر صقر + ألماس)
+- معلومات عن جميع الألعاب الـ 12
+- شرح ثروات صقر والتحديات اليومية
+- إجابات Offline للأسئلة الشائعة
+- اقتراحات سريعة للمستخدم
+
+#### 3. ربط التحديات اليومية:
+**الملفات:**
+- `/app/mobile/src/screens/HomeScreen.js` - إضافة onOpenDailyChallenge
+- `/app/mobile/App.js` - تمرير setShowDailyRewards
+
+#### 4. تحسين التحقق من الاتصال:
+**الملف:** `/app/mobile/src/services/api.js`
+- زيادة timeout إلى 15 ثانية
+- زيادة cache duration إلى 60 ثانية
+- تحسين التعامل مع الأخطاء
+- **⚠️ تنبيه مهم:** يجب تغيير API_URL قبل البناء للـ production
+
+---
+
+## PREVIOUS UPDATE (March 2026) - Version 6.3.0
 
 ### تحديث 1 مارس 2026 - إصلاحات الويب والترجمات
 
