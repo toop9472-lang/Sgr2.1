@@ -24,41 +24,40 @@ Arabic (العربية)
 
 ---
 
-## LATEST UPDATE (March 2026) - Version 6.4.0
+## LATEST UPDATE (March 2026) - Version 6.5.0
 
-### تحديث 1 مارس 2026 - تحسينات الموبايل الشاملة
+### تحديث 1 مارس 2026 - تحسين الألعاب الاحترافي
 
-#### 1. أيقونة اللغة الدائرية الجديدة:
-**ملف جديد:** `/app/mobile/src/components/LanguageSwitcher.js`
-- تصميم دائري احترافي مع علم الدولة
-- دعم 6 لغات: العربية، الإنجليزية، الفرنسية، التركية، الأردية، الهندية
-- حفظ اللغة في AsyncStorage
-- تكامل مع HomeScreen
+#### 1. خلفيات AI جديدة لجميع الألعاب:
+تم توليد رسومات احترافية بالذكاء الاصطناعي لكل لعبة:
+- **الشطرنج (ChessGame):** خلفية ملكية بألوان أزرق داكن وذهبي
+- **تكسير الطوب (BrickBreakerGame):** خلفية أركيد نيون مع تأثيرات فضائية
+- **الثعبان (SnakeGame):** خلفية غابة رقمية مع تأثيرات متوهجة
+- **الذاكرة (MemoryGame):** خلفية سحرية بنفسجية كونية
+- **تبديل الألوان (ColorSwitchGame):** خلفية ألوان قوس قزح متدفقة
+- **سباق الكلمات (WordRaceGame):** خلفية خط عربي أنيق
+- **سباق الرياضيات (MathRaceGame):** خلفية أرقام ومعادلات رقمية
+- **AI Quest:** خلفية شبكة عصبية مستقبلية
 
-#### 2. تحديث المساعد الذكي (AI Chat):
-**الملف:** `/app/mobile/src/components/AIChatModal.js`
-- إضافة SYSTEM_CONTEXT شامل عن التطبيق
-- شرح نظام العملات (جواهر صقر + ألماس)
-- معلومات عن جميع الألعاب الـ 12
-- شرح ثروات صقر والتحديات اليومية
-- إجابات Offline للأسئلة الشائعة
-- اقتراحات سريعة للمستخدم
+#### 2. دمج الأصوات والاهتزازات:
+**الملف:** `/app/mobile/src/utils/gameSounds.js`
+- أصوات للنقر والنجاح والفشل
+- اهتزازات متنوعة (خفيفة، متوسطة، ثقيلة)
+- أصوات خاصة بكل لعبة (شطرنج، ثعبان، ذاكرة، إلخ)
 
-#### 3. ربط التحديات اليومية:
-**الملفات:**
-- `/app/mobile/src/screens/HomeScreen.js` - إضافة onOpenDailyChallenge
-- `/app/mobile/App.js` - تمرير setShowDailyRewards
-
-#### 4. تحسين التحقق من الاتصال:
-**الملف:** `/app/mobile/src/services/api.js`
-- زيادة timeout إلى 15 ثانية
-- زيادة cache duration إلى 60 ثانية
-- تحسين التعامل مع الأخطاء
-- **⚠️ تنبيه مهم:** يجب تغيير API_URL قبل البناء للـ production
+#### 3. الملفات المحدثة:
+- `/app/mobile/src/screens/games/ChessGame.js` - ImageBackground + أصوات
+- `/app/mobile/src/screens/games/BrickBreakerGame.js` - ImageBackground + أصوات
+- `/app/mobile/src/screens/games/SnakeGame.js` - ImageBackground + أصوات
+- `/app/mobile/src/screens/games/MemoryGame.js` - ImageBackground + أصوات
+- `/app/mobile/src/screens/games/ColorSwitchGame.js` - ImageBackground + أصوات
+- `/app/mobile/src/screens/games/WordRaceGame.js` - ImageBackground + أصوات
+- `/app/mobile/src/screens/games/MathRaceGame.js` - ImageBackground + أصوات
+- `/app/mobile/src/screens/games/AIQuestGame.js` - ImageBackground + أصوات
 
 ---
 
-## PREVIOUS UPDATE (March 2026) - Version 6.3.0
+## PREVIOUS UPDATE (March 2026) - Version 6.4.0
 
 ### تحديث 1 مارس 2026 - إصلاحات الويب والترجمات
 
