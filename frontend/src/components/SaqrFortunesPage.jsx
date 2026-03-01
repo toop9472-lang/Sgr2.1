@@ -209,7 +209,7 @@ const AdWatchingModal = ({ visible, onComplete, onClose }) => {
             
             <div className="flex items-center justify-center gap-2 bg-blue-500/20 px-4 py-2 rounded-full mb-6">
               <Diamond className="w-5 h-5 text-blue-400" />
-              <span className="text-blue-400 font-semibold">من 1 إلى 100 ألماسة!</span>
+              <span className="text-blue-400 font-semibold">من 1 إلى 100 جوهرة!</span>
             </div>
 
             <button 
@@ -607,7 +607,7 @@ const SaqrFortunesPage = ({ user, onBack, onBalanceUpdate }) => {
           claimedChallenges: newClaimed,
         });
         
-        alert(`حصلت على ${challenge.reward} ألماسة!`);
+        alert(`حصلت على ${challenge.reward} جوهرة!`);
       }
     } catch (e) {
       console.error('Error claiming challenge:', e);
@@ -727,7 +727,7 @@ const SaqrFortunesPage = ({ user, onBack, onBalanceUpdate }) => {
           </div>
           <div className="flex-1 text-right">
             <h3 className="text-lg font-bold">شاهد إعلان وأدر العجلة!</h3>
-            <p className="text-white/70 text-sm">اربح من 1 إلى 100 ألماسة</p>
+            <p className="text-white/70 text-sm">اربح من 1 إلى 100 جوهرة</p>
           </div>
           <div className="bg-black/30 px-3 py-2 rounded-lg flex items-center gap-1">
             <Diamond className="w-4 h-4" />
