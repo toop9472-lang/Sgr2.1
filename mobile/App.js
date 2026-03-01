@@ -427,6 +427,7 @@ function AppContent() {
             onNavigateToChat={() => setCurrentPage('chat')}
             onNavigateToFortunes={() => setCurrentPage('fortunes')}
             onNavigateToFriends={() => setCurrentPage('friends')}
+            onOpenDailyChallenge={() => setShowDailyRewards(true)}
             onRefresh={initApp}
           />
         )}
