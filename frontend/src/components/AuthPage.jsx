@@ -160,146 +160,158 @@ const AuthPage = ({ onLogin, onGuestMode, onAdminLogin }) => {
 
   if (showEmailForm) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0f] p-4 relative overflow-hidden">
-        {/* Decorative Blue Circles */}
-        <div className="absolute top-[-200px] left-[-200px] w-[500px] h-[500px] rounded-full bg-[#3b82f6]/20 blur-3xl"></div>
-        <div className="absolute bottom-[-150px] right-[-150px] w-[400px] h-[400px] rounded-full bg-[#3b82f6]/15 blur-3xl"></div>
+      <div 
+        className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
+        style={{
+          backgroundImage: `url(${AUTH_BG_IMAGE})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80"></div>
         
         {/* Language Switcher */}
         <div className="fixed top-4 left-4 z-50">
-          <LanguageSwitcher className="!bg-[#1a1a2e] hover:!bg-[#252545] !border-white/10" />
+          <LanguageSwitcher className="!bg-black/50 hover:!bg-black/70 !border-white/10 backdrop-blur-sm" />
         </div>
 
-        <Card className="w-full max-w-md shadow-2xl border border-white/10 bg-[#111118]/80 backdrop-blur-xl rounded-2xl">
-          <CardHeader className="text-center pb-6 pt-8 relative">
-            <button
-              onClick={() => setShowEmailForm(false)}
-              className={`absolute top-4 ${isRTL ? 'right-4' : 'left-4'} text-gray-400 hover:text-white`}
-            >
-              {isRTL ? '←' : '→'}
-            </button>
-            <div className="mx-auto mb-4 w-20 h-20 rounded-full bg-[#0a0a0f] border-2 border-[#3b82f6]/30 flex items-center justify-center overflow-hidden">
+        <div className="relative z-10 w-full max-w-md">
+          {/* Back Button */}
+          <button
+            onClick={() => setShowEmailForm(false)}
+            className={`mb-6 text-white/80 hover:text-white flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+          >
+            <svg className={`w-5 h-5 ${isRTL ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span>{isRTL ? 'رجوع' : 'Back'}</span>
+          </button>
+          
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <div className="mx-auto mb-4 w-20 h-20 rounded-2xl bg-black/50 backdrop-blur-sm border border-white/20 flex items-center justify-center overflow-hidden shadow-lg shadow-blue-500/20">
               <img 
                 src="/logo_saqr.png" 
                 alt="صقر" 
                 className="w-16 h-16 object-contain"
               />
             </div>
-            <CardTitle className="text-2xl font-bold text-white">
+            <h1 className="text-3xl font-bold text-white drop-shadow-lg">
               {isRegister ? t('register') : t('login')}
-            </CardTitle>
-            <CardDescription className="text-gray-400">
+            </h1>
+            <p className="text-white/60 mt-2">
               {isRegister 
                 ? (isRTL ? 'أدخل بياناتك لإنشاء حساب' : 'Enter your details to create an account')
                 : (isRTL ? 'أدخل بريدك الإلكتروني وكلمة المرور' : 'Enter your email and password')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 pb-8 px-8">
-            <form onSubmit={handleEmailAuth} className="space-y-4">
-              {isRegister && (
-                <div>
-                  <Label htmlFor="name" className="text-gray-300">{t('name')}</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                    placeholder={isRTL ? 'اسمك الكامل' : 'Your full name'}
-                    className="mt-1 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
-                    dir={isRTL ? 'rtl' : 'ltr'}
-                    data-testid="auth-name-input"
-                  />
-                </div>
-              )}
+            </p>
+          </div>
+          
+          {/* Form */}
+          <form onSubmit={handleEmailAuth} className="space-y-4">
+            {isRegister && (
               <div>
-                <Label htmlFor="email" className="text-gray-300">{t('email')}</Label>
+                <Label htmlFor="name" className="text-white/80">{t('name')}</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  id="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  placeholder="your@email.com"
-                  className="mt-1 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
-                  dir="ltr"
-                  data-testid="auth-email-input"
+                  placeholder={isRTL ? 'اسمك الكامل' : 'Your full name'}
+                  className="mt-1 bg-black/40 border-white/20 text-white placeholder:text-white/40 backdrop-blur-sm h-12 rounded-xl"
+                  dir={isRTL ? 'rtl' : 'ltr'}
+                  data-testid="auth-name-input"
                 />
               </div>
-              <div>
-                <Label htmlFor="password" className="text-gray-300">{t('password')}</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  required
-                  placeholder="••••••••"
-                  className="mt-1 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
-                  minLength={6}
-                  data-testid="auth-password-input"
-                />
-              </div>
-              
-              {/* خيار تذكرني */}
-              {!isRegister && (
-                <div className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setRememberMe(!rememberMe)}
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                        rememberMe 
-                          ? 'bg-[#3b82f6] border-[#3b82f6]' 
-                          : 'bg-transparent border-white/30 hover:border-white/50'
-                      }`}
-                      data-testid="remember-me-checkbox"
-                    >
-                      {rememberMe && (
-                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </button>
-                    <label 
-                      className="text-gray-400 text-sm cursor-pointer select-none"
-                      onClick={() => setRememberMe(!rememberMe)}
-                    >
-                      {isRTL ? 'تذكرني' : 'Remember me'}
-                    </label>
-                  </div>
+            )}
+            <div>
+              <Label htmlFor="email" className="text-white/80">{t('email')}</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                required
+                placeholder="your@email.com"
+                className="mt-1 bg-black/40 border-white/20 text-white placeholder:text-white/40 backdrop-blur-sm h-12 rounded-xl"
+                dir="ltr"
+                data-testid="auth-email-input"
+              />
+            </div>
+            <div>
+              <Label htmlFor="password" className="text-white/80">{t('password')}</Label>
+              <Input
+                id="password"
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                required
+                placeholder="••••••••"
+                className="mt-1 bg-black/40 border-white/20 text-white placeholder:text-white/40 backdrop-blur-sm h-12 rounded-xl"
+                minLength={6}
+                data-testid="auth-password-input"
+              />
+            </div>
+            
+            {/* Remember Me */}
+            {!isRegister && (
+              <div className="flex items-center justify-between py-2">
+                <div className="flex items-center gap-3">
                   <button
                     type="button"
-                    onClick={() => navigate('/forgot-password')}
-                    className="text-[#60a5fa] hover:underline text-sm"
-                    data-testid="forgot-password-link"
+                    onClick={() => setRememberMe(!rememberMe)}
+                    className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                      rememberMe 
+                        ? 'bg-blue-500 border-blue-500' 
+                        : 'bg-transparent border-white/30 hover:border-white/50'
+                    }`}
+                    data-testid="remember-me-checkbox"
                   >
-                    {isRTL ? 'نسيت كلمة المرور؟' : 'Forgot password?'}
+                    {rememberMe && (
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
                   </button>
+                  <label 
+                    className="text-white/60 text-sm cursor-pointer select-none"
+                    onClick={() => setRememberMe(!rememberMe)}
+                  >
+                    {isRTL ? 'تذكرني' : 'Remember me'}
+                  </label>
                 </div>
-              )}
-              
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full h-12 bg-gradient-to-r from-[#3b82f6] to-[#6366f1] hover:from-[#2563eb] hover:to-[#4f46e5] text-white rounded-full font-medium"
-                data-testid="auth-submit-btn"
-              >
-                {isLoading ? t('loading') : (isRegister ? t('register') : t('login'))}
-              </Button>
-            </form>
+                <button
+                  type="button"
+                  onClick={() => navigate('/forgot-password')}
+                  className="text-blue-400 hover:underline text-sm"
+                  data-testid="forgot-password-link"
+                >
+                  {isRTL ? 'نسيت كلمة المرور؟' : 'Forgot password?'}
+                </button>
+              </div>
+            )}
             
-            <div className="text-center pt-2">
-              <button
-                type="button"
-                onClick={() => setIsRegister(!isRegister)}
-                className="text-[#60a5fa] hover:underline text-sm"
-              >
-                {isRegister ? t('haveAccount') : t('noAccount')}
-              </button>
-            </div>
-          </CardContent>
-        </Card>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-12 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-medium shadow-lg shadow-blue-500/30"
+              data-testid="auth-submit-btn"
+            >
+              {isLoading ? t('loading') : (isRegister ? t('register') : t('login'))}
+            </Button>
+          </form>
+          
+          <div className="text-center mt-6">
+            <button
+              type="button"
+              onClick={() => setIsRegister(!isRegister)}
+              className="text-blue-400 hover:underline text-sm"
+            >
+              {isRegister ? t('haveAccount') : t('noAccount')}
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
