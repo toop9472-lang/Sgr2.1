@@ -107,9 +107,10 @@ const HomeScreen = ({ user, onNavigateToAds, onNavigateToGames, onNavigateToChat
       }
     >
       <View style={styles.content}>
-        {/* Header - بدون شعار */}
+        {/* Header - مع أيقونة اللغة */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
+            <LanguageSwitcher style={styles.langSwitcher} />
             <View style={styles.welcomeContainer}>
               <Text style={styles.welcomeText}>أهلاً {userName}</Text>
               <Text style={styles.subText}>جاهز للتحدي؟</Text>
