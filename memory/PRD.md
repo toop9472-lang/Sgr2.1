@@ -26,7 +26,7 @@ Arabic (العربية)
 
 ## LATEST UPDATE (March 2026) - Version 6.6.0
 
-### تحديث 1 مارس 2026 - تحسين شامل للدردشة والإيموجي
+### تحديث 1 مارس 2026 - تحسين شامل للدردشة والإيموجي + متطلبات المتاجر
 
 #### 1. إيموجي صقر الخاصة بالتطبيق:
 تم إنشاء 8 إيموجي مميزة خاصة بالتطبيق من شخصية صقر:
@@ -57,6 +57,44 @@ Arabic (العربية)
 - نفس التحسينات مطبقة على `GlobalChatPage.jsx`
 - CSS animations مخصصة للتفاعلات
 - دعم كامل لإيموجي صقر
+
+---
+
+### تحديث متطلبات Apple App Store و Google Play (2026)
+
+#### متطلبات Apple:
+**ITMS-90725: iOS SDK Version Issue**
+- المشكلة: يجب البناء بـ iOS 26 SDK (Xcode 26) بدءاً من 28 أبريل 2026
+- الحل: تحديث Xcode إلى الإصدار 26 على Mac
+- تم إضافة: `privacyManifests` في `app.json`
+- تم إنشاء: `/app/mobile/ios/PrivacyInfo.xcprivacy`
+
+#### متطلبات Google Play:
+**1. Android 15 (SDK 35) Target** ✅
+```json
+"compileSdkVersion": 35,
+"targetSdkVersion": 35
+```
+
+**2. Edge-to-Edge Display** ✅
+- تم إضافة plugin `react-native-edge-to-edge`
+- تم تكوين `parentTheme: "EdgeToEdge"`
+
+**3. Deprecated APIs Fix** ✅
+- تم التعامل مع APIs المتوقفة عبر `react-native-edge-to-edge`
+
+**4. Screen Orientation Restrictions** ✅
+- تم تغيير `orientation` من `portrait` إلى `default`
+- تم إضافة دعم جميع الاتجاهات لـ iPad
+
+#### الملفات المحدثة:
+- `/app/mobile/app.json` - الإصدار 6.0.0
+- `/app/mobile/ios/PrivacyInfo.xcprivacy` - Privacy Manifest جديد
+- `/app/mobile/STORE_REQUIREMENTS_2026.md` - دليل شامل
+
+#### ملاحظات مهمة:
+- **لـ iOS 26 SDK**: يجب استخدام Xcode 26 على Mac (غير متوفر في هذه البيئة)
+- **للاختبار**: استخدم `eas build --platform ios --profile preview`
 
 ---
 
