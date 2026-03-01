@@ -10,9 +10,14 @@ import {
   Animated,
   TextInput,
   ScrollView,
+  ImageBackground,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import gameSounds from '../../utils/gameSounds';
+
+// AI-Generated Professional Background
+const GAME_BG = 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/e25830e67b07b9abd00a45cfdba92ba9699cedf84dd86dc00ee05ea23d562afc.png';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const isTablet = screenWidth > 600;
