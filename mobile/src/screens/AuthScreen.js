@@ -625,16 +625,26 @@ const AuthScreen = ({ onLogin }) => {
   // ==================== MAIN SCREEN ====================
   if (mode === 'main') {
     return (
-      <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
+      <ImageBackground 
+        source={{ uri: AUTH_BG_IMAGE }} 
+        style={styles.container}
+        resizeMode="cover"
+      >
+        <LinearGradient 
+          colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)', 'rgba(0,0,0,0.9)']} 
+          style={styles.container}
+        >
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           <View style={styles.content}>
-            {/* Logo */}
+            {/* Logo with Glow Effect */}
             <View style={styles.logoContainer}>
-              <Image 
-                source={require('../../assets/logo_saqr.png')} 
-                style={styles.logoImage}
-                resizeMode="contain"
-              />
+              <View style={styles.logoGlow}>
+                <Image 
+                  source={require('../../assets/logo_saqr.png')} 
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
+              </View>
             </View>
             <Text style={styles.appName}>صقر</Text>
             <Text style={styles.tagline}>أكمل التحديات واكسب المكافآت</Text>
