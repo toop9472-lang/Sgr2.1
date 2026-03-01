@@ -249,24 +249,30 @@ const FriendsPage = ({ user, onBack, onOpenMessages }) => {
   };
 
   const tabs = [
-    { id: 'friends', label: 'أصدقائي', icon: Users },
-    { id: 'requests', label: 'الطلبات', icon: Mail, badge: requests.incoming.length },
-    { id: 'search', label: 'بحث', icon: Search },
+    { id: 'friends', label: isRTL ? 'أصدقائي' : 'My Friends', icon: Users },
+    { id: 'requests', label: isRTL ? 'الطلبات' : 'Requests', icon: Mail, badge: requests.incoming.length },
+    { id: 'search', label: isRTL ? 'بحث' : 'Search', icon: Search },
   ];
 
+  // Theme classes
+  const bgClass = isDark ? 'bg-gradient-to-b from-[#0a0a0f] via-[#1a1a2e] to-[#0a0a0f]' : 'bg-gradient-to-b from-gray-50 to-gray-100';
+  const headerBgClass = isDark ? 'bg-[#0a0a0f]/95' : 'bg-white/95';
+  const textClass = isDark ? 'text-white' : 'text-gray-900';
+  const cardClass = isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200';
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a0a0f] via-[#1a1a2e] to-[#0a0a0f]">
+    <div className={`min-h-screen ${bgClass}`}>
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-[#0a0a0f]/95 backdrop-blur-lg border-b border-white/10">
+      <div className={`sticky top-0 z-40 ${headerBgClass} backdrop-blur-lg border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
           <button 
             onClick={onBack}
-            className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+            className={`w-10 h-10 rounded-full ${isDark ? 'bg-white/10 hover:bg-white/20' : 'bg-gray-100 hover:bg-gray-200'} flex items-center justify-center transition-colors`}
           >
-            <ArrowLeft className="w-5 h-5 text-white" />
+            <ArrowLeft className={`w-5 h-5 ${textClass}`} />
           </button>
           
-          <span className="text-lg font-bold text-white">الأصدقاء</span>
+          <span className={`text-lg font-bold ${textClass}`}>{isRTL ? 'الأصدقاء' : 'Friends'}</span>
 
           <div className="flex items-center gap-2 bg-green-500/20 px-3 py-2 rounded-full">
             <Users className="w-4 h-4 text-green-400" />
