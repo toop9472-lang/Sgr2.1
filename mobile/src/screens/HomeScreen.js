@@ -495,14 +495,35 @@ const styles = StyleSheet.create({
 
   // Featured Card
   featuredCard: { 
-    borderRadius: 16, 
-    overflow: 'hidden' 
+    borderRadius: 20, 
+    overflow: 'hidden',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   featuredGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 20,
     gap: 16,
+  },
+  featuredImageBg: {
+    height: 120,
+  },
+  featuredImageStyle: {
+    borderRadius: 20,
+  },
+  featuredOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    padding: 16,
+  },
+  featuredContent: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
   },
   featuredIcon: {
     width: 56,
@@ -520,10 +541,85 @@ const styles = StyleSheet.create({
     fontWeight: 'bold', 
     color: '#FFF' 
   },
+  featuredNameNew: { 
+    fontSize: 18, 
+    fontWeight: '800', 
+    color: '#FFF',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+    marginBottom: 4,
+  },
   featuredDesc: { 
     fontSize: 13, 
     color: 'rgba(255,255,255,0.8)', 
     marginTop: 4 
+  },
+  featuredDescNew: { 
+    fontSize: 12, 
+    color: 'rgba(255,255,255,0.9)',
+  },
+  playIconBtn: {
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    padding: 12,
+    borderRadius: 14,
+  },
+
+  // Balance Card - New
+  balanceCard: {
+    marginBottom: 20,
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 8,
+    shadowColor: '#fbbf24',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  balanceBanner: {
+    height: 130,
+  },
+  balanceBannerImage: {
+    borderRadius: 20,
+  },
+  balanceOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  balanceTitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
+    marginBottom: 12,
+    fontWeight: '600',
+  },
+  balanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 24,
+  },
+  balanceItem: {
+    alignItems: 'center',
+  },
+  balanceValue: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#FFF',
+    marginTop: 6,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  balanceLabel: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 2,
+  },
+  balanceDivider: {
+    width: 1,
+    height: 50,
+    backgroundColor: 'rgba(255,255,255,0.3)',
   },
 
   // Quick Games Grid
