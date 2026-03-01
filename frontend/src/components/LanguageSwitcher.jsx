@@ -1,10 +1,10 @@
 /**
- * Language Switcher Component
- * Dropdown to select from all available languages
+ * Language Switcher Component - Circular Design (مثل الموبايل)
+ * أيقونة دائرية لتغيير اللغة مع قائمة منسدلة
  */
 import React, { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '../i18n/LanguageContext';
-import { ChevronDown } from 'lucide-react';
+import { Globe, Check } from 'lucide-react';
 
 const languages = [
   { code: 'ar', name: 'العربية', flag: '🇸🇦' },
@@ -39,36 +39,70 @@ const LanguageSwitcher = ({ className = '' }) => {
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
+      {/* Circular Button - مثل الموبايل */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 transition-all"
+        className="w-11 h-11 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-sm border-2 border-white/20 flex items-center justify-center transition-all shadow-lg hover:scale-105"
         data-testid="language-switcher"
       >
-        <span className="text-lg">{currentLang.flag}</span>
-        <span className="text-sm font-medium text-white">{currentLang.name}</span>
-        <ChevronDown className={`w-4 h-4 text-white transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <span className="text-xl">{currentLang.flag}</span>
       </button>
 
+      {/* Modal/Dropdown - تصميم مطابق للموبايل */}
       {isOpen && (
-        <div className="absolute top-full mt-2 left-0 right-0 min-w-[160px] bg-[#1a1a2e] border border-white/20 rounded-xl shadow-xl overflow-hidden z-50">
-          {languages.map((lang) => (
-            <button
-              key={lang.code}
-              onClick={() => handleSelectLanguage(lang.code)}
-              className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors ${
-                language === lang.code ? 'bg-blue-500/20 text-blue-400' : 'text-white'
-              }`}
-              data-testid={`lang-option-${lang.code}`}
-            >
-              <span className="text-lg">{lang.flag}</span>
-              <span className="text-sm font-medium">{lang.name}</span>
-              {language === lang.code && (
-                <span className="ml-auto text-blue-400">✓</span>
-              )}
-            </button>
-          ))}
-        </div>
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/50 z-40"
+            onClick={() => setIsOpen(false)}
+          />
+          
+          {/* Modal Content */}
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[340px] bg-[#1a1a2e] border border-white/10 rounded-3xl shadow-2xl z-50 p-5 animate-scaleIn">
+            {/* Header */}
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <Globe className="w-6 h-6 text-blue-400" />
+              <span className="text-white font-bold text-lg">اختر اللغة</span>
+            </div>
+
+            {/* Languages Grid - مثل الموبايل */}
+            <div className="grid grid-cols-2 gap-3">
+              {languages.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => handleSelectLanguage(lang.code)}
+                  className={`flex items-center gap-3 px-4 py-3.5 rounded-xl border transition-all ${
+                    language === lang.code 
+                      ? 'bg-blue-500/20 border-blue-500/50' 
+                      : 'bg-white/5 border-white/10 hover:bg-white/10'
+                  }`}
+                  data-testid={`lang-option-${lang.code}`}
+                >
+                  <span className="text-2xl">{lang.flag}</span>
+                  <span className={`text-sm font-semibold flex-1 text-left ${
+                    language === lang.code ? 'text-blue-400' : 'text-white/70'
+                  }`}>
+                    {lang.name}
+                  </span>
+                  {language === lang.code && (
+                    <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                      <Check className="w-3 h-3 text-white" />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
       )}
+      
+      <style jsx>{`
+        @keyframes scaleIn {
+          from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+          to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+        .animate-scaleIn { animation: scaleIn 0.2s ease-out; }
+      `}</style>
     </div>
   );
 };
