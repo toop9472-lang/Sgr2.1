@@ -70,7 +70,7 @@ const MessageContent = ({ text }) => {
               key={part.key}
               src={part.url}
               alt="emoji"
-              className="inline-block w-7 h-7 mx-0.5"
+              className="inline-block w-12 h-12 mx-1"
             />
           );
         }
