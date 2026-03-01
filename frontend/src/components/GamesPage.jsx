@@ -613,8 +613,14 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
   // Find user rank
   const userRank = leaderboard.findIndex(l => l.user_id === user?.id);
 
+  // Theme classes
+  const bgClass = isDark ? 'bg-[#0a0a0f]' : 'bg-gray-50';
+  const textClass = isDark ? 'text-white' : 'text-gray-900';
+  const cardClass = isDark ? 'bg-white/5' : 'bg-white shadow-sm';
+  const mutedClass = isDark ? 'text-gray-400' : 'text-gray-600';
+
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white pb-24" dir="rtl" data-testid="games-page">
+    <div className={`min-h-screen ${bgClass} ${textClass} pb-24`} dir={isRTL ? 'rtl' : 'ltr'} data-testid="games-page">
       {/* Guest Restriction Modal */}
       {showGuestModal && (
         <GuestRestrictionModal 
