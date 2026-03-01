@@ -663,8 +663,8 @@ const ChessGame = ({ mode, onComplete, onClose }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <LinearGradient colors={['#1a1a2e', '#16213e', '#0f0f23']} style={styles.gradient}>
+    <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
+      <View style={styles.overlay}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
