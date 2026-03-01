@@ -33,65 +33,86 @@ import SaqrFortunesScreen from './SaqrFortunesScreen';
 const { width, height } = Dimensions.get('window');
 
 // ==================== GAME CARD COMPONENT - PROFESSIONAL DESIGN ====================
-const GameCard = ({ game, onPress, pulseAnim, gameCost }) => (
-  <Animated.View style={[styles.gameCardWrapper, { transform: [{ scale: pulseAnim }] }]}>
-    <TouchableOpacity style={styles.gameCard} onPress={onPress} activeOpacity={0.85}>
-      <LinearGradient colors={game.colors} style={styles.gameCardGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-        {/* Badge */}
+const GameCard = ({ game, onPress, pulseAnim, gameCost }) => {
+  const [showInfo, setShowInfo] = useState(false);
+  
+  const handlePressIn = () => setShowInfo(true);
+  const handlePressOut = () => setShowInfo(false);
+  
+  return (
+    <Animated.View style={[styles.gameCardWrapper, { transform: [{ scale: pulseAnim }] }]}>
+      <TouchableOpacity 
+        style={styles.gameCard} 
+        onPress={onPress} 
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={0.95}
+      >
+        {/* Background Image */}
+        {game.image ? (
+          <Image 
+            source={{ uri: game.image }} 
+            style={styles.gameCardImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <LinearGradient 
+            colors={game.colors} 
+            style={styles.gameCardImage} 
+            start={{ x: 0, y: 0 }} 
+            end={{ x: 1, y: 1 }}
+          >
+            <Ionicons name={game.icon} size={60} color="rgba(255,255,255,0.3)" />
+          </LinearGradient>
+        )}
+        
+        {/* Dark Overlay */}
+        <View style={[styles.gameCardOverlay, showInfo && styles.gameCardOverlayActive]} />
+        
+        {/* Badge - Always visible */}
         {game.badge ? (
-          <View style={styles.gameBadge}>
-            <Text style={styles.gameBadgeText}>{game.badge}</Text>
+          <View style={styles.gameBadgeNew}>
+            <Text style={styles.gameBadgeTextNew}>{game.badge}</Text>
           </View>
         ) : null}
         
-        {/* Game Image */}
-        <View style={styles.gameImageContainer}>
-          {game.image ? (
-            <Image 
-              source={{ uri: game.image }} 
-              style={styles.gameImage}
-              resizeMode="cover"
-            />
-          ) : (
-            <View style={styles.gameIconBg}>
-              <Ionicons name={game.icon} size={36} color="#FFF" />
-            </View>
-          )}
-        </View>
-        
-        {/* Game Info */}
-        <Text style={styles.gameName}>{game.name}</Text>
-        <Text style={styles.gameDesc}>{game.description}</Text>
-        
-        {/* Category Tag */}
-        <View style={styles.categoryTag}>
-          <Text style={styles.categoryText}>{game.category}</Text>
-        </View>
-        
-        {/* Footer */}
-        <View style={styles.gameFooter}>
-          <View style={styles.pointsBadge}>
-            <Ionicons name="star" size={14} color="#fbbf24" />
-            <Text style={styles.pointsText}>+{game.maxPoints}</Text>
+        {/* Online indicator - Always visible */}
+        {game.online && (
+          <View style={styles.onlineIndicator}>
+            <View style={styles.onlineDotNew} />
           </View>
-          {game.online && (
-            <View style={styles.onlineBadge}>
-              <View style={styles.onlineDot} />
-              <Ionicons name="globe" size={12} color="#60a5fa" />
-              <Text style={styles.onlineText}>أونلاين</Text>
+        )}
+        
+        {/* Game Info - Shows on press */}
+        {showInfo && (
+          <View style={styles.gameInfoOverlay}>
+            <Text style={styles.gameNameNew}>{game.name}</Text>
+            <Text style={styles.gameDescNew}>{game.description}</Text>
+            <View style={styles.gameTagsRow}>
+              <View style={styles.pointsTagNew}>
+                <Ionicons name="star" size={12} color="#fbbf24" />
+                <Text style={styles.pointsTextNew}>+{game.maxPoints}</Text>
+              </View>
+              <View style={styles.categoryTagNew}>
+                <Text style={styles.categoryTextNew}>{game.category}</Text>
+              </View>
             </View>
-          )}
-          {!game.online && (
-            <View style={styles.freeBadge}>
-              <Ionicons name="game-controller" size={12} color="#10b981" />
-              <Text style={styles.freeText}>فردي</Text>
-            </View>
-          )}
-        </View>
-      </LinearGradient>
-    </TouchableOpacity>
-  </Animated.View>
-);
+          </View>
+        )}
+        
+        {/* Bottom gradient for name visibility when not pressed */}
+        {!showInfo && (
+          <LinearGradient 
+            colors={['transparent', 'rgba(0,0,0,0.8)']} 
+            style={styles.gameCardBottomGradient}
+          >
+            <Text style={styles.gameNameSmall}>{game.name}</Text>
+          </LinearGradient>
+        )}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
 
 // ==================== MODE SELECTOR ====================
 const ModeSelector = ({ onSelectMode, onClose, gameName }) => (
