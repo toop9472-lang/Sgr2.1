@@ -18,7 +18,13 @@ import {
   TriviaGame, 
   SpeedMathGame, 
   WordChainGame, 
-  PuzzleGame 
+  PuzzleGame,
+  MemoryGame,
+  SnakeGame,
+  BrickBreakerGame,
+  ColorSwitchGame,
+  AIQuestGame,
+  RiddlesGame
 } from './games';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
