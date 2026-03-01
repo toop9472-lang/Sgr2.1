@@ -402,7 +402,31 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
     setBalance(prev => ({ ...prev, diamonds: prev.diamonds - amount }));
   };
 
-  const handleGameComplete = async (points) => {
+  const submitScoreToLeaderboard = async (gameId, score) => {
+    try {
+      const token = localStorage.getItem('user_token');
+      await fetch(`${API_URL}/api/leaderboards/submit-score`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          game_id: gameId, 
+          score: score 
+        }),
+      });
+    } catch (e) {
+      console.log('Error submitting score:', e);
+    }
+  };
+
+  const handleGameComplete = async (points, result) => {
+    // Submit score to leaderboard
+    if (points > 0) {
+      await submitScoreToLeaderboard(activeGame, points);
+    }
+    
     try {
       await fetch(`${API_URL}/api/economy/game-result`, {
         method: 'POST',
@@ -412,7 +436,7 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
           user_id: user?.id, 
           game_id: activeGame, 
           is_online: gameMode === 'online', 
-          won: true,
+          won: result === 'win',
           opponent_diamonds: 0
         }),
       });
