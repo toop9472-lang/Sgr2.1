@@ -294,7 +294,11 @@ const HomeScreen = ({ user, onNavigateToAds, onNavigateToGames, onNavigateToChat
         </View>
 
         {/* Daily Challenge Banner - New Image Design */}
-        <TouchableOpacity activeOpacity={0.9} style={styles.challengeBannerNew}>
+        <TouchableOpacity 
+          activeOpacity={0.9} 
+          style={styles.challengeBannerNew}
+          onPress={onOpenDailyChallenge}
+        >
           <ImageBackground 
             source={{ uri: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/9571396ba276f9f9cf70ce0622c4303850d05054256c99581ef235eec62d9760.png' }}
             style={styles.challengeImageBg}
