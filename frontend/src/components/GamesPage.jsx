@@ -737,16 +737,41 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
               <button
                 key={game.id}
                 onClick={() => handleGameSelect(game.id)}
-                className={`rounded-2xl overflow-hidden transition-transform hover:scale-[1.02] active:scale-[0.98] relative ${
+                className={`rounded-2xl overflow-hidden transition-all duration-300 relative h-44 group ${
                   isGuest ? 'opacity-80' : ''
                 }`}
-                style={{ background: `linear-gradient(135deg, ${game.colors[0]}, ${game.colors[1]})` }}
                 data-testid={`game-card-${game.id}`}
               >
-                {/* Badge */}
+                {/* Background Image */}
+                {game.image ? (
+                  <img 
+                    src={game.image} 
+                    alt={game.name}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                ) : (
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center"
+                    style={{ background: `linear-gradient(135deg, ${game.colors[0]}, ${game.colors[1]})` }}
+                  >
+                    <GameIcon size={60} className="text-white/30" />
+                  </div>
+                )}
+                
+                {/* Dark Overlay - becomes darker on hover */}
+                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/60 transition-all duration-300" />
+                
+                {/* Badge - Always visible */}
                 {game.badge && (
-                  <div className="absolute top-2 left-2 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full text-[10px] font-bold">
+                  <div className="absolute top-2 left-2 bg-amber-500 px-2.5 py-1 rounded-lg text-[10px] font-bold text-black z-20">
                     {game.badge}
+                  </div>
+                )}
+                
+                {/* Online indicator - Always visible */}
+                {game.online && (
+                  <div className="absolute top-2 right-2 z-20">
+                    <div className="w-3 h-3 bg-green-500 rounded-full border-2 border-white animate-pulse" />
                   </div>
                 )}
                 
@@ -756,52 +781,25 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
                     <Lock size={32} className="text-white/80" />
                   </div>
                 )}
-                <div className="p-4 text-center">
-                  {/* Game Image */}
-                  <div className="relative w-20 h-20 mx-auto mb-3">
-                    {game.image ? (
-                      <img 
-                        src={game.image} 
-                        alt={game.name}
-                        className="w-full h-full rounded-2xl object-cover border-2 border-white/20"
-                      />
-                    ) : (
-                      <>
-                        <div className="absolute inset-0 bg-white/20 rounded-full blur-lg" />
-                        <div className="relative w-20 h-20 rounded-full bg-white/20 flex items-center justify-center">
-                          <GameIcon size={32} />
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  
-                  <div className="font-bold text-base">{game.name}</div>
-                  <div className="text-white/70 text-xs mb-2 line-clamp-1">{game.description}</div>
-                  
-                  {/* Category Tag */}
-                  <div className="inline-block bg-black/20 px-2 py-0.5 rounded-full text-[10px] mb-2">
-                    {game.category}
-                  </div>
-                  
-                  {/* Footer */}
-                  <div className="flex items-center justify-center gap-2 mt-1">
-                    <div className="inline-flex items-center gap-1 bg-black/30 px-2 py-0.5 rounded-full text-xs">
-                      <Star size={10} className="text-yellow-400" />
+                
+                {/* Game Info - Shows on hover */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                  <div className="font-bold text-lg text-white mb-1 drop-shadow-lg">{game.name}</div>
+                  <div className="text-white/90 text-xs mb-3 text-center">{game.description}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="inline-flex items-center gap-1 bg-black/50 px-2.5 py-1 rounded-full text-xs">
+                      <Star size={12} className="text-yellow-400" />
                       <span>+{game.maxPoints}</span>
                     </div>
-                    {game.online ? (
-                      <div className="inline-flex items-center gap-1 bg-blue-500/40 px-2 py-0.5 rounded-full text-xs">
-                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-                        <Wifi size={10} />
-                        <span>اونلاين</span>
-                      </div>
-                    ) : (
-                      <div className="inline-flex items-center gap-1 bg-green-500/30 px-2 py-0.5 rounded-full text-xs">
-                        <Gamepad2 size={10} />
-                        <span>فردي</span>
-                      </div>
-                    )}
+                    <div className="bg-white/20 px-2.5 py-1 rounded-full text-[10px] font-semibold">
+                      {game.category}
+                    </div>
                   </div>
+                </div>
+                
+                {/* Bottom gradient with name - visible when not hovering */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 group-hover:opacity-0 transition-opacity duration-300">
+                  <div className="font-bold text-sm text-white text-center drop-shadow-md">{game.name}</div>
                 </div>
               </button>
             );
