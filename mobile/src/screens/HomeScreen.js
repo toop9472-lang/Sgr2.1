@@ -225,28 +225,69 @@ const HomeScreen = ({ user, onNavigateToAds, onNavigateToGames, onNavigateToChat
           </ImageBackground>
         </TouchableOpacity>
 
-        {/* Player Stats */}
+        {/* Player Stats - New Professional Design */}
         <View style={styles.statsSection}>
           <View style={styles.sectionHeader}>
             <Ionicons name="stats-chart" size={18} color="#60a5fa" />
             <Text style={styles.sectionTitle}>إحصائياتك</Text>
           </View>
-          <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
-              <Ionicons name="game-controller-outline" size={22} color="#3b82f6" />
-              <Text style={styles.statValue}>{gamesPlayed}</Text>
-              <Text style={styles.statLabel}>مباراة</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Ionicons name="trophy-outline" size={22} color="#fbbf24" />
-              <Text style={styles.statValue}>{gamesWon}</Text>
-              <Text style={styles.statLabel}>انتصار</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Ionicons name="star-outline" size={22} color="#10b981" />
-              <Text style={styles.statValue}>{userPoints}</Text>
-              <Text style={styles.statLabel}>نقاط صقر</Text>
-            </View>
+          
+          <View style={styles.statsCardNew}>
+            <LinearGradient 
+              colors={['#1a1a2e', '#16213e']} 
+              style={styles.statsGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              {/* Stats Row */}
+              <View style={styles.statsRowNew}>
+                {/* Games Played */}
+                <View style={styles.statItemNew}>
+                  <View style={[styles.statIconBg, { backgroundColor: 'rgba(59, 130, 246, 0.2)' }]}>
+                    <Ionicons name="game-controller" size={20} color="#3b82f6" />
+                  </View>
+                  <Text style={styles.statValueNew}>{gamesPlayed}</Text>
+                  <Text style={styles.statLabelNew}>مباراة لُعبت</Text>
+                </View>
+                
+                {/* Divider */}
+                <View style={styles.statDivider} />
+                
+                {/* Wins */}
+                <View style={styles.statItemNew}>
+                  <View style={[styles.statIconBg, { backgroundColor: 'rgba(251, 191, 36, 0.2)' }]}>
+                    <Ionicons name="trophy" size={20} color="#fbbf24" />
+                  </View>
+                  <Text style={styles.statValueNew}>{gamesWon}</Text>
+                  <Text style={styles.statLabelNew}>انتصار</Text>
+                </View>
+                
+                {/* Divider */}
+                <View style={styles.statDivider} />
+                
+                {/* Win Rate */}
+                <View style={styles.statItemNew}>
+                  <View style={[styles.statIconBg, { backgroundColor: 'rgba(16, 185, 129, 0.2)' }]}>
+                    <Ionicons name="trending-up" size={20} color="#10b981" />
+                  </View>
+                  <Text style={styles.statValueNew}>
+                    {gamesPlayed > 0 ? Math.round((gamesWon / gamesPlayed) * 100) : 0}%
+                  </Text>
+                  <Text style={styles.statLabelNew}>نسبة الفوز</Text>
+                </View>
+              </View>
+              
+              {/* Progress Bar */}
+              <View style={styles.progressSection}>
+                <View style={styles.progressHeader}>
+                  <Text style={styles.progressLabel}>تقدمك نحو المستوى التالي</Text>
+                  <Text style={styles.progressValue}>{Math.min(userPoints % 100, 100)}/100</Text>
+                </View>
+                <View style={styles.progressBarBg}>
+                  <View style={[styles.progressBarFill, { width: `${Math.min(userPoints % 100, 100)}%` }]} />
+                </View>
+              </View>
+            </LinearGradient>
           </View>
         </View>
 
