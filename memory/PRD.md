@@ -24,7 +24,54 @@ Arabic (العربية)
 
 ---
 
-## LATEST UPDATE (March 2026) - Version 7.0.0
+## LATEST UPDATE (March 2026) - Version 7.1.0
+
+### تحديث 1 مارس 2026 - إضافة 6 ألعاب جديدة للويب
+
+#### الألعاب الجديدة المضافة للويب:
+1. **لعبة الذاكرة (Memory Game)** - `/frontend/src/components/games/MemoryGame.jsx`
+   - شبكة 4×4 من البطاقات
+   - نظام combo للإجابات المتتالية
+   - مؤقت ونقاط
+
+2. **لعبة الثعبان (Snake Game)** - `/frontend/src/components/games/SnakeGame.jsx`
+   - تحكم بالأسهم
+   - سرعة متزايدة
+   - إيقاف مؤقت
+
+3. **تكسير الطوب (Brick Breaker)** - `/frontend/src/components/games/BrickBreakerGame.jsx`
+   - 5 صفوف من الطوب الملون
+   - 3 حياة
+   - تحكم بالماوس
+
+4. **تبديل الألوان (Color Switch)** - `/frontend/src/components/games/ColorSwitchGame.jsx`
+   - أسئلة عن لون النص أو اسم اللون
+   - مؤقت 30 ثانية
+   - نظام streak
+
+5. **AI Quest** - `/frontend/src/components/games/AIQuestGame.jsx`
+   - 15 سؤال عن الذكاء الاصطناعي باللغة العربية
+   - مؤقت 15 ثانية لكل سؤال
+   - بونص للإجابات المتتالية
+
+6. **الألغاز (Riddles)** - `/frontend/src/components/games/RiddlesGame.jsx`
+   - 15 لغز عربي
+   - نظام تلميحات (يكلف 2 ألماس)
+   - 10 ألغاز لكل جولة
+
+#### تم تحديث الملفات:
+- `frontend/src/components/games/index.js` - إضافة exports للألعاب الجديدة
+- `frontend/src/components/GamesPage.jsx` - إضافة imports و switch cases
+
+#### حالة الاختبار:
+- ✅ جميع الألعاب تم اختبارها ونجحت (100%)
+- ✅ تسجيل الدخول يعمل
+- ✅ التنقل لصفحة الألعاب يعمل
+- ✅ data-testid attributes موجودة لكل لعبة
+
+---
+
+## PREVIOUS UPDATE (March 2026) - Version 7.0.0
 
 ### تحديث 1 مارس 2026 - نظام الدعوات والإنجازات الكامل
 
