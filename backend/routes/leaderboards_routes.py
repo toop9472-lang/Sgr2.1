@@ -79,8 +79,8 @@ async def submit_game_score(
     if data.game_id not in GAMES:
         raise HTTPException(status_code=400, detail="لعبة غير معروفة")
     
-    # Get user info
-    user = await db.users.find_one({"id": user_id})
+    # Get user info - support both 'id' and 'user_id' fields
+    user = await db.users.find_one({"$or": [{"id": user_id}, {"user_id": user_id}]})
     if not user:
         raise HTTPException(status_code=404, detail="مستخدم غير موجود")
     
