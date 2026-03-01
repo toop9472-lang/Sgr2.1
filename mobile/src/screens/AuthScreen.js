@@ -726,7 +726,8 @@ const AuthScreen = ({ onLogin }) => {
             </Text>
           </View>
         </ScrollView>
-      </LinearGradient>
+        </LinearGradient>
+      </ImageBackground>
     );
   }
 
