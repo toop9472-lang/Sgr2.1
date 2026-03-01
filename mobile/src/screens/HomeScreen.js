@@ -703,10 +703,87 @@ const styles = StyleSheet.create({
     textAlign: 'center' 
   },
 
-  // Stats Section
+  // Stats Section - New Professional Design
   statsSection: { 
     marginBottom: 24 
   },
+  statsCardNew: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 6,
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+  },
+  statsGradient: {
+    padding: 20,
+  },
+  statsRowNew: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  statItemNew: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statIconBg: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  statValueNew: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#FFF',
+  },
+  statLabelNew: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 4,
+  },
+  statDivider: {
+    width: 1,
+    height: 50,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  progressSection: {
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderRadius: 12,
+    padding: 12,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  progressLabel: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+  },
+  progressValue: {
+    fontSize: 12,
+    color: '#60a5fa',
+    fontWeight: '600',
+  },
+  progressBarBg: {
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#60a5fa',
+    borderRadius: 3,
+  },
+  // Old stats styles kept for compatibility
   statsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -730,7 +807,52 @@ const styles = StyleSheet.create({
     marginTop: 4 
   },
 
-  // Challenge Banner
+  // Challenge Banner - New Image Design
+  challengeBannerNew: { 
+    marginBottom: 16, 
+    borderRadius: 20, 
+    overflow: 'hidden',
+    elevation: 6,
+    shadowColor: '#f59e0b',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  challengeImageBg: {
+    height: 100,
+  },
+  challengeImageStyle: {
+    borderRadius: 20,
+  },
+  challengeOverlayNew: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    padding: 16,
+  },
+  challengeContentNew: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+  },
+  challengeTitleNew: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#FFF',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  challengeDescNew: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.9)',
+    marginTop: 2,
+  },
+  challengeBtn: {
+    backgroundColor: '#f59e0b',
+    padding: 12,
+    borderRadius: 14,
+  },
+  // Old challenge styles
   challengeBanner: { 
     marginBottom: 24, 
     borderRadius: 16, 
