@@ -502,6 +502,24 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
       case 'wordchain':
         gameComponent = <WordChainGame {...gameProps} />;
         break;
+      case 'memory':
+        gameComponent = <MemoryGame {...gameProps} />;
+        break;
+      case 'snake':
+        gameComponent = <SnakeGame {...gameProps} />;
+        break;
+      case 'brickbreaker':
+        gameComponent = <BrickBreakerGame {...gameProps} />;
+        break;
+      case 'colorswitch':
+        gameComponent = <ColorSwitchGame {...gameProps} />;
+        break;
+      case 'aiquest':
+        gameComponent = <AIQuestGame {...gameProps} />;
+        break;
+      case 'riddles':
+        gameComponent = <RiddlesGame {...gameProps} />;
+        break;
       default:
         return null;
     }
