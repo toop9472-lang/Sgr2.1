@@ -757,12 +757,22 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
                   </div>
                 )}
                 <div className="p-4 text-center">
-                  {/* Icon with glow */}
-                  <div className="relative w-14 h-14 mx-auto mb-3">
-                    <div className="absolute inset-0 bg-white/20 rounded-full blur-lg" />
-                    <div className="relative w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
-                      <GameIcon size={28} />
-                    </div>
+                  {/* Game Image */}
+                  <div className="relative w-20 h-20 mx-auto mb-3">
+                    {game.image ? (
+                      <img 
+                        src={game.image} 
+                        alt={game.name}
+                        className="w-full h-full rounded-2xl object-cover border-2 border-white/20"
+                      />
+                    ) : (
+                      <>
+                        <div className="absolute inset-0 bg-white/20 rounded-full blur-lg" />
+                        <div className="relative w-20 h-20 rounded-full bg-white/20 flex items-center justify-center">
+                          <GameIcon size={32} />
+                        </div>
+                      </>
+                    )}
                   </div>
                   
                   <div className="font-bold text-base">{game.name}</div>
