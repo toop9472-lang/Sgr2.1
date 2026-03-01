@@ -5,12 +5,14 @@ import {
   Clock, Star, Diamond, Medal, Gamepad2, 
   Users, Cpu, X, Wifi, Crown, Lock,
   Calculator, Type, Apple, CreditCard, MessageCircle,
-  Sparkles, Lightbulb, Palette, Zap
+  Sparkles, Lightbulb, Palette, Zap, ShoppingCart, BarChart3
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../i18n/LanguageContext';
 import soundManager from '../utils/soundManager';
 import GameChat, { ChatToggleButton } from './GameChat';
+import GameLeaderboard, { AllGamesLeaderboards } from './GameLeaderboard';
+import IAPShop from './IAPShop';
 
 // Import game components
 import { 
