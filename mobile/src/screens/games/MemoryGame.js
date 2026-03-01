@@ -244,8 +244,8 @@ const MemoryGame = ({ mode, onComplete, onClose }) => {
   const gridRows = difficulty === 'easy' ? 3 : difficulty === 'medium' ? 4 : 5;
 
   return (
-    <View style={styles.container}>
-      <LinearGradient colors={['#1e1b4b', '#312e81', '#1e1b4b']} style={styles.gradient}>
+    <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
+      <View style={styles.overlay}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.headerBtn} onPress={onClose}>
