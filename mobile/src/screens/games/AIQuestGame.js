@@ -974,7 +974,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'center',
     gap: 12,
-    maxWidth: width - 60,
+    maxWidth: screenWidth - 60,
   },
   sequenceItem: {
     width: 80,
