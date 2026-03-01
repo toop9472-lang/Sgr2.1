@@ -1,6 +1,6 @@
 // API Service - Lightweight API handler with enhanced security
 // Production Server - Emergent Host
-const API_URL = 'https://saqr-live.emergent.host';
+const API_URL = 'https://saqr-ui-sync.emergent.host';
 
 // Connection check timeout - increased for better reliability
 const CONNECTION_TIMEOUT = 20000; // 20 seconds
