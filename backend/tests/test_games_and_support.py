@@ -3,7 +3,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://saqr-ui-sync.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://interactive-games-17.preview.emergentagent.com')
 
 class TestGamesAPI:
     """Games API endpoint tests"""

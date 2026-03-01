@@ -16,7 +16,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import storage from '../services/storage';
 
-const API_URL = 'https://saqr-ui-sync.preview.emergentagent.com';
+const API_URL = 'https://interactive-games-17.preview.emergentagent.com';
 
 // معلومات الدعم
 const SUPPORT_EMAIL = 'sky-321@hotmail.com';

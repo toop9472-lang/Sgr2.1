@@ -177,7 +177,7 @@ eas build --platform ios --profile production
 
 ### API URL:
 ```
-https://saqr-ui-sync.preview.emergentagent.com
+https://interactive-games-17.preview.emergentagent.com
 ```
 
 ---
