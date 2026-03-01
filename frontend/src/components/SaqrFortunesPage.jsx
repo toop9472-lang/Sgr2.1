@@ -1,6 +1,6 @@
 // صفحة ثروات صقر للويب - Saqr Fortunes Web Page
 // نظام مشاهدة الإعلانات الممتع مع عجلة الحظ وصناديق الكنز
-// 500 ألماسة = 1 دولار
+// 500 جوهرة صقر = 1 ريال سعودي
 
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Diamond, Play, Gift, Flame, Trophy, Star, Zap, Clock, TrendingUp, ChevronRight, Sparkles } from 'lucide-react';
