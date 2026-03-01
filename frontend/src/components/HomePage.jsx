@@ -138,38 +138,57 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
           </div>
         </div>
 
-        {/* Balance Card */}
-        <div className="bg-gradient-to-r from-[#3b82f6] to-[#6366f1] rounded-3xl p-6 mb-6 shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
-          <div className="relative z-10 flex items-center justify-between">
-            <div>
-              <p className="text-white/70 text-sm mb-1">{t('currentBalance')}</p>
-              <p className="text-4xl font-bold text-white">${userBalance}</p>
-              <p className="text-white/60 text-xs mt-2">{userPoints} {t('points')}</p>
-            </div>
-            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-              <TrendingUp className="w-8 h-8 text-white" />
+        {/* Balance Card - New Image Design */}
+        <div className="rounded-3xl mb-6 shadow-xl relative overflow-hidden h-32 group">
+          <img 
+            src="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/80a9b958945b14e3f85f8b8e2b49544963122866ce9cdc8af6f2ab70c5c8bb31.png"
+            alt="الرصيد"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/30" />
+          <div className="absolute inset-0 flex items-center justify-center p-6">
+            <div className="text-center">
+              <p className="text-white/80 text-sm mb-2">{t('currentBalance')}</p>
+              <div className="flex items-center justify-center gap-8">
+                <div className="flex items-center gap-2">
+                  <Star className="w-6 h-6 text-yellow-400" />
+                  <span className="text-3xl font-bold text-white drop-shadow-lg">{userPoints}</span>
+                  <span className="text-white/70 text-sm">نقاط</span>
+                </div>
+                <div className="w-px h-10 bg-white/30" />
+                <div className="flex items-center gap-2">
+                  <Gift className="w-6 h-6 text-blue-400" />
+                  <span className="text-3xl font-bold text-white drop-shadow-lg">{user?.diamonds || 0}</span>
+                  <span className="text-white/70 text-sm">ألماسة</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Watch Button */}
+        {/* Watch Button - New Image Design */}
         <button
           onClick={onNavigateToAds}
-          className="w-full bg-gradient-to-r from-[#ef4444] to-[#ec4899] hover:from-[#dc2626] hover:to-[#db2777] rounded-2xl p-5 mb-4 shadow-xl transform transition-all hover:scale-[1.02] active:scale-[0.98]"
+          className="w-full rounded-2xl mb-4 shadow-xl transform transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden h-32 group"
           data-testid="start-watching-btn"
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center">
-                <Play className="w-8 h-8 text-white fill-white" />
-              </div>
+          <img 
+            src="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e14c91a9e40e8d29b6f8d3bf567a4fcb7020c985b1a9d3e96e2035b06f9921e6.png"
+            alt="شاهد واربح"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 group-hover:from-black/80 transition-all" />
+          <div className="absolute inset-0 flex items-end p-5">
+            <div className="flex items-center justify-between w-full">
               <div className={isRTL ? 'text-right' : 'text-left'}>
-                <p className="text-white font-bold text-lg">{t('startWatching')}</p>
-                <p className="text-white/80 text-sm">{t('earnPerAd')}</p>
+                <p className="text-white font-bold text-xl drop-shadow-lg mb-1">{t('startWatching')}</p>
+                <p className="text-white/90 text-sm">{t('earnPerAd')}</p>
+              </div>
+              <div className="bg-gradient-to-r from-red-500 to-pink-500 px-5 py-3 rounded-xl flex items-center gap-2">
+                <Play className="w-5 h-5 text-white fill-white" />
+                <span className="text-white font-bold">ابدأ</span>
               </div>
             </div>
-            <ChevronRight className={`w-6 h-6 text-white ${isRTL ? 'rotate-180' : ''}`} />
           </div>
         </button>
 
