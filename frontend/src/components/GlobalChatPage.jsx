@@ -89,6 +89,8 @@ const InsufficientDiamondsModal = ({ visible, onWatchAds, onClose, currentDiamon
 
 // المكون الرئيسي
 const GlobalChatPage = ({ user, onBack, onNavigateToFortunes }) => {
+  const { isDark } = useTheme();
+  const { isRTL, t } = useLanguage();
   const [selectedServer, setSelectedServer] = useState(SERVERS[0]);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
