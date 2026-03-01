@@ -157,13 +157,16 @@ const WordRaceGame = ({ mode, isOnline, onComplete, onClose }) => {
     setTimeout(() => setFeedback(null), 500);
     
     if (isCorrect) {
+      gameSounds.correct();
       const bonus = showHint ? 0 : 5;
       const streakBonus = Math.min(streak, 3);
       setScore(s => s + 10 + bonus + streakBonus);
       setStreak(s => s + 1);
       setWordsFound(w => w + 1);
+      if (streak >= 2) gameSounds.levelUp();
       nextWord();
     } else {
+      gameSounds.wrong();
       setStreak(0);
     }
     
@@ -171,6 +174,7 @@ const WordRaceGame = ({ mode, isOnline, onComplete, onClose }) => {
   };
 
   const handleSkip = () => {
+    gameSounds.buttonTap();
     setStreak(0);
     nextWord();
   };
