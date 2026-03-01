@@ -196,6 +196,35 @@ const HomeScreen = ({ user, onNavigateToAds, onNavigateToGames, onNavigateToChat
           />
         </View>
 
+        {/* Balance Card - New Design with Image */}
+        <TouchableOpacity style={styles.balanceCard} activeOpacity={0.9}>
+          <ImageBackground 
+            source={{ uri: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/80a9b958945b14e3f85f8b8e2b49544963122866ce9cdc8af6f2ab70c5c8bb31.png' }}
+            style={styles.balanceBanner}
+            imageStyle={styles.balanceBannerImage}
+          >
+            <LinearGradient 
+              colors={['rgba(0,0,0,0.4)', 'rgba(0,0,0,0.7)']} 
+              style={styles.balanceOverlay}
+            >
+              <Text style={styles.balanceTitle}>رصيدك الحالي</Text>
+              <View style={styles.balanceRow}>
+                <View style={styles.balanceItem}>
+                  <Ionicons name="star" size={24} color="#fbbf24" />
+                  <Text style={styles.balanceValue}>{userPoints}</Text>
+                  <Text style={styles.balanceLabel}>نقاط صقر</Text>
+                </View>
+                <View style={styles.balanceDivider} />
+                <View style={styles.balanceItem}>
+                  <Ionicons name="diamond" size={24} color="#60a5fa" />
+                  <Text style={styles.balanceValue}>{userDiamonds}</Text>
+                  <Text style={styles.balanceLabel}>ألماسة</Text>
+                </View>
+              </View>
+            </LinearGradient>
+          </ImageBackground>
+        </TouchableOpacity>
+
         {/* Player Stats */}
         <View style={styles.statsSection}>
           <View style={styles.sectionHeader}>
