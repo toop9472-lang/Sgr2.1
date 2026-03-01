@@ -257,32 +257,39 @@ const HomeScreen = ({ user, onNavigateToAds, onNavigateToGames, onNavigateToChat
           </View>
         </View>
 
-        {/* Saqr Fortunes Section */}
+        {/* Saqr Fortunes Section - New Design with Image */}
         <TouchableOpacity 
           style={styles.fortunesCard}
           onPress={onNavigateToFortunes}
           activeOpacity={0.9}
         >
-          <LinearGradient 
-            colors={['#ec4899', '#9333ea', '#6366f1']} 
-            style={styles.fortunesGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
+          <ImageBackground 
+            source={{ uri: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png' }}
+            style={styles.fortunesBanner}
+            imageStyle={styles.fortunesBannerImage}
           >
-            <View style={styles.fortunesIcon}>
-              <Ionicons name="diamond" size={28} color="#FFF" />
-            </View>
-            <View style={styles.fortunesInfo}>
-              <View style={styles.fortunesHeader}>
-                <Text style={styles.fortunesTitle}>ثروات صقر</Text>
-                <View style={styles.newBadge}>
-                  <Text style={styles.newBadgeText}>جديد</Text>
+            <LinearGradient 
+              colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)']} 
+              style={styles.fortunesOverlay}
+            >
+              <View style={styles.fortunesContent}>
+                <View style={styles.fortunesTextArea}>
+                  <View style={styles.fortunesHeader}>
+                    <Text style={styles.fortunesTitle}>ثروات صقر</Text>
+                    <View style={styles.newBadge}>
+                      <Text style={styles.newBadgeText}>جديد</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.fortunesDesc}>جواهر صقر للاستبدال بالمال!</Text>
+                  <Text style={styles.fortunesSubDesc}>عجلة حظ وصناديق كنز يومية</Text>
+                </View>
+                <View style={styles.playNowBtn}>
+                  <Text style={styles.playNowText}>ابدأ</Text>
+                  <Ionicons name="arrow-forward" size={16} color="#FFF" />
                 </View>
               </View>
-              <Text style={styles.fortunesDesc}>جواهر صقر للاستبدال بالمال! عجلة حظ وصناديق كنز</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={22} color="rgba(255,255,255,0.8)" />
-          </LinearGradient>
+            </LinearGradient>
+          </ImageBackground>
         </TouchableOpacity>
 
         {/* Global Chat Section */}
