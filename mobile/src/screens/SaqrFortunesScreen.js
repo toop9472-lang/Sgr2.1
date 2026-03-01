@@ -110,54 +110,33 @@ const DailyChallenge = ({ challenge, progress, claimed, onClaim }) => {
 // مكون زر المشاهدة الرئيسي - يعرض جواهر صقر
 const MainWatchButton = ({ onPress, saqrGems, loading }) => {
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.loop(
-      Animated.parallel([
-        Animated.sequence([
-          Animated.timing(pulseAnim, { toValue: 1.05, duration: 1000, useNativeDriver: true }),
-          Animated.timing(pulseAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
-        ]),
-        Animated.sequence([
-          Animated.timing(glowAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
-          Animated.timing(glowAnim, { toValue: 0, duration: 1500, useNativeDriver: true }),
-        ]),
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.03, duration: 1200, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
       ])
     ).start();
   }, []);
 
-  const glowOpacity = glowAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.3, 0.7],
-  });
-
   return (
     <View style={styles.mainButtonContainer}>
-      {/* Glow Effect */}
-      <Animated.View style={[styles.glowRing, { opacity: glowOpacity }]} />
-      
       <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
         <TouchableOpacity onPress={onPress} activeOpacity={0.9} disabled={loading}>
-          <LinearGradient
-            colors={['#ec4899', '#9333ea', '#6366f1']}
-            style={styles.mainButton}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFF" size="large" />
-            ) : (
-              <>
-                <Ionicons name="play-circle" size={50} color="#FFF" />
-                <Text style={styles.mainButtonTitle}>شاهد واربح!</Text>
-                <View style={styles.rewardPreview}>
-                  <Ionicons name="sparkles" size={16} color="#FFF" />
-                  <Text style={styles.rewardPreviewText}>من 1 الى 100 جوهرة</Text>
-                </View>
-              </>
+          <View style={styles.mainButtonNew}>
+            <Image
+              source={{ uri: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/79ce2574f803a5fb1d0492bf79d3cf2590abf32894de2625e27f9694b16e0cd7.png' }}
+              style={styles.mainButtonImage}
+            />
+            {loading && (
+              <View style={styles.mainButtonLoading}>
+                <ActivityIndicator color="#FFF" size="large" />
+              </View>
             )}
-          </LinearGradient>
+          </View>
+          <Text style={styles.mainButtonTitleNew}>شاهد واربح!</Text>
+          <Text style={styles.mainButtonSubNew}>من 1 الى 100 جوهرة</Text>
         </TouchableOpacity>
       </Animated.View>
 
