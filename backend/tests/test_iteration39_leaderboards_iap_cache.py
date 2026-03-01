@@ -18,7 +18,7 @@ TEST_PASSWORD = "Test123!@#"
 @pytest.fixture(scope="module")
 def auth_token():
     """Get authentication token"""
-    response = requests.post(f"{BASE_URL}/api/auth/login", json={
+    response = requests.post(f"{BASE_URL}/api/auth/signin", json={
         "email": TEST_EMAIL,
         "password": TEST_PASSWORD
     })
