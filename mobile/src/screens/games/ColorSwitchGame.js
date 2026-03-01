@@ -216,12 +216,14 @@ const ColorSwitchGame = ({ mode, onComplete, onClose }) => {
           </LinearGradient>
         </View>
       )}
-    </LinearGradient>
+      </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
   
   startContainer: {
     flex: 1,
