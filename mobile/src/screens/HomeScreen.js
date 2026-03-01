@@ -499,6 +499,9 @@ const styles = StyleSheet.create({
     alignItems: 'center', 
     gap: 12 
   },
+  langSwitcher: {
+    // Already styled in LanguageSwitcher component
+  },
   welcomeContainer: {
     flexDirection: 'column',
   },
