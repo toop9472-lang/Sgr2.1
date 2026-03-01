@@ -364,14 +364,14 @@ const MemoryGame = ({ mode, onComplete, onClose }) => {
             </View>
           </View>
         )}
-      </LinearGradient>
-    </View>
+      </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  gradient: { flex: 1 },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' },
 
   header: {
     flexDirection: 'row',
