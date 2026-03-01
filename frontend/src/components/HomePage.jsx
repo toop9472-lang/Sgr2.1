@@ -173,72 +173,88 @@ const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
           </div>
         </button>
 
-        {/* Saqr Fortunes Button */}
+        {/* Saqr Fortunes Button - New Image Design */}
         <button
           onClick={() => onNavigate('fortunes')}
-          className="w-full bg-gradient-to-r from-[#ec4899] via-[#9333ea] to-[#6366f1] hover:opacity-90 rounded-2xl p-5 mb-4 shadow-xl transform transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden"
+          className="w-full rounded-2xl mb-4 shadow-xl transform transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden h-36 group"
           data-testid="saqr-fortunes-btn"
         >
-          <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12" />
-          <div className="flex items-center justify-between relative z-10">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center">
-                <Gift className="w-8 h-8 text-white" />
-              </div>
+          <img 
+            src="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png"
+            alt="ثروات صقر"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 group-hover:from-black/80 transition-all" />
+          <div className="absolute inset-0 flex items-end p-5">
+            <div className="flex items-center justify-between w-full">
               <div className={isRTL ? 'text-right' : 'text-left'}>
-                <div className="flex items-center gap-2">
-                  <p className="text-white font-bold text-lg">ثروات صقر</p>
-                  <span className="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">جديد</span>
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-white font-bold text-xl drop-shadow-lg">ثروات صقر</p>
+                  <span className="bg-green-500 text-white text-xs px-2.5 py-1 rounded-full font-bold">جديد</span>
                 </div>
-                <p className="text-white/80 text-sm">جواهر صقر للاستبدال بالمال!</p>
+                <p className="text-white/90 text-sm">جواهر صقر للاستبدال بالمال!</p>
+              </div>
+              <div className="bg-pink-500 px-4 py-2.5 rounded-xl flex items-center gap-2">
+                <span className="text-white font-bold text-sm">ابدأ</span>
+                <ChevronRight className={`w-5 h-5 text-white ${isRTL ? 'rotate-180' : ''}`} />
               </div>
             </div>
-            <ChevronRight className={`w-6 h-6 text-white ${isRTL ? 'rotate-180' : ''}`} />
           </div>
         </button>
 
-        {/* Global Chat Button */}
+        {/* Global Chat Button - New Image Design */}
         <button
           onClick={() => onNavigate('chat')}
-          className="w-full bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] hover:opacity-90 rounded-2xl p-5 mb-4 shadow-xl transform transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden"
+          className="w-full rounded-2xl mb-4 shadow-xl transform transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden h-32 group"
           data-testid="global-chat-btn"
         >
-          <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12" />
-          <div className="flex items-center justify-between relative z-10">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center">
-                <MessageCircle className="w-8 h-8 text-white" />
-              </div>
+          <img 
+            src="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/bcdacd75d090c4626f5432d13b9b6c4c4560cc34282e9424de1cbc6732f06abf.png"
+            alt="الدردشة العامة"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 group-hover:from-black/80 transition-all" />
+          <div className="absolute inset-0 flex items-end p-5">
+            <div className="flex items-center justify-between w-full">
               <div className={isRTL ? 'text-right' : 'text-left'}>
-                <div className="flex items-center gap-2">
-                  <p className="text-white font-bold text-lg">الدردشة العامة</p>
-                  <span className="bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">5 ألماسات</span>
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-white font-bold text-lg drop-shadow-lg">الدردشة العامة</p>
+                  <span className="bg-blue-500/60 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <Gift className="w-3 h-3" />5
+                  </span>
                 </div>
-                <p className="text-white/80 text-sm">تواصل مع العالم! سيرفرات متعددة</p>
+                <p className="text-white/90 text-sm">تواصل مع لاعبين من حول العالم!</p>
+              </div>
+              <div className="bg-blue-500 px-4 py-2.5 rounded-xl flex items-center gap-2">
+                <span className="text-white font-bold text-sm">انضم</span>
+                <MessageCircle className="w-4 h-4 text-white" />
               </div>
             </div>
-            <ChevronRight className={`w-6 h-6 text-white ${isRTL ? 'rotate-180' : ''}`} />
           </div>
         </button>
 
-        {/* Friends Button */}
+        {/* Friends Button - New Image Design */}
         <button
           onClick={() => onNavigate('friends')}
-          className="w-full bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:opacity-90 rounded-2xl p-5 mb-6 shadow-xl transform transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden"
+          className="w-full rounded-2xl mb-6 shadow-xl transform transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden h-28 group"
           data-testid="friends-btn"
         >
-          <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12" />
-          <div className="flex items-center justify-between relative z-10">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center">
-                <Users className="w-8 h-8 text-white" />
-              </div>
+          <img 
+            src="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/7f2948052c933ae7604200fd2c98d91f4504fce293deb36ce108cba1d36f062a.png"
+            alt="الأصدقاء"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 group-hover:from-black/80 transition-all" />
+          <div className="absolute inset-0 flex items-end p-5">
+            <div className="flex items-center justify-between w-full">
               <div className={isRTL ? 'text-right' : 'text-left'}>
-                <p className="text-white font-bold text-lg">الأصدقاء والبريد</p>
-                <p className="text-white/80 text-sm">أضف أصدقاء، تراسل، وادعهم للألعاب مجاناً!</p>
+                <p className="text-white font-bold text-lg drop-shadow-lg mb-1">الأصدقاء والبريد</p>
+                <p className="text-white/90 text-sm">أضف أصدقاء وادعهم للألعاب!</p>
+              </div>
+              <div className="bg-green-500 p-3 rounded-xl">
+                <Users className="w-5 h-5 text-white" />
               </div>
             </div>
-            <ChevronRight className={`w-6 h-6 text-white ${isRTL ? 'rotate-180' : ''}`} />
           </div>
         </button>
 
