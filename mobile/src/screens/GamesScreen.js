@@ -1679,50 +1679,67 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, 
           ))}
         </View>
 
-        {/* Leaderboard Rewards Info */}
-        <View style={styles.rewardsInfoCard}>
-          <View style={styles.rewardsInfoHeader}>
-            <Ionicons name="gift" size={20} color="#fbbf24" />
-            <Text style={styles.rewardsInfoTitle}>مكافآت المتصدرين</Text>
-          </View>
-          <View style={styles.rewardsInfoList}>
-            <View style={styles.rewardRow}>
-              <Ionicons name="medal" size={18} color="#fbbf24" />
-              <Text style={styles.rewardText}>المركز الأول: 3000 نقطة</Text>
-            </View>
-            <View style={styles.rewardRow}>
-              <Ionicons name="medal" size={18} color="#94a3b8" />
-              <Text style={styles.rewardText}>المركز الثاني: 1900 نقطة</Text>
-            </View>
-            <View style={styles.rewardRow}>
-              <Ionicons name="medal" size={18} color="#cd7f32" />
-              <Text style={styles.rewardText}>المركز الثالث: 1000 نقطة</Text>
-            </View>
-          </View>
-        </View>
+        {/* Leaderboard Section - New Professional Design */}
+        <View style={styles.leaderboardSection}>
+          {/* Leaderboard Banner */}
+          <ImageBackground
+            source={{ uri: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8b2dfe633f2e1cbd852cd43d21c498c0e3b21e805e853619ee9798c4c28a9cf9.png' }}
+            style={styles.leaderboardBanner}
+            imageStyle={styles.leaderboardBannerImage}
+          >
+            <LinearGradient
+              colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)']}
+              style={styles.leaderboardBannerOverlay}
+            >
+              <Text style={styles.leaderboardBannerTitle}>التصنيف العالمي</Text>
+              <Text style={styles.leaderboardBannerDesc}>تنافس مع أفضل اللاعبين!</Text>
+            </LinearGradient>
+          </ImageBackground>
 
-        {/* Leaderboard */}
-        <Text style={styles.sectionTitle}>التصنيف العالمي</Text>
-        <View style={styles.leaderboardCard}>
-          {leaderboard.slice(0, 10).map((player, idx) => (
-            <View key={idx} style={[styles.lbRow, idx < 3 && styles.lbTopRow]}>
-              <View style={styles.lbRank}>
-                {idx < 3 ? (
-                  <Ionicons name="medal" size={24} color={['#fbbf24', '#94a3b8', '#cd7f32'][idx]} />
-                ) : (
-                  <Text style={styles.lbRankText}>#{idx + 1}</Text>
-                )}
-              </View>
-              <View style={styles.lbInfo}>
-                <Text style={styles.lbName}>{player.name}</Text>
-                <Text style={styles.lbGames}>{player.gamesPlayed} لعبة</Text>
-              </View>
-              <View style={styles.lbPoints}>
-                <Ionicons name="diamond" size={14} color="#fbbf24" />
-                <Text style={styles.lbPointsText}>{player.points}</Text>
-              </View>
+          {/* Top 3 Rewards */}
+          <View style={styles.topRewardsRow}>
+            <View style={[styles.topRewardItem, { backgroundColor: 'rgba(148, 163, 184, 0.15)' }]}>
+              <Ionicons name="medal" size={28} color="#94a3b8" />
+              <Text style={styles.topRewardRank}>2</Text>
+              <Text style={styles.topRewardPoints}>1900</Text>
             </View>
-          ))}
+            <View style={[styles.topRewardItem, styles.topRewardFirst]}>
+              <Ionicons name="trophy" size={32} color="#fbbf24" />
+              <Text style={styles.topRewardRank}>1</Text>
+              <Text style={styles.topRewardPoints}>3000</Text>
+            </View>
+            <View style={[styles.topRewardItem, { backgroundColor: 'rgba(205, 127, 50, 0.15)' }]}>
+              <Ionicons name="medal" size={28} color="#cd7f32" />
+              <Text style={styles.topRewardRank}>3</Text>
+              <Text style={styles.topRewardPoints}>1000</Text>
+            </View>
+          </View>
+
+          {/* Leaderboard List */}
+          <View style={styles.leaderboardCardNew}>
+            {leaderboard.slice(0, 10).map((player, idx) => (
+              <View key={idx} style={[styles.lbRowNew, idx < 3 && styles.lbTopRowNew]}>
+                <View style={[styles.lbRankBadge, idx === 0 && styles.lbRankGold, idx === 1 && styles.lbRankSilver, idx === 2 && styles.lbRankBronze]}>
+                  {idx < 3 ? (
+                    <Ionicons name="trophy" size={16} color="#FFF" />
+                  ) : (
+                    <Text style={styles.lbRankTextNew}>{idx + 1}</Text>
+                  )}
+                </View>
+                <View style={styles.lbInfoNew}>
+                  <Text style={styles.lbNameNew}>{player.name}</Text>
+                  <View style={styles.lbGamesRow}>
+                    <Ionicons name="game-controller" size={12} color="#64748b" />
+                    <Text style={styles.lbGamesNew}>{player.gamesPlayed} لعبة</Text>
+                  </View>
+                </View>
+                <View style={styles.lbPointsNew}>
+                  <Ionicons name="star" size={16} color="#fbbf24" />
+                  <Text style={styles.lbPointsTextNew}>{player.points}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
         </View>
 
         <View style={{ height: 120 }} />
