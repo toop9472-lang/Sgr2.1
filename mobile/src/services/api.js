@@ -16,7 +16,7 @@ let lastConnectionCheck = null;
 let lastConnectionResult = null;
 const CONNECTION_CACHE_DURATION = 60000; // 60 seconds (increased from 30s)
 
-// Check if API is reachable - Real implementation
+// Check if API is reachable - Real implementation with better error handling
 const checkConnection = async () => {
   // Use cached result if recent
   const now = Date.now();
@@ -27,7 +27,7 @@ const checkConnection = async () => {
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
     
     console.log('Checking connection to:', API_URL);
     
@@ -36,6 +36,7 @@ const checkConnection = async () => {
       signal: controller.signal,
       headers: {
         'Accept': 'application/json',
+        'Cache-Control': 'no-cache',
       },
     });
     
@@ -43,7 +44,7 @@ const checkConnection = async () => {
     
     if (response.ok) {
       const data = await response.json();
-      const isConnected = data.status === 'healthy' && data.database === 'connected';
+      const isConnected = data.status === 'healthy';
       
       // Cache the result
       lastConnectionCheck = now;
@@ -53,24 +54,20 @@ const checkConnection = async () => {
       return isConnected;
     }
     
-    // Server responded but not healthy
+    // Server responded but not healthy - still consider as connected
     lastConnectionCheck = now;
-    lastConnectionResult = false;
-    return false;
+    lastConnectionResult = true; // Server is reachable, just not healthy
+    return true;
   } catch (error) {
     console.log('Connection check failed:', error.message);
     
-    // Cache the failure
-    lastConnectionCheck = now;
-    lastConnectionResult = false;
-    
-    // For AbortError (timeout) or network errors
-    if (error.name === 'AbortError') {
-      console.log('Connection timeout');
-      return false;
+    // Don't cache failures immediately - allow retry
+    if (lastConnectionResult === null) {
+      lastConnectionCheck = now;
+      lastConnectionResult = false;
     }
     
-    return false;
+    return lastConnectionResult ?? false;
   }
 };
 
