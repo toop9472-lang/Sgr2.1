@@ -1,6 +1,8 @@
 // صفحة الأصدقاء للويب - Friends Page
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Users, Mail, Search, UserPlus, Check, X, MessageCircle, Gamepad2, UserMinus, Flag } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
