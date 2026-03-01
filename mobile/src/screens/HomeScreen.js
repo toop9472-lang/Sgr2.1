@@ -142,6 +142,7 @@ const HomeScreen = ({ user, onNavigateToAds, onNavigateToGames, onNavigateToChat
             description="تحدى الذكاء الاصطناعي في 5 أنواع من التحديات الذهنية!"
             colors={['#ec4899', '#9333ea']}
             onPress={handleNavigateToGames}
+            image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/0f533451dc398a22ab06768592a035284d7e83dddc8372ecd8529a3560098cbc.png"
           />
           
           {/* Secondary Featured */}
@@ -152,16 +153,18 @@ const HomeScreen = ({ user, onNavigateToAds, onNavigateToGames, onNavigateToChat
             description="شطرنج، تركيب الصور، ألغاز، أسئلة ثقافية والمزيد!"
             colors={['#3b82f6', '#8b5cf6']}
             onPress={handleNavigateToGames}
+            image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e02071f57750c77c0db321a70a51ed7bceb6eeb4df5f78e29d834466fcf3f354.png"
           />
 
-          {/* Saqr Fortunes - Ad Rewards */}
+          {/* Watch & Earn */}
           <View style={{ height: 12 }} />
           <FeaturedGameCard
-            icon="diamond"
-            name="ثروات صقر - جديد!"
-            description="شاهد واربح! عجلة حظ، صناديق كنز، ومكافآت يومية"
-            colors={['#ec4899', '#9333ea', '#6366f1']}
-            onPress={handleNavigateToGames}
+            icon="play-circle"
+            name="شاهد واربح!"
+            description="شاهد إعلانات قصيرة واحصل على جواهر صقر للاستبدال بالمال"
+            colors={['#f59e0b', '#d97706']}
+            onPress={onNavigateToAds}
+            image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e14c91a9e40e8d29b6f8d3bf567a4fcb7020c985b1a9d3e96e2035b06f9921e6.png"
           />
         </View>
 
