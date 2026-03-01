@@ -1,7 +1,6 @@
 // API Service - Lightweight API handler with enhanced security
-// ⚠️ سيرفر المعاينة - يجب نشر الكود الجديد إلى سيرفر الإنتاج
-// Production server (saqr-live.emergent.host) needs to be updated with latest code
-const API_URL = 'https://saqr-ui-sync.preview.emergentagent.com';
+// Production Server - Emergent Host
+const API_URL = 'https://saqr-live.emergent.host';
 
 // Connection check timeout - increased for better reliability
 const CONNECTION_TIMEOUT = 20000; // 20 seconds
