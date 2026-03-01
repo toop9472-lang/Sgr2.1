@@ -1,4 +1,4 @@
-// Brick Breaker Game - تكسير الطوب
+// Brick Breaker Game - تكسير الطوب - Professional Edition
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
@@ -8,9 +8,14 @@ import {
   Dimensions,
   Animated,
   PanResponder,
+  ImageBackground,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import gameSounds from '../../utils/gameSounds';
+
+// AI-Generated Professional Background
+const GAME_BG = 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/41eae3dfab42e60e7a57f9291dbf06c43e5e3e8b6629673c00658c524c1a237e.png';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 

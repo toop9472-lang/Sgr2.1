@@ -10,10 +10,14 @@ import {
   Alert,
   Animated,
   Modal,
+  ImageBackground,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import gameSounds from '../../utils/gameSounds';
+
+// AI-Generated Professional Background
+const GAME_BG = 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/5f7d92f290baa8d87bddc9fac33a18f8f09afa56e556b7e66faf34518194c56b.png';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const BOARD_SIZE = Math.min(screenWidth - 16, screenHeight * 0.55, 450);

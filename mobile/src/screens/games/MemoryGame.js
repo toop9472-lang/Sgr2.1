@@ -8,10 +8,14 @@ import {
   StyleSheet,
   Dimensions,
   Animated,
+  ImageBackground,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import gameSounds from '../../utils/gameSounds';
+
+// AI-Generated Professional Background
+const GAME_BG = 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/4d3046cfc1a9d31450a57219cfbd557c5dbee891f4bc793b5c782bdd9e9c112d.png';
 
 const { width: screenWidth } = Dimensions.get('window');
 const CARD_MARGIN = 6;
