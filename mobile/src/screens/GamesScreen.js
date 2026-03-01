@@ -44,12 +44,19 @@ const GameCard = ({ game, onPress, pulseAnim, gameCost }) => (
           </View>
         ) : null}
         
-        {/* Icon with glow effect */}
-        <View style={styles.gameIconContainer}>
-          <View style={styles.gameIconGlow} />
-          <View style={styles.gameIconBg}>
-            <Ionicons name={game.icon} size={36} color="#FFF" />
-          </View>
+        {/* Game Image */}
+        <View style={styles.gameImageContainer}>
+          {game.image ? (
+            <Image 
+              source={{ uri: game.image }} 
+              style={styles.gameImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.gameIconBg}>
+              <Ionicons name={game.icon} size={36} color="#FFF" />
+            </View>
+          )}
         </View>
         
         {/* Game Info */}
