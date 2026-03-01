@@ -55,6 +55,9 @@ from routes.economy_routes import router as economy_router
 from routes.stripe_routes import router as stripe_router
 from routes.social_routes import router as social_router
 from routes.invitations_routes import router as invitations_router
+from routes.leaderboards_routes import router as leaderboards_router
+from routes.iap_routes import router as iap_router
+from routes.cache_routes import router as cache_router
 from routes import games_routes
 
 
