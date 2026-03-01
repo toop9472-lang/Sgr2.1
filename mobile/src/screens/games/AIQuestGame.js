@@ -544,7 +544,8 @@ const AIQuestGame = ({ mode, onComplete, onClose }) => {
   if (gameOver) {
     const won = score > aiScore;
     return (
-      <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
+      <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
+        <View style={styles.overlay}>
         <View style={styles.gameOverContainer}>
           <LinearGradient
             colors={won ? ['#22c55e', '#16a34a'] : ['#ef4444', '#dc2626']}
@@ -589,26 +590,30 @@ const AIQuestGame = ({ mode, onComplete, onClose }) => {
             <Text style={styles.exitButtonText}>خروج</Text>
           </TouchableOpacity>
         </View>
-      </LinearGradient>
+        </View>
+      </ImageBackground>
     );
   }
   
   // عرض تسلسل الذاكرة
   if (showingSequence && currentChallenge?.type === 'memory') {
     return (
-      <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
+      <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
+        <View style={styles.overlay}>
         <SequenceDisplay
           sequence={currentChallenge.sequence}
           onComplete={handleSequenceComplete}
         />
-      </LinearGradient>
+        </View>
+      </ImageBackground>
     );
   }
   
   if (!currentChallenge) return null;
   
   return (
-    <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
+    <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
+      <View style={styles.overlay}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={onClose} style={styles.headerBtn}>
