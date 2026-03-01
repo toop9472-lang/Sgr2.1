@@ -209,8 +209,8 @@ eas submit -p android
 
 ## 📞 الدعم والمساعدة
 
-- **الموقع:** https://interactive-games-17.preview.emergentagent.com
-- **API Docs:** https://interactive-games-17.preview.emergentagent.com/docs
+- **الموقع:** https://invites-challenges.preview.emergentagent.com
+- **API Docs:** https://invites-challenges.preview.emergentagent.com/docs
 
 ---
 

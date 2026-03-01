@@ -81,7 +81,7 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
               // الحصول على URL الأصلي
               const originUrl = typeof window !== 'undefined' 
                 ? window.location.origin 
-                : 'https://interactive-games-17.preview.emergentagent.com';
+                : 'https://invites-challenges.preview.emergentagent.com';
               
               // إنشاء جلسة دفع Stripe
               const response = await api.fetch('/api/diamond-payments/checkout/create', {

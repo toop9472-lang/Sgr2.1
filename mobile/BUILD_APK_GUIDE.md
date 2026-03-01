@@ -177,7 +177,7 @@ eas build --platform ios --profile production
 
 ### API URL:
 ```
-https://interactive-games-17.preview.emergentagent.com
+https://invites-challenges.preview.emergentagent.com
 ```
 
 ---

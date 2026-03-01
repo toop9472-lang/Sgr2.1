@@ -95,12 +95,12 @@ rewards,earn,points,ads,money,cashback,gift,withdraw,wallet,saqr
 
 ### رابط سياسة الخصوصية
 ```
-https://interactive-games-17.preview.emergentagent.com/privacy
+https://invites-challenges.preview.emergentagent.com/privacy
 ```
 
 ### رابط الدعم
 ```
-https://interactive-games-17.preview.emergentagent.com
+https://invites-challenges.preview.emergentagent.com
 ```
 
 ### البريد الإلكتروني للدعم
