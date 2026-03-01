@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Progress } from './ui/progress';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -14,6 +15,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 
 const ProfilePage = ({ user, onLogout, onNavigate }) => {
   const { t, isRTL, language } = useLanguage();
+  const { isDark } = useTheme();
   const pointsToNextDollar = 500 - (user.points % 500);
   const progressToNextDollar = ((user.points % 500) / 500) * 100;
   const isGuest = user?.isGuest || false;
