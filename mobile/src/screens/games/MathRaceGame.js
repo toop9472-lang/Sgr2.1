@@ -1,5 +1,6 @@
-// Math Race Game - Fast Math Challenges
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+// Math Race Game - Professional Speed Math Challenge
+// لعبة سباق الرياضيات الاحترافية
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,381 +8,506 @@ import {
   StyleSheet,
   Dimensions,
   Animated,
+  ImageBackground,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import gameSounds from '../../utils/gameSounds';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-const isTablet = screenWidth > 600;
-const GAME_WIDTH = isTablet ? Math.min(screenWidth * 0.7, 500) : screenWidth;
-const GAME_TIME = 60; // 60 ثانية
+const { width: screenWidth } = Dimensions.get('window');
 
-const generateQuestion = (difficulty) => {
-  let num1, num2, operator, answer;
-  
-  if (difficulty < 5) {
-    // سهل: جمع وطرح بسيط
-    num1 = Math.floor(Math.random() * 20) + 1;
-    num2 = Math.floor(Math.random() * 20) + 1;
-    operator = Math.random() > 0.5 ? '+' : '-';
-    if (operator === '-' && num2 > num1) [num1, num2] = [num2, num1];
-    answer = operator === '+' ? num1 + num2 : num1 - num2;
-  } else if (difficulty < 10) {
-    // متوسط: ضرب وقسمة بسيطة
-    const type = Math.random();
-    if (type < 0.4) {
-      num1 = Math.floor(Math.random() * 50) + 10;
-      num2 = Math.floor(Math.random() * 30) + 5;
-      operator = Math.random() > 0.5 ? '+' : '-';
-      if (operator === '-' && num2 > num1) [num1, num2] = [num2, num1];
-      answer = operator === '+' ? num1 + num2 : num1 - num2;
-    } else {
-      num1 = Math.floor(Math.random() * 10) + 2;
-      num2 = Math.floor(Math.random() * 10) + 2;
-      operator = '×';
-      answer = num1 * num2;
-    }
-  } else {
-    // صعب: عمليات مختلطة
-    const type = Math.random();
-    if (type < 0.3) {
-      num1 = Math.floor(Math.random() * 100) + 20;
-      num2 = Math.floor(Math.random() * 50) + 10;
-      operator = Math.random() > 0.5 ? '+' : '-';
-      if (operator === '-' && num2 > num1) [num1, num2] = [num2, num1];
-      answer = operator === '+' ? num1 + num2 : num1 - num2;
-    } else if (type < 0.7) {
-      num1 = Math.floor(Math.random() * 12) + 2;
-      num2 = Math.floor(Math.random() * 12) + 2;
-      operator = '×';
-      answer = num1 * num2;
-    } else {
-      // قسمة بدون باقي
-      answer = Math.floor(Math.random() * 10) + 2;
-      num2 = Math.floor(Math.random() * 10) + 2;
-      num1 = answer * num2;
-      operator = '÷';
-    }
-  }
-  
-  // إنشاء خيارات
-  const options = [answer];
-  while (options.length < 4) {
-    let wrongAnswer;
-    const diff = Math.floor(Math.random() * 10) + 1;
-    wrongAnswer = Math.random() > 0.5 ? answer + diff : answer - diff;
-    if (wrongAnswer > 0 && !options.includes(wrongAnswer)) {
-      options.push(wrongAnswer);
-    }
-  }
-  
-  // خلط الخيارات
-  options.sort(() => Math.random() - 0.5);
-  
-  return {
-    question: `${num1} ${operator} ${num2} = ?`,
-    options,
-    correctAnswer: answer,
-    correctIndex: options.indexOf(answer),
-  };
-};
+// خلفية اللعبة
+const BG_IMAGE = 'https://static.prod-images.emergentagent.com/jobs/40eca190-5242-4463-8c95-bc5f66df29cb/images/4d62f78a9d58ddecdb382580143e38423b0ebc89009baffee37a41a52abe79e5.png';
 
-const MathRaceGame = ({ mode, isOnline, opponent, isMyTurn, onComplete, onClose, onSendMove }) => {
-  const [currentQuestion, setCurrentQuestion] = useState(null);
+const GAME_DURATION = 60; // ثانية
+const OPERATIONS = ['+', '-', '×', '÷'];
+
+const MathRaceGame = ({ mode, onComplete, onClose }) => {
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(GAME_TIME);
+  const [maxStreak, setMaxStreak] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
+  const [question, setQuestion] = useState(null);
+  const [options, setOptions] = useState([]);
+  const [gameOver, setGameOver] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(null);
+  const [difficulty, setDifficulty] = useState(1);
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState(0);
-  const [gameOver, setGameOver] = useState(false);
-  const [feedback, setFeedback] = useState(null);
+
   const timerRef = useRef(null);
-  const feedbackAnim = useRef(new Animated.Value(0)).current;
+  const shakeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const progressAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    startGame();
+    generateQuestion();
+    startTimer();
     return () => clearInterval(timerRef.current);
   }, []);
 
-  const startGame = () => {
-    setCurrentQuestion(generateQuestion(0));
-    setScore(0);
-    setStreak(0);
-    setTimeLeft(GAME_TIME);
-    setQuestionsAnswered(0);
-    setCorrectAnswers(0);
-    setGameOver(false);
-    
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: timeLeft / GAME_DURATION,
+      duration: 1000,
+      useNativeDriver: false,
+    }).start();
+  }, [timeLeft]);
+
+  const startTimer = () => {
     timerRef.current = setInterval(() => {
-      setTimeLeft(t => {
-        if (t <= 1) {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
           clearInterval(timerRef.current);
-          setTimeout(() => endGame(), 100);
+          endGame();
           return 0;
         }
-        return t - 1;
+        return prev - 1;
       });
     }, 1000);
   };
 
-  const endGame = () => {
-    clearInterval(timerRef.current);
-    setGameOver(true);
+  const generateQuestion = () => {
+    const maxNum = 10 + (difficulty * 5);
+    const opIndex = Math.min(Math.floor(Math.random() * (1 + Math.floor(difficulty / 2))), 3);
+    const operation = OPERATIONS[opIndex];
     
-    // حساب النقاط
-    let points = Math.min(22, Math.floor(correctAnswers * 1.5));
-    if (correctAnswers >= 20) points = 25;
-    else if (correctAnswers >= 15) points = 22;
-    else if (correctAnswers >= 10) points = 18;
-    else if (correctAnswers >= 5) points = 12;
+    let num1, num2, answer;
     
-    setTimeout(() => {
-      onComplete(points, correctAnswers >= 10 ? 'win' : 'lose');
-    }, 1000);
-  };
+    switch (operation) {
+      case '+':
+        num1 = Math.floor(Math.random() * maxNum) + 1;
+        num2 = Math.floor(Math.random() * maxNum) + 1;
+        answer = num1 + num2;
+        break;
+      case '-':
+        num1 = Math.floor(Math.random() * maxNum) + 10;
+        num2 = Math.floor(Math.random() * Math.min(num1, maxNum)) + 1;
+        answer = num1 - num2;
+        break;
+      case '×':
+        num1 = Math.floor(Math.random() * 12) + 1;
+        num2 = Math.floor(Math.random() * 12) + 1;
+        answer = num1 * num2;
+        break;
+      case '÷':
+        num2 = Math.floor(Math.random() * 10) + 2;
+        answer = Math.floor(Math.random() * 10) + 1;
+        num1 = num2 * answer;
+        break;
+    }
 
-  const showFeedback = (isCorrect) => {
-    setFeedback(isCorrect);
-    feedbackAnim.setValue(0);
-    Animated.sequence([
-      Animated.timing(feedbackAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
-      Animated.timing(feedbackAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
-    ]).start(() => setFeedback(null));
-  };
-
-  const handleAnswer = (selectedIndex) => {
-    if (gameOver) return;
+    setQuestion({ num1, num2, operation, answer });
     
-    const isCorrect = selectedIndex === currentQuestion.correctIndex;
-    showFeedback(isCorrect);
-    
-    if (isCorrect) {
-      const newStreak = streak + 1;
-      const bonus = Math.min(newStreak, 5);
-      setScore(s => s + 10 + bonus);
-      setStreak(newStreak);
-      setCorrectAnswers(c => c + 1);
-    } else {
-      setStreak(0);
+    // إنشاء خيارات
+    const wrongAnswers = new Set();
+    while (wrongAnswers.size < 3) {
+      const offset = Math.floor(Math.random() * 10) - 5;
+      const wrong = answer + offset;
+      if (wrong !== answer && wrong > 0) {
+        wrongAnswers.add(wrong);
+      }
     }
     
-    setQuestionsAnswered(q => q + 1);
+    const allOptions = [answer, ...Array.from(wrongAnswers)]
+      .sort(() => Math.random() - 0.5);
+    setOptions(allOptions);
+    setIsCorrect(null);
+  };
+
+  const handleAnswer = (selected) => {
+    if (gameOver || isCorrect !== null) return;
     
+    const correct = selected === question.answer;
+    setIsCorrect(correct);
+    setQuestionsAnswered(q => q + 1);
+
+    if (correct) {
+      gameSounds.correct();
+      const points = 10 * (1 + streak * 0.1) * difficulty;
+      setScore(s => s + Math.floor(points));
+      setStreak(s => s + 1);
+      setCorrectAnswers(c => c + 1);
+      if (streak + 1 > maxStreak) setMaxStreak(streak + 1);
+      
+      // زيادة الصعوبة
+      if ((correctAnswers + 1) % 5 === 0) {
+        setDifficulty(d => Math.min(d + 1, 5));
+      }
+
+      // أنيميشن النجاح
+      Animated.sequence([
+        Animated.timing(scaleAnim, { toValue: 1.2, duration: 100, useNativeDriver: true }),
+        Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+      ]).start();
+    } else {
+      gameSounds.wrong();
+      setStreak(0);
+      
+      // أنيميشن الخطأ
+      Animated.sequence([
+        Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+      ]).start();
+    }
+
     // السؤال التالي
     setTimeout(() => {
-      setCurrentQuestion(generateQuestion(questionsAnswered + 1));
-    }, 200);
+      generateQuestion();
+    }, 800);
   };
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  const endGame = () => {
+    setGameOver(true);
+    clearInterval(timerRef.current);
+    
+    if (score >= 500) {
+      gameSounds.win();
+      onComplete && onComplete(50, 'win');
+    } else if (score >= 200) {
+      gameSounds.levelUp();
+      onComplete && onComplete(30, 'good');
+    } else {
+      gameSounds.lose();
+      onComplete && onComplete(15, 'lose');
+    }
   };
 
-  if (!currentQuestion) {
-    return (
-      <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
-        <Text style={styles.loadingText}>جاري التحميل...</Text>
-      </LinearGradient>
-    );
-  }
+  const resetGame = () => {
+    setScore(0);
+    setStreak(0);
+    setMaxStreak(0);
+    setTimeLeft(GAME_DURATION);
+    setGameOver(false);
+    setDifficulty(1);
+    setQuestionsAnswered(0);
+    setCorrectAnswers(0);
+    generateQuestion();
+    startTimer();
+  };
+
+  const getOperationColor = (op) => {
+    switch (op) {
+      case '+': return '#22c55e';
+      case '-': return '#ef4444';
+      case '×': return '#3b82f6';
+      case '÷': return '#f59e0b';
+      default: return '#FFF';
+    }
+  };
 
   return (
-    <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onClose} style={styles.headerBtn}>
-          <Ionicons name="close" size={24} color="#FFF" />
-        </TouchableOpacity>
-        <View style={styles.timerContainer}>
-          <Ionicons name="time" size={20} color={timeLeft <= 10 ? '#ef4444' : '#60a5fa'} />
-          <Text style={[styles.timerText, timeLeft <= 10 && styles.timerWarning]}>
-            {formatTime(timeLeft)}
-          </Text>
-        </View>
-        <View style={styles.scoreContainer}>
-          <Ionicons name="star" size={18} color="#fbbf24" />
-          <Text style={styles.scoreText}>{score}</Text>
-        </View>
-      </View>
-
-      {/* Stats Row */}
-      <View style={styles.statsRow}>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{questionsAnswered}</Text>
-          <Text style={styles.statLabel}>سؤال</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: '#22c55e' }]}>{correctAnswers}</Text>
-          <Text style={styles.statLabel}>صحيح</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: '#f59e0b' }]}>{streak}</Text>
-          <Text style={styles.statLabel}>متتالي</Text>
-        </View>
-      </View>
-
-      {/* Question */}
-      <View style={styles.questionContainer}>
-        <LinearGradient colors={['#1e1e28', '#252532']} style={styles.questionCard}>
-          <Text style={styles.questionText}>{currentQuestion.question}</Text>
-          {streak >= 3 && (
-            <View style={styles.streakBadge}>
-              <Ionicons name="flame" size={16} color="#f59e0b" />
-              <Text style={styles.streakText}>×{streak}</Text>
-            </View>
-          )}
-        </LinearGradient>
-      </View>
-
-      {/* Options */}
-      <View style={styles.optionsContainer}>
-        {currentQuestion.options.map((option, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.optionBtn}
-            onPress={() => handleAnswer(index)}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={['#3b82f6', '#1d4ed8']}
-              style={styles.optionGradient}
-            >
-              <Text style={styles.optionText}>{option}</Text>
-            </LinearGradient>
+    <ImageBackground source={{ uri: BG_IMAGE }} style={styles.container} resizeMode="cover">
+      <View style={styles.overlay}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.headerBtn} onPress={onClose}>
+            <Ionicons name="close" size={24} color="#FFF" />
           </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Feedback Animation */}
-      {feedback !== null && (
-        <Animated.View style={[styles.feedbackOverlay, { opacity: feedbackAnim }]}>
-          <View style={[styles.feedbackBadge, feedback ? styles.feedbackCorrect : styles.feedbackWrong]}>
-            <Ionicons name={feedback ? 'checkmark' : 'close'} size={40} color="#FFF" />
+          
+          <Animated.View style={[styles.scoreBox, { transform: [{ scale: scaleAnim }] }]}>
+            <Text style={styles.scoreLabel}>النقاط</Text>
+            <Text style={styles.scoreValue}>{score}</Text>
+          </Animated.View>
+          
+          <View style={styles.streakBox}>
+            <Ionicons name="flame" size={20} color="#f59e0b" />
+            <Text style={styles.streakValue}>{streak}</Text>
           </View>
-        </Animated.View>
-      )}
+        </View>
 
-      {/* Game Over */}
-      {gameOver && (
-        <View style={styles.gameOverOverlay}>
-          <LinearGradient colors={['rgba(0,0,0,0.95)', 'rgba(0,0,0,0.9)']} style={styles.gameOverContent}>
-            <Ionicons name="calculator" size={50} color="#8b5cf6" />
-            <Text style={styles.gameOverTitle}>انتهى الوقت!</Text>
-            <View style={styles.gameOverStats}>
-              <View style={styles.gameOverStat}>
-                <Text style={styles.gameOverStatValue}>{correctAnswers}</Text>
-                <Text style={styles.gameOverStatLabel}>إجابة صحيحة</Text>
+        {/* Timer */}
+        <View style={styles.timerContainer}>
+          <View style={styles.timerBar}>
+            <Animated.View 
+              style={[
+                styles.timerFill,
+                { 
+                  width: progressAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0%', '100%'],
+                  }),
+                  backgroundColor: timeLeft > 20 ? '#22c55e' : timeLeft > 10 ? '#f59e0b' : '#ef4444',
+                }
+              ]} 
+            />
+          </View>
+          <Text style={styles.timerText}>{timeLeft}s</Text>
+        </View>
+
+        {/* Difficulty & Stats */}
+        <View style={styles.statsRow}>
+          <View style={styles.statBadge}>
+            <Ionicons name="speedometer" size={16} color="#8b5cf6" />
+            <Text style={styles.statText}>المستوى {difficulty}</Text>
+          </View>
+          <View style={styles.statBadge}>
+            <Ionicons name="checkmark-circle" size={16} color="#22c55e" />
+            <Text style={styles.statText}>{correctAnswers}/{questionsAnswered}</Text>
+          </View>
+        </View>
+
+        {/* Question */}
+        {question && (
+          <Animated.View style={[styles.questionBox, { transform: [{ translateX: shakeAnim }] }]}>
+            <View style={styles.questionInner}>
+              <Text style={styles.questionNum}>{question.num1}</Text>
+              <View style={[styles.operationBadge, { backgroundColor: getOperationColor(question.operation) }]}>
+                <Text style={styles.operationText}>{question.operation}</Text>
               </View>
-              <View style={styles.gameOverStat}>
-                <Text style={styles.gameOverStatValue}>{score}</Text>
-                <Text style={styles.gameOverStatLabel}>نقطة</Text>
+              <Text style={styles.questionNum}>{question.num2}</Text>
+              <Text style={styles.equalsSign}>=</Text>
+              <Text style={styles.questionMark}>?</Text>
+            </View>
+          </Animated.View>
+        )}
+
+        {/* Answer Options */}
+        <View style={styles.optionsGrid}>
+          {options.map((option, index) => {
+            const isSelected = isCorrect !== null;
+            const isThisCorrect = option === question?.answer;
+            const wasSelected = isSelected && (isThisCorrect || (isCorrect === false && option === question?.answer));
+            
+            return (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.optionBtn,
+                  isSelected && isThisCorrect && styles.optionCorrect,
+                  isSelected && !isThisCorrect && styles.optionWrong,
+                ]}
+                onPress={() => handleAnswer(option)}
+                disabled={isCorrect !== null}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.optionText}>{option}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Feedback */}
+        {isCorrect !== null && (
+          <View style={styles.feedbackContainer}>
+            <Text style={[styles.feedbackText, { color: isCorrect ? '#22c55e' : '#ef4444' }]}>
+              {isCorrect ? '✓ صحيح!' : '✗ خطأ!'}
+            </Text>
+          </View>
+        )}
+
+        {/* Game Over */}
+        {gameOver && (
+          <View style={styles.gameOverOverlay}>
+            <View style={styles.gameOverModal}>
+              <Text style={styles.gameOverEmoji}>
+                {score >= 500 ? '🏆' : score >= 200 ? '⭐' : '📊'}
+              </Text>
+              <Text style={styles.gameOverTitle}>انتهى الوقت!</Text>
+              <Text style={styles.finalScore}>{score} نقطة</Text>
+              
+              <View style={styles.finalStats}>
+                <View style={styles.finalStatItem}>
+                  <Text style={styles.finalStatLabel}>الإجابات الصحيحة</Text>
+                  <Text style={styles.finalStatValue}>{correctAnswers}/{questionsAnswered}</Text>
+                </View>
+                <View style={styles.finalStatItem}>
+                  <Text style={styles.finalStatLabel}>أعلى سلسلة</Text>
+                  <Text style={styles.finalStatValue}>{maxStreak}</Text>
+                </View>
+                <View style={styles.finalStatItem}>
+                  <Text style={styles.finalStatLabel}>المستوى</Text>
+                  <Text style={styles.finalStatValue}>{difficulty}</Text>
+                </View>
+              </View>
+
+              <View style={styles.gameOverButtons}>
+                <TouchableOpacity style={styles.playAgainBtn} onPress={resetGame}>
+                  <Ionicons name="refresh" size={20} color="#FFF" />
+                  <Text style={styles.playAgainText}>العب مرة أخرى</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.exitBtn} onPress={onClose}>
+                  <Text style={styles.exitText}>خروج</Text>
+                </TouchableOpacity>
               </View>
             </View>
-            <TouchableOpacity style={styles.playAgainBtn} onPress={startGame}>
-              <Ionicons name="refresh" size={20} color="#FFF" />
-              <Text style={styles.playAgainText}>العب مرة أخرى</Text>
-            </TouchableOpacity>
-          </LinearGradient>
-        </View>
-      )}
-    </LinearGradient>
+          </View>
+        )}
+      </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  loadingText: { color: '#FFF', fontSize: 18, textAlign: 'center', marginTop: 100 },
-  
+  overlay: { 
+    flex: 1, 
+    backgroundColor: 'rgba(0,0,0,0.7)',
+  },
+
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
+    paddingHorizontal: 16,
     paddingTop: 50,
+    paddingBottom: 10,
   },
   headerBtn: {
-    padding: 8,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  timerContainer: {
-    flexDirection: 'row',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 16,
+  },
+  scoreBox: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(59,130,246,0.3)',
+    paddingHorizontal: 24,
     paddingVertical: 8,
     borderRadius: 20,
-    gap: 6,
+    borderWidth: 2,
+    borderColor: '#3b82f6',
   },
-  timerText: { color: '#FFF', fontSize: 18, fontWeight: 'bold' },
-  timerWarning: { color: '#ef4444' },
-  scoreContainer: {
+  scoreLabel: {
+    color: '#94a3b8',
+    fontSize: 10,
+  },
+  scoreValue: {
+    color: '#FFF',
+    fontSize: 28,
+    fontWeight: 'bold',
+  },
+  streakBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    backgroundColor: 'rgba(245,158,11,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
   },
-  scoreText: { color: '#fbbf24', fontSize: 18, fontWeight: 'bold' },
+  streakValue: {
+    color: '#f59e0b',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+
+  timerContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  timerBar: {
+    flex: 1,
+    height: 12,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 6,
+    overflow: 'hidden',
+  },
+  timerFill: {
+    height: '100%',
+    borderRadius: 6,
+  },
+  timerText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    minWidth: 40,
+  },
 
   statsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 16,
-    marginHorizontal: 16,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 12,
-  },
-  statItem: { alignItems: 'center' },
-  statValue: { color: '#FFF', fontSize: 24, fontWeight: 'bold' },
-  statLabel: { color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 4 },
-
-  questionContainer: {
-    padding: 20,
-    flex: 1,
     justifyContent: 'center',
+    gap: 12,
+    paddingVertical: 8,
   },
-  questionCard: {
-    padding: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    position: 'relative',
-  },
-  questionText: {
-    fontSize: 42,
-    fontWeight: 'bold',
-    color: '#FFF',
-  },
-  streakBadge: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
+  statBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(245, 158, 11, 0.2)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
-  streakText: { color: '#f59e0b', fontSize: 14, fontWeight: 'bold' },
+  statText: {
+    color: '#FFF',
+    fontSize: 12,
+  },
 
-  optionsContainer: {
+  questionBox: {
+    marginHorizontal: 20,
+    marginVertical: 30,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 24,
+    padding: 24,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  questionInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  questionNum: {
+    color: '#FFF',
+    fontSize: 48,
+    fontWeight: 'bold',
+  },
+  operationBadge: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  operationText: {
+    color: '#FFF',
+    fontSize: 28,
+    fontWeight: 'bold',
+  },
+  equalsSign: {
+    color: '#94a3b8',
+    fontSize: 36,
+    marginHorizontal: 8,
+  },
+  questionMark: {
+    color: '#60a5fa',
+    fontSize: 48,
+    fontWeight: 'bold',
+  },
+
+  optionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    padding: 16,
-    paddingBottom: 40,
+    paddingHorizontal: 20,
     gap: 12,
   },
   optionBtn: {
-    width: (width - 52) / 2,
+    width: (screenWidth - 64) / 2,
+    height: 70,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: 16,
-    overflow: 'hidden',
-  },
-  optionGradient: {
-    padding: 20,
+    justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  optionCorrect: {
+    backgroundColor: 'rgba(34,197,94,0.4)',
+    borderColor: '#22c55e',
+  },
+  optionWrong: {
+    backgroundColor: 'rgba(239,68,68,0.4)',
+    borderColor: '#ef4444',
   },
   optionText: {
     color: '#FFF',
@@ -389,59 +515,91 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
-  feedbackOverlay: {
-    ...StyleSheet.absoluteFillObject,
+  feedbackContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
-    pointerEvents: 'none',
+    paddingVertical: 16,
   },
-  feedbackBadge: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+  feedbackText: {
+    fontSize: 24,
+    fontWeight: 'bold',
   },
-  feedbackCorrect: { backgroundColor: '#22c55e' },
-  feedbackWrong: { backgroundColor: '#ef4444' },
 
   gameOverOverlay: {
     ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.9)',
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  gameOverContent: {
+  gameOverModal: {
+    backgroundColor: '#1e293b',
     padding: 32,
     borderRadius: 24,
     alignItems: 'center',
-    marginHorizontal: 20,
-    minWidth: 300,
+    width: '85%',
+    borderWidth: 2,
+    borderColor: '#3b82f6',
+  },
+  gameOverEmoji: {
+    fontSize: 60,
+    marginBottom: 12,
   },
   gameOverTitle: {
-    fontSize: 26,
-    fontWeight: 'bold',
     color: '#FFF',
-    marginTop: 16,
-    marginBottom: 20,
+    fontSize: 24,
+    fontWeight: 'bold',
   },
-  gameOverStats: {
+  finalScore: {
+    color: '#3b82f6',
+    fontSize: 48,
+    fontWeight: 'bold',
+    marginVertical: 16,
+  },
+  finalStats: {
     flexDirection: 'row',
-    gap: 40,
+    gap: 20,
     marginBottom: 24,
   },
-  gameOverStat: { alignItems: 'center' },
-  gameOverStatValue: { color: '#FFF', fontSize: 32, fontWeight: 'bold' },
-  gameOverStatLabel: { color: 'rgba(255,255,255,0.6)', fontSize: 14, marginTop: 4 },
+  finalStatItem: {
+    alignItems: 'center',
+  },
+  finalStatLabel: {
+    color: '#94a3b8',
+    fontSize: 11,
+    marginBottom: 4,
+  },
+  finalStatValue: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  gameOverButtons: {
+    width: '100%',
+    gap: 12,
+  },
   playAgainBtn: {
     flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#3b82f6',
-    paddingHorizontal: 28,
     paddingVertical: 14,
     borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
-  playAgainText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
+  playAgainText: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  exitBtn: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  exitText: {
+    color: '#FFF',
+    fontSize: 16,
+  },
 });
 
 export default MathRaceGame;
