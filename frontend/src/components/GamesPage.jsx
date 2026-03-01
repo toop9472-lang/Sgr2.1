@@ -770,6 +770,90 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
         <DiamondShop onClose={() => setShowDiamondShop(false)} userId={user?.id} />
       )}
 
+      {/* IAP Shop Modal */}
+      {showIAPShop && (
+        <IAPShop 
+          user={user}
+          onClose={() => setShowIAPShop(false)} 
+          onPurchaseComplete={(data) => {
+            if (data.diamonds_added) {
+              setBalance(prev => ({ ...prev, diamonds: prev.diamonds + data.diamonds_added }));
+            }
+          }}
+        />
+      )}
+
+      {/* Game Leaderboard */}
+      {showLeaderboard && (
+        <GameLeaderboard
+          gameId={showLeaderboard.id}
+          gameName={showLeaderboard.name}
+          gameColor={showLeaderboard.color}
+          user={user}
+          onBack={() => setShowLeaderboard(null)}
+        />
+      )}
+
+      {/* Quick Access Buttons */}
+      {!isGuest && !activeGame && (
+        <div className="mx-6 mb-4 grid grid-cols-2 gap-3">
+          <button
+            onClick={() => setShowAllLeaderboards(true)}
+            className="flex items-center gap-3 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 border border-yellow-500/30 rounded-xl p-3 hover:bg-yellow-500/20 transition-all"
+            data-testid="open-leaderboards-btn"
+          >
+            <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+              <BarChart3 size={20} className="text-yellow-400" />
+            </div>
+            <div className="text-right">
+              <div className="font-bold text-sm">المتصدرين</div>
+              <div className="text-xs text-gray-400">شاهد ترتيبك</div>
+            </div>
+          </button>
+          <button
+            onClick={() => setShowIAPShop(true)}
+            className="flex items-center gap-3 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 rounded-xl p-3 hover:bg-purple-500/20 transition-all"
+            data-testid="open-shop-btn"
+          >
+            <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+              <ShoppingCart size={20} className="text-purple-400" />
+            </div>
+            <div className="text-right">
+              <div className="font-bold text-sm">المتجر</div>
+              <div className="text-xs text-gray-400">عروض VIP</div>
+            </div>
+          </button>
+        </div>
+      )}
+
+      {/* All Games Leaderboards Modal */}
+      {showAllLeaderboards && (
+        <div className="fixed inset-0 bg-black/90 z-50" data-testid="all-leaderboards-modal">
+          <div className="flex items-center justify-between p-4 border-b border-white/10">
+            <button 
+              onClick={() => setShowAllLeaderboards(false)}
+              className="p-2 rounded-full bg-white/10"
+            >
+              <X size={20} />
+            </button>
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              <Trophy className="text-yellow-400" size={20} />
+              لوحات المتصدرين
+            </h2>
+            <div className="w-10" />
+          </div>
+          <div className="overflow-y-auto" style={{ height: 'calc(100vh - 60px)' }}>
+            <AllGamesLeaderboards 
+              user={user}
+              onSelectGame={(gameId, gameInfo) => {
+                setShowAllLeaderboards(false);
+                setShowLeaderboard({ id: gameId, name: gameInfo.name, color: gameInfo.color });
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Games Grid */}
       <div className="px-6 mb-8">
         <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
