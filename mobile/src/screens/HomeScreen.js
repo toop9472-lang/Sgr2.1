@@ -888,7 +888,61 @@ const styles = StyleSheet.create({
     marginTop: 2 
   },
 
-  // Multiplayer Section
+  // Multiplayer Section - New Image Design
+  multiplayerCardNew: {
+    marginBottom: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 6,
+    shadowColor: '#8b5cf6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  multiplayerImageBg: {
+    height: 110,
+  },
+  multiplayerImageStyle: {
+    borderRadius: 20,
+  },
+  multiplayerOverlayNew: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    padding: 16,
+  },
+  multiplayerContentNew: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+  },
+  multiplayerTitleNew: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#FFF',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  multiplayerDescNew: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.9)',
+    marginTop: 2,
+  },
+  startMatchBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#8b5cf6',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 14,
+    gap: 6,
+  },
+  startMatchText: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  // Old multiplayer styles
   multiplayerSection: { 
     marginBottom: 24 
   },
