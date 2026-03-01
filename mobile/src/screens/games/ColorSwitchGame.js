@@ -103,11 +103,14 @@ const ColorSwitchGame = ({ mode, onComplete, onClose }) => {
     const correct = isMatch === actualMatch;
     
     if (correct) {
+      gameSounds.correct();
       const comboBonus = Math.min(combo, 5);
       setScore(s => s + 1 + comboBonus);
       setCombo(c => c + 1);
+      if (combo >= 2) gameSounds.bonus();
       generateNewRound();
     } else {
+      gameSounds.wrong();
       setCombo(0);
       // Penalty: lose 1 second
       setTimeLeft(t => Math.max(0, t - 1));
