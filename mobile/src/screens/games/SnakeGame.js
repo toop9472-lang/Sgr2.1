@@ -291,8 +291,8 @@ const SnakeGame = ({ mode, onComplete, onClose }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <LinearGradient colors={['#0f172a', '#1e293b', '#0f172a']} style={styles.gradient}>
+    <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
+      <View style={styles.overlay}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.headerBtn} onPress={onClose}>
