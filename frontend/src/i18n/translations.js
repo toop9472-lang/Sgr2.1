@@ -230,6 +230,21 @@ export const translations = {
     notifications: 'Notifications',
     withdraw: 'Withdraw',
     watch: 'Watch',
+    games: 'Games',
+    
+    // Home Page Features
+    saqrFortunes: 'Saqr Fortunes',
+    saqrFortunesDesc: 'Exchange Saqr gems for money!',
+    globalChat: 'Global Chat',
+    globalChatDesc: 'Connect with players worldwide!',
+    friends: 'Friends',
+    friendsDesc: 'Add friends and compete with them',
+    currentBalance: 'Current Balance',
+    dailyChallenge: 'Daily Challenge',
+    dailyChallengeDesc: 'Complete the challenge and earn extra rewards',
+    start: 'Start',
+    new: 'New',
+    
     yourPoints: 'Your Points',
     earnedPoint: 'Earned a point!',
     loginToEarnPoints: 'Login to earn points',
