@@ -902,9 +902,9 @@ const styles = StyleSheet.create({
     color: '#FFF',
   },
   inlineEmoji: {
-    width: 28,
-    height: 28,
-    marginHorizontal: 2,
+    width: 48,
+    height: 48,
+    marginHorizontal: 4,
   },
   messageFooter: {
     flexDirection: 'row',
