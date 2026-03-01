@@ -163,9 +163,11 @@ const BrickBreakerGame = ({ difficulty = 'medium', onComplete, onClose }) => {
           const newLives = prev - 1;
           if (newLives <= 0) {
             setGameState('lost');
+            gameSounds.lose();
             const points = Math.floor(score * (difficulty === 'hard' ? 1.5 : 1));
             onComplete(points, 'lose');
           } else {
+            gameSounds.wrong();
             resetBall();
           }
           return newLives;
@@ -186,6 +188,7 @@ const BrickBreakerGame = ({ difficulty = 'medium', onComplete, onClose }) => {
             newY <= brick.y + brick.height
           ) {
             bricksHit = true;
+            gameSounds.buttonTap();
             setScore((prev) => prev + brick.points);
             
             // Determine collision side
