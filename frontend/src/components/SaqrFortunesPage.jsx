@@ -8,7 +8,7 @@ import { ArrowLeft, Diamond, Play, Gift, Flame, Trophy, Star, Zap, Clock, Trendi
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 // ==================== ثوابت النظام ====================
-const DIAMONDS_PER_DOLLAR = 500;
+const GEMS_PER_RIYAL = 500;
 const AD_DURATION_SECONDS = 30;
 const MAX_DAILY_ADS = 50;
 
