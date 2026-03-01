@@ -741,13 +741,18 @@ const AIQuestGame = ({ mode, onComplete, onClose }) => {
         <Ionicons name="star" size={16} color="#fbbf24" />
         <Text style={styles.pointsIndicatorText}>+{currentChallenge.points} نقطة</Text>
       </View>
-    </LinearGradient>
+      </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     padding: 16,
     paddingTop: 50,
   },
