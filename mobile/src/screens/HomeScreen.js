@@ -291,42 +291,58 @@ const HomeScreen = ({ user, onNavigateToAds, onNavigateToGames, onNavigateToChat
           </View>
         </View>
 
-        {/* Daily Challenge Banner */}
-        <TouchableOpacity activeOpacity={0.9} style={styles.challengeBanner}>
-          <LinearGradient colors={['#f59e0b', '#d97706']} style={styles.challengeGradient}>
-            <View style={styles.challengeLeft}>
-              <View style={styles.challengeIconBg}>
-                <Ionicons name="trophy" size={24} color="#FFF" />
+        {/* Daily Challenge Banner - New Image Design */}
+        <TouchableOpacity activeOpacity={0.9} style={styles.challengeBannerNew}>
+          <ImageBackground 
+            source={{ uri: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/9571396ba276f9f9cf70ce0622c4303850d05054256c99581ef235eec62d9760.png' }}
+            style={styles.challengeImageBg}
+            imageStyle={styles.challengeImageStyle}
+          >
+            <LinearGradient 
+              colors={['rgba(0,0,0,0.2)', 'rgba(0,0,0,0.7)']} 
+              style={styles.challengeOverlayNew}
+            >
+              <View style={styles.challengeContentNew}>
+                <View>
+                  <Text style={styles.challengeTitleNew}>التحدي اليومي</Text>
+                  <Text style={styles.challengeDescNew}>اربح نقاط إضافية كل يوم!</Text>
+                </View>
+                <View style={styles.challengeBtn}>
+                  <Ionicons name="flame" size={18} color="#FFF" />
+                </View>
               </View>
-              <View>
-                <Text style={styles.challengeTitle}>التحدي اليومي</Text>
-                <Text style={styles.challengeDesc}>اربح نقاط إضافية كل يوم!</Text>
-              </View>
-            </View>
-            <Ionicons name="chevron-forward" size={24} color="#FFF" />
-          </LinearGradient>
+            </LinearGradient>
+          </ImageBackground>
         </TouchableOpacity>
 
-        {/* Multiplayer Section */}
-        <View style={styles.multiplayerSection}>
-          <LinearGradient colors={['#1e1e28', '#252532']} style={styles.multiplayerCard}>
-            <View style={styles.multiplayerHeader}>
-              <Ionicons name="people" size={24} color="#60a5fa" />
-              <Text style={styles.multiplayerTitle}>اللعب الجماعي</Text>
-            </View>
-            <Text style={styles.multiplayerDesc}>
-              تحدى أصدقائك أو لاعبين من حول العالم في مباريات مباشرة!
-            </Text>
-            <TouchableOpacity 
-              style={styles.multiplayerBtn}
-              onPress={handleNavigateToGames}
-              activeOpacity={0.8}
+        {/* Multiplayer Section - New Image Design */}
+        <TouchableOpacity 
+          style={styles.multiplayerCardNew}
+          onPress={handleNavigateToGames}
+          activeOpacity={0.9}
+        >
+          <ImageBackground 
+            source={{ uri: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/45a8a3fbd10c46b785a5178ca02ae00c0c4aa43973b95689ebf41e18eb5cbada.png' }}
+            style={styles.multiplayerImageBg}
+            imageStyle={styles.multiplayerImageStyle}
+          >
+            <LinearGradient 
+              colors={['rgba(0,0,0,0.2)', 'rgba(0,0,0,0.7)']} 
+              style={styles.multiplayerOverlayNew}
             >
-              <Text style={styles.multiplayerBtnText}>ابدأ مباراة</Text>
-              <Ionicons name="arrow-forward" size={18} color="#FFF" />
-            </TouchableOpacity>
-          </LinearGradient>
-        </View>
+              <View style={styles.multiplayerContentNew}>
+                <View>
+                  <Text style={styles.multiplayerTitleNew}>اللعب الجماعي</Text>
+                  <Text style={styles.multiplayerDescNew}>تحدى لاعبين من حول العالم!</Text>
+                </View>
+                <View style={styles.startMatchBtn}>
+                  <Text style={styles.startMatchText}>ابدأ</Text>
+                  <Ionicons name="arrow-forward" size={16} color="#FFF" />
+                </View>
+              </View>
+            </LinearGradient>
+          </ImageBackground>
+        </TouchableOpacity>
 
         {/* Earn More Section - Subtle, not main focus */}
         <View style={styles.earnSection}>
