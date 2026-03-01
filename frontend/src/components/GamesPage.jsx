@@ -205,6 +205,8 @@ const GuestRestrictionModal = ({ onClose, onLogin }) => {
 
 // Main Games Page Component
 const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
+  const { isDark } = useTheme();
+  const { t, isRTL } = useLanguage();
   const [activeGame, setActiveGame] = useState(null);
   const [gameMode, setGameMode] = useState(null);
   const [showModeSelector, setShowModeSelector] = useState(null);
