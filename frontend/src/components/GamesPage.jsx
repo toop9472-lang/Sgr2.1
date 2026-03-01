@@ -228,6 +228,9 @@ const GamesPage = ({ user, onNavigate, onPointsEarned }) => {
   const [showDiamondShop, setShowDiamondShop] = useState(false);
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [showIAPShop, setShowIAPShop] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(null);
+  const [showAllLeaderboards, setShowAllLeaderboards] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [leaderboard, setLeaderboard] = useState([]);
   const [balance, setBalance] = useState({ saqr_points: 0, diamonds: 300, daily_points_remaining: 70 });
