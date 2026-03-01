@@ -35,7 +35,16 @@ def test_user_id(auth_token):
         headers={"Authorization": f"Bearer {auth_token}"})
     if response.status_code == 200:
         data = response.json()
-        return data.get("id") or data.get("user_id")
+        # Support both id and user_id fields
+        return data.get("id") or data.get("user_id") or data.get("user", {}).get("id")
+    # Also try from signin response
+    signin_response = requests.post(f"{BASE_URL}/api/auth/signin", json={
+        "email": TEST_EMAIL,
+        "password": TEST_PASSWORD
+    })
+    if signin_response.status_code == 200:
+        data = signin_response.json()
+        return data.get("user", {}).get("id")
     return None
 
 
