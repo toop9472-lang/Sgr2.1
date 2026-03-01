@@ -6,6 +6,8 @@ import {
   Users, Cpu, X, Wifi, Crown, Lock,
   Calculator, Type, Apple, CreditCard, MessageCircle
 } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import soundManager from '../utils/soundManager';
 import GameChat, { ChatToggleButton } from './GameChat';
 
