@@ -633,16 +633,22 @@ const SaqrFortunesPage = ({ user, onBack, onBalanceUpdate }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
-        <div className="text-blue-400 animate-pulse">جاري التحميل...</div>
+      <div className={`min-h-screen ${isDark ? 'bg-[#0a0a0f]' : 'bg-gray-50'} flex items-center justify-center`}>
+        <div className={`${isDark ? 'text-blue-400' : 'text-blue-600'} animate-pulse`}>{isRTL ? 'جاري التحميل...' : 'Loading...'}</div>
       </div>
     );
   }
 
+  // Theme classes
+  const bgClass = isDark ? 'bg-gradient-to-b from-[#0a0a0f] via-[#1a1a2e] to-[#0a0a0f]' : 'bg-gradient-to-b from-gray-50 via-gray-100 to-gray-50';
+  const textClass = isDark ? 'text-white' : 'text-gray-900';
+  const cardClass = isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200 shadow-sm';
+  const headerBgClass = isDark ? 'bg-[#0a0a0f]/95' : 'bg-white/95';
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a0a0f] via-[#1a1a2e] to-[#0a0a0f] text-white pb-24">
+    <div className={`min-h-screen ${bgClass} ${textClass} pb-24`}>
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-[#0a0a0f]/95 backdrop-blur-lg border-b border-white/10">
+      <div className={`sticky top-0 z-40 ${headerBgClass} backdrop-blur-lg border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
         <div className="max-w-lg mx-auto px-4 py-4 flex items-center justify-between">
           <button 
             onClick={onBack}
