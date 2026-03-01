@@ -4,6 +4,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Diamond, Play, Gift, Flame, Trophy, Star, Zap, Clock, TrendingUp, ChevronRight, Sparkles } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
