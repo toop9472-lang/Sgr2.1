@@ -4,7 +4,8 @@ import {
   Trophy, Grid3X3, Puzzle, Brain, 
   Clock, Star, Diamond, Medal, Gamepad2, 
   Users, Cpu, X, Wifi, Crown, Lock,
-  Calculator, Type, Apple, CreditCard, MessageCircle
+  Calculator, Type, Apple, CreditCard, MessageCircle,
+  Sparkles, Lightbulb, Palette, Zap
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../i18n/LanguageContext';
