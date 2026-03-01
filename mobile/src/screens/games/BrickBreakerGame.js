@@ -214,6 +214,7 @@ const BrickBreakerGame = ({ difficulty = 'medium', onComplete, onClose }) => {
         // Check if all bricks destroyed
         if (newBricks.every((b) => !b.active)) {
           setGameState('won');
+          gameSounds.win();
           const basePoints = score + 500; // Bonus for completing
           const points = Math.floor(basePoints * (difficulty === 'hard' ? 1.5 : 1));
           onComplete(points, 'win');
