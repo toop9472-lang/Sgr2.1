@@ -2041,6 +2041,140 @@ const styles = StyleSheet.create({
   // Options Grid for Riddles/Trivia
   optionsGrid: { gap: 10 },
   optionTextSelected: { color: '#FFF', fontWeight: '700' },
+  
+  // Leaderboard Section - New Professional Design
+  leaderboardSection: {
+    marginHorizontal: 16,
+    marginBottom: 20,
+  },
+  leaderboardBanner: {
+    height: 120,
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  leaderboardBannerImage: {
+    borderRadius: 20,
+  },
+  leaderboardBannerOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    padding: 16,
+  },
+  leaderboardBannerTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#FFF',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  leaderboardBannerDesc: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.9)',
+    marginTop: 2,
+  },
+  topRewardsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    gap: 12,
+    marginBottom: 16,
+  },
+  topRewardItem: {
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 16,
+    width: 90,
+  },
+  topRewardFirst: {
+    backgroundColor: 'rgba(251, 191, 36, 0.15)',
+    paddingVertical: 16,
+    transform: [{ scale: 1.1 }],
+  },
+  topRewardRank: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 4,
+  },
+  topRewardPoints: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFF',
+    marginTop: 2,
+  },
+  leaderboardCardNew: {
+    backgroundColor: 'rgba(30,41,59,0.6)',
+    borderRadius: 20,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  lbRowNew: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 14,
+    marginVertical: 3,
+  },
+  lbTopRowNew: {
+    backgroundColor: 'rgba(251,191,36,0.05)',
+  },
+  lbRankBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  lbRankGold: {
+    backgroundColor: '#fbbf24',
+  },
+  lbRankSilver: {
+    backgroundColor: '#94a3b8',
+  },
+  lbRankBronze: {
+    backgroundColor: '#cd7f32',
+  },
+  lbRankTextNew: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.7)',
+  },
+  lbInfoNew: {
+    flex: 1,
+  },
+  lbNameNew: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFF',
+  },
+  lbGamesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2,
+  },
+  lbGamesNew: {
+    fontSize: 11,
+    color: '#64748b',
+  },
+  lbPointsNew: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(251,191,36,0.1)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+  },
+  lbPointsTextNew: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#fbbf24',
+  },
 });
 
 export default GamesScreen;
