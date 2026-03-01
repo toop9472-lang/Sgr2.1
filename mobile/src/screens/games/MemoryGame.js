@@ -1,5 +1,6 @@
-// Memory Game - Professional Memory Matching Game
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+// Memory Game - Professional Memory Match Game
+// لعبة الذاكرة الاحترافية - تطابق الأزواج
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,369 +8,599 @@ import {
   StyleSheet,
   Dimensions,
   Animated,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import gameSounds from '../../utils/gameSounds';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-const isTablet = screenWidth > 600;
-const MAX_GRID_WIDTH = isTablet ? 400 : screenWidth - 40;
-const CARD_MARGIN = 4;
-const GRID_SIZE = 4; // 4x4 grid = 16 cards = 8 pairs
-const CARD_SIZE = (MAX_GRID_WIDTH - (CARD_MARGIN * 2 * GRID_SIZE)) / GRID_SIZE;
+const { width: screenWidth } = Dimensions.get('window');
+const CARD_MARGIN = 6;
+const GRID_COLS = 4;
+const CARD_SIZE = (screenWidth - 48 - (CARD_MARGIN * 2 * GRID_COLS)) / GRID_COLS;
 
-// إيموجي الأيقونات للبطاقات
-const CARD_ICONS = [
-  { icon: 'star', color: '#fbbf24' },
-  { icon: 'heart', color: '#ef4444' },
-  { icon: 'moon', color: '#a855f7' },
-  { icon: 'sunny', color: '#f97316' },
-  { icon: 'leaf', color: '#22c55e' },
-  { icon: 'water', color: '#3b82f6' },
-  { icon: 'flame', color: '#dc2626' },
-  { icon: 'diamond', color: '#06b6d4' },
-  { icon: 'flash', color: '#eab308' },
-  { icon: 'rocket', color: '#8b5cf6' },
-  { icon: 'planet', color: '#14b8a6' },
-  { icon: 'snow', color: '#60a5fa' },
+// الرموز المستخدمة
+const SYMBOLS = [
+  { emoji: '🎮', color: '#ef4444' },
+  { emoji: '🎯', color: '#f97316' },
+  { emoji: '🎲', color: '#fbbf24' },
+  { emoji: '🎪', color: '#22c55e' },
+  { emoji: '🎨', color: '#3b82f6' },
+  { emoji: '🎭', color: '#8b5cf6' },
+  { emoji: '🎵', color: '#ec4899' },
+  { emoji: '🎬', color: '#06b6d4' },
+  { emoji: '⚽', color: '#84cc16' },
+  { emoji: '🏀', color: '#f97316' },
+  { emoji: '🎾', color: '#eab308' },
+  { emoji: '🎱', color: '#1f2937' },
 ];
-
-const createCards = (pairs = 8) => {
-  const selectedIcons = CARD_ICONS.slice(0, pairs);
-  const cards = [];
-  
-  selectedIcons.forEach((item, index) => {
-    // كل أيقونة تضاف مرتين (زوج)
-    cards.push({ id: index * 2, icon: item.icon, color: item.color, pairId: index });
-    cards.push({ id: index * 2 + 1, icon: item.icon, color: item.color, pairId: index });
-  });
-  
-  // خلط البطاقات
-  return cards.sort(() => Math.random() - 0.5);
-};
-
-const MemoryCard = ({ card, isFlipped, isMatched, onPress, disabled }) => {
-  const flipAnim = useRef(new Animated.Value(0)).current;
-  
-  useEffect(() => {
-    Animated.spring(flipAnim, {
-      toValue: isFlipped || isMatched ? 1 : 0,
-      friction: 8,
-      tension: 10,
-      useNativeDriver: true,
-    }).start();
-  }, [isFlipped, isMatched]);
-  
-  const frontInterpolate = flipAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['180deg', '360deg'],
-  });
-  
-  const backInterpolate = flipAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '180deg'],
-  });
-  
-  return (
-    <TouchableOpacity 
-      style={styles.cardContainer} 
-      onPress={onPress} 
-      disabled={disabled || isMatched}
-      activeOpacity={0.8}
-    >
-      {/* Back of card */}
-      <Animated.View style={[styles.card, styles.cardBack, { transform: [{ rotateY: backInterpolate }] }]}>
-        <LinearGradient colors={['#3b82f6', '#1d4ed8']} style={styles.cardGradient}>
-          <Ionicons name="help" size={24} color="rgba(255,255,255,0.5)" />
-        </LinearGradient>
-      </Animated.View>
-      
-      {/* Front of card */}
-      <Animated.View style={[styles.card, styles.cardFront, isMatched && styles.cardMatched, { transform: [{ rotateY: frontInterpolate }] }]}>
-        <Ionicons name={card.icon} size={32} color={card.color} />
-      </Animated.View>
-    </TouchableOpacity>
-  );
-};
 
 const MemoryGame = ({ mode, onComplete, onClose }) => {
   const [cards, setCards] = useState([]);
-  const [flippedCards, setFlippedCards] = useState([]);
-  const [matchedPairs, setMatchedPairs] = useState([]);
+  const [flipped, setFlipped] = useState([]);
+  const [matched, setMatched] = useState([]);
   const [moves, setMoves] = useState(0);
-  const [time, setTime] = useState(0);
+  const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
-  const [isChecking, setIsChecking] = useState(false);
+  const [timer, setTimer] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [combo, setCombo] = useState(0);
+  const [bestTime, setBestTime] = useState(null);
+  const [difficulty, setDifficulty] = useState('medium'); // easy: 3x4, medium: 4x4, hard: 4x5
+  
   const timerRef = useRef(null);
-  
-  // بدء اللعبة
+  const flipAnims = useRef([]);
+
+  // إعداد اللعبة
   useEffect(() => {
-    startNewGame();
+    initGame();
     return () => clearInterval(timerRef.current);
-  }, []);
-  
-  const startNewGame = () => {
-    const newCards = createCards(8);
-    setCards(newCards);
-    setFlippedCards([]);
-    setMatchedPairs([]);
+  }, [difficulty]);
+
+  const initGame = () => {
+    const pairs = difficulty === 'easy' ? 6 : difficulty === 'medium' ? 8 : 10;
+    const selectedSymbols = SYMBOLS.slice(0, pairs);
+    const cardPairs = [...selectedSymbols, ...selectedSymbols]
+      .sort(() => Math.random() - 0.5)
+      .map((symbol, index) => ({
+        id: index,
+        ...symbol,
+        isFlipped: false,
+        isMatched: false,
+      }));
+    
+    setCards(cardPairs);
+    flipAnims.current = cardPairs.map(() => new Animated.Value(0));
+    setFlipped([]);
+    setMatched([]);
     setMoves(0);
-    setTime(0);
+    setScore(0);
     setGameOver(false);
-    setIsChecking(false);
-    
-    // بدء المؤقت
-    clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      setTime(t => t + 1);
-    }, 1000);
+    setTimer(0);
+    setIsPlaying(false);
+    setCombo(0);
   };
-  
-  const handleCardPress = (cardId) => {
-    if (isChecking || flippedCards.length >= 2) return;
-    if (flippedCards.includes(cardId)) return;
-    if (matchedPairs.includes(cards.find(c => c.id === cardId)?.pairId)) return;
-    
-    const newFlipped = [...flippedCards, cardId];
-    setFlippedCards(newFlipped);
-    
-    if (newFlipped.length === 2) {
-      setMoves(m => m + 1);
-      setIsChecking(true);
+
+  // المؤقت
+  useEffect(() => {
+    if (isPlaying && !gameOver) {
+      timerRef.current = setInterval(() => {
+        setTimer(t => t + 1);
+      }, 1000);
+    }
+    return () => clearInterval(timerRef.current);
+  }, [isPlaying, gameOver]);
+
+  // التحقق من التطابق
+  useEffect(() => {
+    if (flipped.length === 2) {
+      const [first, second] = flipped;
       
-      const [first, second] = newFlipped;
-      const firstCard = cards.find(c => c.id === first);
-      const secondCard = cards.find(c => c.id === second);
-      
-      if (firstCard.pairId === secondCard.pairId) {
+      if (cards[first].emoji === cards[second].emoji) {
         // تطابق!
-        const newMatched = [...matchedPairs, firstCard.pairId];
-        setMatchedPairs(newMatched);
-        setFlippedCards([]);
-        setIsChecking(false);
+        gameSounds.memoryMatch();
+        setMatched(prev => [...prev, first, second]);
+        setScore(s => s + (100 * (1 + combo * 0.2)));
+        setCombo(c => c + 1);
+        setFlipped([]);
         
         // التحقق من الفوز
-        if (newMatched.length === 8) {
-          clearInterval(timerRef.current);
-          setGameOver(true);
-          
-          // حساب النقاط بناءً على الوقت والحركات
-          let points = 18;
-          if (moves < 16) points = 25;
-          else if (moves < 20) points = 22;
-          else if (moves < 25) points = 20;
-          
-          setTimeout(() => {
-            onComplete(points, 'win');
-          }, 1000);
+        if (matched.length + 2 === cards.length) {
+          endGame(true);
         }
       } else {
-        // لا تطابق - إخفاء بعد ثانية
+        // لا تطابق
+        gameSounds.memoryMismatch();
+        setCombo(0);
         setTimeout(() => {
-          setFlippedCards([]);
-          setIsChecking(false);
+          // قلب البطاقات
+          flipAnims.current[first] && Animated.timing(flipAnims.current[first], {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }).start();
+          flipAnims.current[second] && Animated.timing(flipAnims.current[second], {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }).start();
+          setFlipped([]);
         }, 1000);
       }
     }
+  }, [flipped]);
+
+  const flipCard = (index) => {
+    if (gameOver || flipped.length >= 2 || flipped.includes(index) || matched.includes(index)) {
+      return;
+    }
+
+    if (!isPlaying) {
+      setIsPlaying(true);
+    }
+
+    gameSounds.buttonTap();
+    setMoves(m => m + 1);
+    setFlipped(prev => [...prev, index]);
+    
+    // أنيميشن القلب
+    Animated.timing(flipAnims.current[index], {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
   };
-  
+
+  const endGame = (won) => {
+    clearInterval(timerRef.current);
+    setGameOver(true);
+    
+    if (won) {
+      gameSounds.win();
+      if (!bestTime || timer < bestTime) {
+        setBestTime(timer);
+      }
+      
+      // حساب النقاط بناءً على الوقت والحركات
+      const timeBonus = Math.max(0, 300 - timer * 2);
+      const moveBonus = Math.max(0, 200 - moves * 5);
+      const finalScore = score + timeBonus + moveBonus;
+      
+      onComplete && onComplete(Math.min(100, Math.floor(finalScore / 10)), 'win');
+    } else {
+      gameSounds.lose();
+      onComplete && onComplete(10, 'lose');
+    }
+  };
+
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
-  
-  return (
-    <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onClose} style={styles.headerBtn}>
-          <Ionicons name="arrow-back" size={24} color="#FFF" />
-        </TouchableOpacity>
-        <Text style={styles.title}>لعبة الذاكرة</Text>
-        <TouchableOpacity onPress={startNewGame} style={styles.headerBtn}>
-          <Ionicons name="refresh" size={22} color="#60a5fa" />
-        </TouchableOpacity>
-      </View>
-      
-      {/* Stats */}
-      <View style={styles.statsRow}>
-        <View style={styles.stat}>
-          <Ionicons name="time-outline" size={18} color="#60a5fa" />
-          <Text style={styles.statValue}>{formatTime(time)}</Text>
-        </View>
-        <View style={styles.stat}>
-          <Ionicons name="swap-horizontal" size={18} color="#fbbf24" />
-          <Text style={styles.statValue}>{moves} حركة</Text>
-        </View>
-        <View style={styles.stat}>
-          <Ionicons name="checkmark-circle" size={18} color="#22c55e" />
-          <Text style={styles.statValue}>{matchedPairs.length}/8</Text>
-        </View>
-      </View>
-      
-      {/* Game Board */}
-      <View style={styles.board}>
-        {cards.map((card) => (
-          <MemoryCard
-            key={card.id}
-            card={card}
-            isFlipped={flippedCards.includes(card.id)}
-            isMatched={matchedPairs.includes(card.pairId)}
-            onPress={() => handleCardPress(card.id)}
-            disabled={isChecking}
-          />
-        ))}
-      </View>
-      
-      {/* Instructions */}
-      <View style={styles.instructions}>
-        <Text style={styles.instructionText}>اقلب البطاقات وجد الأزواج المتطابقة</Text>
-      </View>
-      
-      {/* Game Over Overlay */}
-      {gameOver && (
-        <View style={styles.gameOverOverlay}>
-          <LinearGradient colors={['rgba(0,0,0,0.95)', 'rgba(0,0,0,0.9)']} style={styles.gameOverContent}>
-            <Ionicons name="trophy" size={60} color="#fbbf24" />
-            <Text style={styles.gameOverTitle}>مبروك</Text>
-            <Text style={styles.gameOverText}>أكملت اللعبة في {formatTime(time)}</Text>
-            <Text style={styles.gameOverText}>عدد الحركات: {moves}</Text>
-            <TouchableOpacity style={styles.playAgainBtn} onPress={startNewGame}>
-              <Text style={styles.playAgainText}>العب مرة أخرى</Text>
-            </TouchableOpacity>
+
+  const renderCard = (card, index) => {
+    const isFlippedCard = flipped.includes(index) || matched.includes(index);
+    const flipAnim = flipAnims.current[index];
+    
+    const frontInterpolate = flipAnim?.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['180deg', '360deg'],
+    }) || '180deg';
+    
+    const backInterpolate = flipAnim?.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['0deg', '180deg'],
+    }) || '0deg';
+
+    return (
+      <TouchableOpacity
+        key={card.id}
+        style={styles.cardContainer}
+        onPress={() => flipCard(index)}
+        activeOpacity={0.9}
+      >
+        {/* الوجه الخلفي */}
+        <Animated.View
+          style={[
+            styles.card,
+            styles.cardBack,
+            { transform: [{ rotateY: backInterpolate }] },
+          ]}
+        >
+          <LinearGradient
+            colors={['#3b82f6', '#1d4ed8']}
+            style={styles.cardGradient}
+          >
+            <Text style={styles.cardBackIcon}>❓</Text>
           </LinearGradient>
+        </Animated.View>
+        
+        {/* الوجه الأمامي */}
+        <Animated.View
+          style={[
+            styles.card,
+            styles.cardFront,
+            { 
+              transform: [{ rotateY: frontInterpolate }],
+              backgroundColor: matched.includes(index) ? '#22c55e20' : '#FFF',
+            },
+          ]}
+        >
+          <Text style={styles.cardEmoji}>{card.emoji}</Text>
+          {matched.includes(index) && (
+            <View style={styles.matchedBadge}>
+              <Ionicons name="checkmark" size={16} color="#22c55e" />
+            </View>
+          )}
+        </Animated.View>
+      </TouchableOpacity>
+    );
+  };
+
+  const gridRows = difficulty === 'easy' ? 3 : difficulty === 'medium' ? 4 : 5;
+
+  return (
+    <View style={styles.container}>
+      <LinearGradient colors={['#1e1b4b', '#312e81', '#1e1b4b']} style={styles.gradient}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.headerBtn} onPress={onClose}>
+            <Ionicons name="close" size={24} color="#FFF" />
+          </TouchableOpacity>
+          
+          <Text style={styles.title}>لعبة الذاكرة</Text>
+          
+          <TouchableOpacity style={styles.headerBtn} onPress={initGame}>
+            <Ionicons name="refresh" size={24} color="#FFF" />
+          </TouchableOpacity>
         </View>
-      )}
-    </LinearGradient>
+
+        {/* Stats */}
+        <View style={styles.statsRow}>
+          <View style={styles.statBox}>
+            <Ionicons name="time-outline" size={20} color="#fbbf24" />
+            <Text style={styles.statValue}>{formatTime(timer)}</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Ionicons name="hand-left-outline" size={20} color="#3b82f6" />
+            <Text style={styles.statValue}>{moves}</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Ionicons name="star" size={20} color="#22c55e" />
+            <Text style={styles.statValue}>{Math.floor(score)}</Text>
+          </View>
+          {combo > 1 && (
+            <View style={[styles.statBox, styles.comboBox]}>
+              <Text style={styles.comboText}>x{combo}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Progress */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBar}>
+            <View 
+              style={[
+                styles.progressFill, 
+                { width: `${(matched.length / cards.length) * 100}%` }
+              ]} 
+            />
+          </View>
+          <Text style={styles.progressText}>
+            {matched.length / 2} / {cards.length / 2}
+          </Text>
+        </View>
+
+        {/* Game Board */}
+        <View style={styles.board}>
+          <View style={[styles.grid, { flexWrap: 'wrap' }]}>
+            {cards.map((card, index) => renderCard(card, index))}
+          </View>
+        </View>
+
+        {/* Difficulty Selector (before game starts) */}
+        {!isPlaying && moves === 0 && (
+          <View style={styles.difficultyRow}>
+            {['easy', 'medium', 'hard'].map((diff) => (
+              <TouchableOpacity
+                key={diff}
+                style={[
+                  styles.diffBtn,
+                  difficulty === diff && styles.diffBtnActive,
+                ]}
+                onPress={() => setDifficulty(diff)}
+              >
+                <Text style={[
+                  styles.diffText,
+                  difficulty === diff && styles.diffTextActive,
+                ]}>
+                  {diff === 'easy' ? 'سهل' : diff === 'medium' ? 'متوسط' : 'صعب'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {/* Game Over */}
+        {gameOver && (
+          <View style={styles.gameOverOverlay}>
+            <View style={styles.gameOverModal}>
+              <Text style={styles.gameOverEmoji}>🎉</Text>
+              <Text style={styles.gameOverTitle}>أحسنت!</Text>
+              <Text style={styles.gameOverSubtitle}>أكملت اللعبة</Text>
+              
+              <View style={styles.finalStats}>
+                <View style={styles.finalStatItem}>
+                  <Text style={styles.finalStatLabel}>الوقت</Text>
+                  <Text style={styles.finalStatValue}>{formatTime(timer)}</Text>
+                </View>
+                <View style={styles.finalStatItem}>
+                  <Text style={styles.finalStatLabel}>الحركات</Text>
+                  <Text style={styles.finalStatValue}>{moves}</Text>
+                </View>
+                <View style={styles.finalStatItem}>
+                  <Text style={styles.finalStatLabel}>النقاط</Text>
+                  <Text style={styles.finalStatValue}>{Math.floor(score)}</Text>
+                </View>
+              </View>
+
+              {bestTime && timer <= bestTime && (
+                <Text style={styles.newRecord}>🏆 أفضل وقت!</Text>
+              )}
+
+              <View style={styles.gameOverButtons}>
+                <TouchableOpacity style={styles.playAgainBtn} onPress={initGame}>
+                  <Ionicons name="refresh" size={20} color="#FFF" />
+                  <Text style={styles.playAgainText}>العب مرة أخرى</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.exitBtn} onPress={onClose}>
+                  <Text style={styles.exitText}>خروج</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
+      </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  gradient: { flex: 1 },
+
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
+    paddingHorizontal: 16,
     paddingTop: 50,
+    paddingBottom: 10,
   },
-  headerBtn: { 
-    padding: 8, 
-    borderRadius: 12, 
-    backgroundColor: 'rgba(255,255,255,0.1)' 
+  headerBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  title: { 
-    fontSize: 20, 
-    fontWeight: 'bold', 
-    color: '#FFF' 
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#FFF',
   },
-  
+
   statsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 16,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    marginHorizontal: 16,
-    borderRadius: 12,
-    marginBottom: 20,
-  },
-  stat: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    gap: 6 
-  },
-  statValue: { 
-    color: '#FFF', 
-    fontSize: 15, 
-    fontWeight: '600' 
-  },
-  
-  board: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'center',
-    padding: 16,
+    gap: 12,
+    paddingVertical: 12,
   },
-  
+  statBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  statValue: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  comboBox: {
+    backgroundColor: '#f59e0b',
+  },
+  comboText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+
+  progressContainer: {
+    paddingHorizontal: 24,
+    paddingBottom: 16,
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#22c55e',
+    borderRadius: 4,
+  },
+  progressText: {
+    color: '#888',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+
+  board: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  grid: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
   cardContainer: {
     width: CARD_SIZE,
     height: CARD_SIZE,
     margin: CARD_MARGIN,
   },
   card: {
+    position: 'absolute',
     width: '100%',
     height: '100%',
-    position: 'absolute',
-    backfaceVisibility: 'hidden',
     borderRadius: 12,
-    alignItems: 'center',
+    backfaceVisibility: 'hidden',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   cardBack: {
-    backgroundColor: '#1e1e28',
-  },
-  cardFront: {
-    backgroundColor: '#1e1e28',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  cardMatched: {
-    backgroundColor: 'rgba(34, 197, 94, 0.2)',
-    borderColor: '#22c55e',
+    overflow: 'hidden',
   },
   cardGradient: {
     width: '100%',
     height: '100%',
-    borderRadius: 12,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 12,
   },
-  
-  instructions: {
-    padding: 20,
+  cardBackIcon: {
+    fontSize: CARD_SIZE * 0.4,
+  },
+  cardFront: {
+    backgroundColor: '#FFF',
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+  },
+  cardEmoji: {
+    fontSize: CARD_SIZE * 0.5,
+  },
+  matchedBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#dcfce7',
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  instructionText: {
-    color: 'rgba(255,255,255,0.5)',
+
+  difficultyRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 12,
+    paddingVertical: 16,
+  },
+  diffBtn: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  diffBtnActive: {
+    backgroundColor: '#3b82f6',
+  },
+  diffText: {
+    color: '#888',
     fontSize: 14,
   },
-  
+  diffTextActive: {
+    color: '#FFF',
+    fontWeight: 'bold',
+  },
+
   gameOverOverlay: {
     ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.85)',
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  gameOverContent: {
-    padding: 40,
+  gameOverModal: {
+    backgroundColor: '#1e1b4b',
+    padding: 32,
     borderRadius: 24,
     alignItems: 'center',
-    marginHorizontal: 20,
+    width: '85%',
+  },
+  gameOverEmoji: {
+    fontSize: 60,
+    marginBottom: 12,
   },
   gameOverTitle: {
+    color: '#FFF',
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#FFF',
-    marginTop: 16,
-    marginBottom: 8,
   },
-  gameOverText: {
+  gameOverSubtitle: {
+    color: '#888',
     fontSize: 16,
-    color: 'rgba(255,255,255,0.7)',
-    marginVertical: 4,
+    marginBottom: 20,
+  },
+  finalStats: {
+    flexDirection: 'row',
+    gap: 24,
+    marginBottom: 16,
+  },
+  finalStatItem: {
+    alignItems: 'center',
+  },
+  finalStatLabel: {
+    color: '#888',
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  finalStatValue: {
+    color: '#FFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  newRecord: {
+    color: '#fbbf24',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  gameOverButtons: {
+    width: '100%',
+    gap: 12,
   },
   playAgainBtn: {
+    flexDirection: 'row',
     backgroundColor: '#3b82f6',
-    paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 12,
-    marginTop: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
   playAgainText: {
     color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  exitBtn: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  exitText: {
+    color: '#FFF',
     fontSize: 16,
-    fontWeight: '600',
   },
 });
 
