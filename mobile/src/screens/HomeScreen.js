@@ -292,30 +292,39 @@ const HomeScreen = ({ user, onNavigateToAds, onNavigateToGames, onNavigateToChat
           </ImageBackground>
         </TouchableOpacity>
 
-        {/* Global Chat Section */}
+        {/* Global Chat Section - New Design with Image */}
         <TouchableOpacity 
           style={styles.chatCard}
           onPress={onNavigateToChat}
           activeOpacity={0.9}
         >
-          <LinearGradient 
-            colors={['#3b82f6', '#06b6d4']} 
-            style={styles.chatGradient}
+          <ImageBackground 
+            source={{ uri: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/bcdacd75d090c4626f5432d13b9b6c4c4560cc34282e9424de1cbc6732f06abf.png' }}
+            style={styles.chatBanner}
+            imageStyle={styles.chatBannerImage}
           >
-            <View style={styles.chatIcon}>
-              <Ionicons name="chatbubbles" size={26} color="#FFF" />
-            </View>
-            <View style={styles.chatInfo}>
-              <View style={styles.chatHeader}>
-                <Text style={styles.chatTitle}>الدردشة العامة</Text>
-                <View style={styles.costBadge}>
-                  <Text style={styles.costBadgeText}>5 ألماسات</Text>
+            <LinearGradient 
+              colors={['rgba(0,0,0,0.2)', 'rgba(0,0,0,0.7)']} 
+              style={styles.chatOverlay}
+            >
+              <View style={styles.chatContent}>
+                <View style={styles.chatTextArea}>
+                  <View style={styles.chatHeader}>
+                    <Text style={styles.chatTitle}>الدردشة العامة</Text>
+                    <View style={styles.costBadge}>
+                      <Ionicons name="diamond" size={10} color="#60a5fa" />
+                      <Text style={styles.costBadgeText}>5</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.chatDesc}>تواصل مع لاعبين من حول العالم!</Text>
+                </View>
+                <View style={styles.joinBtn}>
+                  <Text style={styles.joinBtnText}>انضم</Text>
+                  <Ionicons name="chatbubbles" size={14} color="#FFF" />
                 </View>
               </View>
-              <Text style={styles.chatDesc}>تواصل مع العالم! سيرفرات متعددة اللغات</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={22} color="rgba(255,255,255,0.8)" />
-          </LinearGradient>
+            </LinearGradient>
+          </ImageBackground>
         </TouchableOpacity>
 
         {/* Friends Section */}
