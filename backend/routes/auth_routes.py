@@ -669,3 +669,287 @@ async def reset_password(data: ResetPasswordRequest):
     )
     
     return {'message': 'تم تغيير كلمة المرور بنجاح'}
+
+
+
+# ==================== Apple Sign In ====================
+
+from fastapi.responses import RedirectResponse
+import secrets
+import httpx
+
+# Store sessions temporarily
+apple_sessions = {}
+
+class AppleTokenRequest(BaseModel):
+    code: str
+    id_token: str = None
+
+@router.get('/apple')
+async def apple_sign_in_redirect(redirect_uri: str = 'saqr://auth/callback'):
+    """
+    Redirect to Apple Sign In page
+    """
+    # Apple OAuth configuration
+    client_id = os.environ.get('APPLE_CLIENT_ID', 'com.saqr.rewards')
+    
+    # Generate state for CSRF protection
+    state = secrets.token_urlsafe(32)
+    
+    # Store state with redirect_uri
+    apple_sessions[state] = {
+        'redirect_uri': redirect_uri,
+        'created_at': datetime.utcnow()
+    }
+    
+    # Apple authorization URL
+    apple_auth_url = (
+        f"https://appleid.apple.com/auth/authorize"
+        f"?client_id={client_id}"
+        f"&redirect_uri={os.environ.get('APPLE_REDIRECT_URI', 'https://saqr-ui-sync.emergent.host/api/auth/apple/callback')}"
+        f"&response_type=code%20id_token"
+        f"&scope=name%20email"
+        f"&response_mode=form_post"
+        f"&state={state}"
+    )
+    
+    return RedirectResponse(url=apple_auth_url)
+
+
+@router.post('/apple/callback')
+async def apple_sign_in_callback(request: Request):
+    """
+    Handle Apple Sign In callback
+    """
+    try:
+        db = get_db()
+        
+        # Get form data
+        form = await request.form()
+        code = form.get('code')
+        id_token = form.get('id_token')
+        state = form.get('state')
+        user_data = form.get('user')  # Only provided on first sign in
+        
+        if not code and not id_token:
+            raise HTTPException(status_code=400, detail='Missing authorization code or id_token')
+        
+        # Get redirect_uri from state
+        session_data = apple_sessions.get(state, {})
+        redirect_uri = session_data.get('redirect_uri', 'saqr://auth/callback')
+        
+        # Clean up old sessions
+        if state in apple_sessions:
+            del apple_sessions[state]
+        
+        # Decode id_token to get user info
+        import jwt
+        apple_user = None
+        
+        if id_token:
+            # Decode without verification for now (Apple tokens are self-signed)
+            try:
+                decoded = jwt.decode(id_token, options={"verify_signature": False})
+                apple_user = {
+                    'id': decoded.get('sub'),
+                    'email': decoded.get('email'),
+                }
+            except Exception as e:
+                print(f"Error decoding Apple token: {e}")
+        
+        # Parse user data if provided (first sign in only)
+        name = 'مستخدم Apple'
+        if user_data:
+            try:
+                import json
+                parsed_user = json.loads(user_data)
+                first_name = parsed_user.get('name', {}).get('firstName', '')
+                last_name = parsed_user.get('name', {}).get('lastName', '')
+                name = f"{first_name} {last_name}".strip() or 'مستخدم Apple'
+            except:
+                pass
+        
+        if not apple_user or not apple_user.get('id'):
+            raise HTTPException(status_code=400, detail='Could not get user info from Apple')
+        
+        # Check if user exists
+        existing_user = await db.users.find_one({
+            '$or': [
+                {'provider': 'apple', 'provider_id': apple_user['id']},
+                {'email': apple_user.get('email')}
+            ]
+        })
+        
+        if existing_user:
+            # Update existing user
+            user_id = existing_user['id']
+            await db.users.update_one(
+                {'id': user_id},
+                {'$set': {
+                    'provider': 'apple',
+                    'provider_id': apple_user['id'],
+                    'updated_at': datetime.utcnow()
+                }}
+            )
+        else:
+            # Create new user
+            user_id = f"user_{uuid.uuid4().hex[:12]}"
+            new_user = {
+                'id': user_id,
+                'email': apple_user.get('email', f"{apple_user['id']}@privaterelay.appleid.com"),
+                'name': name,
+                'provider': 'apple',
+                'provider_id': apple_user['id'],
+                'points': 0,
+                'diamonds': 100,
+                'total_earned': 0,
+                'is_guest': False,
+                'created_at': datetime.utcnow(),
+                'updated_at': datetime.utcnow()
+            }
+            await db.users.insert_one(new_user)
+        
+        # Create session
+        session_id = secrets.token_urlsafe(32)
+        token, refresh = create_token_pair(user_id)
+        
+        # Store session temporarily
+        apple_sessions[session_id] = {
+            'user_id': user_id,
+            'token': token,
+            'refresh_token': refresh,
+            'created_at': datetime.utcnow()
+        }
+        
+        # Redirect back to app
+        return RedirectResponse(url=f"{redirect_uri}?session_id={session_id}")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Apple Sign In Error: {e}")
+        # Redirect with error
+        return RedirectResponse(url=f"saqr://auth/callback?error=auth_failed")
+
+
+@router.get('/session/{session_id}')
+async def get_session(session_id: str):
+    """
+    Get session data after OAuth callback
+    """
+    db = get_db()
+    
+    session_data = apple_sessions.get(session_id)
+    if not session_data:
+        raise HTTPException(status_code=404, detail='Session not found or expired')
+    
+    # Clean up session
+    del apple_sessions[session_id]
+    
+    # Get user data
+    user = await db.users.find_one({'id': session_data['user_id']})
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    
+    return {
+        'token': session_data['token'],
+        'refresh_token': session_data.get('refresh_token'),
+        'user': {
+            'id': user['id'],
+            'email': user.get('email', ''),
+            'name': user.get('name', 'مستخدم'),
+            'avatar': user.get('avatar'),
+            'points': user.get('points', 0),
+            'diamonds': user.get('diamonds', 0),
+            'total_earned': user.get('total_earned', 0),
+            'joined_date': user.get('created_at', datetime.utcnow()).isoformat()
+        }
+    }
+
+
+
+class AppleNativeLogin(BaseModel):
+    user_id: str
+    email: str = None
+    name: str = None
+    identity_token: str = None
+
+@router.post('/apple/native')
+async def apple_native_sign_in(data: AppleNativeLogin):
+    """
+    Handle native Apple Sign In from mobile app
+    """
+    try:
+        db = get_db()
+        
+        if not data.user_id:
+            raise HTTPException(status_code=400, detail='Missing Apple user ID')
+        
+        # Check if user exists
+        existing_user = await db.users.find_one({
+            '$or': [
+                {'provider': 'apple', 'provider_id': data.user_id},
+                {'email': data.email} if data.email else {'_never_match': True}
+            ]
+        })
+        
+        if existing_user:
+            # Update existing user
+            user_id = existing_user['id']
+            update_data = {
+                'provider': 'apple',
+                'provider_id': data.user_id,
+                'updated_at': datetime.utcnow()
+            }
+            # Only update name if provided and user doesn't have one
+            if data.name and (not existing_user.get('name') or existing_user.get('name') == 'مستخدم Apple'):
+                update_data['name'] = data.name
+            
+            await db.users.update_one(
+                {'id': user_id},
+                {'$set': update_data}
+            )
+        else:
+            # Create new user
+            user_id = f"user_{uuid.uuid4().hex[:12]}"
+            new_user = {
+                'id': user_id,
+                'email': data.email or f"{data.user_id[:10]}@privaterelay.appleid.com",
+                'name': data.name or 'مستخدم Apple',
+                'provider': 'apple',
+                'provider_id': data.user_id,
+                'points': 0,
+                'diamonds': 100,  # Welcome bonus
+                'total_earned': 0,
+                'is_guest': False,
+                'created_at': datetime.utcnow(),
+                'updated_at': datetime.utcnow()
+            }
+            await db.users.insert_one(new_user)
+        
+        # Create tokens
+        token, refresh = create_token_pair(user_id)
+        
+        # Get user data
+        user = await db.users.find_one({'id': user_id})
+        
+        return {
+            'token': token,
+            'refresh_token': refresh,
+            'user': {
+                'id': user['id'],
+                'email': user.get('email', ''),
+                'name': user.get('name', 'مستخدم'),
+                'avatar': user.get('avatar'),
+                'points': user.get('points', 0),
+                'diamonds': user.get('diamonds', 0),
+                'total_earned': user.get('total_earned', 0),
+                'joined_date': user.get('created_at', datetime.utcnow()).isoformat()
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Apple Native Sign In Error: {e}")
+        raise HTTPException(status_code=500, detail='فشل تسجيل الدخول')

@@ -573,7 +573,7 @@ const AuthScreen = ({ onLogin }) => {
     }
   };
 
-  // Apple Sign In using WebBrowser (improved for iPad)
+  // Apple Sign In using WebBrowser
   const handleAppleSignIn = async () => {
     if (isAppleLoading || isGoogleLoading) return;
     setIsAppleLoading(true);
@@ -612,7 +612,7 @@ const AuthScreen = ({ onLogin }) => {
           Alert.alert('خطأ', 'لم نتمكن من استلام بيانات الجلسة');
         }
       } else if (result.type === 'cancel') {
-        // User cancelled
+        // User cancelled - do nothing
       }
     } catch (error) {
       console.log('Apple Sign In Error:', error);
