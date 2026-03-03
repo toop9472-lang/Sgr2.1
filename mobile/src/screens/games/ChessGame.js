@@ -648,10 +648,11 @@ const ChessGame = ({ mode, onComplete, onClose }) => {
             style={[
               styles.piece, 
               { 
-                color: pieceDisplay.color === 'white' ? '#FFFFFF' : '#1a1a1a',
-                textShadowColor: pieceDisplay.color === 'white' ? '#000' : '#fff',
-                textShadowOffset: { width: 1, height: 1 },
-                textShadowRadius: 2,
+                // البيضاء: بني خشبي فاتح، السوداء: بني خشبي داكن
+                color: pieceDisplay.color === 'white' ? '#D4A574' : '#4A3728',
+                textShadowColor: pieceDisplay.color === 'white' ? '#8B4513' : '#000',
+                textShadowOffset: { width: 2, height: 2 },
+                textShadowRadius: 3,
               }
             ]}
           >

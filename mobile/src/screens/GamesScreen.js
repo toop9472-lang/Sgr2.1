@@ -441,18 +441,12 @@ const TicTacToeGame = ({ mode, onComplete, onClose, isOnline, opponent, isMyTurn
 // ==================== PUZZLE GAME ====================
 // ==================== PUZZLE GAME (PROFESSIONAL IMAGE PUZZLE) ====================
 const PUZZLE_IMAGES = [
-  { id: 1, name: 'الطبيعة', icon: 'leaf', gradient: ['#22c55e', '#15803d'], 
-    image: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=400&fit=crop' },
-  { id: 2, name: 'المحيط', icon: 'water', gradient: ['#3b82f6', '#1d4ed8'],
-    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=400&fit=crop' },
-  { id: 3, name: 'الغروب', icon: 'sunny', gradient: ['#f97316', '#ea580c'],
-    image: 'https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=400&h=400&fit=crop' },
-  { id: 4, name: 'الفضاء', icon: 'rocket', gradient: ['#8b5cf6', '#7c3aed'],
-    image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=400&fit=crop' },
-  { id: 5, name: 'الجبال', icon: 'partly-sunny', gradient: ['#fbbf24', '#d97706'],
-    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=400&fit=crop' },
-  { id: 6, name: 'الزهور', icon: 'flower', gradient: ['#ec4899', '#db2777'],
-    image: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400&h=400&fit=crop' },
+  { id: 1, name: 'الطبيعة', icon: 'leaf', gradient: ['#22c55e', '#15803d'], image: null },
+  { id: 2, name: 'المحيط', icon: 'water', gradient: ['#3b82f6', '#1d4ed8'], image: null },
+  { id: 3, name: 'الغروب', icon: 'sunny', gradient: ['#f97316', '#ea580c'], image: null },
+  { id: 4, name: 'الفضاء', icon: 'rocket', gradient: ['#8b5cf6', '#7c3aed'], image: null },
+  { id: 5, name: 'الجبال', icon: 'partly-sunny', gradient: ['#fbbf24', '#d97706'], image: null },
+  { id: 6, name: 'الزهور', icon: 'flower', gradient: ['#ec4899', '#db2777'], image: null },
 ];
 
 // Responsive puzzle size
@@ -657,27 +651,19 @@ const PuzzleGame = ({ mode, onComplete, onClose }) => {
               onPress={() => handlePiecePress(idx)}
               activeOpacity={0.8}
             >
-              {currentImage.image ? (
-                <Image
-                  source={{ uri: currentImage.image }}
-                  style={[styles.pieceInner, {
-                    width: puzzleSize - 8,
-                    height: puzzleSize - 8,
-                    position: 'absolute',
-                    top: -(row * pieceSize),
-                    left: -(col * pieceSize),
-                  }]}
-                  resizeMode="cover"
+              <LinearGradient
+                colors={completed ? ['#10b981', '#059669'] : 
+                        isCorrect ? ['#22c55e', '#16a34a'] : 
+                        isSelected ? ['#3b82f6', '#2563eb'] : 
+                        currentImage.gradient}
+                style={styles.pieceInner}
+              >
+                <Ionicons 
+                  name={currentImage.icon} 
+                  size={pieceSize * 0.3} 
+                  color="rgba(255,255,255,0.3)" 
                 />
-              ) : (
-                <LinearGradient
-                  colors={completed ? ['#10b981', '#059669'] : 
-                          isCorrect ? ['#22c55e', '#16a34a'] : 
-                          isSelected ? ['#3b82f6', '#2563eb'] : 
-                          currentImage.gradient}
-                  style={styles.pieceInner}
-                />
-              )}
+              </LinearGradient>
               <View style={[styles.pieceOverlay, isSelected && styles.pieceOverlaySelected]}>
                 <Text style={styles.pieceNum}>{piece + 1}</Text>
               </View>

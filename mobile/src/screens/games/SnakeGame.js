@@ -1,5 +1,5 @@
-// Snake Game - Professional Snake with Effects & Sounds
-// لعبة الثعبان الاحترافية مع تأثيرات وأصوات
+// Snake Game - Professional Touch Control Snake
+// لعبة الثعبان بالتحكم باللمس (السحب)
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
@@ -9,10 +9,10 @@ import {
   Dimensions,
   Animated,
   ImageBackground,
+  PanResponder,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import gameSounds from '../../utils/gameSounds';
 
 // AI-Generated Professional Background
 const GAME_BG = 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/2abaadcae5e79b9f0fb8beb005410c0d4e020163500cfde37b75485bea913ea2.png';
@@ -22,7 +22,14 @@ const isTablet = screenWidth > 600;
 const MAX_GAME_SIZE = isTablet ? 400 : screenWidth - 40;
 const GRID_SIZE = 15;
 const CELL_SIZE = Math.floor(MAX_GAME_SIZE / GRID_SIZE);
-const INITIAL_SPEED = 180;
+
+// سرعات حسب المستوى
+const SPEEDS = {
+  easy: 200,
+  medium: 150,
+  hard: 100,
+  extreme: 60,
+};
 
 // أنواع الطعام المختلفة
 const FOOD_TYPES = [
@@ -33,7 +40,7 @@ const FOOD_TYPES = [
   { emoji: '💎', points: 50, color: '#3b82f6' },
 ];
 
-const SnakeGame = ({ mode, onComplete, onClose }) => {
+const SnakeGame = ({ mode = 'medium', onComplete, onClose }) => {
   const [snake, setSnake] = useState([
     { x: 7, y: 7 },
     { x: 6, y: 7 },
@@ -46,19 +53,54 @@ const SnakeGame = ({ mode, onComplete, onClose }) => {
   const [highScore, setHighScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [speed, setSpeed] = useState(INITIAL_SPEED);
+  const [gameStarted, setGameStarted] = useState(false);
   const [level, setLevel] = useState(1);
   const [combo, setCombo] = useState(0);
   const [showCombo, setShowCombo] = useState(false);
-  const [particles, setParticles] = useState([]);
+  const [difficulty, setDifficulty] = useState(mode);
   
   const gameLoopRef = useRef(null);
   const directionRef = useRef({ x: 1, y: 0 });
   const comboTimerRef = useRef(null);
+  const speedRef = useRef(SPEEDS[mode] || SPEEDS.medium);
   
   // Animations
   const foodAnim = useRef(new Animated.Value(1)).current;
   const scoreAnim = useRef(new Animated.Value(1)).current;
+
+  // Touch Control - PanResponder للسحب
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderRelease: (evt, gestureState) => {
+        const { dx, dy } = gestureState;
+        const absDx = Math.abs(dx);
+        const absDy = Math.abs(dy);
+        
+        // حد أدنى للسحب 20 بكسل
+        if (absDx < 20 && absDy < 20) return;
+        
+        const currentDir = directionRef.current;
+        
+        if (absDx > absDy) {
+          // حركة أفقية
+          if (dx > 0 && currentDir.x !== -1) {
+            changeDirection({ x: 1, y: 0 }); // يمين
+          } else if (dx < 0 && currentDir.x !== 1) {
+            changeDirection({ x: -1, y: 0 }); // يسار
+          }
+        } else {
+          // حركة عمودية
+          if (dy > 0 && currentDir.y !== -1) {
+            changeDirection({ x: 0, y: 1 }); // أسفل
+          } else if (dy < 0 && currentDir.y !== 1) {
+            changeDirection({ x: 0, y: -1 }); // أعلى
+          }
+        }
+      },
+    })
+  ).current;
 
   // تأثير الطعام
   useEffect(() => {
@@ -82,7 +124,6 @@ const SnakeGame = ({ mode, onComplete, onClose }) => {
       };
     } while (currentSnake.some(seg => seg.x === newFood.x && seg.y === newFood.y));
     
-    // اختيار نوع الطعام بناءً على المستوى
     const typeIndex = Math.min(Math.floor(Math.random() * Math.min(level, FOOD_TYPES.length)), FOOD_TYPES.length - 1);
     newFood.type = FOOD_TYPES[typeIndex];
     
@@ -91,7 +132,7 @@ const SnakeGame = ({ mode, onComplete, onClose }) => {
 
   // إنشاء طعام إضافي
   const spawnBonusFood = useCallback((currentSnake) => {
-    if (Math.random() < 0.15) { // 15% فرصة
+    if (Math.random() < 0.15) {
       let pos;
       do {
         pos = {
@@ -100,115 +141,99 @@ const SnakeGame = ({ mode, onComplete, onClose }) => {
         };
       } while (currentSnake.some(seg => seg.x === pos.x && seg.y === pos.y));
       
-      setBonusFood({ ...pos, type: FOOD_TYPES[4], timer: 50 }); // 💎
+      setBonusFood({
+        ...pos,
+        type: { emoji: '🌟', points: 100, color: '#fbbf24' },
+        expiresAt: Date.now() + 5000,
+      });
       
-      // إزالة بعد 5 ثواني
       setTimeout(() => setBonusFood(null), 5000);
     }
   }, []);
 
-  // حلقة اللعبة
+  // Game Loop
   useEffect(() => {
-    if (!gameOver && !isPaused) {
-      gameLoopRef.current = setInterval(() => {
-        moveSnake();
-      }, speed);
-    }
-    return () => clearInterval(gameLoopRef.current);
-  }, [gameOver, isPaused, speed]);
+    if (!gameStarted || gameOver || isPaused) return;
 
-  // إضافة جزيئات
-  const addParticles = (x, y, color) => {
-    const newParticles = Array.from({ length: 8 }, (_, i) => ({
-      id: Date.now() + i,
-      x: x * CELL_SIZE + CELL_SIZE / 2,
-      y: y * CELL_SIZE + CELL_SIZE / 2,
-      color,
-      angle: (i * 45) * (Math.PI / 180),
-    }));
-    setParticles(prev => [...prev, ...newParticles]);
-    setTimeout(() => {
-      setParticles(prev => prev.filter(p => !newParticles.includes(p)));
-    }, 500);
-  };
-
-  const moveSnake = () => {
-    setSnake(currentSnake => {
-      const head = currentSnake[0];
-      const currentDir = directionRef.current;
-      const newHead = {
-        x: (head.x + currentDir.x + GRID_SIZE) % GRID_SIZE,
-        y: (head.y + currentDir.y + GRID_SIZE) % GRID_SIZE,
-      };
-
-      // التصادم مع النفس
-      if (currentSnake.some(seg => seg.x === newHead.x && seg.y === newHead.y)) {
-        endGame(score);
-        return currentSnake;
-      }
-
-      const newSnake = [newHead, ...currentSnake];
-
-      // أكل الطعام العادي
-      if (newHead.x === food.x && newHead.y === food.y) {
-        const points = food.type.points * (1 + combo * 0.1);
-        setScore(s => s + Math.floor(points));
-        setFood(generateFood(newSnake));
-        gameSounds.snakeEat();
-        addParticles(food.x, food.y, food.type.color);
+    gameLoopRef.current = setInterval(() => {
+      setSnake(currentSnake => {
+        const head = { ...currentSnake[0] };
+        const currentDir = directionRef.current;
         
-        // كومبو
-        setCombo(c => c + 1);
-        setShowCombo(true);
-        clearTimeout(comboTimerRef.current);
-        comboTimerRef.current = setTimeout(() => {
-          setCombo(0);
-          setShowCombo(false);
-        }, 3000);
-        
-        // زيادة السرعة
-        if (newSnake.length % 5 === 0 && speed > 80) {
-          setSpeed(s => s - 8);
-          setLevel(l => l + 1);
-          gameSounds.levelUp();
+        head.x += currentDir.x;
+        head.y += currentDir.y;
+
+        // التفاف الشاشة
+        if (head.x < 0) head.x = GRID_SIZE - 1;
+        if (head.x >= GRID_SIZE) head.x = 0;
+        if (head.y < 0) head.y = GRID_SIZE - 1;
+        if (head.y >= GRID_SIZE) head.y = 0;
+
+        // الاصطدام بالجسم
+        if (currentSnake.some(seg => seg.x === head.x && seg.y === head.y)) {
+          endGame(score);
+          return currentSnake;
         }
-        
-        // فرصة طعام إضافي
-        spawnBonusFood(newSnake);
-        
-        // تأثير النقاط
-        Animated.sequence([
-          Animated.timing(scoreAnim, { toValue: 1.3, duration: 100, useNativeDriver: true }),
-          Animated.timing(scoreAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
-        ]).start();
-        
-        return newSnake;
-      }
 
-      // أكل الطعام الإضافي
-      if (bonusFood && newHead.x === bonusFood.x && newHead.y === bonusFood.y) {
-        setScore(s => s + bonusFood.type.points * 2);
-        setBonusFood(null);
-        gameSounds.bonus();
-        addParticles(bonusFood.x, bonusFood.y, '#3b82f6');
-        return newSnake;
-      }
+        const newSnake = [head, ...currentSnake];
 
-      newSnake.pop();
-      return newSnake;
-    });
-  };
+        // أكل الطعام
+        if (head.x === food.x && head.y === food.y) {
+          const points = food.type.points * (1 + combo * 0.1);
+          setScore(s => {
+            const newScore = s + Math.round(points);
+            // زيادة المستوى
+            if (newScore >= level * 100) {
+              setLevel(l => l + 1);
+              speedRef.current = Math.max(40, speedRef.current - 10);
+            }
+            return newScore;
+          });
+          
+          // تأثير النقاط
+          Animated.sequence([
+            Animated.timing(scoreAnim, { toValue: 1.3, duration: 100, useNativeDriver: true }),
+            Animated.timing(scoreAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+          ]).start();
+          
+          // كومبو
+          setCombo(c => c + 1);
+          setShowCombo(true);
+          clearTimeout(comboTimerRef.current);
+          comboTimerRef.current = setTimeout(() => {
+            setCombo(0);
+            setShowCombo(false);
+          }, 3000);
+          
+          setFood(generateFood(newSnake));
+          spawnBonusFood(newSnake);
+          
+          return newSnake;
+        }
+
+        // أكل الطعام الإضافي
+        if (bonusFood && head.x === bonusFood.x && head.y === bonusFood.y) {
+          setScore(s => s + bonusFood.type.points);
+          setBonusFood(null);
+          return newSnake;
+        }
+
+        newSnake.pop();
+        return newSnake;
+      });
+    }, speedRef.current);
+
+    return () => clearInterval(gameLoopRef.current);
+  }, [gameStarted, gameOver, isPaused, food, bonusFood, score, combo, level, generateFood, spawnBonusFood]);
 
   const endGame = (finalScore) => {
     clearInterval(gameLoopRef.current);
     setGameOver(true);
-    gameSounds.snakeDie();
     
     if (finalScore > highScore) {
       setHighScore(finalScore);
     }
     
-    // حساب المكافأة
     let points = 10;
     if (finalScore >= 500) points = 50;
     else if (finalScore >= 300) points = 35;
@@ -219,19 +244,19 @@ const SnakeGame = ({ mode, onComplete, onClose }) => {
   };
 
   const changeDirection = (newDir) => {
-    if (gameOver) return;
+    if (gameOver || isPaused) return;
     
     const currentDir = directionRef.current;
-    // منع الانعكاس
     if (newDir.x !== -currentDir.x || newDir.y !== -currentDir.y) {
       directionRef.current = newDir;
       setDirection(newDir);
-      gameSounds.buttonTap();
     }
   };
 
-  const resetGame = () => {
-    clearInterval(gameLoopRef.current);
+  const startGame = (diff) => {
+    setDifficulty(diff);
+    speedRef.current = SPEEDS[diff] || SPEEDS.medium;
+    setGameStarted(true);
     setSnake([{ x: 7, y: 7 }, { x: 6, y: 7 }, { x: 5, y: 7 }]);
     setFood({ x: 10, y: 7, type: FOOD_TYPES[0] });
     setBonusFood(null);
@@ -240,16 +265,61 @@ const SnakeGame = ({ mode, onComplete, onClose }) => {
     setScore(0);
     setGameOver(false);
     setIsPaused(false);
-    setSpeed(INITIAL_SPEED);
     setLevel(1);
     setCombo(0);
-    setParticles([]);
+  };
+
+  const resetGame = () => {
+    startGame(difficulty);
   };
 
   const togglePause = () => {
     setIsPaused(!isPaused);
-    gameSounds.buttonTap();
   };
+
+  // شاشة اختيار الصعوبة
+  if (!gameStarted) {
+    return (
+      <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
+        <View style={styles.overlay}>
+          <View style={styles.difficultyScreen}>
+            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+              <Ionicons name="close" size={28} color="#FFF" />
+            </TouchableOpacity>
+            
+            <Text style={styles.gameTitle}>🐍 الثعبان</Text>
+            <Text style={styles.gameSubtitle}>اسحب للتحكم في الاتجاه</Text>
+            
+            <View style={styles.difficultyOptions}>
+              <TouchableOpacity style={[styles.diffBtn, { backgroundColor: '#22c55e' }]} onPress={() => startGame('easy')}>
+                <Ionicons name="leaf" size={24} color="#FFF" />
+                <Text style={styles.diffText}>سهل</Text>
+                <Text style={styles.diffDesc}>للمبتدئين</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={[styles.diffBtn, { backgroundColor: '#f59e0b' }]} onPress={() => startGame('medium')}>
+                <Ionicons name="flash" size={24} color="#FFF" />
+                <Text style={styles.diffText}>متوسط</Text>
+                <Text style={styles.diffDesc}>تحدي معتدل</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={[styles.diffBtn, { backgroundColor: '#ef4444' }]} onPress={() => startGame('hard')}>
+                <Ionicons name="flame" size={24} color="#FFF" />
+                <Text style={styles.diffText}>صعب</Text>
+                <Text style={styles.diffDesc}>للمحترفين</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={[styles.diffBtn, { backgroundColor: '#7c3aed' }]} onPress={() => startGame('extreme')}>
+                <Ionicons name="skull" size={24} color="#FFF" />
+                <Text style={styles.diffText}>جهنمي</Text>
+                <Text style={styles.diffDesc}>مستحيل!</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </ImageBackground>
+    );
+  }
 
   // رندر خلية
   const renderCell = (x, y) => {
@@ -273,7 +343,7 @@ const SnakeGame = ({ mode, onComplete, onClose }) => {
         {isSnakeBody && (
           <View style={[
             styles.snakeBody,
-            { opacity: 1 - (snakeIndex * 0.03) }
+            { opacity: 1 - (snakeIndex * 0.02) }
           ]} />
         )}
         {isFood && (
@@ -327,74 +397,17 @@ const SnakeGame = ({ mode, onComplete, onClose }) => {
           )}
         </View>
 
-        {/* Game Board */}
-        <View style={styles.boardContainer}>
+        {/* نص التعليمات */}
+        <Text style={styles.swipeHint}>👆 اسحب للتحكم</Text>
+
+        {/* Game Board with Touch */}
+        <View style={styles.boardContainer} {...panResponder.panHandlers}>
           <View style={styles.board}>
             {Array.from({ length: GRID_SIZE }, (_, y) => (
               <View key={y} style={styles.row}>
                 {Array.from({ length: GRID_SIZE }, (_, x) => renderCell(x, y))}
               </View>
             ))}
-            
-            {/* Particles */}
-            {particles.map(p => (
-              <View
-                key={p.id}
-                style={[
-                  styles.particle,
-                  {
-                    left: p.x,
-                    top: p.y,
-                    backgroundColor: p.color,
-                  }
-                ]}
-              />
-            ))}
-          </View>
-        </View>
-
-        {/* Controls */}
-        <View style={styles.controls}>
-          <View style={styles.controlRow}>
-            <View style={styles.controlSpacer} />
-            <TouchableOpacity 
-              style={styles.controlBtn} 
-              onPress={() => changeDirection({ x: 0, y: -1 })}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="chevron-up" size={32} color="#FFF" />
-            </TouchableOpacity>
-            <View style={styles.controlSpacer} />
-          </View>
-          <View style={styles.controlRow}>
-            <TouchableOpacity 
-              style={styles.controlBtn} 
-              onPress={() => changeDirection({ x: -1, y: 0 })}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="chevron-back" size={32} color="#FFF" />
-            </TouchableOpacity>
-            <View style={styles.centerBtn}>
-              <Text style={styles.centerEmoji}>🎮</Text>
-            </View>
-            <TouchableOpacity 
-              style={styles.controlBtn} 
-              onPress={() => changeDirection({ x: 1, y: 0 })}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="chevron-forward" size={32} color="#FFF" />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.controlRow}>
-            <View style={styles.controlSpacer} />
-            <TouchableOpacity 
-              style={styles.controlBtn} 
-              onPress={() => changeDirection({ x: 0, y: 1 })}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="chevron-down" size={32} color="#FFF" />
-            </TouchableOpacity>
-            <View style={styles.controlSpacer} />
           </View>
         </View>
 
@@ -448,10 +461,58 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
   
-  header: {
+  // Difficulty Screen
+  difficultyScreen: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  closeBtn: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    padding: 10,
+  },
+  gameTitle: {
+    fontSize: 42,
+    fontWeight: 'bold',
+    color: '#FFF',
+    marginBottom: 8,
+  },
+  gameSubtitle: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.7)',
+    marginBottom: 40,
+  },
+  difficultyOptions: {
+    width: '100%',
+    maxWidth: 300,
+    gap: 12,
+  },
+  diffBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    padding: 16,
+    borderRadius: 16,
+    gap: 12,
+  },
+  diffText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFF',
+    flex: 1,
+  },
+  diffDesc: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+  },
+
+  // Header
+  header: {
+    flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 50,
     paddingBottom: 10,
@@ -460,13 +521,11 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  scoreContainer: {
-    alignItems: 'center',
-  },
+  scoreContainer: { alignItems: 'center' },
   score: {
     fontSize: 36,
     fontWeight: 'bold',
@@ -474,13 +533,13 @@ const styles = StyleSheet.create({
   },
   highScore: {
     fontSize: 12,
-    color: '#888',
+    color: 'rgba(255,255,255,0.6)',
   },
 
+  // Stats
   statsBar: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
     gap: 16,
     paddingVertical: 8,
   },
@@ -488,10 +547,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: 12,
   },
   statText: {
     color: '#FFF',
@@ -506,23 +565,30 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 
+  // Swipe Hint
+  swipeHint: {
+    textAlign: 'center',
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 12,
+    marginVertical: 8,
+  },
+
+  // Board
   boardContainer: {
-    alignItems: 'center',
+    flex: 1,
     justifyContent: 'center',
-    paddingVertical: 16,
+    alignItems: 'center',
   },
   board: {
-    width: CELL_SIZE * GRID_SIZE,
-    height: CELL_SIZE * GRID_SIZE,
-    backgroundColor: '#1e293b',
+    width: GRID_SIZE * CELL_SIZE,
+    height: GRID_SIZE * CELL_SIZE,
+    backgroundColor: 'rgba(0,0,0,0.4)',
     borderRadius: 12,
     overflow: 'hidden',
-    borderWidth: 3,
-    borderColor: '#334155',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
-  row: {
-    flexDirection: 'row',
-  },
+  row: { flexDirection: 'row' },
   cell: {
     width: CELL_SIZE,
     height: CELL_SIZE,
@@ -531,6 +597,8 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: 'rgba(255,255,255,0.05)',
   },
+  
+  // Snake
   snakeHead: {
     width: CELL_SIZE - 2,
     height: CELL_SIZE - 2,
@@ -538,71 +606,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   snakeEmoji: {
-    fontSize: CELL_SIZE * 0.8,
+    fontSize: CELL_SIZE - 4,
   },
   snakeBody: {
     width: CELL_SIZE - 4,
     height: CELL_SIZE - 4,
+    borderRadius: (CELL_SIZE - 4) / 2,
     backgroundColor: '#22c55e',
-    borderRadius: 4,
   },
+  
+  // Food
   food: {
-    width: CELL_SIZE,
-    height: CELL_SIZE,
+    width: CELL_SIZE - 2,
+    height: CELL_SIZE - 2,
     justifyContent: 'center',
     alignItems: 'center',
   },
   bonusFood: {
-    width: CELL_SIZE,
-    height: CELL_SIZE,
+    width: CELL_SIZE - 2,
+    height: CELL_SIZE - 2,
     justifyContent: 'center',
     alignItems: 'center',
   },
   foodEmoji: {
-    fontSize: CELL_SIZE * 0.7,
-  },
-  particle: {
-    position: 'absolute',
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    fontSize: CELL_SIZE - 6,
   },
 
-  controls: {
-    alignItems: 'center',
-    paddingVertical: 16,
-  },
-  controlRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  controlBtn: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: 4,
-  },
-  controlSpacer: {
-    width: 70,
-    height: 70,
-    margin: 4,
-  },
-  centerBtn: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: 'rgba(34,197,94,0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: 4,
-  },
-  centerEmoji: {
-    fontSize: 30,
-  },
-
+  // Pause
   pauseOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.8)',
@@ -610,33 +640,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pauseModal: {
-    backgroundColor: '#1e293b',
+    backgroundColor: '#1e1e2e',
     padding: 32,
     borderRadius: 24,
     alignItems: 'center',
   },
-  pauseEmoji: {
-    fontSize: 50,
-    marginBottom: 16,
-  },
+  pauseEmoji: { fontSize: 48, marginBottom: 16 },
   pauseTitle: {
-    color: '#FFF',
     fontSize: 24,
     fontWeight: 'bold',
+    color: '#FFF',
     marginBottom: 20,
   },
   resumeBtn: {
     backgroundColor: '#22c55e',
-    paddingHorizontal: 40,
+    paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 12,
   },
   resumeText: {
     color: '#FFF',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
   },
 
+  // Game Over
   gameOverOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.85)',
@@ -644,32 +672,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   gameOverModal: {
-    backgroundColor: '#1e293b',
+    backgroundColor: '#1e1e2e',
     padding: 32,
     borderRadius: 24,
     alignItems: 'center',
     width: '85%',
+    maxWidth: 320,
   },
-  gameOverEmoji: {
-    fontSize: 60,
-    marginBottom: 12,
-  },
+  gameOverEmoji: { fontSize: 56, marginBottom: 12 },
   gameOverTitle: {
-    color: '#FFF',
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: 'bold',
+    color: '#FFF',
     marginBottom: 8,
   },
   finalScore: {
-    color: '#22c55e',
     fontSize: 42,
     fontWeight: 'bold',
+    color: '#fbbf24',
     marginBottom: 8,
   },
   newRecord: {
-    color: '#fbbf24',
     fontSize: 16,
-    fontWeight: 'bold',
+    color: '#22c55e',
     marginBottom: 16,
   },
   gameOverStats: {
@@ -678,7 +703,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   statLabel: {
-    color: '#888',
+    color: 'rgba(255,255,255,0.6)',
     fontSize: 14,
   },
   gameOverButtons: {
@@ -687,27 +712,25 @@ const styles = StyleSheet.create({
   },
   playAgainBtn: {
     flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: '#22c55e',
     paddingVertical: 14,
     borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
     gap: 8,
   },
   playAgainText: {
     color: '#FFF',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   exitBtn: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingVertical: 14,
-    borderRadius: 12,
+    paddingVertical: 12,
     alignItems: 'center',
   },
   exitText: {
-    color: '#FFF',
-    fontSize: 16,
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 14,
   },
 });
 

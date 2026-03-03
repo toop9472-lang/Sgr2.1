@@ -1,4 +1,4 @@
-// Brick Breaker Game - تكسير الطوب - Professional Edition
+// Brick Breaker Game - تكسير الطوب - Professional 10 Levels
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
@@ -12,198 +12,247 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import gameSounds from '../../utils/gameSounds';
 
-// AI-Generated Professional Background
 const GAME_BG = 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/41eae3dfab42e60e7a57f9291dbf06c43e5e3e8b6629673c00658c524c1a237e.png';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-
-// Responsive sizing for iPad
 const isTablet = screenWidth > 600;
-const MAX_GAME_WIDTH = isTablet ? 500 : screenWidth - 32;
-const GAME_WIDTH = Math.min(screenWidth - 32, MAX_GAME_WIDTH);
-const GAME_HEIGHT = Math.min(screenHeight * 0.55, 500);
+const GAME_WIDTH = Math.min(screenWidth - 32, isTablet ? 500 : screenWidth - 32);
+const GAME_HEIGHT = Math.min(screenHeight * 0.5, 450);
 const PADDLE_WIDTH = isTablet ? 100 : 80;
 const PADDLE_HEIGHT = 12;
 const BALL_SIZE = 14;
-const BRICK_ROWS = 5;
-const BRICK_COLS = isTablet ? 8 : 7;
-const BRICK_WIDTH = (GAME_WIDTH - 20) / BRICK_COLS;
-const BRICK_HEIGHT = 22;
-const BRICK_GAP = 2;
+
+// إعدادات المراحل (10 مراحل)
+const LEVELS = [
+  { rows: 3, cols: 6, ballSpeed: 4, timeLimit: 90, name: 'المبتدئ', color: '#22c55e' },
+  { rows: 4, cols: 6, ballSpeed: 4.5, timeLimit: 80, name: 'السهل', color: '#84cc16' },
+  { rows: 4, cols: 7, ballSpeed: 5, timeLimit: 75, name: 'التحدي', color: '#eab308' },
+  { rows: 5, cols: 7, ballSpeed: 5.5, timeLimit: 70, name: 'المتوسط', color: '#f59e0b' },
+  { rows: 5, cols: 8, ballSpeed: 6, timeLimit: 65, name: 'الصعب', color: '#f97316' },
+  { rows: 6, cols: 8, ballSpeed: 6.5, timeLimit: 60, name: 'المحترف', color: '#ef4444' },
+  { rows: 6, cols: 8, ballSpeed: 7, timeLimit: 55, name: 'الخبير', color: '#dc2626' },
+  { rows: 7, cols: 8, ballSpeed: 7.5, timeLimit: 50, name: 'الأسطورة', color: '#b91c1c' },
+  { rows: 7, cols: 8, ballSpeed: 8, timeLimit: 45, name: 'الجنون', color: '#991b1b' },
+  { rows: 8, cols: 8, ballSpeed: 9, timeLimit: 40, name: 'المستحيل', color: '#7f1d1d' },
+];
 
 const BRICK_COLORS = [
-  ['#ef4444', '#dc2626'], // Red
-  ['#f59e0b', '#d97706'], // Orange
-  ['#eab308', '#ca8a04'], // Yellow
-  ['#22c55e', '#16a34a'], // Green
-  ['#3b82f6', '#2563eb'], // Blue
+  ['#ef4444', '#dc2626'],
+  ['#f59e0b', '#d97706'],
+  ['#eab308', '#ca8a04'],
+  ['#22c55e', '#16a34a'],
+  ['#3b82f6', '#2563eb'],
+  ['#8b5cf6', '#7c3aed'],
+  ['#ec4899', '#db2777'],
+  ['#14b8a6', '#0d9488'],
+];
+
+// Power-ups
+const POWERUPS = [
+  { type: 'wide', icon: '📏', color: '#3b82f6', effect: 'توسيع المضرب' },
+  { type: 'multi', icon: '🔥', color: '#ef4444', effect: 'كرات متعددة' },
+  { type: 'slow', icon: '🐢', color: '#22c55e', effect: 'إبطاء الكرة' },
+  { type: 'life', icon: '❤️', color: '#ec4899', effect: 'حياة إضافية' },
+  { type: 'time', icon: '⏰', color: '#fbbf24', effect: '+15 ثانية' },
 ];
 
 const BrickBreakerGame = ({ difficulty = 'medium', onComplete, onClose }) => {
-  const [gameState, setGameState] = useState('ready'); // ready, playing, paused, won, lost
+  const [gameState, setGameState] = useState('menu'); // menu, playing, paused, won, lost, levelComplete
+  const [currentLevel, setCurrentLevel] = useState(0);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
-  const [level, setLevel] = useState(1);
   const [bricks, setBricks] = useState([]);
+  const [timeLeft, setTimeLeft] = useState(90);
   const [paddleX, setPaddleX] = useState((GAME_WIDTH - PADDLE_WIDTH) / 2);
+  const [paddleWidth, setPaddleWidth] = useState(PADDLE_WIDTH);
+  const [powerups, setPowerups] = useState([]);
+  const [combo, setCombo] = useState(0);
+  const [showCombo, setShowCombo] = useState(false);
   
-  // Ball state
   const ballX = useRef(new Animated.Value(GAME_WIDTH / 2 - BALL_SIZE / 2)).current;
-  const ballY = useRef(new Animated.Value(GAME_HEIGHT - 100)).current;
-  const ballVelX = useRef(difficulty === 'hard' ? 5 : 4);
-  const ballVelY = useRef(difficulty === 'hard' ? -6 : -5);
+  const ballY = useRef(new Animated.Value(GAME_HEIGHT - 80)).current;
+  const ballVelX = useRef(4);
+  const ballVelY = useRef(-4);
   const gameLoop = useRef(null);
+  const timerRef = useRef(null);
   const ballPosX = useRef(GAME_WIDTH / 2 - BALL_SIZE / 2);
-  const ballPosY = useRef(GAME_HEIGHT - 100);
+  const ballPosY = useRef(GAME_HEIGHT - 80);
+  const comboTimeoutRef = useRef(null);
 
-  // Initialize bricks
+  const levelConfig = LEVELS[currentLevel] || LEVELS[0];
+  const BRICK_WIDTH = (GAME_WIDTH - 20) / levelConfig.cols;
+  const BRICK_HEIGHT = 20;
+
+  // Initialize bricks for current level
   const initBricks = useCallback(() => {
     const newBricks = [];
-    for (let row = 0; row < BRICK_ROWS; row++) {
-      for (let col = 0; col < BRICK_COLS; col++) {
+    for (let row = 0; row < levelConfig.rows; row++) {
+      for (let col = 0; col < levelConfig.cols; col++) {
+        const hasPowerup = Math.random() < 0.1;
         newBricks.push({
           id: `${row}-${col}`,
-          x: 10 + col * (BRICK_WIDTH + BRICK_GAP),
-          y: 60 + row * (BRICK_HEIGHT + BRICK_GAP),
-          width: BRICK_WIDTH - BRICK_GAP,
+          x: 10 + col * BRICK_WIDTH,
+          y: 50 + row * (BRICK_HEIGHT + 3),
+          width: BRICK_WIDTH - 2,
           height: BRICK_HEIGHT,
-          colors: BRICK_COLORS[row % BRICK_COLORS.length],
-          points: (BRICK_ROWS - row) * 10,
+          colors: BRICK_COLORS[(row + currentLevel) % BRICK_COLORS.length],
+          points: (levelConfig.rows - row) * 10 * (currentLevel + 1),
           active: true,
+          powerup: hasPowerup ? POWERUPS[Math.floor(Math.random() * POWERUPS.length)] : null,
+          hits: row === 0 && currentLevel >= 5 ? 2 : 1, // طوب قوي في المراحل المتقدمة
         });
       }
     }
     setBricks(newBricks);
-  }, []);
+    setTimeLeft(levelConfig.timeLimit);
+  }, [levelConfig, currentLevel, BRICK_WIDTH]);
 
-  // Reset ball position
+  // Reset ball
   const resetBall = useCallback(() => {
-    ballPosX.current = paddleX + PADDLE_WIDTH / 2 - BALL_SIZE / 2;
-    ballPosY.current = GAME_HEIGHT - 100;
+    ballPosX.current = paddleX + paddleWidth / 2 - BALL_SIZE / 2;
+    ballPosY.current = GAME_HEIGHT - 80;
     ballX.setValue(ballPosX.current);
     ballY.setValue(ballPosY.current);
-    ballVelX.current = (Math.random() > 0.5 ? 1 : -1) * (difficulty === 'hard' ? 5 : 4);
-    ballVelY.current = difficulty === 'hard' ? -6 : -5;
-  }, [paddleX, difficulty]);
+    ballVelX.current = (Math.random() > 0.5 ? 1 : -1) * levelConfig.ballSpeed;
+    ballVelY.current = -levelConfig.ballSpeed;
+  }, [paddleX, paddleWidth, levelConfig.ballSpeed]);
 
-  // Start new game
-  const startGame = useCallback(() => {
-    setScore(0);
-    setLives(3);
-    setLevel(1);
+  // Start level
+  const startLevel = useCallback((lvl = 0) => {
+    setCurrentLevel(lvl);
+    setGameState('playing');
     initBricks();
     resetBall();
-    setGameState('playing');
+    setPaddleWidth(PADDLE_WIDTH);
+    setCombo(0);
+    setPowerups([]);
   }, [initBricks, resetBall]);
 
-  // Paddle pan responder
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderMove: (_, gestureState) => {
-        let newX = paddleX + gestureState.dx;
-        newX = Math.max(0, Math.min(GAME_WIDTH - PADDLE_WIDTH, newX));
-        setPaddleX(newX);
-      },
-    })
-  ).current;
+  // Timer
+  useEffect(() => {
+    if (gameState === 'playing') {
+      timerRef.current = setInterval(() => {
+        setTimeLeft(t => {
+          if (t <= 1) {
+            clearInterval(timerRef.current);
+            setLives(l => {
+              if (l <= 1) {
+                setGameState('lost');
+                return 0;
+              }
+              return l - 1;
+            });
+            resetBall();
+            return levelConfig.timeLimit;
+          }
+          return t - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timerRef.current);
+  }, [gameState, levelConfig.timeLimit, resetBall]);
 
-  // Touch to move paddle
-  const handleTouch = useCallback((evt) => {
-    const touchX = evt.nativeEvent.locationX;
-    const newPaddleX = Math.max(0, Math.min(GAME_WIDTH - PADDLE_WIDTH, touchX - PADDLE_WIDTH / 2));
-    setPaddleX(newPaddleX);
+  // Apply powerup
+  const applyPowerup = useCallback((powerup) => {
+    switch (powerup.type) {
+      case 'wide':
+        setPaddleWidth(w => Math.min(w * 1.5, PADDLE_WIDTH * 2));
+        break;
+      case 'slow':
+        ballVelX.current *= 0.7;
+        ballVelY.current *= 0.7;
+        break;
+      case 'life':
+        setLives(l => l + 1);
+        break;
+      case 'time':
+        setTimeLeft(t => t + 15);
+        break;
+    }
   }, []);
 
   // Game loop
   useEffect(() => {
-    if (gameState !== 'playing') {
-      if (gameLoop.current) {
-        clearInterval(gameLoop.current);
-        gameLoop.current = null;
-      }
-      return;
-    }
+    if (gameState !== 'playing') return;
 
     gameLoop.current = setInterval(() => {
-      // Update ball position
-      let newX = ballPosX.current + ballVelX.current;
-      let newY = ballPosY.current + ballVelY.current;
+      ballPosX.current += ballVelX.current;
+      ballPosY.current += ballVelY.current;
 
       // Wall collisions
-      if (newX <= 0 || newX >= GAME_WIDTH - BALL_SIZE) {
-        ballVelX.current = -ballVelX.current;
-        newX = Math.max(0, Math.min(GAME_WIDTH - BALL_SIZE, newX));
+      if (ballPosX.current <= 0 || ballPosX.current >= GAME_WIDTH - BALL_SIZE) {
+        ballVelX.current *= -1;
+        ballPosX.current = Math.max(0, Math.min(ballPosX.current, GAME_WIDTH - BALL_SIZE));
       }
-      if (newY <= 0) {
-        ballVelY.current = -ballVelY.current;
-        newY = 0;
+      if (ballPosY.current <= 0) {
+        ballVelY.current *= -1;
+        ballPosY.current = 0;
       }
 
       // Paddle collision
       if (
-        newY + BALL_SIZE >= GAME_HEIGHT - 40 &&
-        newY + BALL_SIZE <= GAME_HEIGHT - 40 + PADDLE_HEIGHT &&
-        newX + BALL_SIZE >= paddleX &&
-        newX <= paddleX + PADDLE_WIDTH
+        ballPosY.current >= GAME_HEIGHT - 30 - BALL_SIZE &&
+        ballPosX.current + BALL_SIZE >= paddleX &&
+        ballPosX.current <= paddleX + paddleWidth
       ) {
         ballVelY.current = -Math.abs(ballVelY.current);
-        // Add angle based on where ball hits paddle
-        const hitPos = (newX + BALL_SIZE / 2 - paddleX) / PADDLE_WIDTH;
-        ballVelX.current = (hitPos - 0.5) * 10;
-        newY = GAME_HEIGHT - 40 - BALL_SIZE;
+        const hitPos = (ballPosX.current + BALL_SIZE / 2 - paddleX) / paddleWidth;
+        ballVelX.current = (hitPos - 0.5) * levelConfig.ballSpeed * 2;
+        ballPosY.current = GAME_HEIGHT - 30 - BALL_SIZE;
       }
 
-      // Ball fell below
-      if (newY > GAME_HEIGHT) {
-        setLives((prev) => {
-          const newLives = prev - 1;
-          if (newLives <= 0) {
+      // Lost ball
+      if (ballPosY.current > GAME_HEIGHT) {
+        setCombo(0);
+        setLives(l => {
+          if (l <= 1) {
+            clearInterval(gameLoop.current);
             setGameState('lost');
-            gameSounds.lose();
-            const points = Math.floor(score * (difficulty === 'hard' ? 1.5 : 1));
-            onComplete(points, 'lose');
-          } else {
-            gameSounds.wrong();
-            resetBall();
+            onComplete && onComplete(Math.floor(score / 10), 'lose');
+            return 0;
           }
-          return newLives;
+          resetBall();
+          return l - 1;
         });
-        return;
       }
 
       // Brick collisions
-      setBricks((currentBricks) => {
-        let bricksHit = false;
-        const newBricks = currentBricks.map((brick) => {
+      setBricks(prevBricks => {
+        let updated = false;
+        const newBricks = prevBricks.map(brick => {
           if (!brick.active) return brick;
 
           if (
-            newX + BALL_SIZE >= brick.x &&
-            newX <= brick.x + brick.width &&
-            newY + BALL_SIZE >= brick.y &&
-            newY <= brick.y + brick.height
+            ballPosX.current + BALL_SIZE >= brick.x &&
+            ballPosX.current <= brick.x + brick.width &&
+            ballPosY.current + BALL_SIZE >= brick.y &&
+            ballPosY.current <= brick.y + brick.height
           ) {
-            bricksHit = true;
-            gameSounds.buttonTap();
-            setScore((prev) => prev + brick.points);
+            updated = true;
             
-            // Determine collision side
-            const overlapLeft = newX + BALL_SIZE - brick.x;
-            const overlapRight = brick.x + brick.width - newX;
-            const overlapTop = newY + BALL_SIZE - brick.y;
-            const overlapBottom = brick.y + brick.height - newY;
-            
-            const minOverlapX = Math.min(overlapLeft, overlapRight);
-            const minOverlapY = Math.min(overlapTop, overlapBottom);
-            
-            if (minOverlapX < minOverlapY) {
-              ballVelX.current = -ballVelX.current;
-            } else {
-              ballVelY.current = -ballVelY.current;
+            if (brick.hits > 1) {
+              ballVelY.current *= -1;
+              return { ...brick, hits: brick.hits - 1 };
+            }
+
+            // Hit brick
+            const newCombo = combo + 1;
+            setCombo(newCombo);
+            setShowCombo(true);
+            clearTimeout(comboTimeoutRef.current);
+            comboTimeoutRef.current = setTimeout(() => {
+              setCombo(0);
+              setShowCombo(false);
+            }, 2000);
+
+            const comboBonus = Math.floor(newCombo / 3) * 10;
+            setScore(s => s + brick.points + comboBonus);
+            ballVelY.current *= -1;
+
+            // Drop powerup
+            if (brick.powerup) {
+              applyPowerup(brick.powerup);
             }
 
             return { ...brick, active: false };
@@ -211,345 +260,429 @@ const BrickBreakerGame = ({ difficulty = 'medium', onComplete, onClose }) => {
           return brick;
         });
 
-        // Check if all bricks destroyed
-        if (newBricks.every((b) => !b.active)) {
-          setGameState('won');
-          gameSounds.win();
-          const basePoints = score + 500; // Bonus for completing
-          const points = Math.floor(basePoints * (difficulty === 'hard' ? 1.5 : 1));
-          onComplete(points, 'win');
+        // Check level complete
+        if (updated && newBricks.every(b => !b.active)) {
+          clearInterval(gameLoop.current);
+          clearInterval(timerRef.current);
+          
+          if (currentLevel < LEVELS.length - 1) {
+            setGameState('levelComplete');
+          } else {
+            setGameState('won');
+            onComplete && onComplete(Math.floor(score / 5), 'win');
+          }
         }
 
         return newBricks;
       });
 
-      // Update ball position
-      ballPosX.current = newX;
-      ballPosY.current = newY;
-      ballX.setValue(newX);
-      ballY.setValue(newY);
+      ballX.setValue(ballPosX.current);
+      ballY.setValue(ballPosY.current);
     }, 16);
 
-    return () => {
-      if (gameLoop.current) {
-        clearInterval(gameLoop.current);
-      }
-    };
-  }, [gameState, paddleX, difficulty, score, resetBall, onComplete]);
+    return () => clearInterval(gameLoop.current);
+  }, [gameState, paddleX, paddleWidth, resetBall, combo, currentLevel, levelConfig.ballSpeed, score, applyPowerup, onComplete]);
 
-  // Initialize on mount
-  useEffect(() => {
-    initBricks();
-  }, [initBricks]);
+  // Paddle control
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderMove: (evt) => {
+        const touchX = evt.nativeEvent.locationX - paddleWidth / 2;
+        const newX = Math.max(0, Math.min(touchX, GAME_WIDTH - paddleWidth));
+        setPaddleX(newX);
+      },
+    })
+  ).current;
 
-  const renderBricks = () => {
-    return bricks.map((brick) => {
-      if (!brick.active) return null;
-      return (
-        <LinearGradient
-          key={brick.id}
-          colors={brick.colors}
-          style={[
-            styles.brick,
-            {
-              left: brick.x,
-              top: brick.y,
-              width: brick.width,
-              height: brick.height,
-            },
-          ]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        />
-      );
-    });
-  };
+  // Level selection screen
+  if (gameState === 'menu') {
+    return (
+      <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
+        <View style={styles.overlay}>
+          <View style={styles.menuScreen}>
+            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+              <Ionicons name="close" size={28} color="#FFF" />
+            </TouchableOpacity>
+            
+            <Text style={styles.gameTitle}>🧱 تكسير الطوب</Text>
+            <Text style={styles.gameSubtitle}>10 مراحل • تحدي الوقت</Text>
+            
+            <View style={styles.levelsGrid}>
+              {LEVELS.map((lvl, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  style={[styles.levelBtn, { backgroundColor: lvl.color }]}
+                  onPress={() => startLevel(idx)}
+                >
+                  <Text style={styles.levelNum}>{idx + 1}</Text>
+                  <Text style={styles.levelName}>{lvl.name}</Text>
+                  <Text style={styles.levelTime}>{lvl.timeLimit}ث</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+      </ImageBackground>
+    );
+  }
+
+  // Level complete screen
+  if (gameState === 'levelComplete') {
+    return (
+      <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
+        <View style={styles.overlay}>
+          <View style={styles.resultScreen}>
+            <Text style={styles.resultEmoji}>🎉</Text>
+            <Text style={styles.resultTitle}>مرحلة {currentLevel + 1} مكتملة!</Text>
+            <Text style={styles.resultScore}>{score} نقطة</Text>
+            <Text style={styles.resultTime}>الوقت المتبقي: {timeLeft}ث</Text>
+            
+            <TouchableOpacity 
+              style={styles.nextLevelBtn}
+              onPress={() => startLevel(currentLevel + 1)}
+            >
+              <Text style={styles.nextLevelText}>المرحلة التالية</Text>
+              <Ionicons name="arrow-forward" size={20} color="#FFF" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ImageBackground>
+    );
+  }
+
+  // Game over / Won screens
+  if (gameState === 'lost' || gameState === 'won') {
+    return (
+      <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
+        <View style={styles.overlay}>
+          <View style={styles.resultScreen}>
+            <Text style={styles.resultEmoji}>{gameState === 'won' ? '🏆' : '💔'}</Text>
+            <Text style={styles.resultTitle}>
+              {gameState === 'won' ? 'فوز مذهل!' : 'انتهت اللعبة'}
+            </Text>
+            <Text style={styles.resultScore}>{score} نقطة</Text>
+            <Text style={styles.resultLevel}>وصلت للمرحلة {currentLevel + 1}</Text>
+            
+            <View style={styles.resultButtons}>
+              <TouchableOpacity style={styles.playAgainBtn} onPress={() => startLevel(0)}>
+                <Ionicons name="refresh" size={20} color="#FFF" />
+                <Text style={styles.playAgainText}>من البداية</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.exitBtn} onPress={onClose}>
+                <Text style={styles.exitText}>خروج</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </ImageBackground>
+    );
+  }
 
   return (
     <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
       <View style={styles.overlay}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onClose} style={styles.headerBtn}>
-          <Ionicons name="arrow-back" size={24} color="#FFF" />
-        </TouchableOpacity>
-        <Text style={styles.title}>تكسير الطوب</Text>
-        <View style={styles.headerBtn} />
-      </View>
-
-      {/* Stats Bar */}
-      <View style={styles.statsBar}>
-        <View style={styles.stat}>
-          <Ionicons name="heart" size={18} color="#ef4444" />
-          <Text style={styles.statText}>{lives}</Text>
-        </View>
-        <View style={styles.stat}>
-          <Ionicons name="trophy" size={18} color="#fbbf24" />
-          <Text style={styles.statText}>{score}</Text>
-        </View>
-        <View style={styles.stat}>
-          <Ionicons name="layers" size={18} color="#60a5fa" />
-          <Text style={styles.statText}>المستوى {level}</Text>
-        </View>
-      </View>
-
-      {/* Game Area */}
-      <View 
-        style={styles.gameArea}
-        onTouchMove={handleTouch}
-        onTouchStart={handleTouch}
-      >
-        {/* Bricks */}
-        {renderBricks()}
-
-        {/* Ball */}
-        <Animated.View
-          style={[
-            styles.ball,
-            {
-              transform: [
-                { translateX: ballX },
-                { translateY: ballY },
-              ],
-            },
-          ]}
-        />
-
-        {/* Paddle */}
-        <View
-          style={[
-            styles.paddle,
-            {
-              left: paddleX,
-              bottom: 40,
-            },
-          ]}
-          {...panResponder.panHandlers}
-        >
-          <LinearGradient
-            colors={['#60a5fa', '#3b82f6']}
-            style={styles.paddleGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          />
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.headerBtn} onPress={onClose}>
+            <Ionicons name="close" size={24} color="#FFF" />
+          </TouchableOpacity>
+          
+          <View style={styles.headerCenter}>
+            <Text style={styles.levelText}>المرحلة {currentLevel + 1}</Text>
+            <Text style={styles.levelNameText}>{levelConfig.name}</Text>
+          </View>
+          
+          <TouchableOpacity 
+            style={styles.headerBtn} 
+            onPress={() => setGameState(gameState === 'paused' ? 'playing' : 'paused')}
+          >
+            <Ionicons name={gameState === 'paused' ? 'play' : 'pause'} size={24} color="#FFF" />
+          </TouchableOpacity>
         </View>
 
-        {/* Game State Overlays */}
-        {gameState === 'ready' && (
-          <View style={styles.overlay}>
-            <TouchableOpacity style={styles.startBtn} onPress={startGame}>
-              <LinearGradient
-                colors={['#22c55e', '#16a34a']}
-                style={styles.startBtnGradient}
-              >
-                <Ionicons name="play" size={40} color="#FFF" />
-                <Text style={styles.startBtnText}>ابدأ اللعب</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+        {/* Stats */}
+        <View style={styles.statsBar}>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{score}</Text>
+            <Text style={styles.statLabel}>نقاط</Text>
+          </View>
+          
+          <View style={[styles.statItem, styles.timerItem, timeLeft <= 10 && styles.timerCritical]}>
+            <Ionicons name="time" size={18} color={timeLeft <= 10 ? '#ef4444' : '#fbbf24'} />
+            <Text style={[styles.timerValue, timeLeft <= 10 && styles.timerCriticalText]}>{timeLeft}</Text>
+          </View>
+          
+          <View style={styles.livesContainer}>
+            {[...Array(lives)].map((_, i) => (
+              <Text key={i} style={styles.lifeIcon}>❤️</Text>
+            ))}
+          </View>
+        </View>
+
+        {/* Combo */}
+        {showCombo && combo > 2 && (
+          <View style={styles.comboContainer}>
+            <Text style={styles.comboText}>x{combo} كومبو!</Text>
           </View>
         )}
 
-        {(gameState === 'won' || gameState === 'lost') && (
-          <View style={styles.overlay}>
-            <View style={styles.resultCard}>
-              <Ionicons
-                name={gameState === 'won' ? 'trophy' : 'sad'}
-                size={60}
-                color={gameState === 'won' ? '#fbbf24' : '#ef4444'}
-              />
-              <Text style={styles.resultTitle}>
-                {gameState === 'won' ? 'فوز' : 'انتهت اللعبة'}
-              </Text>
-              <Text style={styles.resultScore}>النقاط: {score}</Text>
-              <View style={styles.resultBtns}>
-                <TouchableOpacity style={styles.playAgainBtn} onPress={startGame}>
-                  <Ionicons name="refresh" size={20} color="#FFF" />
-                  <Text style={styles.playAgainText}>العب مجدداً</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.exitBtn} onPress={onClose}>
-                  <Text style={styles.exitText}>خروج</Text>
-                </TouchableOpacity>
-              </View>
+        {/* Game Area */}
+        <View style={styles.gameArea} {...panResponder.panHandlers}>
+          <View style={[styles.gameBoard, { width: GAME_WIDTH, height: GAME_HEIGHT }]}>
+            {/* Bricks */}
+            {bricks.map(brick => brick.active && (
+              <LinearGradient
+                key={brick.id}
+                colors={brick.colors}
+                style={[styles.brick, {
+                  left: brick.x,
+                  top: brick.y,
+                  width: brick.width,
+                  height: brick.height,
+                }]}
+              >
+                {brick.hits > 1 && (
+                  <View style={styles.strongBrick}>
+                    <Text style={styles.strongBrickText}>🛡️</Text>
+                  </View>
+                )}
+                {brick.powerup && (
+                  <Text style={styles.powerupIcon}>{brick.powerup.icon}</Text>
+                )}
+              </LinearGradient>
+            ))}
+
+            {/* Ball */}
+            <Animated.View
+              style={[styles.ball, {
+                left: ballX,
+                top: ballY,
+              }]}
+            >
+              <LinearGradient colors={['#FFF', '#ccc']} style={styles.ballInner} />
+            </Animated.View>
+
+            {/* Paddle */}
+            <LinearGradient
+              colors={['#60a5fa', '#3b82f6']}
+              style={[styles.paddle, {
+                left: paddleX,
+                width: paddleWidth,
+              }]}
+            />
+          </View>
+        </View>
+
+        {/* Pause Overlay */}
+        {gameState === 'paused' && (
+          <View style={styles.pauseOverlay}>
+            <View style={styles.pauseModal}>
+              <Text style={styles.pauseEmoji}>⏸️</Text>
+              <Text style={styles.pauseTitle}>إيقاف مؤقت</Text>
+              <TouchableOpacity style={styles.resumeBtn} onPress={() => setGameState('playing')}>
+                <Text style={styles.resumeText}>استمرار</Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}
-      </View>
-
-      {/* Instructions */}
-      <View style={styles.instructions}>
-        <Ionicons name="finger-print" size={20} color="#FFF" />
-        <Text style={styles.instructionText}>حرّك إصبعك لتحريك المضرب</Text>
-      </View>
       </View>
     </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  container: { flex: 1 },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' },
+  
+  // Menu
+  menuScreen: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingTop: 50,
+  closeBtn: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    padding: 10,
   },
+  gameTitle: { fontSize: 36, fontWeight: 'bold', color: '#FFF', marginBottom: 8 },
+  gameSubtitle: { fontSize: 14, color: 'rgba(255,255,255,0.7)', marginBottom: 30 },
+  levelsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 10,
+    maxWidth: 350,
+  },
+  levelBtn: {
+    width: 65,
+    height: 65,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  levelNum: { fontSize: 20, fontWeight: 'bold', color: '#FFF' },
+  levelName: { fontSize: 8, color: 'rgba(255,255,255,0.8)' },
+  levelTime: { fontSize: 10, color: 'rgba(255,255,255,0.6)' },
+
+  // Header
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    marginBottom: 12,
+    paddingTop: 50,
+    paddingBottom: 10,
   },
   headerBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#FFF',
-  },
+  headerCenter: { alignItems: 'center' },
+  levelText: { fontSize: 16, fontWeight: 'bold', color: '#FFF' },
+  levelNameText: { fontSize: 12, color: 'rgba(255,255,255,0.7)' },
+
+  // Stats
   statsBar: {
     flexDirection: 'row',
     justifyContent: 'space-around',
+    alignItems: 'center',
     paddingVertical: 10,
-    paddingHorizontal: 16,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    marginHorizontal: 16,
-    borderRadius: 12,
-    marginBottom: 12,
+    paddingHorizontal: 20,
   },
-  stat: {
+  statItem: { alignItems: 'center' },
+  statValue: { fontSize: 24, fontWeight: 'bold', color: '#FFF' },
+  statLabel: { fontSize: 10, color: 'rgba(255,255,255,0.6)' },
+  timerItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(251,191,36,0.2)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
     gap: 6,
   },
-  statText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
+  timerCritical: { backgroundColor: 'rgba(239,68,68,0.3)' },
+  timerValue: { fontSize: 22, fontWeight: 'bold', color: '#fbbf24' },
+  timerCriticalText: { color: '#ef4444' },
+  livesContainer: { flexDirection: 'row', gap: 4 },
+  lifeIcon: { fontSize: 18 },
+
+  // Combo
+  comboContainer: {
+    position: 'absolute',
+    top: 140,
+    alignSelf: 'center',
+    backgroundColor: '#f59e0b',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 12,
   },
-  gameArea: {
-    width: GAME_WIDTH,
-    height: GAME_HEIGHT,
-    backgroundColor: 'rgba(255,255,255,0.02)',
-    marginHorizontal: 16,
+  comboText: { color: '#FFF', fontWeight: 'bold', fontSize: 14 },
+
+  // Game
+  gameArea: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  gameBoard: {
+    backgroundColor: 'rgba(0,0,0,0.4)',
     borderRadius: 16,
     overflow: 'hidden',
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.1)',
   },
   brick: {
     position: 'absolute',
     borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
+  strongBrick: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+  },
+  strongBrickText: { fontSize: 10 },
+  powerupIcon: { fontSize: 12 },
   ball: {
     position: 'absolute',
     width: BALL_SIZE,
     height: BALL_SIZE,
     borderRadius: BALL_SIZE / 2,
-    backgroundColor: '#FFF',
-    shadowColor: '#FFF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 8,
-  },
-  paddle: {
-    position: 'absolute',
-    width: PADDLE_WIDTH,
-    height: PADDLE_HEIGHT,
-    borderRadius: PADDLE_HEIGHT / 2,
     overflow: 'hidden',
   },
-  paddleGradient: {
-    flex: 1,
+  ballInner: { flex: 1 },
+  paddle: {
+    position: 'absolute',
+    bottom: 20,
+    height: PADDLE_HEIGHT,
     borderRadius: PADDLE_HEIGHT / 2,
   },
-  overlay: {
+
+  // Results
+  resultScreen: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  resultEmoji: { fontSize: 60, marginBottom: 16 },
+  resultTitle: { fontSize: 28, fontWeight: 'bold', color: '#FFF', marginBottom: 8 },
+  resultScore: { fontSize: 36, fontWeight: 'bold', color: '#fbbf24', marginBottom: 8 },
+  resultTime: { fontSize: 14, color: 'rgba(255,255,255,0.7)', marginBottom: 8 },
+  resultLevel: { fontSize: 14, color: 'rgba(255,255,255,0.7)', marginBottom: 24 },
+  nextLevelBtn: {
+    flexDirection: 'row',
+    backgroundColor: '#22c55e',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    gap: 8,
+  },
+  nextLevelText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
+  resultButtons: { gap: 12, alignItems: 'center' },
+  playAgainBtn: {
+    flexDirection: 'row',
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    gap: 8,
+  },
+  playAgainText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
+  exitBtn: { paddingVertical: 10 },
+  exitText: { color: 'rgba(255,255,255,0.6)', fontSize: 14 },
+
+  // Pause
+  pauseOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.8)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  startBtn: {
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  startBtnGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-  },
-  startBtnText: {
-    color: '#FFF',
-    fontSize: 22,
-    fontWeight: '700',
-  },
-  resultCard: {
-    backgroundColor: '#1a1a24',
-    borderRadius: 24,
+  pauseModal: {
+    backgroundColor: '#1e1e2e',
     padding: 32,
+    borderRadius: 24,
     alignItems: 'center',
-    width: '85%',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
   },
-  resultTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#FFF',
-    marginTop: 16,
-  },
-  resultScore: {
-    fontSize: 20,
-    color: '#fbbf24',
-    marginTop: 8,
-  },
-  resultBtns: {
-    marginTop: 24,
-    width: '100%',
-    gap: 12,
-  },
-  playAgainBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#3b82f6',
+  pauseEmoji: { fontSize: 48, marginBottom: 16 },
+  pauseTitle: { fontSize: 24, fontWeight: 'bold', color: '#FFF', marginBottom: 20 },
+  resumeBtn: {
+    backgroundColor: '#22c55e',
+    paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 12,
   },
-  playAgainText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  exitBtn: {
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  exitText: {
-    color: '#888',
-    fontSize: 14,
-  },
-  instructions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 16,
-  },
-  instructionText: {
-    color: '#666',
-    fontSize: 14,
-  },
+  resumeText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
 });
 
 export default BrickBreakerGame;
