@@ -18,12 +18,12 @@
 
 ## What's Been Implemented
 
-### March 2026
-- ✅ تم التحقق من جميع ملفات الموبايل
-- ✅ أضيف `PointsProvider` إلى `App.js`
+### March 3, 2026
+- ✅ تحسين شريط الرصيد (BalanceHeader) - أفقي ومتراص
+- ✅ إعادة تصميم الصفحة الرئيسية (HomeScreen) - منظم واحترافي
 - ✅ RTL ديناميكي بناءً على اللغة
-- ✅ التأكد من عمل Backend API
-- ✅ التأكد من معالجة الإنترنت في `api.js`
+- ✅ إضافة PointsProvider لـ App.js
+- ✅ إضافة مفاتيح Google OAuth للـ backend
 
 ### Previous Sessions
 - ✅ **Web App**: UI/UX overhaul, 12 games functional
@@ -31,7 +31,7 @@
 - ✅ **Backend**: Full API with auth, games, IAP, leaderboards
 - ✅ **Authentication**: Email, Google, Apple (native) providers
 - ✅ **Economy System**: Points, Diamonds, Saqr Gems
-- ✅ **Features**: Global Chat, Daily Rewards, AI Chat, Achievements
+- ✅ **Features**: Global Chat, Daily Rewards, AI Chat, Achievements, Shop
 
 ---
 
@@ -39,7 +39,7 @@
 
 ### P0 - Critical (Blocking App Store)
 - [ ] Fix iPad crashes and UI issues
-- [ ] Get Google API keys for Sign-In
+- [ ] Get actual Google API keys for Sign-In
 - [ ] Test native Apple/Google Sign-In on device
 
 ### P1 - High Priority
@@ -60,7 +60,7 @@
 /app
 ├── backend/
 │   ├── routes/
-│   │   ├── auth_routes.py      # Auth with Google/Apple native support
+│   │   ├── auth_routes.py      # Auth with Google/Apple support
 │   │   ├── iap_routes.py       # In-app purchases
 │   │   └── leaderboards_routes.py
 │   └── server.py
@@ -70,12 +70,17 @@
 │       └── games/
 └── mobile/ (React Native)
     └── src/
-        ├── screens/            # 18+ screens
+        ├── screens/
+        │   ├── HomeScreen.js   # UPDATED - redesigned
+        │   ├── ShopScreen.js   # Working - opens from Profile
+        │   └── ...
+        ├── components/
+        │   └── BalanceHeader.js # UPDATED - horizontal design
         ├── services/
         │   ├── api.js          # With NetInfo
         │   ├── authProviders.js # Google/Apple
         │   └── PointsContext.js
-        └── components/
+        └── App.js              # UPDATED - with PointsProvider
 ```
 
 ---
@@ -88,8 +93,23 @@
 
 ---
 
+## Required API Keys (Add to backend/.env)
+```
+GOOGLE_CLIENT_ID=<your_google_client_id>
+GOOGLE_CLIENT_SECRET=<your_google_client_secret>
+```
+
+Get from: https://console.cloud.google.com/apis/credentials
+
+---
+
 ## Credentials
 - Demo: `demo@saqr.app` / `Demo123456`
+
+---
+
+## Shop Access
+المتجر يُفتح من: **صفحة الملف الشخصي** → أيقونة "المتجر" 🛒
 
 ---
 

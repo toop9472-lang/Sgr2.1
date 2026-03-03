@@ -1,4 +1,4 @@
-// Balance Header - شريط عرض الرصيد المحسن (جواهر صقر + الماس)
+// Balance Header - شريط الرصيد المحسن (أفقي ومتراص)
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -35,9 +35,9 @@ const BalanceHeader = ({ userId, onDiamondPress, onGemsPress, refreshTrigger }) 
         const data = await response.json();
         setBalance(data);
         
-        // تاثير النبض عند التحديث
+        // تأثير النبض عند التحديث
         Animated.sequence([
-          Animated.timing(pulseAnim, { toValue: 1.08, duration: 150, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1.05, duration: 150, useNativeDriver: true }),
           Animated.timing(pulseAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
         ]).start();
       }
@@ -57,158 +57,134 @@ const BalanceHeader = ({ userId, onDiamondPress, onGemsPress, refreshTrigger }) 
   };
 
   return (
-    <View style={styles.container}>
-      {/* جواهر صقر - للاستبدال بالمال */}
-      <TouchableOpacity 
-        onPress={onGemsPress}
-        activeOpacity={0.8}
-        style={styles.balanceItem}
-      >
-        <Animated.View style={[styles.balanceCard, { transform: [{ scale: pulseAnim }] }]}>
-          <LinearGradient
-            colors={['rgba(244,114,182,0.2)', 'rgba(192,132,252,0.1)']}
-            style={styles.balanceGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <LinearGradient
-              colors={['#f472b6', '#c084fc']}
-              style={styles.iconCircle}
-            >
-              <Ionicons name="sparkles" size={16} color="#FFF" />
-            </LinearGradient>
-            <View style={styles.balanceInfo}>
-              <Text style={styles.gemsLabel}>جواهر صقر</Text>
-              <Text style={styles.gemsValue}>{formatNumber(balance.saqr_gems)}</Text>
-            </View>
-          </LinearGradient>
-        </Animated.View>
-      </TouchableOpacity>
-
-      {/* الماسات - للاستهلاك داخل التطبيق */}
-      <TouchableOpacity 
-        onPress={onDiamondPress}
-        activeOpacity={0.8}
-        style={styles.balanceItem}
-      >
-        <Animated.View style={[styles.balanceCard, { transform: [{ scale: pulseAnim }] }]}>
-          <LinearGradient
-            colors={['rgba(96,165,250,0.2)', 'rgba(59,130,246,0.1)']}
-            style={styles.balanceGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <LinearGradient
-              colors={['#60a5fa', '#3b82f6']}
-              style={styles.iconCircle}
-            >
-              <Ionicons name="diamond" size={16} color="#FFF" />
-            </LinearGradient>
-            <View style={styles.balanceInfo}>
-              <Text style={styles.diamondLabel}>الماس</Text>
-              <Text style={styles.diamondValue}>{formatNumber(balance.diamonds)}</Text>
-            </View>
-            {/* زر الاضافة */}
-            <View style={styles.addButton}>
-              <Ionicons name="add" size={12} color="#FFF" />
-            </View>
-          </LinearGradient>
-        </Animated.View>
-      </TouchableOpacity>
-
-      {/* نقاط صقر - مختصرة */}
-      <Animated.View style={[styles.pointsCard, { transform: [{ scale: pulseAnim }] }]}>
-        <LinearGradient
-          colors={['rgba(251,191,36,0.2)', 'rgba(245,158,11,0.1)']}
-          style={styles.pointsGradient}
+    <Animated.View style={[styles.container, { transform: [{ scale: pulseAnim }] }]}>
+      {/* الرصيد في صف واحد */}
+      <View style={styles.balanceRow}>
+        {/* جواهر صقر */}
+        <TouchableOpacity 
+          onPress={onGemsPress}
+          activeOpacity={0.8}
+          style={styles.balanceItem}
         >
-          <Ionicons name="star" size={14} color="#fbbf24" />
-          <Text style={styles.pointsValue}>{formatNumber(balance.saqr_points)}</Text>
-        </LinearGradient>
-      </Animated.View>
-    </View>
+          <LinearGradient
+            colors={['rgba(244,114,182,0.15)', 'rgba(192,132,252,0.1)']}
+            style={styles.balanceGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <View style={styles.iconWrapper}>
+              <Ionicons name="sparkles" size={14} color="#f472b6" />
+            </View>
+            <Text style={styles.gemsValue}>{formatNumber(balance.saqr_gems)}</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        {/* الماسات */}
+        <TouchableOpacity 
+          onPress={onDiamondPress}
+          activeOpacity={0.8}
+          style={styles.balanceItem}
+        >
+          <LinearGradient
+            colors={['rgba(96,165,250,0.15)', 'rgba(59,130,246,0.1)']}
+            style={styles.balanceGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <View style={styles.iconWrapper}>
+              <Ionicons name="diamond" size={14} color="#60a5fa" />
+            </View>
+            <Text style={styles.diamondValue}>{formatNumber(balance.diamonds)}</Text>
+            <View style={styles.addIcon}>
+              <Ionicons name="add" size={10} color="#FFF" />
+            </View>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        {/* نقاط صقر */}
+        <View style={styles.pointsItem}>
+          <LinearGradient
+            colors={['rgba(251,191,36,0.15)', 'rgba(245,158,11,0.1)']}
+            style={styles.pointsGradient}
+          >
+            <Ionicons name="star" size={14} color="#fbbf24" />
+            <Text style={styles.pointsValue}>{formatNumber(balance.saqr_points)}</Text>
+          </LinearGradient>
+        </View>
+      </View>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  balanceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    justifyContent: 'center',
     gap: 8,
   },
   balanceItem: {
     flex: 1,
-  },
-  balanceCard: {
-    borderRadius: 14,
-    overflow: 'hidden',
+    maxWidth: 120,
   },
   balanceGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    borderRadius: 14,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
+    gap: 6,
   },
-  iconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  iconWrapper: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  balanceInfo: {
-    flex: 1,
-    marginLeft: 8,
-  },
-  gemsLabel: {
-    fontSize: 9,
-    color: 'rgba(244,114,182,0.9)',
-    fontWeight: '500',
-  },
   gemsValue: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#f472b6',
   },
-  diamondLabel: {
-    fontSize: 9,
-    color: 'rgba(96,165,250,0.9)',
-    fontWeight: '500',
-  },
   diamondValue: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#60a5fa',
   },
-  addButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+  addIcon: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: '#10b981',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  pointsCard: {
-    borderRadius: 12,
-    overflow: 'hidden',
+  pointsItem: {
+    flex: 1,
+    maxWidth: 100,
   },
   pointsGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    borderRadius: 12,
-    gap: 4,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
     borderWidth: 1,
     borderColor: 'rgba(251,191,36,0.15)',
   },
   pointsValue: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#fbbf24',
   },
