@@ -15,9 +15,8 @@ LogBox.ignoreLogs([
   'expo-device',
 ]);
 
-// Force RTL for Arabic
+// RTL support - will be set dynamically based on language
 I18nManager.allowRTL(true);
-I18nManager.forceRTL(true);
 
 // Screens
 import AuthScreen from './src/screens/AuthScreen';
@@ -105,6 +104,15 @@ function AppContent() {
 
   // Notification listener ref
   const notificationListenerRef = useRef(null);
+
+  // Dynamic RTL based on language
+  useEffect(() => {
+    const isRTL = language === 'ar';
+    if (I18nManager.isRTL !== isRTL) {
+      I18nManager.forceRTL(isRTL);
+      // Note: RTL changes require app restart to take effect
+    }
+  }, [language]);
 
   // Initialize app
   useEffect(() => {
