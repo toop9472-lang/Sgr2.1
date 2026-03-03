@@ -648,8 +648,8 @@ const ChessGame = ({ mode, onComplete, onClose }) => {
             style={[
               styles.piece, 
               { 
-                // البيضاء: بني خشبي فاتح، السوداء: بني خشبي داكن
-                color: pieceDisplay.color === 'white' ? '#D4A574' : '#4A3728',
+                // البيضاء: بني خشبي فاتح، السوداء: أسود داكن
+                color: pieceDisplay.color === 'white' ? '#D4A574' : '#1a1a1a',
                 textShadowColor: pieceDisplay.color === 'white' ? '#8B4513' : '#000',
                 textShadowOffset: { width: 2, height: 2 },
                 textShadowRadius: 3,
