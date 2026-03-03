@@ -30,6 +30,7 @@ import SnakeGame from './games/SnakeGame';
 import ColorSwitchGame from './games/ColorSwitchGame';
 import MathRaceGame from './games/MathRaceGame';
 import WordRaceGame from './games/WordRaceGame';
+import MillionaireScreen from './MillionaireScreen';
 import { triviaQuestions, riddlesQuestions } from '../data/questionsData';
 import AdChallengesModal from '../components/AdChallengesModal';
 import SaqrFortunesScreen from './SaqrFortunesScreen';
@@ -1189,6 +1190,19 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, 
       badge: '',
       image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/3a0211bd8e37c202ba475214f6cd4a78086e29615fbe36f18fa7b822d0ec5faf.png'
     },
+    { 
+      id: 'millionaire', 
+      name: 'من سيربح المليون', 
+      icon: 'cash', 
+      colors: ['#fbbf24', '#f59e0b'], 
+      description: '15 سؤال للمليون!', 
+      maxPoints: 100, 
+      online: false, 
+      onlineCost: 0,
+      category: 'مميزة',
+      badge: 'جديد',
+      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png'
+    },
   ];
 
   // Multiplayer event handlers
@@ -1493,6 +1507,8 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, 
         return <WordRaceGame {...gameProps} />;
       case 'colorswitch':
         return <ColorSwitchGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
+      case 'millionaire':
+        return <MillionaireScreen onComplete={handleGameComplete} onClose={closeGame} />;
       default:
         return <ComingSoonGame name={games.find(g => g.id === activeGame)?.name || 'لعبة'} onClose={closeGame} />;
     }

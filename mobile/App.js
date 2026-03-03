@@ -37,6 +37,9 @@ import SaqrFortunesScreen from './src/screens/SaqrFortunesScreen';
 import FriendsScreen from './src/screens/FriendsScreen';
 import PrivateMessagesScreen from './src/screens/PrivateMessagesScreen';
 import InvitationsScreen from './src/screens/InvitationsScreen';
+import MillionaireScreen from './src/screens/MillionaireScreen';
+import OnboardingScreen from './src/screens/OnboardingScreen';
+import LeaderboardScreen from './src/screens/LeaderboardScreen';
 
 // Components
 import BottomNav from './src/components/BottomNav';
@@ -45,6 +48,7 @@ import AIChatModal from './src/components/AIChatModal';
 import DailyRewardsModal from './src/components/DailyRewardsModal';
 import DiamondShopModal from './src/components/DiamondShopModal';
 import BalanceHeader from './src/components/BalanceHeader';
+import DailyStreakModal, { useDailyStreak } from './src/components/DailyStreakModal';
 
 // Contexts
 import { LanguageProvider, useLanguage } from './src/i18n/LanguageContext';
@@ -85,6 +89,9 @@ function AppContent() {
   const [showAchievements, setShowAchievements] = useState(false);
   const [showShop, setShowShop] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showMillionaire, setShowMillionaire] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [networkStatus, setNetworkStatus] = useState('checking');
   const [settings, setSettings] = useState(null);
   const [balanceRefresh, setBalanceRefresh] = useState(0);
@@ -566,6 +573,31 @@ function AppContent() {
       {showAdminPanel && (
         <View style={StyleSheet.absoluteFill}>
           <AdminWebViewScreen onClose={() => setShowAdminPanel(false)} />
+        </View>
+      )}
+
+      {/* Millionaire Game Screen */}
+      {showMillionaire && (
+        <View style={StyleSheet.absoluteFill}>
+          <MillionaireScreen
+            onClose={() => setShowMillionaire(false)}
+            onComplete={(points, result) => {
+              if (result === 'win') {
+                setUser(prev => ({ ...prev, points: (prev.points || 0) + points }));
+                setBalanceRefresh(prev => prev + 1);
+              }
+            }}
+          />
+        </View>
+      )}
+
+      {/* Leaderboard Screen */}
+      {showLeaderboard && (
+        <View style={StyleSheet.absoluteFill}>
+          <LeaderboardScreen
+            userId={user?.id}
+            onClose={() => setShowLeaderboard(false)}
+          />
         </View>
       )}
 
