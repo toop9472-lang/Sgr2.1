@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const API_URL = 'https://invites-challenges.preview.emergentagent.com';
+const API_URL = 'https://ipad-stability-fix.preview.emergentagent.com';
 
 const AdvertiserDashboardScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');

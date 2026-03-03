@@ -531,7 +531,7 @@ async def forgot_password(data: ForgotPasswordRequest):
     )
     
     # Build reset URL
-    frontend_url = "https://invites-challenges.preview.emergentagent.com"
+    frontend_url = "https://ipad-stability-fix.preview.emergentagent.com"
     reset_url = f"{frontend_url}/forgot-password?token={reset_token}"
     
     # Send email with reset link
@@ -985,7 +985,7 @@ async def google_sign_in_redirect(redirect_uri: str = 'saqr://auth/callback'):
     google_auth_url = (
         f"https://accounts.google.com/o/oauth2/v2/auth"
         f"?client_id={client_id}"
-        f"&redirect_uri={os.environ.get('GOOGLE_REDIRECT_URI', 'https://invites-challenges.preview.emergentagent.com/api/auth/google/callback')}"
+        f"&redirect_uri={os.environ.get('GOOGLE_REDIRECT_URI', 'https://ipad-stability-fix.preview.emergentagent.com/api/auth/google/callback')}"
         f"&response_type=code"
         f"&scope=email%20profile"
         f"&access_type=offline"
@@ -1034,7 +1034,7 @@ async def google_sign_in_callback(code: str = None, state: str = None, error: st
                     'client_secret': client_secret,
                     'code': code,
                     'grant_type': 'authorization_code',
-                    'redirect_uri': os.environ.get('GOOGLE_REDIRECT_URI', 'https://invites-challenges.preview.emergentagent.com/api/auth/google/callback')
+                    'redirect_uri': os.environ.get('GOOGLE_REDIRECT_URI', 'https://ipad-stability-fix.preview.emergentagent.com/api/auth/google/callback')
                 }
             )
             

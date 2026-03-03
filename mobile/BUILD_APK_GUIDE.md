@@ -177,7 +177,7 @@ eas build --platform ios --profile production
 
 ### API URL:
 ```
-https://invites-challenges.preview.emergentagent.com
+https://ipad-stability-fix.preview.emergentagent.com
 ```
 
 ---

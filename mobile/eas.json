@@ -24,7 +24,8 @@
       },
       "ios": {
         "distribution": "store",
-        "credentialsSource": "remote"
+        "credentialsSource": "remote",
+        "image": "latest"
       },
       "env": {
         "EAS_BUILD_NO_EXPO_GO_WARNING": "1",

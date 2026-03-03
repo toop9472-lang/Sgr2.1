@@ -1,8 +1,9 @@
 // Saqr Mobile App - Main Entry Point
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, ActivityIndicator, Text, BackHandler, Alert, Image, I18nManager, LogBox } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Text, BackHandler, Alert, Image, I18nManager, LogBox, useColorScheme } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import colors from './src/styles/colors';
 
 // Ignore specific warnings that don't affect functionality
 LogBox.ignoreLogs([
@@ -49,12 +50,12 @@ import BalanceHeader from './src/components/BalanceHeader';
 // Contexts
 import { LanguageProvider, useLanguage } from './src/i18n/LanguageContext';
 import { AchievementsProvider, useAchievements } from './src/services/AchievementsContext';
+import { PointsProvider } from './src/services/PointsContext';
 import { AchievementNotification } from './src/screens/AchievementsScreen';
 
 // Services
 import api from './src/services/api';
 import storage from './src/services/storage';
-import colors from './src/styles/colors';
 
 // Safe notification import
 let NotificationService = null;
@@ -69,6 +70,11 @@ try {
 
 // Main App Content (wrapped with providers)
 function AppContent() {
+  // Theme support
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const theme = isDark ? colors.dark : colors.light;
+  
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -607,7 +613,9 @@ function App() {
   return (
     <LanguageProvider>
       <AchievementsProvider>
-        <AppContent />
+        <PointsProvider>
+          <AppContent />
+        </PointsProvider>
       </AchievementsProvider>
     </LanguageProvider>
   );

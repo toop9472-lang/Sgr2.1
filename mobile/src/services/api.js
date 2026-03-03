@@ -2,7 +2,7 @@
 // Production Server - Emergent Host
 import NetInfo from '@react-native-community/netinfo';
 
-const API_URL = 'https://invites-challenges.preview.emergentagent.com';
+const API_URL = 'https://ipad-stability-fix.preview.emergentagent.com';
 
 // Connection check timeout - increased for better reliability
 const CONNECTION_TIMEOUT = 20000; // 20 seconds

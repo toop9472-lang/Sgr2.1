@@ -209,8 +209,8 @@ eas submit -p android
 
 ## 📞 الدعم والمساعدة
 
-- **الموقع:** https://invites-challenges.preview.emergentagent.com
-- **API Docs:** https://invites-challenges.preview.emergentagent.com/docs
+- **الموقع:** https://ipad-stability-fix.preview.emergentagent.com
+- **API Docs:** https://ipad-stability-fix.preview.emergentagent.com/docs
 
 ---
 

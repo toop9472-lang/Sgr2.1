@@ -5,7 +5,7 @@
     "version": "7.2.2",
     "orientation": "default",
     "icon": "./assets/logo_saqr.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/logo_saqr.png",
       "resizeMode": "contain",
@@ -146,7 +146,8 @@
       "associatedDomains": [
         "applinks:invites-challenges.preview.emergentagent.com",
         "webcredentials:invites-challenges.preview.emergentagent.com"
-      ]
+      ],
+      "deploymentTarget": "15.0"
     },
     "android": {
       "adaptiveIcon": {
@@ -179,7 +180,10 @@
       ],
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO"
-      ]
+      ],
+      "targetSdkVersion": 35,
+      "compileSdkVersion": 35,
+      "minSdkVersion": 24
     },
     "web": {
       "favicon": "./assets/logo_saqr.png"
