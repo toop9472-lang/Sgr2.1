@@ -404,6 +404,85 @@ async def get_user_rewarded_stats(user_id: str = Depends(get_current_user_id)):
     }
 
 
+@router.post('/start-session')
+async def start_ad_session(
+    data: dict,
+    user_id: str = Depends(get_current_user_id)
+):
+    """Start a new ad viewing session for fraud prevention"""
+    db = get_db()
+    settings = await get_ad_settings(db)
+    
+    # Check daily limit
+    can_watch, remaining = await check_daily_limit(
+        db, user_id, settings.get('daily_rewarded_limit', 50)
+    )
+    if not can_watch:
+        raise HTTPException(status_code=429, detail={'error': 'daily_limit', 'message': 'وصلت للحد اليومي'})
+    
+    # Check cooldown
+    can_watch, cooldown_remaining = await check_cooldown(
+        db, user_id, settings.get('cooldown_seconds', 30)
+    )
+    if not can_watch:
+        raise HTTPException(status_code=429, detail={'error': 'cooldown', 'message': f'انتظر {cooldown_remaining} ثانية', 'remaining': cooldown_remaining})
+    
+    # Create session
+    session_id = str(uuid.uuid4())
+    session = {
+        'session_id': session_id,
+        'user_id': user_id,
+        'ad_type': data.get('ad_type', 'rewarded'),
+        'started_at': datetime.now(timezone.utc),
+        'device_info': data.get('device_info', {}),
+        'status': 'started'
+    }
+    await db.ad_sessions.insert_one(session)
+    
+    return {
+        'session_id': session_id,
+        'expected_reward': settings.get('points_per_rewarded_ad', 5),
+        'remaining_today': remaining
+    }
+
+
+@router.post('/sync-pending')
+async def sync_pending_reward(
+    data: dict,
+    user_id: str = Depends(get_current_user_id)
+):
+    """Sync a pending reward that failed to save earlier"""
+    db = get_db()
+    
+    # Validate session
+    session = await db.ad_sessions.find_one({
+        'session_id': data.get('sessionId'),
+        'user_id': user_id
+    })
+    
+    if not session:
+        raise HTTPException(status_code=404, detail='جلسة غير موجودة')
+    
+    # Check if already claimed
+    if session.get('status') == 'completed':
+        return {'success': False, 'message': 'تم استلام المكافأة مسبقاً'}
+    
+    # Grant reward
+    reward = 1  # نقطة واحدة للإعلان المعلق
+    
+    await db.users.update_one(
+        {'$or': [{'id': user_id}, {'user_id': user_id}]},
+        {'$inc': {'points': reward, 'total_earned': reward, 'ads_watched': 1}}
+    )
+    
+    await db.ad_sessions.update_one(
+        {'session_id': data.get('sessionId')},
+        {'$set': {'status': 'completed', 'synced_at': datetime.now(timezone.utc)}}
+    )
+    
+    return {'success': True, 'reward': reward}
+
+
 @router.get('/leaderboard')
 async def get_rewarded_leaderboard():
     """Get top earners from rewarded ads"""

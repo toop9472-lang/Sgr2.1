@@ -10,78 +10,72 @@
 ## Core Requirements
 1. نظام مصادقة (Email, Google, Apple)
 2. مشاهدة الإعلانات وكسب النقاط
-3. ألعاب متعددة
-4. نظام اقتصادي (نقاط + ماس)
+3. ألعاب متعددة (12 لعبة)
+4. نظام اقتصادي (نقاط + ماس + جواهر صقر)
 5. دعم iPad وiPhone
 
 ---
 
 ## What's Been Implemented
 
-### March 3, 2026
-- ✅ تحسين شريط الرصيد (BalanceHeader) - أفقي ومتراص
-- ✅ إعادة تصميم الصفحة الرئيسية (HomeScreen) - منظم واحترافي
+### March 3, 2026 - Session 2
+- ✅ **Skeleton Loading Component** - تحميل متحرك احترافي
+- ✅ **Ad Reward Service** - نظام مكافآت إعلانات محسن
+- ✅ **Backend Endpoints** - start-session و sync-pending
+
+### March 3, 2026 - Session 1
+- ✅ تحسين شريط الرصيد (BalanceHeader)
+- ✅ إعادة تصميم الصفحة الرئيسية (HomeScreen)
 - ✅ RTL ديناميكي بناءً على اللغة
 - ✅ إضافة PointsProvider لـ App.js
-- ✅ إضافة مفاتيح Google OAuth للـ backend
 
-### Previous Sessions
-- ✅ **Web App**: UI/UX overhaul, 12 games functional
-- ✅ **Mobile App**: 18+ screens implemented
-- ✅ **Backend**: Full API with auth, games, IAP, leaderboards
-- ✅ **Authentication**: Email, Google, Apple (native) providers
-- ✅ **Economy System**: Points, Diamonds, Saqr Gems
-- ✅ **Features**: Global Chat, Daily Rewards, AI Chat, Achievements, Shop
+### الألعاب المحسنة:
+- ✅ **الثعبان** - تحكم باللمس (Swipe) + 4 مستويات
+- ✅ **تكسير الطوب** - 10 مراحل + Power-ups + وقت محدد
+- ✅ **الشطرنج** - ألوان خشبية واقعية
+- ✅ **تركيب الصور** - إصلاح الأخطاء
 
 ---
 
 ## Prioritized Backlog
 
-### P0 - Critical (Blocking App Store)
+### P0 - Critical
 - [ ] Fix iPad crashes and UI issues
-- [ ] Get actual Google API keys for Sign-In
 - [ ] Test native Apple/Google Sign-In on device
+- [ ] Build and submit to App Store
 
 ### P1 - High Priority
-- [ ] Build and test mobile app
-- [ ] Submit to App Store
-- [ ] Implement Redis caching
+- [ ] Add FlashList instead of FlatList
+- [ ] Add Sentry for Crash Reporting
+- [ ] Add Firebase Analytics
+- [ ] Enable New Architecture
 
 ### P2 - Future
-- [ ] Add new mobile features to web app
-- [ ] Move API_URL to .env file
-- [ ] Performance optimizations
+- [ ] Add expo-secure-store for token
+- [ ] Add Firebase App Check
+- [ ] Add OTA Updates (expo-updates)
 
 ---
 
-## Architecture
+## New Components
 
-```
-/app
-├── backend/
-│   ├── routes/
-│   │   ├── auth_routes.py      # Auth with Google/Apple support
-│   │   ├── iap_routes.py       # In-app purchases
-│   │   └── leaderboards_routes.py
-│   └── server.py
-├── frontend/ (Web)
-│   └── src/
-│       ├── pages/
-│       └── games/
-└── mobile/ (React Native)
-    └── src/
-        ├── screens/
-        │   ├── HomeScreen.js   # UPDATED - redesigned
-        │   ├── ShopScreen.js   # Working - opens from Profile
-        │   └── ...
-        ├── components/
-        │   └── BalanceHeader.js # UPDATED - horizontal design
-        ├── services/
-        │   ├── api.js          # With NetInfo
-        │   ├── authProviders.js # Google/Apple
-        │   └── PointsContext.js
-        └── App.js              # UPDATED - with PointsProvider
-```
+### SkeletonLoading.js
+Location: `/app/mobile/src/components/SkeletonLoading.js`
+- HomeScreenSkeleton
+- ProfileScreenSkeleton
+- GamesScreenSkeleton
+- ShopScreenSkeleton
+- ChatScreenSkeleton
+- ListItemSkeleton
+
+### AdRewardService.js
+Location: `/app/mobile/src/services/AdRewardService.js`
+Features:
+- Session tracking
+- Daily limit (50 ads)
+- Cooldown (30 seconds)
+- Fraud prevention
+- Pending rewards sync
 
 ---
 
@@ -89,27 +83,31 @@
 - `POST /api/auth/signin` - Email login
 - `POST /api/auth/google` - Google OAuth
 - `POST /api/auth/apple/native` - Native Apple Sign-In
-- `GET /api/health` - Health check
+- `GET /api/rewarded-ads/next` - Get next ad
+- `POST /api/rewarded-ads/start-session` - Start ad session
+- `POST /api/rewarded-ads/complete` - Complete ad + get reward
+- `POST /api/rewarded-ads/sync-pending` - Sync pending rewards
 
 ---
 
-## Required API Keys (Add to backend/.env)
-```
-GOOGLE_CLIENT_ID=<your_google_client_id>
-GOOGLE_CLIENT_SECRET=<your_google_client_secret>
-```
-
-Get from: https://console.cloud.google.com/apis/credentials
+## Games (12 total)
+1. AI Quest - تحدي الذكاء الاصطناعي
+2. الشطرنج - Chess with AI
+3. إكس أو - Tic Tac Toe
+4. الذاكرة - Memory Match
+5. الثعبان - Snake (Touch Control)
+6. أسئلة ثقافية - Trivia
+7. تركيب الصور - Puzzle
+8. الألغاز - Riddles
+9. تكسير الطوب - Brick Breaker (10 levels)
+10. سباق الحساب - Math Race
+11. سباق الكلمات - Word Race
+12. تبديل الألوان - Color Switch
 
 ---
 
 ## Credentials
 - Demo: `demo@saqr.app` / `Demo123456`
-
----
-
-## Shop Access
-المتجر يُفتح من: **صفحة الملف الشخصي** → أيقونة "المتجر" 🛒
 
 ---
 
