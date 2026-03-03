@@ -143,10 +143,6 @@
           }
         ]
       },
-      "associatedDomains": [
-        "applinks:invites-challenges.preview.emergentagent.com",
-        "webcredentials:invites-challenges.preview.emergentagent.com"
-      ],
       "deploymentTarget": "15.0"
     },
     "android": {
