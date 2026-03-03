@@ -36,6 +36,7 @@ import GlobalChatScreen from './src/screens/GlobalChatScreen';
 import SaqrFortunesScreen from './src/screens/SaqrFortunesScreen';
 import FriendsScreen from './src/screens/FriendsScreen';
 import PrivateMessagesScreen from './src/screens/PrivateMessagesScreen';
+import InvitationsScreen from './src/screens/InvitationsScreen';
 
 // Components
 import BottomNav from './src/components/BottomNav';
@@ -509,6 +510,12 @@ function AppContent() {
             user={user}
             onClose={() => setCurrentPage('friends')}
             initialFriend={selectedFriend}
+          />
+        )}
+        {currentPage === 'invitations' && (
+          <InvitationsScreen 
+            user={user}
+            onClose={() => setCurrentPage('home')}
           />
         )}
       </LinearGradient>

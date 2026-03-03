@@ -2,7 +2,7 @@
   "expo": {
     "name": "صقر",
     "slug": "saqr-app",
-    "version": "7.2.1",
+    "version": "7.2.2",
     "orientation": "default",
     "icon": "./assets/logo_saqr.png",
     "userInterfaceStyle": "dark",
@@ -58,7 +58,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.saqr.rewards",
-      "buildNumber": "73",
+      "buildNumber": "74",
       "config": {
         "usesNonExemptEncryption": false
       },
@@ -142,7 +142,11 @@
             ]
           }
         ]
-      }
+      },
+      "associatedDomains": [
+        "applinks:invites-challenges.preview.emergentagent.com",
+        "webcredentials:invites-challenges.preview.emergentagent.com"
+      ]
     },
     "android": {
       "adaptiveIcon": {
@@ -150,7 +154,7 @@
         "backgroundColor": "#0a0a0f"
       },
       "package": "com.saqr.rewards",
-      "versionCode": 73,
+      "versionCode": 74,
       "softwareKeyboardLayoutMode": "resize",
       "intentFilters": [
         {
@@ -189,6 +193,7 @@
         "iosRewardedAdUnitId": "ca-app-pub-5132559433385403/2999033852",
         "androidRewardedAdUnitId": "ca-app-pub-5132559433385403/3389052725"
       }
-    }
+    },
+    "scheme": "saqr"
   }
 }

@@ -20,6 +20,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
+import { signInWithGoogle, signInWithApple } from '../services/authProviders';
 import api from '../services/api';
 import storage from '../services/storage';
 import colors from '../styles/colors';
@@ -519,104 +520,59 @@ const AuthScreen = ({ onLogin }) => {
     );
   };
 
-  // Google Sign In using WebBrowser (improved for iPad)
+  // Google Sign In using authProviders
   const handleGoogleSignIn = async () => {
     if (isAppleLoading || isGoogleLoading) return;
     setIsGoogleLoading(true);
     try {
-      const authUrl = `${api.BASE_URL}/api/auth/google?redirect_uri=saqr://auth/callback`;
+      const result = await signInWithGoogle();
       
-      // Use preferEphemeralSession for better iPad compatibility
-      const result = await WebBrowser.openAuthSessionAsync(
-        authUrl,
-        'saqr://auth/callback',
-        {
-          preferEphemeralSession: true, // Better for iPad
-          showInRecents: true,
-        }
-      );
-      
-      if (result.type === 'success' && result.url) {
-        // Extract session_id from URL
-        const url = result.url;
-        const sessionMatch = url.match(/session_id=([^&]+)/);
-        
-        if (sessionMatch) {
-          const sessionId = sessionMatch[1];
-          // Get user data from session
-          const response = await fetch(`${api.BASE_URL}/api/auth/session/${sessionId}`, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' },
-          });
-          const data = await response.json();
-          
-          if (response.ok && data.user) {
-            await storage.setToken(data.token);
-            await storage.setUserData(data.user);
-            onLogin(data.user);
-          } else {
-            Alert.alert('خطأ', data.detail || 'فشل تسجيل الدخول، حاول مرة أخرى');
-          }
-        } else {
-          Alert.alert('خطأ', 'لم نتمكن من استلام بيانات الجلسة');
-        }
-      } else if (result.type === 'cancel') {
-        // User cancelled, do nothing
-      } else if (result.type === 'dismiss') {
-        // Browser was dismissed
+      if (result.success) {
+        await storage.setToken(result.token);
+        await storage.setUserData(result.user);
+        onLogin(result.user);
+      } else if (result.cancelled) {
+        // User cancelled - do nothing
       }
     } catch (error) {
       console.log('Google Sign In Error:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء تسجيل الدخول بـ Google. تأكد من اتصالك بالإنترنت.');
+      Alert.alert(
+        'خطأ في تسجيل الدخول', 
+        error.message || 'فشل تسجيل الدخول بجوجل. تأكد من اتصالك بالإنترنت.',
+        [
+          { text: 'إلغاء', style: 'cancel' },
+          { text: 'إعادة المحاولة', onPress: handleGoogleSignIn }
+        ]
+      );
     } finally {
       setIsGoogleLoading(false);
     }
   };
 
-  // Apple Sign In using WebBrowser
+  // Apple Sign In using authProviders
   const handleAppleSignIn = async () => {
     if (isAppleLoading || isGoogleLoading) return;
     setIsAppleLoading(true);
     try {
-      const authUrl = `${api.BASE_URL}/api/auth/apple?redirect_uri=saqr://auth/callback`;
+      const result = await signInWithApple();
       
-      const result = await WebBrowser.openAuthSessionAsync(
-        authUrl,
-        'saqr://auth/callback',
-        {
-          preferEphemeralSession: true,
-          showInRecents: true,
-        }
-      );
-      
-      if (result.type === 'success' && result.url) {
-        const url = result.url;
-        const sessionMatch = url.match(/session_id=([^&]+)/);
-        
-        if (sessionMatch) {
-          const sessionId = sessionMatch[1];
-          const response = await fetch(`${api.BASE_URL}/api/auth/session/${sessionId}`, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' },
-          });
-          const data = await response.json();
-          
-          if (response.ok && data.user) {
-            await storage.setToken(data.token);
-            await storage.setUserData(data.user);
-            onLogin(data.user);
-          } else {
-            Alert.alert('خطأ', data.detail || 'فشل تسجيل الدخول، حاول مرة أخرى');
-          }
-        } else {
-          Alert.alert('خطأ', 'لم نتمكن من استلام بيانات الجلسة');
-        }
-      } else if (result.type === 'cancel') {
+      if (result.success) {
+        await storage.setToken(result.token);
+        await storage.setUserData(result.user);
+        onLogin(result.user);
+      } else if (result.cancelled) {
         // User cancelled - do nothing
       }
     } catch (error) {
       console.log('Apple Sign In Error:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء تسجيل الدخول بـ Apple. تأكد من اتصالك بالإنترنت.');
+      Alert.alert(
+        'خطأ في تسجيل الدخول', 
+        error.message || 'فشل تسجيل الدخول بـ Apple. تأكد من اتصالك بالإنترنت.',
+        [
+          { text: 'إلغاء', style: 'cancel' },
+          { text: 'إعادة المحاولة', onPress: handleAppleSignIn }
+        ]
+      );
     } finally {
       setIsAppleLoading(false);
     }

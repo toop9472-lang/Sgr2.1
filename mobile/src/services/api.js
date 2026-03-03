@@ -1,6 +1,8 @@
 // API Service - Lightweight API handler with enhanced security
 // Production Server - Emergent Host
-const API_URL = 'https://saqr-ui-sync.emergent.host';
+import NetInfo from '@react-native-community/netinfo';
+
+const API_URL = 'https://invites-challenges.preview.emergentagent.com';
 
 // Connection check timeout - increased for better reliability
 const CONNECTION_TIMEOUT = 20000; // 20 seconds
@@ -14,8 +16,28 @@ let lastConnectionCheck = null;
 let lastConnectionResult = null;
 const CONNECTION_CACHE_DURATION = 60000; // 60 seconds (increased from 30s)
 
+// Check network connectivity first
+const checkNetworkConnectivity = async () => {
+  try {
+    const netState = await NetInfo.fetch();
+    return netState.isConnected && netState.isInternetReachable !== false;
+  } catch (error) {
+    console.log('NetInfo check failed:', error);
+    return true; // Assume connected if check fails
+  }
+};
+
 // Check if API is reachable - Real implementation with better error handling
 const checkConnection = async () => {
+  // Check network first
+  const hasNetwork = await checkNetworkConnectivity();
+  if (!hasNetwork) {
+    console.log('No network connectivity');
+    lastConnectionCheck = Date.now();
+    lastConnectionResult = false;
+    return false;
+  }
+
   // Use cached result if recent
   const now = Date.now();
   if (lastConnectionCheck && (now - lastConnectionCheck) < CONNECTION_CACHE_DURATION) {

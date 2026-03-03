@@ -953,3 +953,159 @@ async def apple_native_sign_in(data: AppleNativeLogin):
     except Exception as e:
         print(f"Apple Native Sign In Error: {e}")
         raise HTTPException(status_code=500, detail='فشل تسجيل الدخول')
+
+
+
+# ==================== Google Sign In ====================
+
+@router.get('/google')
+async def google_sign_in_redirect(redirect_uri: str = 'saqr://auth/callback'):
+    """
+    Redirect to Google Sign In page
+    """
+    import secrets
+    
+    client_id = os.environ.get('GOOGLE_CLIENT_ID', '')
+    
+    if not client_id:
+        # Return error if no client ID configured
+        return RedirectResponse(url=f"{redirect_uri}?error=google_not_configured")
+    
+    # Generate state for CSRF protection
+    state = secrets.token_urlsafe(32)
+    
+    # Store state with redirect_uri
+    apple_sessions[state] = {
+        'redirect_uri': redirect_uri,
+        'provider': 'google',
+        'created_at': datetime.utcnow()
+    }
+    
+    # Google authorization URL
+    google_auth_url = (
+        f"https://accounts.google.com/o/oauth2/v2/auth"
+        f"?client_id={client_id}"
+        f"&redirect_uri={os.environ.get('GOOGLE_REDIRECT_URI', 'https://invites-challenges.preview.emergentagent.com/api/auth/google/callback')}"
+        f"&response_type=code"
+        f"&scope=email%20profile"
+        f"&access_type=offline"
+        f"&state={state}"
+    )
+    
+    return RedirectResponse(url=google_auth_url)
+
+
+@router.get('/google/callback')
+async def google_sign_in_callback(code: str = None, state: str = None, error: str = None):
+    """
+    Handle Google Sign In callback
+    """
+    try:
+        db = get_db()
+        
+        if error:
+            session_data = apple_sessions.get(state, {})
+            redirect_uri = session_data.get('redirect_uri', 'saqr://auth/callback')
+            return RedirectResponse(url=f"{redirect_uri}?error={error}")
+        
+        if not code:
+            raise HTTPException(status_code=400, detail='Missing authorization code')
+        
+        # Get redirect_uri from state
+        session_data = apple_sessions.get(state, {})
+        redirect_uri = session_data.get('redirect_uri', 'saqr://auth/callback')
+        
+        # Clean up session
+        if state in apple_sessions:
+            del apple_sessions[state]
+        
+        # Exchange code for tokens
+        client_id = os.environ.get('GOOGLE_CLIENT_ID', '')
+        client_secret = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+        
+        if not client_id or not client_secret:
+            return RedirectResponse(url=f"{redirect_uri}?error=google_not_configured")
+        
+        async with httpx.AsyncClient() as client:
+            token_response = await client.post(
+                'https://oauth2.googleapis.com/token',
+                data={
+                    'client_id': client_id,
+                    'client_secret': client_secret,
+                    'code': code,
+                    'grant_type': 'authorization_code',
+                    'redirect_uri': os.environ.get('GOOGLE_REDIRECT_URI', 'https://invites-challenges.preview.emergentagent.com/api/auth/google/callback')
+                }
+            )
+            
+            if token_response.status_code != 200:
+                return RedirectResponse(url=f"{redirect_uri}?error=token_exchange_failed")
+            
+            tokens = token_response.json()
+            access_token = tokens.get('access_token')
+            
+            # Get user info
+            userinfo_response = await client.get(
+                'https://www.googleapis.com/oauth2/v2/userinfo',
+                headers={'Authorization': f'Bearer {access_token}'}
+            )
+            
+            if userinfo_response.status_code != 200:
+                return RedirectResponse(url=f"{redirect_uri}?error=userinfo_failed")
+            
+            google_user = userinfo_response.json()
+        
+        # Check if user exists
+        existing_user = await db.users.find_one({
+            '$or': [
+                {'provider': 'google', 'provider_id': google_user.get('id')},
+                {'email': google_user.get('email')}
+            ]
+        })
+        
+        if existing_user:
+            user_id = existing_user['id']
+            await db.users.update_one(
+                {'id': user_id},
+                {'$set': {
+                    'provider': 'google',
+                    'provider_id': google_user.get('id'),
+                    'avatar': google_user.get('picture'),
+                    'updated_at': datetime.utcnow()
+                }}
+            )
+        else:
+            user_id = f"user_{uuid.uuid4().hex[:12]}"
+            new_user = {
+                'id': user_id,
+                'email': google_user.get('email', ''),
+                'name': google_user.get('name', 'مستخدم Google'),
+                'avatar': google_user.get('picture'),
+                'provider': 'google',
+                'provider_id': google_user.get('id'),
+                'points': 0,
+                'diamonds': 100,
+                'total_earned': 0,
+                'is_guest': False,
+                'created_at': datetime.utcnow(),
+                'updated_at': datetime.utcnow()
+            }
+            await db.users.insert_one(new_user)
+        
+        # Create session
+        import secrets
+        session_id = secrets.token_urlsafe(32)
+        token, refresh = create_token_pair(user_id)
+        
+        apple_sessions[session_id] = {
+            'user_id': user_id,
+            'token': token,
+            'refresh_token': refresh,
+            'created_at': datetime.utcnow()
+        }
+        
+        return RedirectResponse(url=f"{redirect_uri}?session_id={session_id}")
+        
+    except Exception as e:
+        print(f"Google Sign In Error: {e}")
+        return RedirectResponse(url=f"saqr://auth/callback?error=auth_failed")
