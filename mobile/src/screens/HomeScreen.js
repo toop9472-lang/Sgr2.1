@@ -1,5 +1,5 @@
-// Home Screen - الصفحة الرئيسية المحسنة
-// تصميم احترافي ومنظم
+// Home Screen - الصفحة الرئيسية
+// بدون ألعاب - فقط ثروات صقر والميزات الأساسية
 import React, { useState, useMemo, useCallback, memo } from 'react';
 import {
   View,
@@ -16,9 +16,8 @@ import { Ionicons } from '@expo/vector-icons';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = (width - 52) / 2;
 
-// بطاقة لعبة مميزة
+// بطاقة مميزة كبيرة
 const FeaturedCard = memo(({ title, subtitle, image, colors, icon, onPress, badge }) => (
   <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={styles.featuredCard}>
     <ImageBackground source={{ uri: image }} style={styles.featuredBg} imageStyle={styles.featuredImage}>
@@ -42,27 +41,24 @@ const FeaturedCard = memo(({ title, subtitle, image, colors, icon, onPress, badg
   </TouchableOpacity>
 ));
 
-// بطاقة صغيرة
-const SmallCard = memo(({ title, icon, color, onPress }) => (
-  <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.smallCard}>
-    <View style={[styles.smallCardIcon, { backgroundColor: color + '20' }]}>
-      <Ionicons name={icon} size={22} color={color} />
-    </View>
-    <Text style={styles.smallCardText}>{title}</Text>
-  </TouchableOpacity>
-));
-
 // بطاقة ميزة
-const FeatureCard = memo(({ title, subtitle, image, color, icon, onPress }) => (
+const FeatureCard = memo(({ title, subtitle, image, color, icon, onPress, badge }) => (
   <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={styles.featureCard}>
     <ImageBackground source={{ uri: image }} style={styles.featureBg} imageStyle={styles.featureImage}>
       <LinearGradient colors={['rgba(0,0,0,0.2)', 'rgba(0,0,0,0.75)']} style={styles.featureOverlay}>
-        <View style={styles.featureContent}>
-          <Text style={styles.featureTitle}>{title}</Text>
-          <Text style={styles.featureSubtitle}>{subtitle}</Text>
-        </View>
-        <View style={[styles.featureBtn, { backgroundColor: color }]}>
-          <Ionicons name={icon} size={14} color="#FFF" />
+        {badge && (
+          <View style={styles.featureBadge}>
+            <Text style={styles.featureBadgeText}>{badge}</Text>
+          </View>
+        )}
+        <View style={styles.featureBottom}>
+          <View style={styles.featureContent}>
+            <Text style={styles.featureTitle}>{title}</Text>
+            <Text style={styles.featureSubtitle}>{subtitle}</Text>
+          </View>
+          <View style={[styles.featureBtn, { backgroundColor: color }]}>
+            <Ionicons name={icon} size={14} color="#FFF" />
+          </View>
         </View>
       </LinearGradient>
     </ImageBackground>
@@ -86,8 +82,7 @@ const HomeScreen = ({
   const userName = useMemo(() => user?.name || 'لاعب', [user?.name]);
   const userPoints = useMemo(() => user?.saqr_points || user?.points || 0, [user?.saqr_points, user?.points]);
   const userDiamonds = useMemo(() => user?.diamonds || 0, [user?.diamonds]);
-  const gamesPlayed = useMemo(() => user?.games_played || 0, [user?.games_played]);
-  const gamesWon = useMemo(() => user?.games_won || 0, [user?.games_won]);
+  const userGems = useMemo(() => user?.saqr_gems || 0, [user?.saqr_gems]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -115,13 +110,13 @@ const HomeScreen = ({
             <LanguageSwitcher />
             <View>
               <Text style={styles.greeting}>أهلاً {userName}</Text>
-              <Text style={styles.subGreeting}>جاهز للتحدي؟</Text>
+              <Text style={styles.subGreeting}>مرحباً بك في صقر</Text>
             </View>
           </View>
           <View style={styles.headerRight}>
             <View style={styles.statBadge}>
-              <Ionicons name="star" size={12} color="#fbbf24" />
-              <Text style={styles.statText}>{userPoints}</Text>
+              <Ionicons name="sparkles" size={12} color="#f472b6" />
+              <Text style={styles.statText}>{userGems}</Text>
             </View>
             <View style={[styles.statBadge, styles.diamondBadge]}>
               <Ionicons name="diamond" size={12} color="#60a5fa" />
@@ -130,60 +125,75 @@ const HomeScreen = ({
           </View>
         </View>
 
-        {/* القسم الرئيسي - الألعاب */}
+        {/* ثروات صقر - القسم الرئيسي */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>العب الآن</Text>
-            <TouchableOpacity onPress={onNavigateToGames}>
-              <Text style={styles.seeAll}>عرض الكل</Text>
-            </TouchableOpacity>
+            <Ionicons name="sparkles" size={18} color="#ec4899" />
+            <Text style={styles.sectionTitle}>ثروات صقر</Text>
+            <View style={styles.newTag}>
+              <Text style={styles.newTagText}>جديد</Text>
+            </View>
           </View>
 
-          {/* البطاقة المميزة الكبيرة */}
           <FeaturedCard
-            title="AI Quest"
-            subtitle="تحدى الذكاء الاصطناعي!"
-            image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/0f533451dc398a22ab06768592a035284d7e83dddc8372ecd8529a3560098cbc.png"
-            colors={['#ec4899', '#9333ea']}
-            onPress={onNavigateToGames}
-            badge="جديد"
+            title="ثروات صقر"
+            subtitle="اربح جواهر صقر للاستبدال بالمال الحقيقي!"
+            image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png"
+            colors={['#ec4899', '#be185d']}
+            icon="sparkles"
+            onPress={onNavigateToFortunes}
+            badge="500 جوهرة = 1 ريال"
+          />
+
+          <Text style={styles.fortunesDesc}>
+            عجلة الحظ اليومية • صناديق الكنز • مكافآت مضاعفة
+          </Text>
+        </View>
+
+        {/* شاهد واربح */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="play-circle" size={18} color="#f59e0b" />
+            <Text style={styles.sectionTitle}>شاهد واربح</Text>
+          </View>
+
+          <FeaturedCard
+            title="شاهد واربح"
+            subtitle="شاهد إعلانات قصيرة واحصل على جواهر صقر!"
+            image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e14c91a9e40e8d29b6f8d3bf567a4fcb7020c985b1a9d3e96e2035b06f9921e6.png"
+            colors={['#f59e0b', '#d97706']}
+            icon="play"
+            onPress={onNavigateToAds}
           />
         </View>
 
-        {/* الألعاب السريعة */}
-        <View style={styles.quickGames}>
-          <SmallCard title="شطرنج" icon="grid-outline" color="#10b981" onPress={onNavigateToGames} />
-          <SmallCard title="X-O" icon="close-outline" color="#f59e0b" onPress={onNavigateToGames} />
-          <SmallCard title="أسئلة" icon="help-circle-outline" color="#ec4899" onPress={onNavigateToGames} />
-          <SmallCard title="ألغاز" icon="extension-puzzle-outline" color="#8b5cf6" onPress={onNavigateToGames} />
-        </View>
-
-        {/* الإحصائيات */}
-        <View style={styles.statsCard}>
-          <LinearGradient colors={['#1a1a2e', '#16213e']} style={styles.statsGradient}>
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <View style={[styles.statIcon, { backgroundColor: 'rgba(59,130,246,0.2)' }]}>
-                  <Ionicons name="game-controller" size={18} color="#3b82f6" />
+        {/* رصيدك */}
+        <View style={styles.balanceCard}>
+          <LinearGradient colors={['#1a1a2e', '#16213e']} style={styles.balanceGradient}>
+            <Text style={styles.balanceTitle}>رصيدك الحالي</Text>
+            <View style={styles.balanceRow}>
+              <View style={styles.balanceItem}>
+                <View style={[styles.balanceIcon, { backgroundColor: 'rgba(244,114,182,0.2)' }]}>
+                  <Ionicons name="sparkles" size={20} color="#f472b6" />
                 </View>
-                <Text style={styles.statValue}>{gamesPlayed}</Text>
-                <Text style={styles.statLabel}>مباراة</Text>
+                <Text style={styles.balanceValue}>{userGems}</Text>
+                <Text style={styles.balanceLabel}>جواهر صقر</Text>
               </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <View style={[styles.statIcon, { backgroundColor: 'rgba(251,191,36,0.2)' }]}>
-                  <Ionicons name="trophy" size={18} color="#fbbf24" />
+              <View style={styles.balanceDivider} />
+              <View style={styles.balanceItem}>
+                <View style={[styles.balanceIcon, { backgroundColor: 'rgba(96,165,250,0.2)' }]}>
+                  <Ionicons name="diamond" size={20} color="#60a5fa" />
                 </View>
-                <Text style={styles.statValue}>{gamesWon}</Text>
-                <Text style={styles.statLabel}>انتصار</Text>
+                <Text style={styles.balanceValue}>{userDiamonds}</Text>
+                <Text style={styles.balanceLabel}>ماسة</Text>
               </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <View style={[styles.statIcon, { backgroundColor: 'rgba(16,185,129,0.2)' }]}>
-                  <Ionicons name="trending-up" size={18} color="#10b981" />
+              <View style={styles.balanceDivider} />
+              <View style={styles.balanceItem}>
+                <View style={[styles.balanceIcon, { backgroundColor: 'rgba(251,191,36,0.2)' }]}>
+                  <Ionicons name="star" size={20} color="#fbbf24" />
                 </View>
-                <Text style={styles.statValue}>{gamesPlayed > 0 ? Math.round((gamesWon / gamesPlayed) * 100) : 0}%</Text>
-                <Text style={styles.statLabel}>نسبة الفوز</Text>
+                <Text style={styles.balanceValue}>{userPoints}</Text>
+                <Text style={styles.balanceLabel}>نقطة</Text>
               </View>
             </View>
           </LinearGradient>
@@ -192,20 +202,20 @@ const HomeScreen = ({
         {/* البطاقات الثنائية */}
         <View style={styles.dualCards}>
           <FeatureCard
-            title="ثروات صقر"
-            subtitle="اربح جواهر!"
-            image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png"
-            color="#ec4899"
-            icon="sparkles"
-            onPress={onNavigateToFortunes}
-          />
-          <FeatureCard
             title="التحدي اليومي"
             subtitle="نقاط إضافية!"
             image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/9571396ba276f9f9cf70ce0622c4303850d05054256c99581ef235eec62d9760.png"
             color="#f59e0b"
             icon="flame"
             onPress={onOpenDailyChallenge}
+          />
+          <FeatureCard
+            title="الألعاب"
+            subtitle="العب واربح!"
+            image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e02071f57750c77c0db321a70a51ed7bceb6eeb4df5f78e29d834466fcf3f354.png"
+            color="#8b5cf6"
+            icon="game-controller"
+            onPress={onNavigateToGames}
           />
         </View>
 
@@ -218,6 +228,7 @@ const HomeScreen = ({
             color="#3b82f6"
             icon="chatbubbles"
             onPress={onNavigateToChat}
+            badge="5 ماسات"
           />
           <FeatureCard
             title="الأصدقاء"
@@ -229,20 +240,10 @@ const HomeScreen = ({
           />
         </View>
 
-        {/* شاهد واربح */}
-        <FeaturedCard
-          title="شاهد واربح"
-          subtitle="شاهد إعلانات واحصل على جواهر صقر!"
-          image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e14c91a9e40e8d29b6f8d3bf567a4fcb7020c985b1a9d3e96e2035b06f9921e6.png"
-          colors={['#f59e0b', '#d97706']}
-          icon="play-circle"
-          onPress={onNavigateToAds}
-        />
-
         {/* نصيحة */}
         <View style={styles.tipCard}>
           <Ionicons name="bulb-outline" size={18} color="#fbbf24" />
-          <Text style={styles.tipText}>ادعُ أصدقاءك واربح مكافآت مضاعفة!</Text>
+          <Text style={styles.tipText}>ادعُ أصدقاءك واربح جواهر صقر مضاعفة!</Text>
         </View>
       </View>
     </ScrollView>
@@ -265,7 +266,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     justifyContent: 'space-between', 
     alignItems: 'center', 
-    marginBottom: 20 
+    marginBottom: 24 
   },
   headerLeft: { 
     flexDirection: 'row', 
@@ -288,9 +289,9 @@ const styles = StyleSheet.create({
   statBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(251,191,36,0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 5,
+    backgroundColor: 'rgba(244,114,182,0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 16,
     gap: 4,
   },
@@ -299,57 +300,75 @@ const styles = StyleSheet.create({
   },
   statText: { 
     color: '#FFF', 
-    fontSize: 12, 
+    fontSize: 13, 
     fontWeight: '600' 
   },
 
   // الأقسام
   section: { 
-    marginBottom: 16 
+    marginBottom: 20 
   },
   sectionHeader: { 
     flexDirection: 'row', 
-    justifyContent: 'space-between', 
     alignItems: 'center', 
-    marginBottom: 10 
+    marginBottom: 12,
+    gap: 8,
   },
   sectionTitle: { 
-    fontSize: 15, 
+    fontSize: 16, 
     fontWeight: 'bold', 
-    color: '#FFF' 
+    color: '#FFF',
+    flex: 1,
   },
-  seeAll: { 
-    fontSize: 12, 
-    color: '#60a5fa' 
+  newTag: {
+    backgroundColor: '#22c55e',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  newTagText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  fortunesDesc: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 8,
   },
 
   // البطاقة المميزة
   featuredCard: { 
     borderRadius: 16, 
     overflow: 'hidden',
-    marginBottom: 12,
+    elevation: 8,
+    shadowColor: '#ec4899',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   featuredBg: {
-    height: 140,
+    height: 160,
   },
   featuredImage: {
     borderRadius: 16,
   },
   featuredOverlay: {
     flex: 1,
-    padding: 14,
+    padding: 16,
     justifyContent: 'space-between',
   },
   badge: {
     alignSelf: 'flex-start',
     backgroundColor: '#22c55e',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 12,
   },
   badgeText: {
     color: '#FFF',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: 'bold',
   },
   featuredContent: {
@@ -359,7 +378,7 @@ const styles = StyleSheet.create({
   },
   featuredInfo: {},
   featuredTitle: { 
-    fontSize: 18, 
+    fontSize: 20, 
     fontWeight: '800', 
     color: '#FFF',
     textShadowColor: 'rgba(0,0,0,0.5)',
@@ -369,76 +388,58 @@ const styles = StyleSheet.create({
   featuredSubtitle: { 
     fontSize: 12, 
     color: 'rgba(255,255,255,0.9)',
-    marginTop: 2,
+    marginTop: 4,
   },
   playBtn: {
-    padding: 10,
-    borderRadius: 12,
+    padding: 12,
+    borderRadius: 14,
   },
 
-  // الألعاب السريعة
-  quickGames: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  smallCard: { 
-    alignItems: 'center', 
-    width: (width - 48) / 4 
-  },
-  smallCardIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 6,
-  },
-  smallCardText: { 
-    fontSize: 11, 
-    color: 'rgba(255,255,255,0.7)', 
-    textAlign: 'center' 
-  },
-
-  // الإحصائيات
-  statsCard: {
+  // الرصيد
+  balanceCard: {
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 16,
   },
-  statsGradient: {
-    padding: 16,
+  balanceGradient: {
+    padding: 20,
   },
-  statsRow: {
+  balanceTitle: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 13,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  balanceRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
   },
-  statItem: {
+  balanceItem: {
     alignItems: 'center',
     flex: 1,
   },
-  statIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  balanceIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
-  statValue: {
-    fontSize: 20,
+  balanceValue: {
+    fontSize: 22,
     fontWeight: '800',
     color: '#FFF',
   },
-  statLabel: {
-    fontSize: 10,
+  balanceLabel: {
+    fontSize: 11,
     color: 'rgba(255,255,255,0.6)',
-    marginTop: 2,
+    marginTop: 4,
   },
-  statDivider: {
+  balanceDivider: {
     width: 1,
-    height: 40,
+    height: 50,
     backgroundColor: 'rgba(255,255,255,0.1)',
   },
 
@@ -454,7 +455,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   featureBg: {
-    height: 100,
+    height: 110,
   },
   featureImage: {
     borderRadius: 14,
@@ -462,6 +463,21 @@ const styles = StyleSheet.create({
   featureOverlay: {
     flex: 1,
     padding: 12,
+    justifyContent: 'space-between',
+  },
+  featureBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(96,165,250,0.8)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  featureBadgeText: {
+    color: '#FFF',
+    fontSize: 9,
+    fontWeight: 'bold',
+  },
+  featureBottom: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
@@ -490,9 +506,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(251,191,36,0.1)',
-    padding: 12,
+    padding: 14,
     borderRadius: 12,
-    gap: 8,
+    gap: 10,
     marginTop: 4,
     borderWidth: 1,
     borderColor: 'rgba(251,191,36,0.2)',
