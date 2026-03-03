@@ -3,14 +3,10 @@
 ## Original Problem Statement
 تطبيق صقر هو تطبيق مكافآت يتيح للمستخدمين مشاهدة الإعلانات وكسب النقاط والماس. الهدف الأصلي كان إصلاح مشاكل iPad للإرسال إلى App Store.
 
-## User Personas
-- **المستخدم العادي**: يشاهد الإعلانات ويلعب الألعاب لكسب النقاط
-- **المعلن**: يريد عرض إعلاناته للمستخدمين
-
 ## Core Requirements
 1. نظام مصادقة (Email, Google, Apple)
 2. مشاهدة الإعلانات وكسب النقاط
-3. ألعاب متعددة (12 لعبة)
+3. ألعاب متعددة (13 لعبة)
 4. نظام اقتصادي (نقاط + ماس + جواهر صقر)
 5. دعم iPad وiPhone
 
@@ -18,81 +14,63 @@
 
 ## What's Been Implemented
 
-### March 3, 2026 - Session 2
-- ✅ **Skeleton Loading Component** - تحميل متحرك احترافي
-- ✅ **Ad Reward Service** - نظام مكافآت إعلانات محسن
-- ✅ **Backend Endpoints** - start-session و sync-pending
+### March 3, 2026 - Final Session
 
-### March 3, 2026 - Session 1
-- ✅ تحسين شريط الرصيد (BalanceHeader)
-- ✅ إعادة تصميم الصفحة الرئيسية (HomeScreen)
-- ✅ RTL ديناميكي بناءً على اللغة
-- ✅ إضافة PointsProvider لـ App.js
+#### NEW FEATURES:
+- ✅ **MillionaireScreen** - لعبة من سيربح المليون (15 سؤال + وسائل مساعدة)
+- ✅ **OnboardingScreen** - شاشة ترحيب للمستخدمين الجدد
+- ✅ **DailyStreakModal** - نظام التسجيل اليومي (7 أيام)
+- ✅ **ReferralService** - نظام الإحالات (100 نقطة للداعي)
+- ✅ **LeaderboardScreen** - لوحة المتصدرين (يومي/أسبوعي/الكل)
+- ✅ **SkeletonLoading** - تحميل متحرك احترافي
+- ✅ **AdRewardService** - نظام مكافآت إعلانات محسن
 
-### الألعاب المحسنة:
-- ✅ **الثعبان** - تحكم باللمس (Swipe) + 4 مستويات
-- ✅ **تكسير الطوب** - 10 مراحل + Power-ups + وقت محدد
-- ✅ **الشطرنج** - ألوان خشبية واقعية
-- ✅ **تركيب الصور** - إصلاح الأخطاء
+#### IMPROVED GAMES:
+- ✅ **Snake Game** - تحكم باللمس (Swipe) + 4 مستويات
+- ✅ **Brick Breaker** - 10 مراحل + Power-ups + وقت محدد
+- ✅ **Chess Game** - ألوان خشبية واقعية
 
----
-
-## Prioritized Backlog
-
-### P0 - Critical
-- [ ] Fix iPad crashes and UI issues
-- [ ] Test native Apple/Google Sign-In on device
-- [ ] Build and submit to App Store
-
-### P1 - High Priority
-- [ ] Add FlashList instead of FlatList
-- [ ] Add Sentry for Crash Reporting
-- [ ] Add Firebase Analytics
-- [ ] Enable New Architecture
-
-### P2 - Future
-- [ ] Add expo-secure-store for token
-- [ ] Add Firebase App Check
-- [ ] Add OTA Updates (expo-updates)
+#### BACKEND:
+- ✅ `/api/referrals/apply` - تطبيق كود إحالة
+- ✅ `/api/referrals/stats` - إحصائيات الإحالات
+- ✅ `/api/referrals/list` - قائمة الإحالات
+- ✅ `/api/rewarded-ads/start-session` - بدء جلسة إعلان
+- ✅ `/api/rewarded-ads/sync-pending` - مزامنة المكافآت
 
 ---
 
-## New Components
+## All Files Created/Modified
 
-### SkeletonLoading.js
-Location: `/app/mobile/src/components/SkeletonLoading.js`
-- HomeScreenSkeleton
-- ProfileScreenSkeleton
-- GamesScreenSkeleton
-- ShopScreenSkeleton
-- ChatScreenSkeleton
-- ListItemSkeleton
+### NEW FILES:
+```
+mobile/src/screens/MillionaireScreen.js
+mobile/src/screens/OnboardingScreen.js
+mobile/src/screens/LeaderboardScreen.js
+mobile/src/components/DailyStreakModal.js
+mobile/src/components/SkeletonLoading.js
+mobile/src/services/ReferralService.js
+mobile/src/services/AdRewardService.js
+backend/routes/referrals_routes.py
+```
 
-### AdRewardService.js
-Location: `/app/mobile/src/services/AdRewardService.js`
-Features:
-- Session tracking
-- Daily limit (50 ads)
-- Cooldown (30 seconds)
-- Fraud prevention
-- Pending rewards sync
-
----
-
-## Key APIs
-- `POST /api/auth/signin` - Email login
-- `POST /api/auth/google` - Google OAuth
-- `POST /api/auth/apple/native` - Native Apple Sign-In
-- `GET /api/rewarded-ads/next` - Get next ad
-- `POST /api/rewarded-ads/start-session` - Start ad session
-- `POST /api/rewarded-ads/complete` - Complete ad + get reward
-- `POST /api/rewarded-ads/sync-pending` - Sync pending rewards
+### MODIFIED FILES:
+```
+mobile/src/screens/HomeScreen.js
+mobile/src/screens/games/SnakeGame.js
+mobile/src/screens/games/BrickBreakerGame.js
+mobile/src/screens/games/ChessGame.js
+mobile/src/screens/GamesScreen.js
+mobile/src/components/BalanceHeader.js
+mobile/App.js
+backend/server.py
+backend/routes/rewarded_ads_routes.py
+```
 
 ---
 
-## Games (12 total)
+## Games (13 total)
 1. AI Quest - تحدي الذكاء الاصطناعي
-2. الشطرنج - Chess with AI
+2. الشطرنج - Chess with AI (ألوان خشبية)
 3. إكس أو - Tic Tac Toe
 4. الذاكرة - Memory Match
 5. الثعبان - Snake (Touch Control)
@@ -103,6 +81,58 @@ Features:
 10. سباق الحساب - Math Race
 11. سباق الكلمات - Word Race
 12. تبديل الألوان - Color Switch
+13. **من سيربح المليون - Millionaire (NEW)**
+
+---
+
+## Prioritized Backlog
+
+### P0 - Critical
+- [ ] Fix iPad crashes and UI issues
+- [ ] Add new screens to App.js navigation
+- [ ] Build and test on device
+
+### P1 - High Priority
+- [ ] Add Sentry for Crash Reporting
+- [ ] Add Firebase Analytics
+- [ ] Convert FlatList to FlashList
+- [ ] Test Apple/Google Sign-In
+
+### P2 - Future
+- [ ] Add expo-secure-store for token
+- [ ] Add Firebase App Check
+- [ ] Enable New Architecture
+
+---
+
+## Key APIs
+- `POST /api/auth/signin` - Email login
+- `POST /api/auth/google` - Google OAuth
+- `POST /api/auth/apple/native` - Native Apple Sign-In
+- `GET /api/referrals/stats` - Referral statistics
+- `POST /api/referrals/apply` - Apply referral code
+- `GET /api/leaderboard` - Get leaderboard
+- `POST /api/rewarded-ads/start-session` - Start ad session
+
+---
+
+## Referral System
+- **Referrer**: 100 points + 10 diamonds
+- **Referee**: 50 points + 5 diamonds
+- **Link format**: https://saqr.app/invite/{CODE}
+
+---
+
+## Daily Streak Rewards
+| Day | Reward |
+|-----|--------|
+| 1 | 5 points |
+| 2 | 10 points |
+| 3 | 5 diamonds |
+| 4 | 15 points |
+| 5 | 10 diamonds |
+| 6 | 25 points |
+| 7 | 20 diamonds (gift) |
 
 ---
 
