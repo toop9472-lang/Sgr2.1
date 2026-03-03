@@ -209,8 +209,8 @@ eas submit -p android
 
 ## 📞 الدعم والمساعدة
 
-- **الموقع:** https://ipad-stability-fix.preview.emergentagent.com
-- **API Docs:** https://ipad-stability-fix.preview.emergentagent.com/docs
+- **الموقع:** https://saqr-build-final.preview.emergentagent.com
+- **API Docs:** https://saqr-build-final.preview.emergentagent.com/docs
 
 ---
 

@@ -146,11 +146,11 @@ const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenS
   };
 
   const handlePrivacy = () => {
-    Linking.openURL('https://ipad-stability-fix.preview.emergentagent.com/privacy');
+    Linking.openURL('https://saqr-build-final.preview.emergentagent.com/privacy');
   };
 
   const handleTerms = () => {
-    Linking.openURL('https://ipad-stability-fix.preview.emergentagent.com/terms');
+    Linking.openURL('https://saqr-build-final.preview.emergentagent.com/terms');
   };
 
   const handleSettings = () => {

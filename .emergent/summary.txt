@@ -1,207 +1,224 @@
 <analysis>**original_problem_statement:**
 The user's initial goal was to fix critical iPad crashes for an App Store submission. This expanded into a full UI/UX overhaul for both web and mobile, adding social features (invites, challenges), an in-app economy (IAP, leaderboards), and building/submitting the app.
 
-After two rejections from Apple, the user provided a comprehensive and highly detailed set of requirements for the mobile app. This includes:
-1.  Fixing Apple and Google Sign-In, which are currently not working and were a cause for rejection.
-2.  Implementing robust error handling and internet connectivity checks.
-3.  Implementing a Who Wants to Be a Millionaire style game.
-4.  Adding a global chat screen.
-5.  Implementing a points-to-cash withdrawal system (500 points = 1 SAR).
-6.  Ensuring the app is compliant with future (2026) Apple and Google SDK requirements to avoid future rejections.
+The latest set of requests focused on a massive overhaul of the mobile app to fix numerous bugs and add significant new features to achieve a world-class level of quality, including:
+1.  Fixing and improving multiple games (Snake, Chess, Puzzle, Brick Breaker).
+2.  Adding new features: a Who Wants to Be a Millionaire game, leaderboards, a referral system, daily streaks, and an onboarding flow.
+3.  Improving the UI of the Home Screen and the top balance bar.
+4.  Ensuring all icons and features are interactive and complete.
+5.  Implementing a robust system for rewarded ads.
+6.  Building the final app for Android and iOS, compliant with 2026 store requirements, and submitting it.
+7.  Creating a PDF summary of the app's features and estimated value.
 
 **User's preferred language**: العربية
 
 **what currently exists?**
-The application is a full-stack project with a React web front-end, React Native mobile app, and a FastAPI backend.
+The application is a full-stack project with a React web front-end, React Native mobile app, and a FastAPI backend. The agent has just completed a massive overhaul of the mobile application and initiated a production build.
 
--   **Web App**: The UI/UX has been overhauled. All 12 mobile games now have corresponding, functional components on the web. An in-app store and leaderboards have been implemented and are functional.
--   **Mobile App**: The app has undergone a massive, in-progress overhaul to address Apple's rejection feedback and implement new features.
-    -   **Authentication**: New native authentication providers for Google () and Apple () have been coded into a new  file. Backend endpoints (, ) have been created to support this.
-    -   **New Features**: Placeholders and logic have been added for a Who Wants to Be a Millionaire game (), a global chat (), and a points management system ().
-    -   **Compliance**: Build configuration files (, ) have been updated to target future SDK versions (iOS 26, Android API 35) to meet 2026 store requirements.
-    -   **UI/UX**: Support for light/dark mode has been added to the root  component.
--   **Backend**: The backend supports all web and mobile features, including user auth (email, Google, Apple), games, challenges, invites, achievements, IAP, and leaderboards.
+-   **Mobile App**:
+    -   **Games**: Heavily refactored.  now uses swipe controls,  has updated visuals,  has 10 levels and power-ups, and  has been fixed.
+    -   **New Features**:  (Millionaire game), , , , and a  have all been created and integrated into .
+    -   **UI/UX**: The  has been redesigned to be cleaner, and the  component has been improved.
+    -   **Core Logic**: A comprehensive  manages the in-app economy. A  component has been created for better loading states.
+    -   **Ads System**: A full-fledged rewarded ads system has been implemented on both the frontend () and backend () to manage ad sessions and grant rewards.
+    -   **Compliance**:  and  have been updated to target the latest SDKs (Android API 35) and build configurations required for 2026.
+-   **Backend**: New endpoints have been created to support the referral system () and the rewarded ads system ().
 
 **Last working item**:
--   Last item agent was working: The agent was implementing a massive, user-directed overhaul of the mobile app to fix App Store rejection issues and add significant new features. The work involved creating new services for authentication, adding new screens, updating context providers, and modifying build configurations for future compliance. The agent completed all the coding changes as requested and was summarizing the work before proceeding to the build step, which the user explicitly paused.
+-   Last item agent was working: The agent initiated a production build for both Android and iOS using the  command. This was the final step after completing a massive list of user-requested features, bug fixes, and improvements.
 -   Status: IN PROGRESS
--   Agent Testing Done: N
--   Which testing method agent to use? both. Given the extensive changes to authentication, state management, and core app structure, both frontend and backend testing agents are required for a full regression test. Testing on a real device will be necessary for native sign-in functionalities.
+-   Agent Testing Done: N (Individual components were tested during development, but the final build has not been tested.)
+-   Which testing method agent to use? both. Once the build is complete, a new development build should be created for on-device testing of all native features (auth, games, ads). The production build should be tested via TestFlight/Google Play Internal Testing before submission.
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: Complete and verify the comprehensive mobile app overhaul (P0)
--   Issue 2: Critical iPad-specific bugs causing crashes and UI errors (P0 - BLOCKER)
--   Issue 3: Obtain Google Client IDs from the user to enable Google Sign-In (P1 - BLOCKED)
--   Issue 4: Implement Redis for backend caching (P2)
+-   Issue 1: Monitor EAS build and handle submission (P0)
+-   Issue 2: Critical iPad-specific bugs causing crashes (P0 - BLOCKER)
+-   Issue 3: Obtain real Google Client IDs from the user (P1 - BLOCKED)
+-   Issue 4: User complaint about game sounds (P2)
+-   Issue 5: Implement Redis for backend caching (P2)
 
 **Issues Detail:**
--   **Issue 1: Complete and verify the comprehensive mobile app overhaul**
-    -   Attempted fixes: The agent has written and modified numerous files, including , , , , , and created  and  to meet the user's detailed requirements.
+-   **Issue 1: Monitor EAS build and handle submission**
+    -   Attempted fixes: The agent started the build process in the background with .
     -   Next debug checklist:
-        1.  Receive confirmation from the user to proceed with building.
-        2.  Obtain and add  and  to the  file.
-        3.  Run  in  to sync new native dependencies.
-        4.  Create a new EAS development build to test on a physical device.
-        5.  Thoroughly test Apple Sign-In, Google Sign-In, and the Email login flow.
-        6.  Verify all new features: Millionaire game, global chat, points system, and light/dark theme.
-    -   Why fix this issue and what will be achieved with the fix?: This is the user's most recent and critical request, intended to fix all known issues, pass the Apple review, and add major new functionality.
+        1.  Check the status of the build using .
+        2.  If the build is successful, locate the artifact URL provided in the build details. The user requested the Android APK link.
+        3.  The user also requested automatic submission. The agent noted that the current build was started without the  flag, so a manual submission command (EAS project not configured.
+Input is required, but stdin is not readable. Failed to display prompt: Would you like to automatically create an EAS project for @ziyad333/app?) will be required after the build completes.
+    -   Why fix this issue and what will be achieved with the fix?: This is the user's primary goal: to get a distributable version of the app for the stores.
     -   Status: IN PROGRESS
-    -   Is recurring issue?: Y (Authentication issues are recurring).
+    -   Is recurring issue?: N
     -   Should Test frontend/backend/both after fix?: Both
-    -   Blocked on other issue: User confirmation to build; Issue 3 (Google Client IDs).
+    -   Blocked on other issue: The build process itself.
 
 -   **Issue 2: Critical iPad-specific bugs**
     -   Attempted fixes: None. This issue has been consistently postponed.
     -   Next debug checklist:
-        1.  Once a stable build from Issue 1 is available, deploy it to an iPad or iPad simulator.
-        2.  Reproduce the crashes and UI errors reported by Apple.
-        3.  Inspect layout files (Flexbox usage, percentage-based dimensions) and platform-specific code for incompatibilities with tablet aspect ratios.
-    -   Why fix this issue and what will be achieved with the fix?: This is a direct blocker for App Store approval and was part of the original problem statement.
+        1.  Once a stable build is available, deploy it to an iPad or iPad simulator.
+        2.  Reproduce the crashes and UI errors reported by Apple in the past.
+        3.  Inspect layout files (Flexbox, aspect ratios) and platform-specific code.
+    -   Why fix this issue and what will be achieved with the fix?: This is a direct blocker for App Store approval.
     -   Status: NOT STARTED
     -   Is recurring issue?: Y
     -   Should Test frontend/backend/both after fix?: Frontend
-    -   Blocked on other issue: Blocked on completing the current mobile app overhaul (Issue 1).
+    -   Blocked on other issue: A stable build from Issue 1.
 
 -   **Issue 3: Obtain Google Client IDs from the user**
-    -   Attempted fixes: The agent has noted that the keys are required but has not yet prompted the user for them.
+    -   Attempted fixes: The agent added placeholders to  and .
     -   Next debug checklist:
-        1.  In the next  interaction, clearly state that  and  are required to complete the Google Sign-In feature.
-        2.  Provide instructions or a link for the user on where to find these keys in the Google Cloud Console.
-    -   Why fix this issue and what will be achieved with the fix?: The Google Sign-In feature cannot be completed or tested without these credentials.
+        1.  Clearly ask the user for the required keys:  &  for the backend, and / for the mobile app.
+        2.  Provide instructions on where to find these in the Google Cloud Console.
+    -   Why fix this issue and what will be achieved with the fix?: Google Sign-In will not function without the correct keys.
     -   Status: NOT STARTED
     -   Is recurring issue?: N
-    -   Should Test frontend/backend/both after fix?: Backend
+    -   Should Test frontend/backend/both after fix?: Both
     -   Blocked on other issue: No.
 
--   **Issue 4: Implement Redis for backend caching**
+-   **Issue 4: User complaint about game sounds**
+    -   Attempted fixes: Agent investigated and found sounds rely on basic phone vibration via . The agent decided improving this was too complex due to local asset management and left it.
+    -   Next debug checklist:
+        1.  Re-evaluate the use of .
+        2.  Search for a simple library to play bundled sound effects ( or ).
+        3.  Implement a basic sound manager to play sounds for game actions (e.g., win, lose, collect).
+    -   Why fix this issue and what will be achieved with the fix?: Addresses a direct user complaint about the app's quality and feel.
+    -   Status: NOT STARTED
+    -   Is recurring issue?: Y
+    -   Should Test frontend/backend/both after fix?: Frontend
+
+-   **Issue 5: Implement Redis for backend caching**
     -   Attempted fixes: A placeholder  file was created, but no logic was implemented.
     -   Next debug checklist:
-        1.  Install  and  python packages.
-        2.  Configure the Redis connection in  using an environment variable.
-        3.  Apply caching decorators to high-traffic, read-only endpoints (e.g., fetching leaderboards, game data).
-    -   Why fix this issue and what will be achieved with the fix?: To improve backend performance and reduce database load, as requested by the user.
+        1.  Install  and .
+        2.  Configure the Redis connection in .
+        3.  Apply caching decorators to endpoints like .
+    -   Why fix this issue and what will be achieved with the fix?: To improve backend performance.
     -   Status: NOT STARTED
     -   Is recurring issue?: N
     -   Should Test frontend/backend/both after fix?: Backend
 
 **In progress Task List**:
--   **Task 1: Finalize Mobile App Overhaul**
-    -   Where to resume: All code changes have been made. The next step is to communicate the status to the user, request the necessary Google API keys, and ask for permission to start the build and testing phase.
-    -   What will be achieved with this?: A fully refactored mobile app that addresses all of the user's latest requests and is ready for a new build and submission cycle.
+-   **Task 1: Monitor and Finalize App Build**
+    -   Where to resume: The EAS build is running. The next agent must check its status with .
+    -   What will be achieved with this?: A final, shareable build of the mobile app for both Android and iOS.
     -   Status: IN PROGRESS
     -   Should Test frontend/backend/both after fix?: Both
-    -   Blocked on something: User confirmation to build and provision of Google API keys.
+    -   Blocked on something: The EAS build service.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   (P0) Build, Test, and Submit Mobile App: After completing the overhaul, create new builds for Android and iOS, conduct thorough testing, and submit them to the respective stores with updated release notes.
+    -   (P0) Submit completed builds to App Store and Google Play.
+    -   (P0) Create a development build to test and fix the iPad-specific crashes.
 -   **Future Tasks:**
-    -   (P1) Web App Parity: Implement the Who Wants to Be a Millionaire game and other new mobile features on the web app to maintain a consistent user experience.
-    -   (P2) Refactor Hardcoded API URL: The recurring technical debt in  should be addressed by moving the URL to an environment variable.
+    -   (P1) Web App Parity: Implement new mobile features (Millionaire game, Leaderboards) on the web app.
+    -   (P2) Refactor hardcoded API URL in  to an environment variable.
+    -   (P2) Add crash reporting (Sentry/Bugsnag) and analytics (Firebase) as previously suggested.
 
 **Completed work in this session**
--   **Web App Game Parity**: Fixed the web app's game page by creating and integrating 6 missing game components, ensuring all 12 games are now playable.
--   **Web App Login Fix**: Debugged and resolved an issue preventing web app login.
--   **IAP and Leaderboards**: Successfully implemented and tested a full-featured in-app purchase store and game leaderboards on both the backend and web frontend.
--   **First Apple Rejection Fix**: Addressed Apple's initial rejection by implementing a web-based Apple Sign-In, verifying a demo account, and creating a support page. A new build (7.2.1) was successfully submitted.
--   **Comprehensive Mobile Overhaul (Coding Phase)**:
-    -   Updated build configurations (, ) for future 2026 App Store/Google Play compliance.
-    -   Re-architected authentication to use native Google/Apple sign-in libraries via a new  service.
-    -   Added backend endpoints to support native sign-in.
-    -   Added a  for economy management and implemented a light/dark theme using .
+-   **Mobile Game Overhaul**:
+    -   : Reworked with swipe controls () and multiple difficulty levels.
+    -   : Updated piece colors to a wooden theme as requested.
+    -   : Fixed a crash related to image sources.
+    -   : Completely rewritten with 10 timed stages and power-ups.
+-   **New Mobile Features**:
+    -   Created and integrated  (Millionaire Game), , , , and a referral system ( + backend routes).
+-   **UI/UX & Core Fixes**:
+    -   Redesigned  to be cleaner and more focused.
+    -   Improved  component.
+    -   Integrated  throughout the app.
+    -   Fixed dynamic RTL handling in .
+-   **Rewarded Ads System**: Built a complete system with frontend () and backend logic () to manage ad sessions and validate rewards.
+-   **Build & Compliance**: Updated  and  for 2026 store requirements and initiated the final production build.
+-   **Documentation**: Created a summary PDF of the application at .
 
 **Earlier issues found/mentioned but not fixed**
--   **iPad critical bugs (crashes, UI errors)**: This is the original, most critical unresolved issue. It has been repeatedly deferred.
--   **Hardcoded API URL in mobile app**: A technical debt item from the previous handoff that has not been addressed.
+-   **iPad critical bugs (crashes, UI errors)**: The original, most critical unresolved issue.
+-   **Hardcoded API URL in mobile app**: Known technical debt.
+-   **Sub-par game sounds**: User complained about them being primitive; the agent decided not to fix this.
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork**: no internet connection error on iPad and general instability.
 -   **Recurrence count**: 3+
--   **Status**: NOT STARTED
+-   **Status**: NOT STARTED (The agent verified  is correctly used, but the specific iPad instability has not been tested or addressed).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **App Store/Google Play Compliance**: Proactively updating build configurations (, ) to meet future SDK requirements (iOS 26, Android API 35) and address specific rejection warnings ().
--   **Native Mobile Authentication**: Shifting from web-based authentication to native solutions using  and  for a better user experience and to meet platform standards.
--   **EAS Build & Submission**: Full workflow expertise from building () to submitting () and interpreting build/submission status.
--   **Global State Management**: Expanding the use of React's Context API to manage complex global state like points, diamonds (), and achievements.
--   **Dynamic Theming**: Implementing light/dark mode support by leveraging the  hook from React Native.
+-   **EAS Build Pipeline**: Using  and  for creating and deploying production builds.
+-   **React Native Gesture Handler**: Used to implement swipe controls in .
+-   **Global State Management**: Heavy use of  to manage the in-app economy across all games and features.
+-   **Component-Based Architecture**: Addition of reusable components like , , and .
 
 **key DB schema**
--   **leaderboards**: { , , ,  }
--   **iap_products**: { , , , ,  }
--   **purchases**: { , , ,  }
+-   **referrals**: { uid=0(root) gid=0(root) groups=0(root), , ,  }
+-   **ad_sessions**: { uid=0(root) gid=0(root) groups=0(root), , ,  }
 
 **All files of reference**
--   : **Critical new file** for native auth.
--   : **Critically updated** with plugins and entitlements for native auth and SDK targets.
--   : **Critically updated** for future build compliance.
--   : Heavily modified to use the new auth service.
--   : Updated to include new context providers and theme logic.
--   : Updated with callbacks for native Google/Apple sign-in.
--   : New file for handling IAP.
--   : New file for handling leaderboards.
--   : Updated to fix broken game links.
+-   : All game files within this directory were heavily modified or rewritten.
+-   : Rewritten for a new layout.
+-   : Significantly updated to integrate new screens, modals, and providers.
+-   , : Updated for build compliance.
+-   : New file for referral logic.
+-   : New file for ad reward logic.
+-   : New document created at user's request.
 
 **Areas that need refactoring**:
--   The hardcoded  in  remains a piece of technical debt that should be moved to an environment variable ().
--   The new backend caching system () is just a placeholder and needs full implementation.
+-   The hardcoded  in .
+-   The placeholder Redis caching system ().
+-   Game sounds need to be implemented properly instead of just using vibration.
 
 **key api endpoints**
--   : **(New)** Handles Google Sign-In callback.
--   : **(Updated)** Handles Apple Sign-In callback (web).
--   : **(New)** Handles native Apple Sign-In callback.
--   : **(New)** Endpoint to process an in-app purchase.
--   : **(New)** Fetches the leaderboard for a specific game.
--   : **(New)** Submits a new score to a leaderboard.
+-   : **(New)** Creates a referral link for a user.
+-   : **(New)** Starts a new ad-watching session for a user.
+-   : **(New)** Validates an ad session and grants a reward.
 
 **Critical Info for New Agent**
--   **User's Language is Arabic**: You must communicate exclusively in Arabic (العربية).
--   **PAUSE BEFORE BUILDING**: The user has explicitly instructed not to build the application yet. Your first action should be to summarize the current state, ask for the required Google API keys, and seek permission to start the build and test process.
--   **Google Keys Required**: The new Google Sign-In flow is blocked until the user provides  and . You must ask for these.
--   **iPad Bugs are the Ultimate Blocker**: The long-standing, unresolved iPad crashes are a critical issue and a direct cause for App Store rejection. After the current overhaul is complete, this must become the highest priority.
--   **Follow User's Detailed Instructions**: The user provides extremely specific, multi-point instructions. Adhere to them closely, as they represent the primary requirements.
+-   **BUILD IN PROGRESS**: An EAS build for Android and iOS is currently running in the background. Your first action MUST be to check its status using .
+-   **SUBMIT AFTER BUILD**: The user wants the app submitted to the stores immediately after a successful build. The command will be EAS project not configured.
+Input is required, but stdin is not readable. Failed to display prompt: Would you like to automatically create an EAS project for @ziyad333/app?. You need to provide the user with the Android APK link from the build details page.
+-   **iPad BUGS ARE P0**: After the build/submit process, the long-standing iPad crashes MUST become the highest priority to ensure App Store approval.
+-   **GOOGLE KEYS REQUIRED**: The Google Sign-In feature is using placeholder keys and will not work. You must prompt the user for the real keys.
+-   **USER LANGUAGE**: Always communicate in Arabic (العربية).
 
 **documents and test reports created in this job**
--    (updated multiple times)
--    (for IAP and Leaderboards)
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (Final Overhaul Request)**: Provided an extremely detailed list of requirements for the mobile app, including fixing Google/Apple sign-in, adding new games/features, implementing a points system, and preparing for 2026 store SDK requirements. (Completed - Coding phase)
-2.  **Agent**: Acknowledged the request and started implementation.
-3.  **User**: Do not start the build until I tell you. Have you finished everything? Make sure you are doing everything for the mobile app. (Pending - User confirmation needed to build)
-4.  **Agent**: Confirmed it would check everything for the mobile app before building.
-5.  **User**: Finish everything without building and lifting. Then provided another very detailed message reinforcing the 2026 SDK requirements and summarizing the desired auth/feature implementations. (Completed - Coding phase)
-6.  **Agent**: Acknowledged the finish without building command and proceeded with applying all the configuration and code changes.
+1.  **User**: Provided a long list of bugs and required improvements for the games (Snake, Chess, Puzzle, Brick Breaker) and features (Shop, Daily Reward), and requested better game sounds. (Mostly addressed)
+2.  **User**: Asked why updates were not visible in the repository. (Resolved, agent confirmed commits were present).
+3.  **User**: Showed the agent the game files exist. (Agent acknowledged and analyzed them).
+4.  **User**: Provided a list of high-level improvement suggestions (performance, ads, chat, security, etc.). (Partially addressed).
+5.  **User**: Confirmed all previous suggestions should be implemented. (Agent proceeded with implementation).
+6.  **User**: Requested the build and submission process to start, ensuring all icons are interactive and build settings are for 2026. (In Progress).
+7.  **User**: Confirmed the chess piece colors and requested the build to proceed after checking login and internet functionality. (Agent confirmed and started build).
+8.  **User**: Requested deletion of old apps, the PDF summary, the final Android APK link, and an estimate of the app's value. (Partially addressed, PDF created, build started).
+9.  **User**: Stated that submission should happen automatically. (Agent corrected this, explaining submission is a manual step for the current build).
+10. **User**: Asked the agent to continue until the upload is done. (In Progress).
 
 **Project Health Check:**
 -   **Broken**:
-    -   iPad compatibility remains broken and is a known cause for App Store rejection.
-    -   Google Sign-In is unimplemented pending API keys. Apple Sign-In is newly implemented but completely untested.
+    -   iPad compatibility remains critically broken.
+    -   Google Sign-In is non-functional due to placeholder API keys.
 -   **Mocked**:
-    -   The Redis caching system is mocked with a placeholder route file () and has no functional logic.
+    -   The Redis caching system is a placeholder with no logic.
 
 **3rd Party Integrations**
--    (Social Logins - web-based)
--    **(New/Untested)**
--    **(New/Untested)**
--    (Google AdMob)
+-   
+-   
+-    (For game controls)
 -   EAS (Build and Submit)
 
 **Testing status**
--   Testing agent used after significant changes: YES (for IAP/Leaderboards). NO (for the most recent, massive mobile overhaul).
+-   Testing agent used after significant changes: NO (not for the latest overhaul).
 -   Troubleshoot agent used after agent stuck in loop: NO
--   Test files created:
-    - 
--   Known regressions: The critical iPad bugs that cause crashes and UI issues remain unresolved. The stability of the new authentication system is unknown.
+-   Test files created: None in this session.
+-   Known regressions: The critical iPad bugs remain unresolved.
 
 **Credentials to test flow:**
 -   **Email**: 
 -   **Password**: 
 
 **What agent forgot to execute**
--   The agent has consistently failed to prioritize and address the critical iPad bugs, which was the user's original and most important request for App Store submission.
--   The agent has not yet prompted the user for the necessary Google API keys, which blocks the completion of the Google Sign-In feature.</analysis>
+-   The agent did not resolve the user's complaint about the poor quality of game sounds, deciding it was too complex. This remains an open user request.
+-   While correctly stating it cannot delete projects from the user's Expo account, the agent failed to provide helpful instructions on how the user could do it themselves.</analysis>

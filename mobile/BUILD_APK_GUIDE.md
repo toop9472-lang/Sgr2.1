@@ -177,7 +177,7 @@ eas build --platform ios --profile production
 
 ### API URL:
 ```
-https://ipad-stability-fix.preview.emergentagent.com
+https://saqr-build-final.preview.emergentagent.com
 ```
 
 ---
