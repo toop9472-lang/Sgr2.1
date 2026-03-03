@@ -209,9 +209,16 @@ export const api = {
       body: JSON.stringify({ email, password }),
     });
     
+    // Clone response to read body without consuming it
+    const clonedResponse = response.clone();
+    
     if (response.ok) {
-      const data = await response.json();
-      this.setTokens(data.token, data.refresh_token);
+      try {
+        const data = await clonedResponse.json();
+        this.setTokens(data.token, data.refresh_token);
+      } catch (e) {
+        console.log('Token setting skipped');
+      }
     }
     
     return response;
@@ -223,9 +230,16 @@ export const api = {
       body: JSON.stringify({ email, password, name }),
     });
     
+    // Clone response to read body without consuming it
+    const clonedResponse = response.clone();
+    
     if (response.ok) {
-      const data = await response.json();
-      this.setTokens(data.token, data.refresh_token);
+      try {
+        const data = await clonedResponse.json();
+        this.setTokens(data.token, data.refresh_token);
+      } catch (e) {
+        console.log('Token setting skipped');
+      }
     }
     
     return response;
