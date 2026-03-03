@@ -1,25 +1,24 @@
-# صقر - Saqr App PRD (Final)
+# صقر - Saqr App PRD
 
-## Application Status: ✅ READY FOR BUILD & SUBMISSION
+## Application Status: ✅ BUG FIXES COMPLETED - READY FOR RE-BUILD
 
 ---
 
 ## What's Implemented (Complete)
 
-### Games (13 total)
+### Games (12 total - Millionaire hidden temporarily)
 1. AI Quest - تحدي الذكاء الاصطناعي
-2. الشطرنج - Chess (ألوان خشبية)
+2. الشطرنج - Chess (قطع موحدة بتصميم احترافي)
 3. إكس أو - Tic Tac Toe
 4. الذاكرة - Memory Match
 5. الثعبان - Snake (Touch Control + 4 levels)
 6. أسئلة ثقافية - Trivia
-7. تركيب الصور - Puzzle
+7. تركيب الصور - Puzzle (صور AI جديدة)
 8. الألغاز - Riddles
 9. تكسير الطوب - Brick Breaker (10 levels)
 10. سباق الحساب - Math Race
 11. سباق الكلمات - Word Race
 12. تبديل الألوان - Color Switch
-13. **من سيربح المليون - Millionaire (NEW)**
 
 ### Features
 - ✅ Authentication (Email, Google, Apple)
@@ -30,45 +29,53 @@
 - ✅ Leaderboard (Daily/Weekly/All)
 - ✅ Global Chat
 - ✅ Friends System
-- ✅ Shop with IAP
-- ✅ Achievements
+- ✅ Shop with AI-generated Images (6 diamond packages)
+- ✅ Achievements (مبني على الإعلانات والمشاركة)
 - ✅ Challenges
-- ✅ Profile & Settings
-
-### New Components
-```
-mobile/src/screens/MillionaireScreen.js
-mobile/src/screens/OnboardingScreen.js
-mobile/src/screens/LeaderboardScreen.js
-mobile/src/components/DailyStreakModal.js
-mobile/src/components/SkeletonLoading.js
-mobile/src/services/ReferralService.js
-mobile/src/services/AdRewardService.js
-backend/routes/referrals_routes.py
-```
+- ✅ Profile & Settings (مع زر تسجيل خروج)
 
 ---
 
-## Build Configuration (2026 Compliant)
+## Bug Fixes Completed (March 3, 2026)
 
-### eas.json
-- iOS: `image: "latest"` (Xcode 26+)
-- Android: `targetSdkVersion: 35`
-- Production channel ready
+### 1. صفحة تسجيل الدخول ✅
+- Fixed login flow to show login page
+- Email login works correctly
+- Added logout button in Settings
 
-### app.json
-- Android: targetSdkVersion 35, compileSdkVersion 35
-- iOS: Supports iOS 26 SDK
-- All plugins configured
+### 2. قطع الشطرنج ✅
+- Unified chess piece design (same Unicode characters)
+- White pieces: #FFFFFF with black shadow
+- Black pieces: #1a1a1a with gray shadow
+
+### 3. لعبة البازل ✅
+- Replaced Unsplash images with AI-generated images
+- 4 new themes: غروب الشمس, الجبال, القطة, الزهور
+
+### 4. المتجر ✅
+- Added AI-generated diamond package images
+- 6 packages with professional gem/diamond designs
+
+### 5. الإنجازات ✅
+- Completely rewritten to be based on:
+  - مشاهدة الإعلانات (ads_watched)
+  - مشاركة التطبيق (app_shares)
+  - الإحالات الناجحة (successful_referrals)
+- 12 new achievements total
+
+### 6. الإعدادات ✅
+- Added logout button
+- Theme and language settings working
 
 ---
 
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/signin`
-- `POST /api/auth/google`
-- `POST /api/auth/apple/native`
+- `POST /api/auth/signin` - Email login
+- `POST /api/auth/register` - Email registration
+- `POST /api/auth/google` - Google OAuth
+- `POST /api/auth/apple/native` - Apple Sign-In
 
 ### Referrals
 - `GET /api/referrals/stats`
@@ -85,35 +92,35 @@ backend/routes/referrals_routes.py
 
 ---
 
-## Rewards Structure
+## Upcoming Tasks (P0)
 
-### Referral System
-| Role | Points | Diamonds |
-|------|--------|----------|
-| Referrer | 100 | 10 |
-| Referee | 50 | 5 |
+1. **Build new app version**
+   - iOS: `eas build --platform ios --profile production`
+   - Android: `eas build --platform android --profile production`
 
-### Daily Streak
-| Day | Reward |
-|-----|--------|
-| 1 | 5 points |
-| 2 | 10 points |
-| 3 | 5 diamonds |
-| 4 | 15 points |
-| 5 | 10 diamonds |
-| 6 | 25 points |
-| 7 | 20 diamonds |
+2. **Submit to stores**
+   - iOS: `eas submit --platform ios`
+   - Android: Manual upload to Google Play Console
 
 ---
 
-## Build Commands
-```bash
-cd /app/mobile
-npx expo install
-eas build --platform all --profile production
-eas submit --platform ios
-eas submit --platform android
-```
+## Future Tasks (P1/P2)
+
+### P1 - High Priority
+- Fix critical iPad bugs (crashes, UI glitches)
+- Get Google Client IDs from user for Google Sign-In
+- Make Golden Saqr rewards give diamonds
+
+### P2 - Medium Priority
+- Generate AI images for remaining UI elements
+- Research third-party game integration
+- Sync mobile features to web app
+- Refactor hardcoded API URL in mobile/src/api/api.js
+
+### P3 - Low Priority
+- Improve game sounds
+- Add crash reporting (Sentry)
+- Implement Redis caching
 
 ---
 
@@ -123,5 +130,25 @@ eas submit --platform android
 
 ---
 
+## Architecture
+
+```
+/app
+├── backend/           # FastAPI backend
+│   ├── routes/       # API endpoints
+│   ├── models/       # Data models
+│   └── auth/         # Authentication
+├── mobile/           # React Native (Expo)
+│   ├── src/
+│   │   ├── screens/  # All app screens
+│   │   ├── services/ # API, Storage, Context
+│   │   ├── components/ # Reusable UI
+│   │   └── utils/    # Helpers
+│   └── app.json      # Expo config
+└── frontend/         # React web app
+```
+
+---
+
 ## Last Updated
-March 3, 2026 - FINAL VERSION
+March 3, 2026 - Bug fixes completed, ready for re-build
