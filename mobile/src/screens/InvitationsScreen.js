@@ -23,6 +23,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import api from '../services/api';
 import gameSounds from '../utils/gameSounds';
+import { useAchievements } from '../services/AchievementsContext';
 
 const { width } = Dimensions.get('window');
 
@@ -630,6 +631,9 @@ const InvitationsScreen = ({ user, onClose, onPlayGame }) => {
   const [showJoinByCode, setShowJoinByCode] = useState(false);
   
   const tabAnim = useRef(new Animated.Value(0)).current;
+  
+  // Achievements context for recording shares
+  const { recordAppShared } = useAchievements();
 
   useEffect(() => {
     loadData();
@@ -758,10 +762,15 @@ const InvitationsScreen = ({ user, onClose, onPlayGame }) => {
     loadData();
   };
 
-  const shareInvitation = (invitation) => {
-    Share.share({
+  const shareInvitation = async (invitation) => {
+    const result = await Share.share({
       message: `انضم إلي في تطبيق صقر! استخدم الكود: ${invitation.code}\n\nحمّل التطبيق الآن!`,
     });
+    
+    // Record share for achievements
+    if (result.action === Share.sharedAction && recordAppShared) {
+      recordAppShared();
+    }
   };
 
   return (

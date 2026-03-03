@@ -17,6 +17,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import storage from '../services/storage';
+import { useAchievements } from '../services/AchievementsContext';
 
 const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenShop, onOpenAdminPanel }) => {
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -28,6 +29,9 @@ const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenS
   const [isLoading, setIsLoading] = useState(false);
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
   const [editName, setEditName] = useState(user?.name || '');
+  
+  // Achievements context
+  const { recordAppShared } = useAchievements();
   
   const userPoints = user?.points || 0;
   const totalEarned = user?.total_earned || userPoints;
@@ -112,10 +116,15 @@ const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenS
 
   const handleShareApp = async () => {
     try {
-      await Share.share({
+      const result = await Share.share({
         message: `جرب تطبيق صقر واكسب المال من مشاهدة الإعلانات!\n\nاستخدم كود الإحالة: ${referralCode}\n\nحمّل التطبيق الآن!`,
         title: 'شارك تطبيق صقر',
       });
+      
+      // Record app share for achievements if share was successful
+      if (result.action === Share.sharedAction && recordAppShared) {
+        recordAppShared();
+      }
     } catch (error) {
       console.log('Share error:', error);
     }
@@ -146,11 +155,11 @@ const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenS
   };
 
   const handlePrivacy = () => {
-    Linking.openURL('https://saqr-build-final.preview.emergentagent.com/privacy');
+    Linking.openURL('https://quality-restore-1.preview.emergentagent.com/privacy');
   };
 
   const handleTerms = () => {
-    Linking.openURL('https://saqr-build-final.preview.emergentagent.com/terms');
+    Linking.openURL('https://quality-restore-1.preview.emergentagent.com/terms');
   };
 
   const handleSettings = () => {

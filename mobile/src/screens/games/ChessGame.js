@@ -23,9 +23,10 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const BOARD_SIZE = Math.min(screenWidth - 16, screenHeight * 0.55, 450);
 const SQUARE_SIZE = BOARD_SIZE / 8;
 
-// قطع الشطرنج - Unicode
+// قطع الشطرنج - Unicode - نفس الشكل (مملوء) لكلا اللونين
+// استخدام القطع المملوءة فقط (♚♛♜♝♞♟) والتمييز باللون
 const PIECES = {
-  white: { king: '\u2654', queen: '\u2655', rook: '\u2656', bishop: '\u2657', knight: '\u2658', pawn: '\u2659' },
+  white: { king: '\u265A', queen: '\u265B', rook: '\u265C', bishop: '\u265D', knight: '\u265E', pawn: '\u265F' },
   black: { king: '\u265A', queen: '\u265B', rook: '\u265C', bishop: '\u265D', knight: '\u265E', pawn: '\u265F' },
 };
 
@@ -642,17 +643,18 @@ const ChessGame = ({ mode, onComplete, onClose }) => {
           <View style={styles.captureIndicator} />
         )}
 
-        {/* القطعة */}
+        {/* القطعة - نفس الشكل بألوان مختلفة (تصميم احترافي) */}
         {pieceDisplay && (
           <Text 
             style={[
               styles.piece, 
               { 
-                // البيضاء: بني خشبي فاتح، السوداء: أسود داكن
-                color: pieceDisplay.color === 'white' ? '#D4A574' : '#1a1a1a',
-                textShadowColor: pieceDisplay.color === 'white' ? '#8B4513' : '#000',
-                textShadowOffset: { width: 2, height: 2 },
-                textShadowRadius: 3,
+                // استخدام ألوان متباينة للقطع - أبيض فاتح / أسود داكن
+                color: pieceDisplay.color === 'white' ? '#FFFFFF' : '#1a1a1a',
+                // إضافة حدود للقطع البيضاء لتظهر بوضوح
+                textShadowColor: pieceDisplay.color === 'white' ? '#000000' : '#666666',
+                textShadowOffset: { width: 0, height: 0 },
+                textShadowRadius: pieceDisplay.color === 'white' ? 3 : 1,
               }
             ]}
           >

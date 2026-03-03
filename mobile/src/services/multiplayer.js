@@ -1,7 +1,7 @@
 // Multiplayer Game Service - خدمة اللعب الجماعي
 import { Platform } from 'react-native';
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || 'https://saqr-build-final.preview.emergentagent.com';
+const API_BASE = process.env.REACT_APP_BACKEND_URL || 'https://quality-restore-1.preview.emergentagent.com';
 
 class MultiplayerService {
   constructor() {

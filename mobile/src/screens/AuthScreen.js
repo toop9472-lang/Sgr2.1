@@ -397,30 +397,39 @@ const AuthScreen = ({ onLogin }) => {
         response = await api.register(email, password, name);
         data = await response.json();
         
-        if (response.ok && data.success) {
-          const loginResponse = await api.login(email, password);
-          const loginData = await loginResponse.json();
-          if (loginResponse.ok) {
-            await storage.setToken(loginData.token);
-            await storage.setUserData(loginData.user);
-            onLogin(loginData.user);
+        if (response.ok && (data.token || data.success)) {
+          // If registration returns token directly
+          if (data.token) {
+            await storage.setToken(data.token);
+            await storage.setUserData(data.user);
+            onLogin(data.user);
+          } else {
+            // Otherwise login after registration
+            const loginResponse = await api.login(email, password);
+            const loginData = await loginResponse.json();
+            if (loginResponse.ok) {
+              await storage.setToken(loginData.token);
+              await storage.setUserData(loginData.user);
+              onLogin(loginData.user);
+            }
           }
         } else {
-          Alert.alert('خطأ', data.detail || 'فشل إنشاء الحساب');
+          Alert.alert('خطأ', data.detail || data.message || 'فشل إنشاء الحساب');
         }
       } else {
         response = await api.login(email, password);
         data = await response.json();
         
-        if (response.ok) {
+        if (response.ok && data.token) {
           await storage.setToken(data.token);
           await storage.setUserData(data.user);
           onLogin(data.user);
         } else {
-          Alert.alert('خطأ', data.detail || 'فشل تسجيل الدخول');
+          Alert.alert('خطأ', data.detail || data.message || 'فشل تسجيل الدخول');
         }
       }
     } catch (error) {
+      console.log('Auth error:', error);
       handleConnectionError(error);
     } finally {
       setIsLoading(false);

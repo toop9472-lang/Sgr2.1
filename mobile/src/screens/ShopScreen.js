@@ -288,14 +288,14 @@ const SHOP_ITEMS = [
   },
 ];
 
-// Diamond Packages for Purchase
+// Diamond Packages for Purchase - with AI-generated professional images
 const DIAMOND_PACKAGES = [
-  { id: 'pack_50', diamonds: 50, price: 4.99, bonus: 0, icon: 'diamond-outline' },
-  { id: 'pack_150', diamonds: 150, price: 9.99, bonus: 20, icon: 'diamond' },
-  { id: 'pack_350', diamonds: 350, price: 19.99, bonus: 50, icon: 'diamond' },
-  { id: 'pack_750', diamonds: 750, price: 39.99, bonus: 150, icon: 'diamond' },
-  { id: 'pack_1500', diamonds: 1500, price: 74.99, bonus: 400, icon: 'diamond' },
-  { id: 'pack_3500', diamonds: 3500, price: 149.99, bonus: 1000, icon: 'diamond' },
+  { id: 'pack_50', diamonds: 50, price: 4.99, bonus: 0, icon: 'diamond-outline', image: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/8d0264089edcfd06522002458fa06c39546c26f3c63eb9ee166111a86c4a1f70.png' },
+  { id: 'pack_150', diamonds: 150, price: 9.99, bonus: 20, icon: 'diamond', image: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/2331b4dba6a7794ca82e307739d695d26c4b52262ad971bb241272053261e7d0.png' },
+  { id: 'pack_350', diamonds: 350, price: 19.99, bonus: 50, icon: 'diamond', image: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/f3510c77236365fa4fa98a435bc3fe90061eeff371b68553e5ab0802c561dd42.png' },
+  { id: 'pack_750', diamonds: 750, price: 39.99, bonus: 150, icon: 'diamond', image: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/27e837516af9a27d6232662cf8922fdf81f6f3db1555b994002eb12554331c93.png' },
+  { id: 'pack_1500', diamonds: 1500, price: 74.99, bonus: 400, icon: 'diamond', image: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/a50037c315fcbd1d811fced1e2e9b7183b7d8255812d7a6faf8d1d451883de1c.png' },
+  { id: 'pack_3500', diamonds: 3500, price: 149.99, bonus: 1000, icon: 'diamond', image: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/72b5b17853dba2913709717ad1d6f03c49d7354619584ae3a9ac2d8cc9ba3e41.png' },
 ];
 
 // Rarity colors
@@ -358,7 +358,7 @@ const ShopItemCard = ({ item, owned, onPurchase, userDiamonds }) => {
   );
 };
 
-// Diamond Package Card
+// Diamond Package Card with Real Images
 const DiamondPackageCard = ({ pack, onPurchase }) => {
   const hasBonus = pack.bonus > 0;
   
@@ -368,23 +368,36 @@ const DiamondPackageCard = ({ pack, onPurchase }) => {
       onPress={() => onPurchase(pack)}
       activeOpacity={0.8}
     >
-      <LinearGradient
-        colors={['#3b82f6', '#1d4ed8']}
-        style={styles.diamondCardGradient}
-      >
-        {hasBonus && (
-          <View style={styles.bonusBadge}>
-            <Text style={styles.bonusText}>+{pack.bonus}</Text>
+      <View style={styles.diamondCardContainer}>
+        {/* Background Image */}
+        <Image 
+          source={{ uri: pack.image }} 
+          style={styles.diamondCardImage}
+          resizeMode="cover"
+        />
+        {/* Overlay Gradient */}
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.7)', 'rgba(0,0,0,0.9)']}
+          style={styles.diamondCardGradient}
+        >
+          {hasBonus && (
+            <View style={styles.bonusBadge}>
+              <Text style={styles.bonusText}>+{pack.bonus}</Text>
+            </View>
+          )}
+          
+          <View style={styles.diamondCardContent}>
+            <View style={styles.diamondIconBadge}>
+              <Ionicons name="diamond" size={18} color="#60a5fa" />
+            </View>
+            <Text style={styles.diamondAmount}>{pack.diamonds}</Text>
+            <Text style={styles.diamondLabel}>ماسة</Text>
+            <View style={styles.diamondPrice}>
+              <Text style={styles.diamondPriceText}>${pack.price}</Text>
+            </View>
           </View>
-        )}
-        
-        <Ionicons name={pack.icon} size={36} color="#FFF" />
-        <Text style={styles.diamondAmount}>{pack.diamonds}</Text>
-        <Text style={styles.diamondLabel}>ماسة</Text>
-        <View style={styles.diamondPrice}>
-          <Text style={styles.diamondPriceText}>${pack.price}</Text>
-        </View>
-      </LinearGradient>
+        </LinearGradient>
+      </View>
     </TouchableOpacity>
   );
 };
@@ -1099,20 +1112,47 @@ const styles = StyleSheet.create({
   diamondCard: {
     width: (width - 60) / 3,
     marginBottom: 12,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  diamondCardContainer: {
+    width: '100%',
+    height: 160,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  diamondCardImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
   },
   diamondCardGradient: {
-    borderRadius: 16,
-    padding: 16,
+    flex: 1,
+    padding: 10,
+    justifyContent: 'flex-end',
     alignItems: 'center',
+  },
+  diamondCardContent: {
+    alignItems: 'center',
+  },
+  diamondIconBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(96,165,250,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 4,
   },
   bonusBadge: {
     position: 'absolute',
-    top: -8,
-    right: -8,
+    top: 8,
+    right: 8,
     backgroundColor: '#10b981',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 10,
+    zIndex: 10,
   },
   bonusText: {
     color: '#FFF',
@@ -1121,16 +1161,15 @@ const styles = StyleSheet.create({
   },
   diamondAmount: {
     color: '#FFF',
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginTop: 8,
   },
   diamondLabel: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 11,
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 10,
   },
   diamondPrice: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(59,130,246,0.9)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,

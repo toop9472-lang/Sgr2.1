@@ -177,7 +177,7 @@ eas build --platform ios --profile production
 
 ### API URL:
 ```
-https://saqr-build-final.preview.emergentagent.com
+https://quality-restore-1.preview.emergentagent.com
 ```
 
 ---

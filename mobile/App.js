@@ -105,8 +105,8 @@ function AppContent() {
     newAchievement, 
     clearNewAchievement, 
     updateCurrency,
-    recordGameWin,
-    recordGameLoss,
+    recordAdWatched,
+    recordAppShared,
   } = useAchievements();
 
   // Notification listener ref
@@ -366,13 +366,14 @@ function AppContent() {
     }
   };
 
-  // Handle game completion for achievements
-  const handleGameComplete = async (gameId, won, timeInSeconds = null) => {
-    if (won) {
-      await recordGameWin(gameId, timeInSeconds);
-    } else {
-      await recordGameLoss(gameId);
-    }
+  // Handle ad watched for achievements
+  const handleAdWatched = async () => {
+    await recordAdWatched();
+  };
+
+  // Handle app shared for achievements
+  const handleAppShared = async () => {
+    await recordAppShared();
   };
 
   const handleDailyRewardClaimed = (data) => {
@@ -466,6 +467,7 @@ function AppContent() {
         {currentPage === 'settings' && (
           <SettingsScreen 
             onBack={() => setCurrentPage('profile')}
+            onLogout={handleLogout}
           />
         )}
         {currentPage === 'advertiser' && (

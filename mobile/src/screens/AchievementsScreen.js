@@ -263,24 +263,24 @@ const AchievementsScreen = ({ onClose, language = 'ar' }) => {
           </View>
           <View style={styles.summaryStats}>
             <View style={styles.summaryStatItem}>
-              <Ionicons name="trophy" size={20} color="#fbbf24" />
-              <Text style={styles.summaryStatValue}>{stats.wins}</Text>
+              <Ionicons name="play-circle" size={20} color="#10b981" />
+              <Text style={styles.summaryStatValue}>{stats.ads_watched || 0}</Text>
               <Text style={styles.summaryStatLabel}>
-                {language === 'ar' ? 'فوز' : 'Wins'}
+                {language === 'ar' ? 'إعلان' : 'Ads'}
               </Text>
             </View>
             <View style={styles.summaryStatItem}>
-              <Ionicons name="flame" size={20} color="#f97316" />
-              <Text style={styles.summaryStatValue}>{stats.best_win_streak}</Text>
+              <Ionicons name="share-social" size={20} color="#3b82f6" />
+              <Text style={styles.summaryStatValue}>{stats.app_shares || 0}</Text>
               <Text style={styles.summaryStatLabel}>
-                {language === 'ar' ? 'أفضل سلسلة' : 'Best Streak'}
+                {language === 'ar' ? 'مشاركة' : 'Shares'}
               </Text>
             </View>
             <View style={styles.summaryStatItem}>
-              <Ionicons name="apps" size={20} color="#8b5cf6" />
-              <Text style={styles.summaryStatValue}>{stats.unique_games?.length || 0}</Text>
+              <Ionicons name="person-add" size={20} color="#8b5cf6" />
+              <Text style={styles.summaryStatValue}>{stats.successful_referrals || 0}</Text>
               <Text style={styles.summaryStatLabel}>
-                {language === 'ar' ? 'ألعاب' : 'Games'}
+                {language === 'ar' ? 'إحالة' : 'Referrals'}
               </Text>
             </View>
           </View>

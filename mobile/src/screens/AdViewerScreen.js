@@ -21,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import storage from '../services/storage';
 import admobService from '../services/admobService';
+import { useAchievements } from '../services/AchievementsContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -72,6 +73,9 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
   const [videoLoading, setVideoLoading] = useState(true);
   const [isAdMobLoading, setIsAdMobLoading] = useState(false);
   const [adMobReady, setAdMobReady] = useState(false);
+  
+  // Achievements context for recording ad watches
+  const { recordAdWatched } = useAchievements();
   
   // Comments state
   const [showComments, setShowComments] = useState(false);
@@ -294,6 +298,11 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
     setTimeout(() => setShowPointsAnimation(false), 3000);
     
     if (onPointsEarned) onPointsEarned(points);
+    
+    // Record ad watched for achievements
+    if (recordAdWatched) {
+      recordAdWatched();
+    }
     
     const token = await storage.getToken();
     if (token && currentAd) {

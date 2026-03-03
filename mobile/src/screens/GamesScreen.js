@@ -440,14 +440,36 @@ const TicTacToeGame = ({ mode, onComplete, onClose, isOnline, opponent, isMyTurn
 };
 
 // ==================== PUZZLE GAME ====================
-// ==================== PUZZLE GAME (PROFESSIONAL IMAGE PUZZLE) ====================
+// ==================== PUZZLE GAME (PROFESSIONAL AI-GENERATED IMAGES) ====================
 const PUZZLE_IMAGES = [
-  { id: 1, name: 'الطبيعة', icon: 'leaf', gradient: ['#22c55e', '#15803d'], image: null },
-  { id: 2, name: 'المحيط', icon: 'water', gradient: ['#3b82f6', '#1d4ed8'], image: null },
-  { id: 3, name: 'الغروب', icon: 'sunny', gradient: ['#f97316', '#ea580c'], image: null },
-  { id: 4, name: 'الفضاء', icon: 'rocket', gradient: ['#8b5cf6', '#7c3aed'], image: null },
-  { id: 5, name: 'الجبال', icon: 'partly-sunny', gradient: ['#fbbf24', '#d97706'], image: null },
-  { id: 6, name: 'الزهور', icon: 'flower', gradient: ['#ec4899', '#db2777'], image: null },
+  { 
+    id: 1, 
+    name: 'غروب الشمس', 
+    icon: 'sunny', 
+    gradient: ['#f59e0b', '#ef4444'], 
+    image: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/790aea00464f3094d85b3ec7bcb2afb006df8e90e0f04201191220ec251f21df.png' 
+  },
+  { 
+    id: 2, 
+    name: 'الجبال', 
+    icon: 'snow', 
+    gradient: ['#06b6d4', '#3b82f6'], 
+    image: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/3d8c26e54596dfd6119b3e0dbc132bba3f9a7a4b838f53c5f707a8ee3b76a5e5.png' 
+  },
+  { 
+    id: 3, 
+    name: 'القطة', 
+    icon: 'paw', 
+    gradient: ['#f97316', '#fbbf24'], 
+    image: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/80dd5458cd76b663ba0070e59843f6a7aba7a44cb4cf4d0a4e40eca1f3712cab.png' 
+  },
+  { 
+    id: 4, 
+    name: 'الزهور', 
+    icon: 'flower', 
+    gradient: ['#ec4899', '#db2777'], 
+    image: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/d57d16dad83d4ac03e77928fabc5111a4bd66f58c3ec7ea3def95ff179a63a10.png' 
+  },
 ];
 
 // Responsive puzzle size
@@ -559,20 +581,16 @@ const PuzzleGame = ({ mode, onComplete, onClose }) => {
         
         <View style={styles.previewContainer}>
           <Text style={styles.previewTitle}>احفظ هذه الصورة!</Text>
-          <LinearGradient
-            colors={currentImage.gradient}
-            style={[styles.previewImage, { width: width - 80, height: width - 80 }]}
-          >
-            <Ionicons name={currentImage.icon} size={60} color="#FFF" />
-            <Text style={styles.previewName}>{currentImage.name}</Text>
-            <View style={styles.previewGrid}>
-              {[...Array(gridSize * gridSize).keys()].map((num) => (
-                <View key={num} style={[styles.previewPiece, { width: (width - 100) / gridSize, height: (width - 100) / gridSize }]}>
-                  <Text style={styles.previewPieceNum}>{num + 1}</Text>
-                </View>
-              ))}
+          <View style={[styles.previewImage, { width: width - 80, height: width - 80, overflow: 'hidden', borderRadius: 16 }]}>
+            <Image 
+              source={{ uri: currentImage.image }} 
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="cover"
+            />
+            <View style={styles.previewOverlay}>
+              <Text style={styles.previewName}>{currentImage.name}</Text>
             </View>
-          </LinearGradient>
+          </View>
           <Text style={styles.previewCountdown}>تبدأ اللعبة خلال ثوانٍ...</Text>
         </View>
       </View>
@@ -629,7 +647,7 @@ const PuzzleGame = ({ mode, onComplete, onClose }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Puzzle Grid */}
+      {/* Puzzle Grid - باستخدام صور حقيقية */}
       <View style={[styles.puzzleGrid, { width: puzzleSize, alignSelf: 'center' }]}>
         {pieces.map((piece, idx) => {
           const pieceSize = (puzzleSize - 8) / gridSize;
@@ -652,25 +670,34 @@ const PuzzleGame = ({ mode, onComplete, onClose }) => {
               onPress={() => handlePiecePress(idx)}
               activeOpacity={0.8}
             >
-              <LinearGradient
-                colors={completed ? ['#10b981', '#059669'] : 
-                        isCorrect ? ['#22c55e', '#16a34a'] : 
-                        isSelected ? ['#3b82f6', '#2563eb'] : 
-                        currentImage.gradient}
-                style={styles.pieceInner}
-              >
-                <Ionicons 
-                  name={currentImage.icon} 
-                  size={pieceSize * 0.3} 
-                  color="rgba(255,255,255,0.3)" 
+              {/* عرض جزء من الصورة الحقيقية */}
+              <View style={[styles.pieceInner, { overflow: 'hidden' }]}>
+                <Image 
+                  source={{ uri: currentImage.image }}
+                  style={{
+                    width: puzzleSize - 8,
+                    height: puzzleSize - 8,
+                    position: 'absolute',
+                    left: -(col * pieceSize),
+                    top: -(row * pieceSize),
+                  }}
+                  resizeMode="cover"
                 />
-              </LinearGradient>
-              <View style={[styles.pieceOverlay, isSelected && styles.pieceOverlaySelected]}>
+                {/* تأثير عند التحديد */}
+                {isSelected && (
+                  <View style={styles.pieceSelectedOverlay} />
+                )}
+                {/* علامة صح للقطع الصحيحة */}
+                {isCorrect && !completed && (
+                  <View style={styles.pieceCorrectBadge}>
+                    <Ionicons name="checkmark" size={12} color="#fff" />
+                  </View>
+                )}
+              </View>
+              {/* رقم القطعة */}
+              <View style={[styles.pieceNumBadge, isSelected && styles.pieceNumBadgeSelected]}>
                 <Text style={styles.pieceNum}>{piece + 1}</Text>
               </View>
-              {isCorrect && !completed && (
-                <Ionicons name="checkmark" size={12} color="#fff" style={styles.correctBadge} />
-              )}
             </TouchableOpacity>
           );
         })}
@@ -1190,19 +1217,20 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, 
       badge: '',
       image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/3a0211bd8e37c202ba475214f6cd4a78086e29615fbe36f18fa7b822d0ec5faf.png'
     },
-    { 
-      id: 'millionaire', 
-      name: 'من سيربح المليون', 
-      icon: 'cash', 
-      colors: ['#fbbf24', '#f59e0b'], 
-      description: '15 سؤال للمليون!', 
-      maxPoints: 100, 
-      online: false, 
-      onlineCost: 0,
-      category: 'مميزة',
-      badge: 'جديد',
-      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png'
-    },
+    // لعبة من سيربح المليون - مخفية مؤقتاً
+    // { 
+    //   id: 'millionaire', 
+    //   name: 'من سيربح المليون', 
+    //   icon: 'cash', 
+    //   colors: ['#fbbf24', '#f59e0b'], 
+    //   description: '15 سؤال للمليون!', 
+    //   maxPoints: 100, 
+    //   online: false, 
+    //   onlineCost: 0,
+    //   category: 'مميزة',
+    //   badge: 'جديد',
+    //   image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png'
+    // },
   ];
 
   // Multiplayer event handlers
@@ -2180,6 +2208,47 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#fbbf24',
+  },
+  
+  // Puzzle Game Styles - صور حقيقية
+  previewOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 16,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  pieceSelectedOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(59, 130, 246, 0.3)',
+    borderWidth: 3,
+    borderColor: '#3b82f6',
+  },
+  pieceCorrectBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#22c55e',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pieceNumBadge: {
+    position: 'absolute',
+    bottom: 4,
+    left: 4,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pieceNumBadgeSelected: {
+    backgroundColor: '#3b82f6',
   },
 });
 

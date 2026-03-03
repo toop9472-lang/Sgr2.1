@@ -1,4 +1,4 @@
-// Settings Screen - Theme and Language settings
+// Settings Screen - Theme, Language settings and Logout
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -11,8 +11,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import storage from '../services/storage';
 
-const SettingsScreen = ({ onBack }) => {
+const SettingsScreen = ({ onBack, onLogout }) => {
   const [theme, setTheme] = useState('dark');
   const [language, setLanguage] = useState('ar');
   const [showThemeModal, setShowThemeModal] = useState(false);
@@ -73,6 +74,34 @@ const SettingsScreen = ({ onBack }) => {
   const getThemeName = () => themes.find(t => t.id === theme)?.name || 'داكن';
   const getLanguageName = () => languages.find(l => l.code === language)?.name || 'العربية';
 
+  // Handle logout
+  const handleLogout = () => {
+    Alert.alert(
+      'تسجيل الخروج',
+      'هل أنت متأكد من تسجيل الخروج؟',
+      [
+        { text: 'إلغاء', style: 'cancel' },
+        { 
+          text: 'تسجيل الخروج', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await storage.clearAll();
+              await AsyncStorage.removeItem('saqr_user');
+              await AsyncStorage.removeItem('saqr_token');
+              if (onLogout) {
+                onLogout();
+              }
+            } catch (error) {
+              console.log('Logout error:', error);
+              Alert.alert('خطأ', 'حدث خطأ أثناء تسجيل الخروج');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const settingsItems = [
     {
       id: 'language',
@@ -105,6 +134,14 @@ const SettingsScreen = ({ onBack }) => {
       value: 'مفعّلة',
       action: () => Alert.alert('الإشعارات', 'الإشعارات مفعّلة حالياً'),
       color: '#fbbf24',
+    },
+    {
+      id: 'logout',
+      icon: 'log-out-outline',
+      label: 'تسجيل الخروج',
+      value: '',
+      action: handleLogout,
+      color: '#ef4444',
     },
   ];
 
