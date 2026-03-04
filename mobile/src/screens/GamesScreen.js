@@ -1040,7 +1040,7 @@ const RiddlesGame = ({ mode, onComplete, onClose }) => {
 };
 
 // ==================== MAIN GAMES SCREEN ====================
-const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, onClose }) => {
+const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievements, balanceRefresh, language, onClose }) => {
   const [activeGame, setActiveGame] = useState(null);
   const [gameMode, setGameMode] = useState(null);
   const [showModeSelector, setShowModeSelector] = useState(null);
@@ -1295,15 +1295,20 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, 
   }, [balanceRefresh]);
 
   const fetchBalance = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      if (__DEV__) console.log('GamesScreen: No user ID for balance');
+      return;
+    }
     try {
       const response = await api.getBalance(user.id);
       if (response.ok) {
         const data = await response.json();
-        setBalance(data);
+        setBalance(prevBalance => ({ ...prevBalance, ...data }));
+      } else {
+        if (__DEV__) console.log('GamesScreen: Balance API error:', response.status);
       }
     } catch (e) {
-      console.log('Balance error:', e);
+      if (__DEV__) console.log('GamesScreen: Balance error:', e.message);
     }
   };
 
@@ -1348,7 +1353,7 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, balanceRefresh, 
         }
       }
     } catch (e) {
-      console.log(e);
+      if (__DEV__) console.log('Leaderboard error:', e.message);
     } finally {
       setLoading(false);
     }

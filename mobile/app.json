@@ -145,8 +145,7 @@
             ]
           }
         ]
-      },
-      "deploymentTarget": "15.0"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -179,10 +178,7 @@
       ],
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO"
-      ],
-      "targetSdkVersion": 35,
-      "compileSdkVersion": 35,
-      "minSdkVersion": 24
+      ]
     },
     "web": {
       "favicon": "./assets/logo_saqr.png"
