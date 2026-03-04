@@ -18,7 +18,6 @@ import {
 import { Video } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../services/api';
 import storage from '../services/storage';
 import admobService from '../services/admobService';
