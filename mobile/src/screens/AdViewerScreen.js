@@ -18,6 +18,7 @@ import {
 import { Video } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../services/api';
 import storage from '../services/storage';
 import admobService from '../services/admobService';
@@ -882,11 +883,12 @@ const styles = StyleSheet.create({
   // Navigation
   navContainer: {
     position: 'absolute',
-    bottom: 40,
+    bottom: 60, // زيادة المسافة من الأسفل للأجهزة الحديثة
     left: 0,
     right: 0,
     alignItems: 'center',
     zIndex: 20,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 0, // مسافة إضافية لـ iOS
   },
   navBtn: {
     alignItems: 'center',

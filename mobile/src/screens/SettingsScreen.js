@@ -37,6 +37,7 @@ const SettingsScreen = ({ onBack, onLogout }) => {
   const saveTheme = async (newTheme) => {
     try {
       await AsyncStorage.setItem('saqr_theme', newTheme);
+      await AsyncStorage.setItem('app_theme', newTheme); // For ThemeContext if exists
       setTheme(newTheme);
       setShowThemeModal(false);
       Alert.alert('تم الحفظ', 'تم تغيير المظهر بنجاح');
@@ -47,7 +48,9 @@ const SettingsScreen = ({ onBack, onLogout }) => {
 
   const saveLanguage = async (newLanguage) => {
     try {
+      // Save in both keys for compatibility
       await AsyncStorage.setItem('saqr_language', newLanguage);
+      await AsyncStorage.setItem('app_language', newLanguage); // For LanguageContext
       setLanguage(newLanguage);
       setShowLanguageModal(false);
       Alert.alert('تم الحفظ', 'تم تغيير اللغة بنجاح. أعد تشغيل التطبيق لتفعيل التغييرات.');

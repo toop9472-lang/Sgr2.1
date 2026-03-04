@@ -142,9 +142,17 @@ export const signInWithApple = async () => {
       throw new Error(error.detail || 'فشل تسجيل الدخول');
     }
   } catch (error) {
+    // Handle different error types
     if (error.code === 'ERR_CANCELED' || error.code === 'ERR_REQUEST_CANCELED') {
       return { success: false, cancelled: true };
     }
+    
+    // ERR_REQUEST_UNKNOWN usually means Apple Sign In is not properly configured
+    if (error.code === 'ERR_REQUEST_UNKNOWN') {
+      console.error('Apple SignIn Config Error:', error);
+      throw new Error('تسجيل الدخول بأبل غير متاح حالياً. جاري العمل على إصلاحه.');
+    }
+    
     console.error('Apple SignIn Error:', error);
     throw new Error('فشل تسجيل الدخول بأبل: ' + (error.message || 'خطأ غير معروف'));
   }

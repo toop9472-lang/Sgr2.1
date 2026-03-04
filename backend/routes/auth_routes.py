@@ -139,6 +139,12 @@ async def signin(credentials: EmailLogin, request: Request):
             else:
                 joined_date = str(created_at) if created_at else datetime.utcnow().isoformat()
             
+            # Get economy data from user document directly
+            # Default values for new users: 300 diamonds, 0 gems
+            diamonds = user.get('diamonds', 300)  # 300 initial diamonds for new users
+            saqr_gems = user.get('saqr_gems', 0)
+            saqr_points = user.get('saqr_points', user.get('points', 0))
+            
             return {
                 'token': access_token,
                 'refresh_token': refresh_token,
@@ -148,7 +154,9 @@ async def signin(credentials: EmailLogin, request: Request):
                     'email': user['email'],
                     'name': user['name'],
                     'avatar': user.get('avatar'),
-                    'points': user.get('points', 0),
+                    'points': saqr_points,
+                    'diamonds': diamonds,
+                    'saqr_gems': saqr_gems,
                     'total_earned': user.get('total_earned', 0),
                     'joined_date': joined_date
                 }

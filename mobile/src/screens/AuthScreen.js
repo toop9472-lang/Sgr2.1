@@ -399,29 +399,18 @@ const AuthScreen = ({ onLogin }) => {
       let response;
       let data;
 
-      console.log('=== Starting Auth ===');
-      console.log('Mode:', mode);
-      console.log('Email:', email);
+      if (__DEV__) console.log('Auth started:', mode);
 
       if (mode === 'email_register') {
-        console.log('Registering...');
         response = await api.register(email, password, name);
-        console.log('Register response status:', response.status);
-        
         data = await response.json();
-        console.log('Register data:', JSON.stringify(data));
         
         if (response.ok && (data.token || data.success)) {
-          // If registration returns token directly
           if (data.token) {
-            console.log('Saving token from registration...');
             await storage.setToken(data.token);
             await storage.setUserData(data.user);
-            console.log('Calling onLogin...');
             onLogin(data.user);
           } else {
-            // Otherwise login after registration
-            console.log('Logging in after registration...');
             const loginResponse = await api.login(email, password);
             const loginData = await loginResponse.json();
             if (loginResponse.ok) {
@@ -431,41 +420,28 @@ const AuthScreen = ({ onLogin }) => {
             }
           }
         } else {
-          console.log('Registration failed:', data);
+          if (__DEV__) console.log('Registration failed:', data);
           Alert.alert('خطأ', data.detail || data.message || 'فشل إنشاء الحساب');
         }
       } else {
-        console.log('Logging in...');
         response = await api.login(email, password);
-        console.log('Login response status:', response.status);
-        console.log('Login response ok:', response.ok);
-        
         data = await response.json();
-        console.log('Login data received:', data ? 'yes' : 'no');
-        console.log('Has token:', data?.token ? 'yes' : 'no');
-        console.log('Has user:', data?.user ? 'yes' : 'no');
+        
+        if (__DEV__) console.log('Login response:', response.ok, data?.token ? 'has token' : 'no token');
         
         if (response.ok && data.token) {
-          console.log('Login successful, saving data...');
           await storage.setToken(data.token);
-          console.log('Token saved');
           await storage.setUserData(data.user);
-          console.log('User data saved, calling onLogin...');
           onLogin(data.user);
-          console.log('onLogin called');
         } else {
-          console.log('Login failed:', data);
+          if (__DEV__) console.log('Login failed:', data);
           Alert.alert('خطأ', data.detail || data.message || 'البريد الإلكتروني أو كلمة المرور غير صحيحة');
         }
       }
     } catch (error) {
-      console.log('=== Auth Error ===');
-      console.log('Error name:', error.name);
-      console.log('Error message:', error.message);
-      console.log('Error stack:', error.stack);
+      if (__DEV__) console.log('Auth Error:', error.message);
       handleConnectionError(error);
     } finally {
-      console.log('=== Auth Complete ===');
       setIsLoading(false);
     }
   };

@@ -383,13 +383,33 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
 
   const loadBalance = async () => {
     try {
-      const response = await api.getBalance(user?.id);
+      // First, try to get diamonds from user object directly
+      if (user?.diamonds !== undefined) {
+        setDiamonds(user.diamonds);
+        console.log('Balance from user object:', user.diamonds);
+      }
+      
+      // Then try to fetch from API for most up-to-date balance
+      const userId = user?.id || user?.user_id;
+      if (!userId) {
+        console.log('No user ID available for balance check');
+        return;
+      }
+      
+      const response = await api.getBalance(userId);
       if (response.ok) {
         const data = await response.json();
         setDiamonds(data.diamonds || 0);
+        console.log('Balance from API:', data.diamonds);
+      } else {
+        console.log('Balance API failed, using user object value');
       }
     } catch (e) {
       console.log('Error loading balance:', e);
+      // Fallback to user object if API fails
+      if (user?.diamonds !== undefined) {
+        setDiamonds(user.diamonds);
+      }
     }
   };
 

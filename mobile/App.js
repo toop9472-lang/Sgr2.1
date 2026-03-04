@@ -495,7 +495,6 @@ function AppContent() {
             onPointsEarned={handlePointsEarned}
             onOpenDiamondShop={() => setShowDiamondShop(true)}
             onOpenAchievements={() => setShowAchievements(true)}
-            onGameComplete={handleGameComplete}
             balanceRefresh={balanceRefresh}
             language={language}
             onClose={() => setCurrentPage('home')}
@@ -714,7 +713,12 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.log('App Error:', error, errorInfo);
+    console.log('Error details:', error?.message, error?.stack);
   }
+
+  handleRetry = () => {
+    this.setState({ hasError: false, error: null });
+  };
 
   render() {
     if (this.state.hasError) {
@@ -723,8 +727,14 @@ class ErrorBoundary extends React.Component {
           <LinearGradient colors={['#0a0a0f', '#1a1a2e']} style={errorStyles.gradient}>
             <Text style={errorStyles.icon}>⚠️</Text>
             <Text style={errorStyles.title}>حدث خطأ غير متوقع</Text>
-            <Text style={errorStyles.message}>نعتذر عن هذا الخطأ. يرجى إعادة تشغيل التطبيق.</Text>
+            <Text style={errorStyles.message}>نعتذر عن هذا الخطأ. يرجى المحاولة مرة أخرى.</Text>
+            <TouchableOpacity style={errorStyles.retryBtn} onPress={this.handleRetry}>
+              <Text style={errorStyles.retryText}>إعادة المحاولة</Text>
+            </TouchableOpacity>
             <Text style={errorStyles.support}>للدعم: sky-321@hotmail.com</Text>
+            {__DEV__ && this.state.error && (
+              <Text style={errorStyles.errorDetails}>{this.state.error.toString()}</Text>
+            )}
           </LinearGradient>
         </View>
       );
@@ -740,7 +750,10 @@ const errorStyles = StyleSheet.create({
   icon: { fontSize: 60, marginBottom: 20 },
   title: { fontSize: 22, fontWeight: 'bold', color: '#FFF', marginBottom: 10, textAlign: 'center' },
   message: { fontSize: 16, color: 'rgba(255,255,255,0.7)', textAlign: 'center', marginBottom: 20 },
+  retryBtn: { backgroundColor: '#3b82f6', paddingHorizontal: 30, paddingVertical: 12, borderRadius: 10, marginBottom: 20 },
+  retryText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
   support: { fontSize: 14, color: '#60a5fa', textAlign: 'center' },
+  errorDetails: { fontSize: 10, color: '#ef4444', marginTop: 20, textAlign: 'center' },
 });
 
 // Export with Error Boundary

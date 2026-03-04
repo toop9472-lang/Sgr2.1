@@ -28,7 +28,7 @@ const SHOP_CATEGORIES = [
   { id: 'vip', name: 'VIP', icon: 'diamond' },
 ];
 
-// Shop Items Database
+// Shop Items Database - with AI-generated images
 const SHOP_ITEMS = [
   // Avatars - الصور الرمزية
   {
@@ -41,6 +41,7 @@ const SHOP_ITEMS = [
     colors: ['#fbbf24', '#d97706'],
     type: 'avatar',
     rarity: 'rare',
+    image: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/49657672d9a64589c56e4aaf8d04fd1ed449ed3eb20bdd620a2dd446c56d8f93.png',
   },
   {
     id: 'avatar_diamond',
@@ -52,6 +53,7 @@ const SHOP_ITEMS = [
     colors: ['#3b82f6', '#1d4ed8'],
     type: 'avatar',
     rarity: 'epic',
+    image: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/023917c49fab8b87593072b51baa9584ecaec8bddecc94d124c69166ba378dad.png',
   },
   {
     id: 'avatar_fire',
@@ -63,6 +65,7 @@ const SHOP_ITEMS = [
     colors: ['#ef4444', '#dc2626'],
     type: 'avatar',
     rarity: 'rare',
+    image: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/4dc85c2c6db823cb599e231591fae681ea6a3f675e8193fc0460d56837dc4c47.png',
   },
   {
     id: 'avatar_crown',
@@ -74,6 +77,7 @@ const SHOP_ITEMS = [
     colors: ['#a855f7', '#7c3aed'],
     type: 'avatar',
     rarity: 'legendary',
+    image: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/33a946656c353bd7e90889bb7c01499898ff0a23da35e2e6bcd661d595319a4b.png',
   },
   {
     id: 'avatar_star',
@@ -85,6 +89,7 @@ const SHOP_ITEMS = [
     colors: ['#fbbf24', '#f59e0b'],
     type: 'avatar',
     rarity: 'common',
+    image: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/86abd9d66ea83500fffe680b9db5618403214798c4150d5508f861cbeece635e.png',
   },
   
   // Frames - الإطارات
@@ -98,6 +103,7 @@ const SHOP_ITEMS = [
     colors: ['#fbbf24', '#b45309'],
     type: 'frame',
     rarity: 'rare',
+    image: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/81b25ff7dff1c22531ebee6eb6d1b1c78ed8dbcf4fd47ded3f3e8b36b7e331c5.png',
   },
   {
     id: 'frame_neon',
@@ -109,6 +115,7 @@ const SHOP_ITEMS = [
     colors: ['#ec4899', '#8b5cf6'],
     type: 'frame',
     rarity: 'epic',
+    image: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/b5329ed8b521321c18a1a23f7dfacb283e436fa40a3601f5f0a053e9f07f461b.png',
   },
   {
     id: 'frame_royal',
@@ -119,7 +126,8 @@ const SHOP_ITEMS = [
     icon: 'ribbon',
     colors: ['#7c3aed', '#4c1d95'],
     type: 'frame',
-    rarity: 'legendary',
+    rarity: 'epic',
+    image: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/3db2e3f1eb9a0f47dec7b567bf019a25c2c537936ae0045036c460a5f41d9901.png',
   },
   {
     id: 'frame_ice',
@@ -306,7 +314,7 @@ const RARITY_COLORS = {
   legendary: { bg: '#fbbf24', text: 'أسطوري' },
 };
 
-// Shop Item Card
+// Shop Item Card - with AI Images
 const ShopItemCard = ({ item, owned, onPurchase, userDiamonds }) => {
   const canAfford = userDiamonds >= item.price;
   const rarity = RARITY_COLORS[item.rarity];
@@ -318,17 +326,32 @@ const ShopItemCard = ({ item, owned, onPurchase, userDiamonds }) => {
       activeOpacity={owned ? 1 : 0.8}
       disabled={owned}
     >
-      <LinearGradient
-        colors={owned ? ['#1e293b', '#334155'] : item.colors}
-        style={styles.itemIconContainer}
-      >
-        <Ionicons name={item.icon} size={32} color={owned ? '#666' : '#FFF'} />
-        {owned && (
-          <View style={styles.ownedBadge}>
-            <Ionicons name="checkmark" size={14} color="#FFF" />
-          </View>
-        )}
-      </LinearGradient>
+      {item.image ? (
+        <View style={styles.itemImageContainer}>
+          <Image 
+            source={{ uri: item.image }} 
+            style={styles.itemImage}
+            resizeMode="cover"
+          />
+          {owned && (
+            <View style={styles.ownedImageBadge}>
+              <Ionicons name="checkmark" size={14} color="#FFF" />
+            </View>
+          )}
+        </View>
+      ) : (
+        <LinearGradient
+          colors={owned ? ['#1e293b', '#334155'] : item.colors}
+          style={styles.itemIconContainer}
+        >
+          <Ionicons name={item.icon} size={32} color={owned ? '#666' : '#FFF'} />
+          {owned && (
+            <View style={styles.ownedBadge}>
+              <Ionicons name="checkmark" size={14} color="#FFF" />
+            </View>
+          )}
+        </LinearGradient>
+      )}
       
       <View style={styles.itemInfo}>
         <Text style={[styles.itemName, owned && styles.itemNameOwned]}>{item.name}</Text>
@@ -864,6 +887,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
+  },
+  itemImageContainer: {
+    width: '100%',
+    height: 80,
+    borderRadius: 12,
+    marginBottom: 10,
+    overflow: 'hidden',
+  },
+  itemImage: {
+    width: '100%',
+    height: '100%',
+  },
+  ownedImageBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#10b981',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   ownedBadge: {
     position: 'absolute',
