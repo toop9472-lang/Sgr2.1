@@ -15,11 +15,6 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
-import storage from '../services/storage';
-import colors from '../styles/colors';
-
-// Use the API URL directly
-const API_URL = 'https://saqr-live.emergent.host';
 
 // الباقات الساعية الجديدة (تطابق الويب)
 const HOURLY_PACKAGES = [
@@ -50,6 +45,15 @@ const AdvertiserScreen = () => {
     description: '',
     video_url: '',
   });
+
+  const parseErrorMessage = async (response, fallback) => {
+    try {
+      const data = await response.json();
+      return data?.detail || data?.message || fallback;
+    } catch (_) {
+      return fallback;
+    }
+  };
 
   // Validate video URL and duration
   const validateVideoUrl = (url) => {
@@ -112,20 +116,16 @@ const AdvertiserScreen = () => {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${API_URL}/api/advertiser/ads`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          advertiser_name: formData.name,
-          advertiser_email: formData.email,
-          advertiser_phone: formData.phone,
-          website_url: formData.website,
-          title: formData.title,
-          description: formData.description,
-          video_url: formData.video_url,
-          duration_hours: selectedPackage.duration_hours,
-          ad_type: adType,
-        }),
+      const response = await api.createAdvertiserAd({
+        advertiser_name: formData.name,
+        advertiser_email: formData.email,
+        advertiser_phone: formData.phone,
+        website_url: formData.website,
+        title: formData.title,
+        description: formData.description,
+        video_url: formData.video_url,
+        duration_hours: selectedPackage.duration_hours,
+        ad_type: adType,
       });
 
       if (response.ok) {
@@ -133,7 +133,8 @@ const AdvertiserScreen = () => {
         setCreatedAd(data);
         setStep(3); // Go to payment step
       } else {
-        Alert.alert('خطأ', 'فشل إنشاء الإعلان');
+        const errorMessage = await parseErrorMessage(response, 'فشل إنشاء الإعلان');
+        Alert.alert('خطأ', errorMessage);
       }
     } catch (error) {
       Alert.alert('خطأ', 'حدث خطأ في الاتصال');
@@ -151,16 +152,12 @@ const AdvertiserScreen = () => {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${API_URL}/api/payments/checkout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          package_id: selectedPackage.id,
-          ad_id: createdAd.ad.id,
-          origin_url: API_URL,
-          advertiser_email: formData.email,
-        }),
-      });
+      const response = await api.createAdvertiserCheckout(
+        selectedPackage.id,
+        createdAd.ad.id,
+        api.baseUrl,
+        formData.email
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -168,7 +165,8 @@ const AdvertiserScreen = () => {
         await Linking.openURL(data.checkout_url);
         setStep(4); // Go to success
       } else {
-        Alert.alert('خطأ', 'فشل إنشاء جلسة الدفع');
+        const errorMessage = await parseErrorMessage(response, 'فشل إنشاء جلسة الدفع');
+        Alert.alert('خطأ', errorMessage);
       }
     } catch (error) {
       Alert.alert('خطأ', 'حدث خطأ في الدفع');

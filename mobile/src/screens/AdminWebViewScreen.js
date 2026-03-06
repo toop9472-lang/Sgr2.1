@@ -13,8 +13,9 @@ import {
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import api from '../services/api';
 
-const ADMIN_URL = 'https://quality-restore-1.preview.emergentagent.com/admin/login';
+const ADMIN_URL = `${api.baseUrl}/admin/login`;
 
 const AdminWebViewScreen = ({ onClose }) => {
   const [loading, setLoading] = useState(true);

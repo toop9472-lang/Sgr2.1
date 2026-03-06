@@ -133,9 +133,9 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
         
         // Save points to server
         try {
-          const token = await storage.getItem('userToken');
+          const token = await storage.getToken();
           if (token) {
-            await api.recordAdWatch('admob_rewarded', points);
+            await api.recordAdView('admob_rewarded', 60, token, points);
           }
         } catch (e) {
           console.log('Error saving points:', e);

@@ -14,6 +14,7 @@ import {
   Share,
   ActivityIndicator,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import storage from '../services/storage';
@@ -155,11 +156,11 @@ const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenS
   };
 
   const handlePrivacy = () => {
-    Linking.openURL('https://quality-restore-1.preview.emergentagent.com/privacy');
+    Linking.openURL(`${api.baseUrl}/privacy`);
   };
 
   const handleTerms = () => {
-    Linking.openURL('https://quality-restore-1.preview.emergentagent.com/terms');
+    Linking.openURL(`${api.baseUrl}/terms`);
   };
 
   const handleSettings = () => {
@@ -195,7 +196,7 @@ const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenS
       const data = await response.json();
       
       if (response.ok && data.token) {
-        await storage.setItem('admin_token', data.token);
+        await AsyncStorage.setItem('admin_token', data.token);
         setShowAdminLogin(false);
         setAdminEmail('');
         setAdminPassword('');

@@ -2,7 +2,10 @@
 // Production Server - Emergent Host
 import NetInfo from '@react-native-community/netinfo';
 
-const API_URL = 'https://quality-restore-1.preview.emergentagent.com';
+const API_URL =
+  process.env.EXPO_PUBLIC_API_URL ||
+  process.env.API_URL ||
+  'https://quality-restore-1.preview.emergentagent.com';
 
 // Connection check timeout - increased for better reliability
 const CONNECTION_TIMEOUT = 20000; // 20 seconds
@@ -265,18 +268,33 @@ export const api = {
   },
 
   // AI Chat
-  async sendChatMessage(message, token = null) {
+  async sendChatMessage(message, token = null, systemMessage = null) {
     const endpoint = token || accessToken ? '/api/claude-ai/chat' : '/api/claude-ai/chat/guest';
     const headers = {};
     if (token) headers.Authorization = `Bearer ${token}`;
-    return this.fetch(endpoint, {
+
+    const primaryResponse = await this.fetch(endpoint, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         messages: [{ role: 'user', content: message }],
-        system_message: 'أنت مساعد ذكي في تطبيق صقر. ساعد المستخدم باللغة العربية.'
+        system_message: systemMessage || 'أنت مساعد ذكي في تطبيق صقر. ساعد المستخدم باللغة العربية.',
       }),
     });
+
+    // توافق خلفي مع المسار القديم في بعض بيئات الخادم
+    if ([404, 405].includes(primaryResponse.status)) {
+      return this.fetch('/api/claude/chat', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          message,
+          system_message: systemMessage || 'أنت مساعد ذكي في تطبيق صقر. ساعد المستخدم باللغة العربية.',
+        }),
+      });
+    }
+
+    return primaryResponse;
   },
 
   // Record ad view
@@ -308,6 +326,66 @@ export const api = {
   async getPackages() {
     return this.fetch('/api/payments/packages');
   },
+
+  // Support tickets
+  async getSupportTickets(token) {
+    return this.fetch('/api/support/tickets', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  },
+
+  async createSupportTicket(payload, token) {
+    return this.fetch('/api/support/tickets', {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async getSupportTicket(ticketId, token) {
+    return this.fetch(`/api/support/tickets/${ticketId}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  },
+
+  async replySupportTicket(ticketId, message, token) {
+    return this.fetch(`/api/support/tickets/${ticketId}/reply`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: JSON.stringify({ message }),
+    });
+  },
+
+  async closeSupportTicket(ticketId, token) {
+    return this.fetch(`/api/support/tickets/${ticketId}/close`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  },
+
+  // Advertiser
+  async getAdvertiserAnalytics(advertiserEmail) {
+    return this.fetch(`/api/analytics/advertiser/${encodeURIComponent(advertiserEmail)}`);
+  },
+
+  async createAdvertiserAd(payload) {
+    return this.fetch('/api/advertiser/ads', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async createAdvertiserCheckout(packageId, adId, originUrl, advertiserEmail) {
+    return this.fetch('/api/payments/checkout', {
+      method: 'POST',
+      body: JSON.stringify({
+        package_id: packageId,
+        ad_id: adId,
+        origin_url: originUrl,
+        advertiser_email: advertiserEmail,
+      }),
+    });
+  },
   
   // Check password strength
   async checkPasswordStrength(password) {
@@ -332,15 +410,6 @@ export const api = {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(data),
-    });
-  },
-
-  // Send chat message to AI
-  async sendChatMessage(message, token) {
-    return this.fetch('/api/claude/chat', {
-      method: 'POST',
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      body: JSON.stringify({ message }),
     });
   },
 

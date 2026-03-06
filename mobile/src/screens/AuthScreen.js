@@ -691,11 +691,11 @@ const AuthScreen = ({ onLogin }) => {
             {/* Terms */}
             <Text style={styles.terms}>
               بالتسجيل، أنت توافق على{' '}
-              <Text style={styles.termsLink} onPress={() => Linking.openURL('https://saqr-live.emergent.host/terms')}>
+              <Text style={styles.termsLink} onPress={() => Linking.openURL(`${api.baseUrl}/terms`)}>
                 الشروط والأحكام
               </Text>
               {' '}و{' '}
-              <Text style={styles.termsLink} onPress={() => Linking.openURL('https://saqr-live.emergent.host/privacy')}>
+              <Text style={styles.termsLink} onPress={() => Linking.openURL(`${api.baseUrl}/privacy`)}>
                 سياسة الخصوصية
               </Text>
             </Text>

@@ -12,8 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-const API_URL = 'https://quality-restore-1.preview.emergentagent.com';
+import api from '../services/api';
 
 const AdvertiserDashboardScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -30,9 +29,7 @@ const AdvertiserDashboardScreen = ({ navigation }) => {
     setError(null);
     
     try {
-      const response = await fetch(
-        `${API_URL}/api/analytics/advertiser/${encodeURIComponent(advertiserEmail)}`
-      );
+      const response = await api.getAdvertiserAnalytics(advertiserEmail);
       
       if (response.ok) {
         const result = await response.json();
@@ -40,9 +37,11 @@ const AdvertiserDashboardScreen = ({ navigation }) => {
         setIsLoggedIn(true);
       } else {
         setError('لم يتم العثور على إعلانات لهذا البريد');
+        setData(null);
       }
     } catch (err) {
       setError('حدث خطأ في الاتصال');
+      setData(null);
     } finally {
       setIsLoading(false);
       setRefreshing(false);

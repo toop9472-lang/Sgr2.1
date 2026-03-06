@@ -15,8 +15,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import storage from '../services/storage';
-
-const API_URL = 'https://quality-restore-1.preview.emergentagent.com';
+import api from '../services/api';
 
 // معلومات الدعم
 const SUPPORT_EMAIL = 'sky-321@hotmail.com';
@@ -50,7 +49,16 @@ const SupportScreen = ({ navigation }) => {
   }, []);
 
   const getAuthToken = async () => {
-    return await storage.get('token');
+    return storage.getToken();
+  };
+
+  const parseErrorMessage = async (response, fallback) => {
+    try {
+      const data = await response.json();
+      return data?.detail || data?.message || fallback;
+    } catch (_) {
+      return fallback;
+    }
   };
 
   const fetchTickets = async () => {
@@ -61,15 +69,13 @@ const SupportScreen = ({ navigation }) => {
         return;
       }
 
-      const response = await fetch(`${API_URL}/api/support/tickets`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await api.getSupportTickets(token);
 
       if (response.ok) {
         const data = await response.json();
-        setTickets(data);
+        setTickets(Array.isArray(data) ? data : []);
+      } else {
+        setTickets([]);
       }
     } catch (error) {
       console.error('Error fetching tickets:', error);
@@ -88,14 +94,12 @@ const SupportScreen = ({ navigation }) => {
     setIsSubmitting(true);
     try {
       const token = await getAuthToken();
-      const response = await fetch(`${API_URL}/api/support/tickets`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(newTicket),
-      });
+      if (!token) {
+        Alert.alert('تسجيل الدخول مطلوب', 'يرجى تسجيل الدخول أولاً');
+        return;
+      }
+
+      const response = await api.createSupportTicket(newTicket, token);
 
       if (response.ok) {
         const data = await response.json();
@@ -104,8 +108,8 @@ const SupportScreen = ({ navigation }) => {
         setNewTicket({ subject: '', message: '', category: 'general' });
         fetchTickets();
       } else {
-        const error = await response.json();
-        Alert.alert('خطأ', error.detail || 'فشل إنشاء التذكرة');
+        const errorMessage = await parseErrorMessage(response, 'فشل إنشاء التذكرة');
+        Alert.alert('خطأ', errorMessage);
       }
     } catch (error) {
       Alert.alert('خطأ', 'حدث خطأ في الاتصال');
@@ -123,14 +127,12 @@ const SupportScreen = ({ navigation }) => {
     setIsSubmitting(true);
     try {
       const token = await getAuthToken();
-      const response = await fetch(`${API_URL}/api/support/tickets/${ticketId}/reply`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ message: replyMessage }),
-      });
+      if (!token) {
+        Alert.alert('تسجيل الدخول مطلوب', 'يرجى تسجيل الدخول أولاً');
+        return;
+      }
+
+      const response = await api.replySupportTicket(ticketId, replyMessage, token);
 
       if (response.ok) {
         Alert.alert('تم بنجاح', 'تم إرسال ردك بنجاح');
@@ -142,8 +144,8 @@ const SupportScreen = ({ navigation }) => {
           fetchTicketDetail(ticketId);
         }
       } else {
-        const error = await response.json();
-        Alert.alert('خطأ', error.detail || 'فشل إرسال الرد');
+        const errorMessage = await parseErrorMessage(response, 'فشل إرسال الرد');
+        Alert.alert('خطأ', errorMessage);
       }
     } catch (error) {
       Alert.alert('خطأ', 'حدث خطأ في الاتصال');
@@ -155,11 +157,7 @@ const SupportScreen = ({ navigation }) => {
   const fetchTicketDetail = async (ticketId) => {
     try {
       const token = await getAuthToken();
-      const response = await fetch(`${API_URL}/api/support/tickets/${ticketId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await api.getSupportTicket(ticketId, token);
 
       if (response.ok) {
         const data = await response.json();
@@ -182,17 +180,15 @@ const SupportScreen = ({ navigation }) => {
           onPress: async () => {
             try {
               const token = await getAuthToken();
-              const response = await fetch(`${API_URL}/api/support/tickets/${ticketId}/close`, {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${token}`,
-                },
-              });
+              const response = await api.closeSupportTicket(ticketId, token);
 
               if (response.ok) {
                 Alert.alert('تم', 'تم إغلاق التذكرة');
                 setShowTicketDetail(null);
                 fetchTickets();
+              } else {
+                const errorMessage = await parseErrorMessage(response, 'فشل إغلاق التذكرة');
+                Alert.alert('خطأ', errorMessage);
               }
             } catch (error) {
               Alert.alert('خطأ', 'فشل إغلاق التذكرة');
