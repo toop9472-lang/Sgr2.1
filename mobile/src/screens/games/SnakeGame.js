@@ -57,6 +57,7 @@ const SnakeGame = ({ mode = 'medium', onComplete, onClose }) => {
   const [level, setLevel] = useState(1);
   const [combo, setCombo] = useState(0);
   const [showCombo, setShowCombo] = useState(false);
+  const [isNewRecord, setIsNewRecord] = useState(false);
   const [difficulty, setDifficulty] = useState(mode);
   
   const gameLoopRef = useRef(null);
@@ -114,6 +115,10 @@ const SnakeGame = ({ mode = 'medium', onComplete, onClose }) => {
     return () => pulse.stop();
   }, []);
 
+  useEffect(() => {
+    return () => clearTimeout(comboTimerRef.current);
+  }, []);
+
   // إنشاء طعام عشوائي
   const generateFood = useCallback((currentSnake) => {
     let newFood;
@@ -169,8 +174,12 @@ const SnakeGame = ({ mode = 'medium', onComplete, onClose }) => {
         if (head.y < 0) head.y = GRID_SIZE - 1;
         if (head.y >= GRID_SIZE) head.y = 0;
 
-        // الاصطدام بالجسم
-        if (currentSnake.some(seg => seg.x === head.x && seg.y === head.y)) {
+        const ateMainFood = head.x === food.x && head.y === food.y;
+        const ateBonusFood = bonusFood && head.x === bonusFood.x && head.y === bonusFood.y;
+
+        // السماح بالحركة إلى موقع الذيل إذا لم يكن هناك أكل في نفس الخطوة
+        const bodyToCheck = ateMainFood || ateBonusFood ? currentSnake : currentSnake.slice(0, -1);
+        if (bodyToCheck.some(seg => seg.x === head.x && seg.y === head.y)) {
           endGame(score);
           return currentSnake;
         }
@@ -178,7 +187,7 @@ const SnakeGame = ({ mode = 'medium', onComplete, onClose }) => {
         const newSnake = [head, ...currentSnake];
 
         // أكل الطعام
-        if (head.x === food.x && head.y === food.y) {
+        if (ateMainFood) {
           const points = food.type.points * (1 + combo * 0.1);
           setScore(s => {
             const newScore = s + Math.round(points);
@@ -212,7 +221,7 @@ const SnakeGame = ({ mode = 'medium', onComplete, onClose }) => {
         }
 
         // أكل الطعام الإضافي
-        if (bonusFood && head.x === bonusFood.x && head.y === bonusFood.y) {
+        if (ateBonusFood) {
           setScore(s => s + bonusFood.type.points);
           setBonusFood(null);
           return newSnake;
@@ -228,9 +237,12 @@ const SnakeGame = ({ mode = 'medium', onComplete, onClose }) => {
 
   const endGame = (finalScore) => {
     clearInterval(gameLoopRef.current);
+    clearTimeout(comboTimerRef.current);
     setGameOver(true);
-    
-    if (finalScore > highScore) {
+
+    const newRecord = finalScore > highScore;
+    setIsNewRecord(newRecord);
+    if (newRecord) {
       setHighScore(finalScore);
     }
     
@@ -254,6 +266,7 @@ const SnakeGame = ({ mode = 'medium', onComplete, onClose }) => {
   };
 
   const startGame = (diff) => {
+    clearTimeout(comboTimerRef.current);
     setDifficulty(diff);
     speedRef.current = SPEEDS[diff] || SPEEDS.medium;
     setGameStarted(true);
@@ -267,6 +280,8 @@ const SnakeGame = ({ mode = 'medium', onComplete, onClose }) => {
     setIsPaused(false);
     setLevel(1);
     setCombo(0);
+    setShowCombo(false);
+    setIsNewRecord(false);
   };
 
   const resetGame = () => {
@@ -433,7 +448,7 @@ const SnakeGame = ({ mode = 'medium', onComplete, onClose }) => {
               </Text>
               <Text style={styles.gameOverTitle}>انتهت اللعبة!</Text>
               <Text style={styles.finalScore}>{score} نقطة</Text>
-              {score > highScore - score && score > 0 && (
+              {isNewRecord && score > 0 && (
                 <Text style={styles.newRecord}>🎉 رقم قياسي جديد!</Text>
               )}
               <View style={styles.gameOverStats}>

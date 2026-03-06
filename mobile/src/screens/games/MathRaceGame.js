@@ -31,6 +31,7 @@ const MathRaceGame = ({ mode, onComplete, onClose }) => {
   const [options, setOptions] = useState([]);
   const [gameOver, setGameOver] = useState(false);
   const [isCorrect, setIsCorrect] = useState(null);
+  const [selectedOption, setSelectedOption] = useState(null);
   const [difficulty, setDifficulty] = useState(1);
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState(0);
@@ -113,6 +114,7 @@ const MathRaceGame = ({ mode, onComplete, onClose }) => {
       .sort(() => Math.random() - 0.5);
     setOptions(allOptions);
     setIsCorrect(null);
+    setSelectedOption(null);
   };
 
   const handleAnswer = (selected) => {
@@ -120,6 +122,7 @@ const MathRaceGame = ({ mode, onComplete, onClose }) => {
     
     const correct = selected === question.answer;
     setIsCorrect(correct);
+    setSelectedOption(selected);
     setQuestionsAnswered(q => q + 1);
 
     if (correct) {
@@ -269,7 +272,6 @@ const MathRaceGame = ({ mode, onComplete, onClose }) => {
           {options.map((option, index) => {
             const isSelected = isCorrect !== null;
             const isThisCorrect = option === question?.answer;
-            const wasSelected = isSelected && (isThisCorrect || (isCorrect === false && option === question?.answer));
             
             return (
               <TouchableOpacity
@@ -277,7 +279,7 @@ const MathRaceGame = ({ mode, onComplete, onClose }) => {
                 style={[
                   styles.optionBtn,
                   isSelected && isThisCorrect && styles.optionCorrect,
-                  isSelected && !isThisCorrect && styles.optionWrong,
+                  isSelected && selectedOption === option && !isThisCorrect && styles.optionWrong,
                 ]}
                 onPress={() => handleAnswer(option)}
                 disabled={isCorrect !== null}

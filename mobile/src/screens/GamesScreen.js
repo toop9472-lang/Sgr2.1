@@ -197,25 +197,31 @@ const TicTacToeGame = ({ mode, onComplete, onClose, isOnline, opponent, isMyTurn
 
   // استقبال حركات الخصم الأونلاين
   useEffect(() => {
-    if (isOnline) {
-      const unsubMove = require('../services/multiplayer').default.on('opponentMove', (data) => {
-        if (data.move && typeof data.move.position === 'number') {
-          const newBoard = [...board];
-          newBoard[data.move.position] = 'O';
-          setBoard(newBoard);
-          
-          const result = checkWinner(newBoard);
-          if (result) {
-            handleGameEnd(result, newBoard);
-          } else {
-            setIsPlayerTurn(true);
-          }
+    if (!isOnline) return;
+    const unsubMove = require('../services/multiplayer').default.on('opponentMove', (data) => {
+      if (!data.move || typeof data.move.position !== 'number') return;
+      const movePos = data.move.position;
+
+      setBoard(prevBoard => {
+        // تجاهل الحركة غير الصالحة أو المكررة
+        if (movePos < 0 || movePos > 8 || prevBoard[movePos] || gameOver) {
+          return prevBoard;
         }
+        const nextBoard = [...prevBoard];
+        nextBoard[movePos] = 'O';
+
+        const result = checkWinner(nextBoard);
+        if (result) {
+          handleGameEnd(result, nextBoard);
+        } else {
+          setIsPlayerTurn(true);
+        }
+        return nextBoard;
       });
-      
-      return () => unsubMove();
-    }
-  }, [board, isOnline]);
+    });
+
+    return () => unsubMove();
+  }, [isOnline, gameOver]);
 
   const winPatterns = [
     [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -345,7 +351,7 @@ const TicTacToeGame = ({ mode, onComplete, onClose, isOnline, opponent, isMyTurn
 
   const resetGame = () => {
     setBoard(Array(9).fill(null));
-    setIsPlayerTurn(true);
+    setIsPlayerTurn(isOnline ? initialTurn : true);
     setGameOver(false);
     setWinner(null);
   };
@@ -422,12 +428,12 @@ const TicTacToeGame = ({ mode, onComplete, onClose, isOnline, opponent, isMyTurn
       {gameOver && (
         <View style={styles.resultCard}>
           <Ionicons 
-            name={winner === 'X' ? 'trophy' : winner === 'draw' ? 'remove' : 'sad'} 
+            name={winner === 'player' ? 'trophy' : winner === 'draw' ? 'remove' : 'sad'} 
             size={50} 
-            color={winner === 'X' ? '#fbbf24' : winner === 'draw' ? '#888' : '#ef4444'} 
+            color={winner === 'player' ? '#fbbf24' : winner === 'draw' ? '#888' : '#ef4444'} 
           />
           <Text style={styles.resultText}>
-            {winner === 'X' ? 'فوز!' : winner === 'draw' ? 'تعادل' : 'خسارة'}
+            {winner === 'player' ? 'فوز!' : winner === 'draw' ? 'تعادل' : 'خسارة'}
           </Text>
           <TouchableOpacity style={styles.playAgainBtn} onPress={resetGame}>
             <Ionicons name="refresh" size={18} color="#FFF" />
@@ -1081,7 +1087,7 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
       colors: ['#7c3aed', '#4c1d95'], 
       description: 'لعبة الملوك والاستراتيجية', 
       maxPoints: 25, 
-      online: true, 
+      online: false, 
       onlineCost: 30,
       category: 'استراتيجية',
       badge: 'مميز',
@@ -1133,7 +1139,7 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
       colors: ['#10b981', '#047857'], 
       description: 'اختبر معلوماتك العامة', 
       maxPoints: 25, 
-      online: true, 
+      online: false, 
       onlineCost: 20,
       category: 'ثقافية',
       badge: '250+ سؤال',
@@ -1146,7 +1152,7 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
       colors: ['#3b82f6', '#1e40af'], 
       description: 'رتب القطع لتكمل الصورة', 
       maxPoints: 20, 
-      online: true, 
+      online: false, 
       onlineCost: 25,
       category: 'ذهنية',
       badge: '',
@@ -1185,7 +1191,7 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
       colors: ['#8b5cf6', '#6d28d9'], 
       description: 'حل المعادلات بسرعة', 
       maxPoints: 22, 
-      online: true, 
+      online: false, 
       onlineCost: 20,
       category: 'رياضيات',
       badge: 'تحدي',
@@ -1198,7 +1204,7 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
       colors: ['#06b6d4', '#0891b2'], 
       description: 'اكتشف الكلمات المخفية', 
       maxPoints: 22, 
-      online: true, 
+      online: false, 
       onlineCost: 25,
       category: 'لغوية',
       badge: '',

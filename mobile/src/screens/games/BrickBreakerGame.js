@@ -81,52 +81,63 @@ const BrickBreakerGame = ({ difficulty = 'medium', onComplete, onClose }) => {
   const comboTimeoutRef = useRef(null);
 
   const levelConfig = LEVELS[currentLevel] || LEVELS[0];
-  const BRICK_WIDTH = (GAME_WIDTH - 20) / levelConfig.cols;
   const BRICK_HEIGHT = 20;
 
+  useEffect(() => {
+    return () => clearTimeout(comboTimeoutRef.current);
+  }, []);
+
   // Initialize bricks for current level
-  const initBricks = useCallback(() => {
+  const initBricks = useCallback((targetLevel = currentLevel) => {
+    const config = LEVELS[targetLevel] || LEVELS[0];
+    const brickWidth = (GAME_WIDTH - 20) / config.cols;
     const newBricks = [];
-    for (let row = 0; row < levelConfig.rows; row++) {
-      for (let col = 0; col < levelConfig.cols; col++) {
+    for (let row = 0; row < config.rows; row++) {
+      for (let col = 0; col < config.cols; col++) {
         const hasPowerup = Math.random() < 0.1;
         newBricks.push({
           id: `${row}-${col}`,
-          x: 10 + col * BRICK_WIDTH,
+          x: 10 + col * brickWidth,
           y: 50 + row * (BRICK_HEIGHT + 3),
-          width: BRICK_WIDTH - 2,
+          width: brickWidth - 2,
           height: BRICK_HEIGHT,
-          colors: BRICK_COLORS[(row + currentLevel) % BRICK_COLORS.length],
-          points: (levelConfig.rows - row) * 10 * (currentLevel + 1),
+          colors: BRICK_COLORS[(row + targetLevel) % BRICK_COLORS.length],
+          points: (config.rows - row) * 10 * (targetLevel + 1),
           active: true,
           powerup: hasPowerup ? POWERUPS[Math.floor(Math.random() * POWERUPS.length)] : null,
-          hits: row === 0 && currentLevel >= 5 ? 2 : 1, // طوب قوي في المراحل المتقدمة
+          hits: row === 0 && targetLevel >= 5 ? 2 : 1, // طوب قوي في المراحل المتقدمة
         });
       }
     }
     setBricks(newBricks);
-    setTimeLeft(levelConfig.timeLimit);
-  }, [levelConfig, currentLevel, BRICK_WIDTH]);
+    setTimeLeft(config.timeLimit);
+  }, [currentLevel]);
 
   // Reset ball
-  const resetBall = useCallback(() => {
-    ballPosX.current = paddleX + paddleWidth / 2 - BALL_SIZE / 2;
+  const resetBall = useCallback((ballSpeed = levelConfig.ballSpeed, nextPaddleX = paddleX, nextPaddleWidth = paddleWidth) => {
+    ballPosX.current = nextPaddleX + nextPaddleWidth / 2 - BALL_SIZE / 2;
     ballPosY.current = GAME_HEIGHT - 80;
     ballX.setValue(ballPosX.current);
     ballY.setValue(ballPosY.current);
-    ballVelX.current = (Math.random() > 0.5 ? 1 : -1) * levelConfig.ballSpeed;
-    ballVelY.current = -levelConfig.ballSpeed;
+    ballVelX.current = (Math.random() > 0.5 ? 1 : -1) * ballSpeed;
+    ballVelY.current = -ballSpeed;
   }, [paddleX, paddleWidth, levelConfig.ballSpeed]);
 
   // Start level
   const startLevel = useCallback((lvl = 0) => {
-    setCurrentLevel(lvl);
+    const targetLevel = Math.max(0, Math.min(lvl, LEVELS.length - 1));
+    const targetConfig = LEVELS[targetLevel] || LEVELS[0];
+    const centeredPaddleX = (GAME_WIDTH - PADDLE_WIDTH) / 2;
+
+    setCurrentLevel(targetLevel);
     setGameState('playing');
-    initBricks();
-    resetBall();
+    setPaddleX(centeredPaddleX);
     setPaddleWidth(PADDLE_WIDTH);
     setCombo(0);
+    setShowCombo(false);
     setPowerups([]);
+    initBricks(targetLevel);
+    resetBall(targetConfig.ballSpeed, centeredPaddleX, PADDLE_WIDTH);
   }, [initBricks, resetBall]);
 
   // Timer
@@ -139,6 +150,7 @@ const BrickBreakerGame = ({ difficulty = 'medium', onComplete, onClose }) => {
             setLives(l => {
               if (l <= 1) {
                 setGameState('lost');
+                onComplete && onComplete(Math.floor(score / 10), 'lose');
                 return 0;
               }
               return l - 1;
@@ -151,7 +163,7 @@ const BrickBreakerGame = ({ difficulty = 'medium', onComplete, onClose }) => {
       }, 1000);
     }
     return () => clearInterval(timerRef.current);
-  }, [gameState, levelConfig.timeLimit, resetBall]);
+  }, [gameState, levelConfig.timeLimit, resetBall, onComplete, score]);
 
   // Apply powerup
   const applyPowerup = useCallback((powerup) => {

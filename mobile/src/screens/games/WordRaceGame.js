@@ -70,7 +70,21 @@ const WORDS_DB = [
 ];
 
 const shuffleWord = (word) => {
-  return word.split('').sort(() => Math.random() - 0.5).join('');
+  if (!word || word.length < 2) return word;
+  let shuffled = word;
+  let tries = 0;
+
+  while (shuffled === word && tries < 8) {
+    const chars = word.split('');
+    for (let i = chars.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [chars[i], chars[j]] = [chars[j], chars[i]];
+    }
+    shuffled = chars.join('');
+    tries += 1;
+  }
+
+  return shuffled;
 };
 
 const WordRaceGame = ({ mode, isOnline, onComplete, onClose }) => {
@@ -150,8 +164,9 @@ const WordRaceGame = ({ mode, isOnline, onComplete, onClose }) => {
 
   const handleSubmit = () => {
     if (!userInput.trim()) return;
-    
-    const isCorrect = userInput.trim() === currentWord.word;
+
+    const cleanedInput = userInput.trim();
+    const isCorrect = cleanedInput === currentWord.word;
     setFeedback(isCorrect);
     
     setTimeout(() => setFeedback(null), 500);

@@ -193,7 +193,10 @@ const getValidMoves = (board, row, col, piece, castlingRights, enPassantSquare) 
           const test1 = board.map(r => [...r]);
           test1[kingRow][5] = test1[kingRow][4];
           test1[kingRow][4] = null;
-          if (!isKingInCheck(test1, color)) {
+          const test2 = board.map(r => [...r]);
+          test2[kingRow][6] = test2[kingRow][4];
+          test2[kingRow][4] = null;
+          if (!isKingInCheck(test1, color) && !isKingInCheck(test2, color)) {
             moves.push([kingRow, 6, 'castle-k']);
           }
         }
@@ -207,7 +210,10 @@ const getValidMoves = (board, row, col, piece, castlingRights, enPassantSquare) 
           const test1 = board.map(r => [...r]);
           test1[kingRow][3] = test1[kingRow][4];
           test1[kingRow][4] = null;
-          if (!isKingInCheck(test1, color)) {
+          const test2 = board.map(r => [...r]);
+          test2[kingRow][2] = test2[kingRow][4];
+          test2[kingRow][4] = null;
+          if (!isKingInCheck(test1, color) && !isKingInCheck(test2, color)) {
             moves.push([kingRow, 2, 'castle-q']);
           }
         }
@@ -467,6 +473,7 @@ const ChessGame = ({ mode, onComplete, onClose }) => {
     const capturedPiece = newBoard[toR][toC];
     const newCastling = { ...castlingRights };
     let newEnPassant = null;
+    const isPromotionMove = piece[1] === 'p' && (toR === 0 || toR === 7);
 
     // معالجة التبييت
     if (special === 'castle-k') {
@@ -529,7 +536,7 @@ const ChessGame = ({ mode, onComplete, onClose }) => {
     }
 
     // ترقية البيدق
-    if (piece[1] === 'p' && (toR === 0 || toR === 7)) {
+    if (isPromotionMove) {
       setShowPromotion({ row: toR, col: toC, color: piece[0] });
     }
 
@@ -540,7 +547,7 @@ const ChessGame = ({ mode, onComplete, onClose }) => {
     setValidMoves([]);
     setMoveHistory(prev => [...prev, { from: [fromR, fromC], to: [toR, toC], piece }]);
     
-    if (!showPromotion || (piece[1] !== 'p' || (toR !== 0 && toR !== 7))) {
+    if (!isPromotionMove) {
       setTurn(turn === 'w' ? 'b' : 'w');
     }
 

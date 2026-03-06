@@ -1,7 +1,7 @@
 // Multiplayer Game Service - خدمة اللعب الجماعي
-import { Platform } from 'react-native';
+import api from './api';
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || 'https://quality-restore-1.preview.emergentagent.com';
+const API_BASE = api.baseUrl || 'https://quality-restore-1.preview.emergentagent.com';
 
 class MultiplayerService {
   constructor() {
@@ -11,6 +11,7 @@ class MultiplayerService {
     this.listeners = new Map();
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
+    this.manuallyDisconnected = false;
   }
 
   // الاتصال بالخادم
@@ -22,6 +23,7 @@ class MultiplayerService {
       }
 
       this.playerId = playerId;
+      this.manuallyDisconnected = false;
       const wsUrl = API_BASE.replace('https://', 'wss://').replace('http://', 'ws://');
       
       this.ws = new WebSocket(`${wsUrl}/ws/game/${playerId}`);
@@ -102,6 +104,8 @@ class MultiplayerService {
 
   // إعادة الاتصال
   handleDisconnect() {
+    if (this.manuallyDisconnected) return;
+
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       console.log(`Reconnecting... attempt ${this.reconnectAttempts}`);
@@ -213,11 +217,13 @@ class MultiplayerService {
 
   // قطع الاتصال
   disconnect() {
+    this.manuallyDisconnected = true;
     if (this.ws) {
       this.ws.close();
       this.ws = null;
     }
     this.currentRoom = null;
+    this.playerId = null;
     this.removeAllListeners();
   }
 
