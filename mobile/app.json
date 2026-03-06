@@ -54,12 +54,14 @@
           }
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-apple-authentication"
     ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.saqr.rewards",
-      "buildNumber": "77",
+      "buildNumber": "78",
+      "usesAppleSignIn": true,
       "config": {
         "usesNonExemptEncryption": false
       },
@@ -151,7 +153,7 @@
         "backgroundColor": "#0a0a0f"
       },
       "package": "com.saqr.rewards",
-      "versionCode": 77,
+      "versionCode": 78,
       "softwareKeyboardLayoutMode": "resize",
       "intentFilters": [
         {

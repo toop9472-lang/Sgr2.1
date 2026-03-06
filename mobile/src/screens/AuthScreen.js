@@ -624,8 +624,7 @@ const AuthScreen = ({ onLogin }) => {
             <Text style={styles.appName}>صقر</Text>
             <Text style={styles.tagline}>أكمل التحديات واكسب المكافآت</Text>
 
-            {/* Apple Sign In - مخفي مؤقتاً حتى يتم تجديد Provisioning Profile */}
-            {/* 
+            {/* Apple Sign In */}
             {Platform.OS === 'ios' && (
               <TouchableOpacity 
                 style={[styles.appleBtn, (isAppleLoading || isGoogleLoading) && styles.disabledBtn]} 
@@ -643,7 +642,6 @@ const AuthScreen = ({ onLogin }) => {
                 )}
               </TouchableOpacity>
             )}
-            */}
 
             {/* Google Sign In */}
             <TouchableOpacity 
