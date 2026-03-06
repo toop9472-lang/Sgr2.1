@@ -16,7 +16,6 @@ import {
   Alert,
 } from 'react-native';
 import { Video } from 'expo-av';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import storage from '../services/storage';
@@ -74,6 +73,7 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
   const [videoLoading, setVideoLoading] = useState(true);
   const [isAdMobLoading, setIsAdMobLoading] = useState(false);
   const [adMobReady, setAdMobReady] = useState(false);
+  const [adMobStatusMessage, setAdMobStatusMessage] = useState('جاري تجهيز إعلان المكافأة...');
   
   // Achievements context for recording ad watches
   const { recordAdWatched } = useAchievements();
@@ -92,58 +92,119 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
   const touchStartRef = useRef({ y: 0, x: 0, time: 0 });
 
   const currentAd = ads[currentIndex];
+  const currentUserId = user?.user_id || user?.id;
 
   // Initialize AdMob
   useEffect(() => {
+    const unsubscribe = admobService.subscribe(({ eventType }) => {
+      if (eventType === 'loaded') {
+        setAdMobReady(true);
+        setAdMobStatusMessage('الإعلان جاهز');
+      } else if (eventType === 'error') {
+        setAdMobReady(false);
+        setAdMobStatusMessage('لا يوجد إعلان متاح الآن');
+      } else if (eventType === 'closed') {
+        const ready = admobService.isReady();
+        setAdMobReady(ready);
+        setAdMobStatusMessage(ready ? 'الإعلان جاهز' : 'جاري تحميل إعلان جديد...');
+      }
+    });
+
     initAdMob();
+
+    return () => {
+      unsubscribe?.();
+    };
   }, []);
 
   const initAdMob = async () => {
     try {
       const initialized = await admobService.initialize();
       if (initialized) {
-        setAdMobReady(true);
+        const ready = admobService.isReady();
+        setAdMobReady(ready);
+        setAdMobStatusMessage(ready ? 'الإعلان جاهز' : 'جاري تحميل إعلان المكافأة...');
         console.log('✅ AdMob جاهز');
+      } else {
+        setAdMobReady(false);
+        setAdMobStatusMessage('تعذر تهيئة إعلانات المكافأة');
       }
     } catch (error) {
+      setAdMobReady(false);
+      setAdMobStatusMessage('فشل تهيئة الإعلانات');
       console.log('❌ خطأ في تهيئة AdMob:', error);
     }
   };
 
+  const persistReward = useCallback(async ({ adId, watchDuration, points, adType }) => {
+    try {
+      if (currentUserId) {
+        const rewardResponse = await api.claimAdWatchReward(currentUserId, watchDuration, adType);
+        if (rewardResponse.ok) return true;
+      }
+    } catch (error) {
+      console.log('Claim reward failed, fallback to recordAdView');
+    }
+
+    try {
+      const token = await storage.getToken();
+      if (!token) return false;
+      const fallbackResponse = await api.recordAdView(adId, watchDuration, token, points);
+      return fallbackResponse.ok;
+    } catch (error) {
+      console.log('Fallback reward save failed:', error);
+      return false;
+    }
+  }, [currentUserId]);
+
   // Show AdMob Rewarded Ad
   const showAdMobAd = async () => {
     if (!adMobReady) {
-      Alert.alert('انتظر', 'جاري تحميل الإعلان...');
+      Alert.alert('انتظر', adMobStatusMessage || 'جاري تحميل الإعلان...');
       return;
     }
     
     setIsAdMobLoading(true);
     try {
       const result = await admobService.showRewardedAd();
-      if (result.rewarded) {
-        // User earned reward
-        const points = result.amount || 5;
-        setEarnedPoints(points);
-        setTotalEarnedSession(prev => prev + points);
-        setShowPointsAnimation(true);
-        Vibration.vibrate(100);
-        
-        if (onPointsEarned) {
-          onPointsEarned(points);
-        }
-        
-        // Save points to server
-        try {
-          const token = await storage.getToken();
-          if (token) {
-            await api.recordAdView('admob_rewarded', 60, token, points);
-          }
-        } catch (e) {
-          console.log('Error saving points:', e);
-        }
-        
-        setTimeout(() => setShowPointsAnimation(false), 3000);
+      if (!result.success) {
+        Alert.alert('تنبيه', result.error || 'لا تتوفر إعلانات حالياً. حاول لاحقاً.');
+        setAdMobReady(admobService.isReady());
+        return;
       }
+
+      if (!result.rewarded) {
+        Alert.alert('تنبيه', 'يجب إكمال الإعلان للحصول على المكافأة.');
+        setAdMobReady(admobService.isReady());
+        return;
+      }
+
+      const points = Number(result.amount) > 0 ? Number(result.amount) : 5;
+      setEarnedPoints(points);
+      setTotalEarnedSession(prev => prev + points);
+      setShowPointsAnimation(true);
+      Vibration.vibrate(100);
+      
+      if (onPointsEarned) {
+        onPointsEarned(points);
+      }
+      
+      if (recordAdWatched) {
+        recordAdWatched();
+      }
+      
+      const persisted = await persistReward({
+        adId: 'admob_rewarded',
+        watchDuration: 60,
+        points,
+        adType: 'rewarded',
+      });
+
+      if (!persisted) {
+        Alert.alert('تنبيه', 'تم تسجيل المكافأة محلياً، وسيتم مزامنتها عند تحسن الاتصال.');
+      }
+      
+      setTimeout(() => setShowPointsAnimation(false), 3000);
     } catch (error) {
       console.log('AdMob error:', error);
       Alert.alert('خطأ', 'لا تتوفر إعلانات حالياً. حاول لاحقاً.');
@@ -167,8 +228,9 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
       const response = await api.getAds();
       if (response.ok) {
         const data = await response.json();
-        if (data.length > 0) {
-          const shuffled = shuffleArray(data);
+        const adsList = Array.isArray(data) ? data : (Array.isArray(data?.ads) ? data.ads : []);
+        if (adsList.length > 0) {
+          const shuffled = shuffleArray(adsList);
           setAds(shuffled);
         } else {
           setAds(DEMO_ADS);
@@ -290,7 +352,7 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
     return () => clearTimeout(controlsTimerRef.current);
   }, [showControls, isPlaying, showComments]);
 
-  const handlePointsEarned = async (points) => {
+  const handlePointsEarned = useCallback(async (points) => {
     setEarnedPoints(points);
     setTotalEarnedSession(prev => prev + points);
     setShowPointsAnimation(true);
@@ -305,15 +367,18 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
       recordAdWatched();
     }
     
-    const token = await storage.getToken();
-    if (token && currentAd) {
-      try {
-        await api.recordAdView(currentAd.id, 60, token, points);
-      } catch (e) {
+    if (currentAd) {
+      const persisted = await persistReward({
+        adId: currentAd.id,
+        watchDuration: 60,
+        points,
+        adType: 'video',
+      });
+      if (!persisted) {
         console.log('Failed to record points');
       }
     }
-  };
+  }, [currentAd, onPointsEarned, persistReward, recordAdWatched]);
 
   const navigateAd = (direction) => {
     setShowComments(false);
@@ -467,9 +532,13 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
       <View style={styles.rightActions}>
         {/* AdMob Rewarded Ad Button */}
         <TouchableOpacity 
-          style={[styles.actionBtn, styles.adMobBtn]}
+          style={[
+            styles.actionBtn,
+            styles.adMobBtn,
+            (!adMobReady || isAdMobLoading) && styles.actionBtnDisabled
+          ]}
           onPress={showAdMobAd}
-          disabled={isAdMobLoading}
+          disabled={isAdMobLoading || !adMobReady}
         >
           {isAdMobLoading ? (
             <ActivityIndicator size="small" color="#fff" />
@@ -480,6 +549,7 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
             </>
           )}
         </TouchableOpacity>
+        <Text style={styles.adMobStatusText}>{adMobStatusMessage}</Text>
 
         {/* Comments Button */}
         <TouchableOpacity 
@@ -631,9 +701,9 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
                         onPress={() => handleLikeComment(comment.comment_id)}
                       >
                         <Ionicons 
-                          name={comment.likes?.includes(user?.user_id) ? 'heart' : 'heart-outline'} 
+                          name={comment.likes?.includes(currentUserId) ? 'heart' : 'heart-outline'} 
                           size={16} 
-                          color={comment.likes?.includes(user?.user_id) ? '#ef4444' : 'rgba(255,255,255,0.5)'} 
+                          color={comment.likes?.includes(currentUserId) ? '#ef4444' : 'rgba(255,255,255,0.5)'} 
                         />
                         <Text style={styles.likeCount}>{comment.likes_count || 0}</Text>
                       </TouchableOpacity>
@@ -833,6 +903,17 @@ const styles = StyleSheet.create({
   adMobBtn: {
     backgroundColor: 'rgba(251,191,36,0.2)',
     borderColor: 'rgba(251,191,36,0.5)',
+  },
+  actionBtnDisabled: {
+    opacity: 0.45,
+  },
+  adMobStatusText: {
+    maxWidth: 78,
+    textAlign: 'center',
+    color: 'rgba(255,255,255,0.65)',
+    fontSize: 10,
+    marginTop: -10,
+    marginBottom: 2,
   },
   actionCount: {
     color: '#fff',

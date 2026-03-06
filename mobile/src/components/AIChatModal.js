@@ -87,15 +87,26 @@ const AIChatModal = ({ visible, onClose }) => {
     if (!userMessage || isLoading) return;
     
     setInputText('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    const updatedMessages = [...messages, { role: 'user', content: userMessage }];
+    setMessages(updatedMessages);
     setIsLoading(true);
 
     try {
       const token = await storage.getToken();
-      const response = await api.sendChatMessage(userMessage, token, SYSTEM_CONTEXT);
+      const conversation = updatedMessages
+        .filter((msg) => msg.role === 'user' || msg.role === 'assistant')
+        .slice(-10);
+
+      let response = await api.sendChatConversation(conversation, token, SYSTEM_CONTEXT);
+
+      // Retry once for transient backend failures
+      if (!response.ok && [429, 500, 502, 503, 504].includes(response.status)) {
+        await new Promise((resolve) => setTimeout(resolve, 700));
+        response = await api.sendChatConversation(conversation, token, SYSTEM_CONTEXT);
+      }
 
       if (response.ok) {
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
         const aiResponse = data.response || data.message || data.content || 'تم استلام رسالتك!';
         setMessages(prev => [...prev, { 
           role: 'assistant', 

@@ -18,6 +18,9 @@ let refreshToken = null;
 let lastConnectionCheck = null;
 let lastConnectionResult = null;
 const CONNECTION_CACHE_DURATION = 60000; // 60 seconds (increased from 30s)
+const debugLog = (...args) => {
+  if (__DEV__) console.log(...args);
+};
 
 // Check network connectivity first
 const checkNetworkConnectivity = async () => {
@@ -25,7 +28,7 @@ const checkNetworkConnectivity = async () => {
     const netState = await NetInfo.fetch();
     return netState.isConnected && netState.isInternetReachable !== false;
   } catch (error) {
-    console.log('NetInfo check failed:', error);
+    debugLog('NetInfo check failed:', error);
     return true; // Assume connected if check fails
   }
 };
@@ -35,7 +38,7 @@ const checkConnection = async () => {
   // Check network first
   const hasNetwork = await checkNetworkConnectivity();
   if (!hasNetwork) {
-    console.log('No network connectivity');
+    debugLog('No network connectivity');
     lastConnectionCheck = Date.now();
     lastConnectionResult = false;
     return false;
@@ -44,7 +47,7 @@ const checkConnection = async () => {
   // Use cached result if recent
   const now = Date.now();
   if (lastConnectionCheck && (now - lastConnectionCheck) < CONNECTION_CACHE_DURATION) {
-    console.log('Using cached connection result:', lastConnectionResult);
+    debugLog('Using cached connection result:', lastConnectionResult);
     return lastConnectionResult;
   }
 
@@ -52,7 +55,7 @@ const checkConnection = async () => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
     
-    console.log('Checking connection to:', API_URL);
+    debugLog('Checking connection to:', API_URL);
     
     const response = await fetch(`${API_URL}/api/health`, {
       method: 'GET',
@@ -73,7 +76,7 @@ const checkConnection = async () => {
       lastConnectionCheck = now;
       lastConnectionResult = isConnected;
       
-      console.log('Connection check result:', isConnected);
+      debugLog('Connection check result:', isConnected);
       return isConnected;
     }
     
@@ -82,7 +85,7 @@ const checkConnection = async () => {
     lastConnectionResult = true; // Server is reachable, just not healthy
     return true;
   } catch (error) {
-    console.log('Connection check failed:', error.message);
+    debugLog('Connection check failed:', error.message);
     
     // Don't cache failures immediately - allow retry
     if (lastConnectionResult === null) {
@@ -157,8 +160,8 @@ export const api = {
         headers.Authorization = `Bearer ${accessToken}`;
       }
       
-      // Log the request for debugging
-      console.log(`API Request: ${API_URL}${endpoint}`);
+      // Log the request in development only
+      debugLog(`API Request: ${API_URL}${endpoint}`);
       
       // Create abort controller for timeout
       const controller = new AbortController();
@@ -172,8 +175,8 @@ export const api = {
       
       clearTimeout(timeoutId);
       
-      // Log response status
-      console.log(`API Response: ${response.status} for ${endpoint}`);
+      // Log response status in development only
+      debugLog(`API Response: ${response.status} for ${endpoint}`);
       
       // If token expired, try refresh
       if (response.status === 401 && refreshToken) {
@@ -267,8 +270,22 @@ export const api = {
     return this.fetch('/api/settings/public/rewards');
   },
 
-  // AI Chat
-  async sendChatMessage(message, token = null, systemMessage = null) {
+  // AI Chat (conversation-aware)
+  async sendChatConversation(messages = [], token = null, systemMessage = null) {
+    const safeMessages = Array.isArray(messages)
+      ? messages
+          .filter((item) => item?.content && item?.role)
+          .map((item) => ({ role: item.role, content: item.content }))
+      : [];
+
+    const normalizedMessages = safeMessages.length > 0
+      ? safeMessages
+      : [{ role: 'user', content: 'مرحباً' }];
+
+    const lastUserMessage = [...normalizedMessages]
+      .reverse()
+      .find((item) => item.role === 'user')?.content || 'مرحباً';
+
     const endpoint = token || accessToken ? '/api/claude-ai/chat' : '/api/claude-ai/chat/guest';
     const headers = {};
     if (token) headers.Authorization = `Bearer ${token}`;
@@ -277,7 +294,7 @@ export const api = {
       method: 'POST',
       headers,
       body: JSON.stringify({
-        messages: [{ role: 'user', content: message }],
+        messages: normalizedMessages,
         system_message: systemMessage || 'أنت مساعد ذكي في تطبيق صقر. ساعد المستخدم باللغة العربية.',
       }),
     });
@@ -288,13 +305,17 @@ export const api = {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          message,
+          message: lastUserMessage,
           system_message: systemMessage || 'أنت مساعد ذكي في تطبيق صقر. ساعد المستخدم باللغة العربية.',
         }),
       });
     }
 
     return primaryResponse;
+  },
+
+  async sendChatMessage(message, token = null, systemMessage = null) {
+    return this.sendChatConversation([{ role: 'user', content: message }], token, systemMessage);
   },
 
   // Record ad view
@@ -458,10 +479,15 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ phone, otp, name, password }),
     });
+    const clonedResponse = response.clone();
     
     if (response.ok) {
-      const data = await response.json();
-      this.setTokens(data.token, data.refresh_token);
+      try {
+        const data = await clonedResponse.json();
+        this.setTokens(data.token, data.refresh_token);
+      } catch (e) {
+        debugLog('Token setting skipped for registerWithPhone');
+      }
     }
     
     return response;
@@ -481,10 +507,15 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ phone, otp, session_token: sessionToken }),
     });
+    const clonedResponse = response.clone();
     
     if (response.ok) {
-      const data = await response.json();
-      this.setTokens(data.token, data.refresh_token);
+      try {
+        const data = await clonedResponse.json();
+        this.setTokens(data.token, data.refresh_token);
+      } catch (e) {
+        debugLog('Token setting skipped for verifyLoginOTP');
+      }
     }
     
     return response;

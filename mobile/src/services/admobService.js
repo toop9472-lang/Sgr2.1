@@ -29,6 +29,7 @@ class AdMobService {
     this.listeners = [];
     this.loadRetryCount = 0;
     this.maxRetries = 3;
+    this.unsubscribers = [];
   }
 
   // تهيئة SDK
@@ -71,6 +72,9 @@ class AdMobService {
 
   // تحميل إعلان مكافئ
   loadRewardedAd() {
+    // تنظيف الاشتراكات القديمة قبل إنشاء إعلان جديد
+    this.cleanupAdListeners();
+
     const adUnitId = this.getRewardedAdUnitId();
     
     console.log('📥 جاري تحميل الإعلان المكافئ...', adUnitId);
@@ -157,17 +161,78 @@ class AdMobService {
   async showRewardedAd() {
     if (!this.isAdLoaded || !this.rewardedAd) {
       console.warn('⚠️ الإعلان غير جاهز للعرض');
-      return { success: false, error: 'الإعلان غير جاهز' };
+      return { success: false, rewarded: false, error: 'الإعلان غير جاهز' };
     }
 
-    try {
-      console.log('▶️ جاري عرض الإعلان...');
-      await this.rewardedAd.show();
-      return { success: true };
-    } catch (error) {
-      console.error('❌ فشل عرض الإعلان:', error);
-      return { success: false, error: error.message };
-    }
+    return new Promise(async (resolve) => {
+      let settled = false;
+      let rewardPayload = null;
+      const showUnsubscribers = [];
+
+      const finalize = (payload) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeoutId);
+        showUnsubscribers.forEach((unsub) => {
+          try {
+            unsub();
+          } catch (e) {
+            // no-op
+          }
+        });
+        resolve(payload);
+      };
+
+      const timeoutId = setTimeout(() => {
+        finalize({
+          success: false,
+          rewarded: false,
+          error: 'انتهت مهلة تحميل نتيجة الإعلان',
+        });
+      }, 45000);
+
+      try {
+        // مستمع مؤقت للمكافأة الخاصة بهذا العرض
+        showUnsubscribers.push(
+          this.rewardedAd.addAdEventListener(RewardedAdEventType.EARNED_REWARD, (reward) => {
+            rewardPayload = reward;
+          })
+        );
+
+        // مستمع مؤقت للإغلاق: عندها نُرجع النتيجة النهائية للمكالمة
+        showUnsubscribers.push(
+          this.rewardedAd.addAdEventListener(AdEventType.CLOSED, () => {
+            finalize({
+              success: true,
+              rewarded: Boolean(rewardPayload),
+              amount: rewardPayload?.amount || 0,
+              type: rewardPayload?.type || null,
+            });
+          })
+        );
+
+        // مستمع مؤقت للأخطاء أثناء العرض
+        showUnsubscribers.push(
+          this.rewardedAd.addAdEventListener(AdEventType.ERROR, (error) => {
+            finalize({
+              success: false,
+              rewarded: false,
+              error: error?.message || 'فشل عرض الإعلان',
+            });
+          })
+        );
+
+        console.log('▶️ جاري عرض الإعلان...');
+        await this.rewardedAd.show();
+      } catch (error) {
+        console.error('❌ فشل عرض الإعلان:', error);
+        finalize({
+          success: false,
+          rewarded: false,
+          error: error?.message || 'فشل عرض الإعلان',
+        });
+      }
+    });
   }
 
   // التحقق من جاهزية الإعلان
@@ -194,15 +259,22 @@ class AdMobService {
     });
   }
 
-  // تنظيف الموارد
-  cleanup() {
-    if (this.unsubscribers) {
-      this.unsubscribers.forEach(unsub => {
+  cleanupAdListeners() {
+    if (this.unsubscribers?.length) {
+      this.unsubscribers.forEach((unsub) => {
         try {
           unsub();
-        } catch (e) {}
+        } catch (e) {
+          // no-op
+        }
       });
+      this.unsubscribers = [];
     }
+  }
+
+  // تنظيف الموارد
+  cleanup() {
+    this.cleanupAdListeners();
     this.listeners = [];
     this.rewardedAd = null;
     this.isAdLoaded = false;

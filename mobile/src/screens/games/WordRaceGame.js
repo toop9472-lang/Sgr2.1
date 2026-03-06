@@ -322,7 +322,7 @@ const WordRaceGame = ({ mode, isOnline, onComplete, onClose }) => {
       {gameOver && (
         <View style={styles.gameOverOverlay}>
           <LinearGradient colors={['rgba(0,0,0,0.95)', 'rgba(0,0,0,0.9)']} style={styles.gameOverContent}>
-            <Ionicons name="text" size={50} color="#06b6d4" />
+            <Ionicons name="text-outline" size={50} color="#06b6d4" />
             <Text style={styles.gameOverTitle}>انتهى الوقت!</Text>
             <View style={styles.gameOverStats}>
               <View style={styles.gameOverStat}>

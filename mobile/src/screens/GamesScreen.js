@@ -37,6 +37,10 @@ import SaqrFortunesScreen from './SaqrFortunesScreen';
 import { shuffleArray } from '../utils/random';
 
 const { width, height } = Dimensions.get('window');
+const ioniconGlyphMap = Ionicons?.glyphMap || {};
+const resolveIconName = (iconName, fallback = 'ellipse-outline') => (
+  ioniconGlyphMap[iconName] ? iconName : fallback
+);
 
 // ==================== GAME CARD COMPONENT - PROFESSIONAL DESIGN ====================
 const GameCard = ({ game, onPress, pulseAnim, gameCost }) => {
@@ -68,7 +72,7 @@ const GameCard = ({ game, onPress, pulseAnim, gameCost }) => {
             start={{ x: 0, y: 0 }} 
             end={{ x: 1, y: 1 }}
           >
-            <Ionicons name={game.icon} size={60} color="rgba(255,255,255,0.3)" />
+            <Ionicons name={resolveIconName(game.icon, 'apps-outline')} size={60} color="rgba(255,255,255,0.3)" />
           </LinearGradient>
         )}
         
@@ -619,7 +623,7 @@ const PuzzleGame = ({ mode, onComplete, onClose }) => {
       {/* Current Image Indicator */}
       <TouchableOpacity onPress={changeImage} style={styles.imageIndicator}>
         <LinearGradient colors={currentImage.gradient} style={styles.imageIndicatorGradient}>
-          <Ionicons name={currentImage.icon} size={20} color="#FFF" />
+          <Ionicons name={resolveIconName(currentImage.icon, 'image-outline')} size={20} color="#FFF" />
           <Text style={styles.imageIndicatorName}>{currentImage.name}</Text>
           <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.7)" />
         </LinearGradient>
@@ -1149,7 +1153,7 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
     { 
       id: 'puzzle', 
       name: 'تركيب الصور', 
-      icon: 'extension-puzzle', 
+      icon: 'apps-outline', 
       colors: ['#3b82f6', '#1e40af'], 
       description: 'رتب القطع لتكمل الصورة', 
       maxPoints: 20, 
@@ -1201,7 +1205,7 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
     { 
       id: 'wordrace', 
       name: 'سباق الكلمات', 
-      icon: 'text', 
+      icon: 'text-outline', 
       colors: ['#06b6d4', '#0891b2'], 
       description: 'اكتشف الكلمات المخفية', 
       maxPoints: 22, 

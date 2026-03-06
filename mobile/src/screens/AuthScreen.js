@@ -63,7 +63,20 @@ const AuthScreen = ({ onLogin }) => {
     } else if (error.message?.includes('JSON')) {
       Alert.alert('خطأ', 'حدث خطأ في معالجة البيانات. يرجى المحاولة مرة أخرى.');
     } else {
-      Alert.alert('خطأ', error.message || 'حدث خطأ. يرجى المحاولة مرة أخرى.');
+      Alert.alert('خطأ', error.message || 'تعذّر إكمال العملية حالياً. حاول مرة أخرى.');
+    }
+  };
+
+  const parseErrorMessage = async (response, fallbackMessage) => {
+    try {
+      const data = await response.json();
+      if (typeof data === 'string' && data.trim()) return data;
+      return data?.detail || data?.message || fallbackMessage;
+    } catch (_) {
+      if (response.status === 401) return 'بيانات تسجيل الدخول غير صحيحة';
+      if (response.status === 429) return 'تم تجاوز عدد المحاولات المسموح. حاول لاحقاً';
+      if (response.status >= 500) return 'الخادم مشغول حالياً. حاول بعد قليل';
+      return fallbackMessage;
     }
   };
   
@@ -174,7 +187,7 @@ const AuthScreen = ({ onLogin }) => {
     setIsLoading(true);
     try {
       const response = await api.sendOTP(cleanPhone);
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       
       if (response.ok && data.success) {
         setCountdown(60);
@@ -187,7 +200,8 @@ const AuthScreen = ({ onLogin }) => {
           setOtp(otpDigits);
         }
       } else {
-        Alert.alert('خطأ', data.detail || 'فشل إرسال رمز التحقق');
+        const message = data.detail || data.message || 'فشل إرسال رمز التحقق';
+        Alert.alert('خطأ', message);
       }
     } catch (error) {
       if (error.message === 'CONNECTION_TIMEOUT') {
@@ -232,7 +246,7 @@ const AuthScreen = ({ onLogin }) => {
     try {
       const cleanPhone = phone.replace(/\D/g, '');
       const response = await api.registerWithPhone(cleanPhone, otpCode, name, password);
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       
       if (response.ok && data.success) {
         await storage.setToken(data.token);
@@ -240,7 +254,8 @@ const AuthScreen = ({ onLogin }) => {
         Alert.alert('مرحباً', 'تم إنشاء حسابك بنجاح!');
         onLogin(data.user);
       } else {
-        Alert.alert('خطأ', data.detail || 'فشل إنشاء الحساب');
+        const message = data.detail || data.message || 'فشل إنشاء الحساب';
+        Alert.alert('خطأ', message);
       }
     } catch (error) {
       handleConnectionError(error);
@@ -264,7 +279,7 @@ const AuthScreen = ({ onLogin }) => {
     setIsLoading(true);
     try {
       const response = await api.loginWithPhone(cleanPhone, password);
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       
       if (response.ok && data.success && data.requires_otp) {
         setSessionToken(data.session_token);
@@ -278,7 +293,8 @@ const AuthScreen = ({ onLogin }) => {
           setOtp(otpDigits);
         }
       } else {
-        Alert.alert('خطأ', data.detail || 'رقم الجوال أو كلمة المرور غير صحيحة');
+        const message = data.detail || data.message || 'رقم الجوال أو كلمة المرور غير صحيحة';
+        Alert.alert('خطأ', message);
       }
     } catch (error) {
       handleConnectionError(error);
@@ -299,14 +315,15 @@ const AuthScreen = ({ onLogin }) => {
     try {
       const cleanPhone = phone.replace(/\D/g, '');
       const response = await api.verifyLoginOTP(cleanPhone, otpCode, sessionToken);
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       
       if (response.ok && data.success) {
         await storage.setToken(data.token);
         await storage.setUserData(data.user);
         onLogin(data.user);
       } else {
-        Alert.alert('خطأ', data.detail || 'رمز التحقق غير صحيح');
+        const message = data.detail || data.message || 'رمز التحقق غير صحيح';
+        Alert.alert('خطأ', message);
       }
     } catch (error) {
       handleConnectionError(error);
@@ -366,7 +383,7 @@ const AuthScreen = ({ onLogin }) => {
     try {
       const cleanPhone = phone.replace(/\D/g, '');
       const response = await api.resetPassword(cleanPhone, otpCode, password);
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       
       if (response.ok && data.success) {
         Alert.alert('تم', 'تم تغيير كلمة المرور بنجاح');
@@ -374,7 +391,8 @@ const AuthScreen = ({ onLogin }) => {
         setPassword('');
         setConfirmPassword('');
       } else {
-        Alert.alert('خطأ', data.detail || 'فشل تغيير كلمة المرور');
+        const message = data.detail || data.message || 'فشل تغيير كلمة المرور';
+        Alert.alert('خطأ', message);
       }
     } catch (error) {
       handleConnectionError(error);
@@ -403,7 +421,7 @@ const AuthScreen = ({ onLogin }) => {
 
       if (mode === 'email_register') {
         response = await api.register(email, password, name);
-        data = await response.json();
+        data = await response.json().catch(() => ({}));
         
         if (response.ok && (data.token || data.success)) {
           if (data.token) {
@@ -421,11 +439,12 @@ const AuthScreen = ({ onLogin }) => {
           }
         } else {
           if (__DEV__) console.log('Registration failed:', data);
-          Alert.alert('خطأ', data.detail || data.message || 'فشل إنشاء الحساب');
+          const message = data.detail || data.message || await parseErrorMessage(response, 'فشل إنشاء الحساب');
+          Alert.alert('خطأ', message);
         }
       } else {
         response = await api.login(email, password);
-        data = await response.json();
+        data = await response.json().catch(() => ({}));
         
         if (__DEV__) console.log('Login response:', response.ok, data?.token ? 'has token' : 'no token');
         
@@ -435,7 +454,8 @@ const AuthScreen = ({ onLogin }) => {
           onLogin(data.user);
         } else {
           if (__DEV__) console.log('Login failed:', data);
-          Alert.alert('خطأ', data.detail || data.message || 'البريد الإلكتروني أو كلمة المرور غير صحيحة');
+          const message = data.detail || data.message || await parseErrorMessage(response, 'البريد الإلكتروني أو كلمة المرور غير صحيحة');
+          Alert.alert('خطأ', message);
         }
       }
     } catch (error) {
@@ -474,7 +494,7 @@ const AuthScreen = ({ onLogin }) => {
         Alert.alert('تم', 'تم إعادة إرسال رمز التحقق');
       }
     } catch (error) {
-      Alert.alert('خطأ', 'فشل إعادة الإرسال');
+      handleConnectionError(error);
     } finally {
       setIsLoading(false);
     }
