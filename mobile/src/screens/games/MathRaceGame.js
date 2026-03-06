@@ -11,8 +11,8 @@ import {
   ImageBackground,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import gameSounds from '../../utils/gameSounds';
+import { shuffleArray } from '../../utils/random';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -37,6 +37,7 @@ const MathRaceGame = ({ mode, onComplete, onClose }) => {
   const [correctAnswers, setCorrectAnswers] = useState(0);
 
   const timerRef = useRef(null);
+  const nextQuestionTimeoutRef = useRef(null);
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const progressAnim = useRef(new Animated.Value(1)).current;
@@ -44,7 +45,10 @@ const MathRaceGame = ({ mode, onComplete, onClose }) => {
   useEffect(() => {
     generateQuestion();
     startTimer();
-    return () => clearInterval(timerRef.current);
+    return () => {
+      clearInterval(timerRef.current);
+      clearTimeout(nextQuestionTimeoutRef.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -56,6 +60,7 @@ const MathRaceGame = ({ mode, onComplete, onClose }) => {
   }, [timeLeft]);
 
   const startTimer = () => {
+    clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
@@ -110,15 +115,15 @@ const MathRaceGame = ({ mode, onComplete, onClose }) => {
       }
     }
     
-    const allOptions = [answer, ...Array.from(wrongAnswers)]
-      .sort(() => Math.random() - 0.5);
-    setOptions(allOptions);
+    const allOptions = [answer, ...Array.from(wrongAnswers)];
+    const shuffledOptions = shuffleArray(allOptions);
+    setOptions(shuffledOptions);
     setIsCorrect(null);
     setSelectedOption(null);
   };
 
   const handleAnswer = (selected) => {
-    if (gameOver || isCorrect !== null) return;
+    if (gameOver || isCorrect !== null || !question) return;
     
     const correct = selected === question.answer;
     setIsCorrect(correct);
@@ -157,12 +162,14 @@ const MathRaceGame = ({ mode, onComplete, onClose }) => {
     }
 
     // السؤال التالي
-    setTimeout(() => {
+    clearTimeout(nextQuestionTimeoutRef.current);
+    nextQuestionTimeoutRef.current = setTimeout(() => {
       generateQuestion();
     }, 800);
   };
 
   const endGame = () => {
+    if (gameOver) return;
     setGameOver(true);
     clearInterval(timerRef.current);
     
@@ -179,6 +186,8 @@ const MathRaceGame = ({ mode, onComplete, onClose }) => {
   };
 
   const resetGame = () => {
+    clearInterval(timerRef.current);
+    clearTimeout(nextQuestionTimeoutRef.current);
     setScore(0);
     setStreak(0);
     setMaxStreak(0);
@@ -187,6 +196,9 @@ const MathRaceGame = ({ mode, onComplete, onClose }) => {
     setDifficulty(1);
     setQuestionsAnswered(0);
     setCorrectAnswers(0);
+    setIsCorrect(null);
+    setSelectedOption(null);
+    progressAnim.setValue(1);
     generateQuestion();
     startTimer();
   };

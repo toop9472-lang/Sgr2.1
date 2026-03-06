@@ -15,6 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { usePoints } from '../services/PointsContext';
+import { shuffleArray } from '../utils/random';
 
 const { width, height } = Dimensions.get('window');
 
@@ -123,7 +124,7 @@ const MillionaireScreen = ({ onClose, onComplete }) => {
       case 'fifty':
         // إزالة إجابتين خاطئتين
         const wrongAnswers = [0, 1, 2, 3].filter(i => i !== currentQuestion.correct);
-        const toHide = wrongAnswers.sort(() => Math.random() - 0.5).slice(0, 2);
+        const toHide = shuffleArray(wrongAnswers).slice(0, 2);
         setHiddenAnswers(toHide);
         break;
       

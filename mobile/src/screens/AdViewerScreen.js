@@ -22,6 +22,7 @@ import api from '../services/api';
 import storage from '../services/storage';
 import admobService from '../services/admobService';
 import { useAchievements } from '../services/AchievementsContext';
+import { shuffleArray } from '../utils/random';
 
 const { width, height } = Dimensions.get('window');
 
@@ -167,7 +168,7 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
       if (response.ok) {
         const data = await response.json();
         if (data.length > 0) {
-          const shuffled = data.sort(() => Math.random() - 0.5);
+          const shuffled = shuffleArray(data);
           setAds(shuffled);
         } else {
           setAds(DEMO_ADS);

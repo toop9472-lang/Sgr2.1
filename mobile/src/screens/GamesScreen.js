@@ -34,6 +34,7 @@ import MillionaireScreen from './MillionaireScreen';
 import { triviaQuestions, riddlesQuestions } from '../data/questionsData';
 import AdChallengesModal from '../components/AdChallengesModal';
 import SaqrFortunesScreen from './SaqrFortunesScreen';
+import { shuffleArray } from '../utils/random';
 
 const { width, height } = Dimensions.get('window');
 
@@ -752,7 +753,7 @@ const TriviaGame = ({ mode, onComplete, onClose }) => {
 
   // اختيار 50 سؤال عشوائي متغير لكل جولة
   useEffect(() => {
-    const shuffled = [...triviaQuestions].sort(() => Math.random() - 0.5);
+    const shuffled = shuffleArray(triviaQuestions);
     const selected = shuffled.slice(0, 50).map(q => ({
       q: q.question,
       options: q.options,
@@ -899,7 +900,7 @@ const RiddlesGame = ({ mode, onComplete, onClose }) => {
 
   // اختيار 12 لغز عشوائي من 50 لغز
   useEffect(() => {
-    const shuffled = [...riddlesQuestions].sort(() => Math.random() - 0.5);
+    const shuffled = shuffleArray(riddlesQuestions);
     const selected = shuffled.slice(0, 12).map(q => ({
       r: q.question,
       options: q.options,

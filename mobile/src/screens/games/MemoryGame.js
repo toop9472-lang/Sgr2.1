@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import gameSounds from '../../utils/gameSounds';
+import { shuffleArray } from '../../utils/random';
 
 // AI-Generated Professional Background
 const GAME_BG = 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/4d3046cfc1a9d31450a57219cfbd557c5dbee891f4bc793b5c782bdd9e9c112d.png';
@@ -47,24 +48,29 @@ const MemoryGame = ({ mode, onComplete, onClose }) => {
   const [gameOver, setGameOver] = useState(false);
   const [timer, setTimer] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isResolving, setIsResolving] = useState(false);
   const [combo, setCombo] = useState(0);
   const [bestTime, setBestTime] = useState(null);
   const [difficulty, setDifficulty] = useState('medium'); // easy: 3x4, medium: 4x4, hard: 4x5
   
   const timerRef = useRef(null);
   const flipAnims = useRef([]);
+  const mismatchTimeoutRef = useRef(null);
 
   // إعداد اللعبة
   useEffect(() => {
     initGame();
-    return () => clearInterval(timerRef.current);
+    return () => {
+      clearInterval(timerRef.current);
+      clearTimeout(mismatchTimeoutRef.current);
+    };
   }, [difficulty]);
 
   const initGame = () => {
+    clearTimeout(mismatchTimeoutRef.current);
     const pairs = difficulty === 'easy' ? 6 : difficulty === 'medium' ? 8 : 10;
     const selectedSymbols = SYMBOLS.slice(0, pairs);
-    const cardPairs = [...selectedSymbols, ...selectedSymbols]
-      .sort(() => Math.random() - 0.5)
+    const cardPairs = shuffleArray([...selectedSymbols, ...selectedSymbols])
       .map((symbol, index) => ({
         id: index,
         ...symbol,
@@ -81,6 +87,7 @@ const MemoryGame = ({ mode, onComplete, onClose }) => {
     setGameOver(false);
     setTimer(0);
     setIsPlaying(false);
+    setIsResolving(false);
     setCombo(0);
   };
 
@@ -96,45 +103,57 @@ const MemoryGame = ({ mode, onComplete, onClose }) => {
 
   // التحقق من التطابق
   useEffect(() => {
-    if (flipped.length === 2) {
-      const [first, second] = flipped;
-      
-      if (cards[first].emoji === cards[second].emoji) {
-        // تطابق!
-        gameSounds.memoryMatch();
-        setMatched(prev => [...prev, first, second]);
-        setScore(s => s + (100 * (1 + combo * 0.2)));
-        setCombo(c => c + 1);
-        setFlipped([]);
-        
-        // التحقق من الفوز
-        if (matched.length + 2 === cards.length) {
+    if (flipped.length !== 2 || gameOver || cards.length === 0) return;
+    const [first, second] = flipped;
+    if (!cards[first] || !cards[second]) return;
+
+    setIsResolving(true);
+
+    if (cards[first].emoji === cards[second].emoji) {
+      // تطابق!
+      gameSounds.memoryMatch();
+      const gainedScore = 100 * (1 + combo * 0.2);
+      setMatched(prev => {
+        const nextMatched = [...prev, first, second];
+        if (nextMatched.length === cards.length) {
           endGame(true);
         }
-      } else {
-        // لا تطابق
-        gameSounds.memoryMismatch();
-        setCombo(0);
-        setTimeout(() => {
-          // قلب البطاقات
-          flipAnims.current[first] && Animated.timing(flipAnims.current[first], {
-            toValue: 0,
-            duration: 300,
-            useNativeDriver: true,
-          }).start();
-          flipAnims.current[second] && Animated.timing(flipAnims.current[second], {
-            toValue: 0,
-            duration: 300,
-            useNativeDriver: true,
-          }).start();
-          setFlipped([]);
-        }, 1000);
-      }
+        return nextMatched;
+      });
+      setScore(s => s + gainedScore);
+      setCombo(c => c + 1);
+      setFlipped([]);
+      setIsResolving(false);
+      return;
     }
-  }, [flipped]);
+
+    // لا تطابق
+    gameSounds.memoryMismatch();
+    setCombo(0);
+    mismatchTimeoutRef.current = setTimeout(() => {
+      flipAnims.current[first] && Animated.timing(flipAnims.current[first], {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+      flipAnims.current[second] && Animated.timing(flipAnims.current[second], {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+      setFlipped([]);
+      setIsResolving(false);
+    }, 700);
+  }, [flipped, cards, combo, gameOver]);
 
   const flipCard = (index) => {
-    if (gameOver || flipped.length >= 2 || flipped.includes(index) || matched.includes(index)) {
+    if (
+      gameOver ||
+      isResolving ||
+      flipped.length >= 2 ||
+      flipped.includes(index) ||
+      matched.includes(index)
+    ) {
       return;
     }
 
@@ -155,7 +174,9 @@ const MemoryGame = ({ mode, onComplete, onClose }) => {
   };
 
   const endGame = (won) => {
+    if (gameOver) return;
     clearInterval(timerRef.current);
+    clearTimeout(mismatchTimeoutRef.current);
     setGameOver(true);
     
     if (won) {

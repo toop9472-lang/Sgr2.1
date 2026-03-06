@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import gameSounds from '../../utils/gameSounds';
+import { pickRandom } from '../../utils/random';
 
 // AI-Generated Professional Background
 const GAME_BG = 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/1686eb6c53be174737bae618b3efe2ae326d4a885e6864935b7dc822635a6c92.png';
@@ -87,6 +88,14 @@ const shuffleWord = (word) => {
   return shuffled;
 };
 
+const normalizeArabicWord = (value) => {
+  if (!value) return '';
+  return value
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/[ًٌٍَُِّْـ]/g, '');
+};
+
 const WordRaceGame = ({ mode, isOnline, onComplete, onClose }) => {
   const [currentWord, setCurrentWord] = useState(null);
   const [shuffledWord, setShuffledWord] = useState('');
@@ -109,11 +118,12 @@ const WordRaceGame = ({ mode, isOnline, onComplete, onClose }) => {
 
   const getNewWord = (exclude = []) => {
     const available = WORDS_DB.filter(w => !exclude.includes(w.word));
-    if (available.length === 0) return WORDS_DB[0];
-    return available[Math.floor(Math.random() * available.length)];
+    if (available.length === 0) return pickRandom(WORDS_DB, WORDS_DB[0]);
+    return pickRandom(available, available[0]);
   };
 
   const startGame = () => {
+    clearInterval(timerRef.current);
     const word = getNewWord([]);
     setCurrentWord(word);
     setShuffledWord(shuffleWord(word.word));
@@ -139,6 +149,7 @@ const WordRaceGame = ({ mode, isOnline, onComplete, onClose }) => {
   };
 
   const endGame = () => {
+    if (gameOver) return;
     clearInterval(timerRef.current);
     setGameOver(true);
     
@@ -153,20 +164,24 @@ const WordRaceGame = ({ mode, isOnline, onComplete, onClose }) => {
   };
 
   const nextWord = () => {
-    const newUsed = [...usedWords, currentWord.word];
-    setUsedWords(newUsed);
-    const word = getNewWord(newUsed);
+    const currentWordValue = currentWord?.word;
+    const nextUsedRaw = currentWordValue ? [...usedWords, currentWordValue] : [...usedWords];
+    const nextUsed = nextUsedRaw.length >= WORDS_DB.length ? [] : nextUsedRaw;
+    setUsedWords(nextUsed);
+
+    const word = getNewWord(nextUsed);
     setCurrentWord(word);
     setShuffledWord(shuffleWord(word.word));
     setUserInput('');
     setShowHint(false);
+    setTimeout(() => inputRef.current?.focus(), 40);
   };
 
   const handleSubmit = () => {
-    if (!userInput.trim()) return;
+    if (gameOver || !userInput.trim()) return;
 
-    const cleanedInput = userInput.trim();
-    const isCorrect = cleanedInput === currentWord.word;
+    const cleanedInput = normalizeArabicWord(userInput);
+    const isCorrect = cleanedInput === normalizeArabicWord(currentWord.word);
     setFeedback(isCorrect);
     
     setTimeout(() => setFeedback(null), 500);
@@ -189,9 +204,16 @@ const WordRaceGame = ({ mode, isOnline, onComplete, onClose }) => {
   };
 
   const handleSkip = () => {
+    if (gameOver) return;
     gameSounds.buttonTap();
     setStreak(0);
     nextWord();
+  };
+
+  const handleShowHint = () => {
+    if (showHint || gameOver) return;
+    setShowHint(true);
+    setScore(s => Math.max(0, s - 5));
   };
 
   const formatTime = (seconds) => {
@@ -265,7 +287,7 @@ const WordRaceGame = ({ mode, isOnline, onComplete, onClose }) => {
             <Text style={styles.hintText}>{currentWord.hint}</Text>
           </View>
         ) : (
-          <TouchableOpacity style={styles.hintBtn} onPress={() => setShowHint(true)}>
+          <TouchableOpacity style={styles.hintBtn} onPress={handleShowHint}>
             <Ionicons name="bulb-outline" size={18} color="#fbbf24" />
             <Text style={styles.hintBtnText}>عرض التلميح (-5 نقاط)</Text>
           </TouchableOpacity>
@@ -285,13 +307,13 @@ const WordRaceGame = ({ mode, isOnline, onComplete, onClose }) => {
           onSubmitEditing={handleSubmit}
           returnKeyType="done"
         />
-        <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
+        <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={gameOver}>
           <Ionicons name="checkmark" size={24} color="#FFF" />
         </TouchableOpacity>
       </View>
 
       {/* Skip Button */}
-      <TouchableOpacity style={styles.skipBtn} onPress={handleSkip}>
+      <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} disabled={gameOver}>
         <Ionicons name="play-skip-forward" size={18} color="rgba(255,255,255,0.6)" />
         <Text style={styles.skipText}>تخطي</Text>
       </TouchableOpacity>

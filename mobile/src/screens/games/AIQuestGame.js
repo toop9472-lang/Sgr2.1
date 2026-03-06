@@ -1,6 +1,6 @@
 // AI Quest - لعبة مغامرة ذكاء اصطناعي مبتكرة
 // لعبة تتحدى فيها الذكاء الاصطناعي في سلسلة من التحديات المتنوعة
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,13 +8,12 @@ import {
   StyleSheet,
   Dimensions,
   Animated,
-  TextInput,
-  ScrollView,
   ImageBackground,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import gameSounds from '../../utils/gameSounds';
+import { pickRandom, shuffleArray } from '../../utils/random';
 
 // AI-Generated Professional Background
 const GAME_BG = 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/e25830e67b07b9abd00a45cfdba92ba9699cedf84dd86dc00ee05ea23d562afc.png';
@@ -22,6 +21,7 @@ const GAME_BG = 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const isTablet = screenWidth > 600;
 const GAME_WIDTH = isTablet ? Math.min(screenWidth * 0.8, 600) : screenWidth;
+const MAX_CHALLENGES = 15;
 
 // أنواع التحديات المختلفة
 const CHALLENGE_TYPES = ['math', 'pattern', 'logic', 'word', 'memory'];
@@ -73,13 +73,13 @@ const generateMathChallenge = (level) => {
       options.push(Math.floor(wrong));
     }
   }
-  options.sort(() => Math.random() - 0.5);
+  const shuffledOptions = shuffleArray(options);
   
   return {
     type: 'math',
     question,
-    options,
-    correctIndex: options.indexOf(answer),
+    options: shuffledOptions,
+    correctIndex: shuffledOptions.indexOf(answer),
     timeLimit: Math.max(15 - level, 8),
     points: 10 + level * 5,
   };
@@ -114,7 +114,7 @@ const generatePatternChallenge = (level) => {
     { seq: [0, 3, 8, 15], next: 24, hint: 'n² - 1' },
   ];
   
-  const pattern = patterns[Math.floor(Math.random() * patterns.length)];
+  const pattern = pickRandom(patterns, patterns[0]);
   const options = [pattern.next];
   
   while (options.length < 4) {
@@ -123,13 +123,13 @@ const generatePatternChallenge = (level) => {
       options.push(wrong);
     }
   }
-  options.sort(() => Math.random() - 0.5);
+  const shuffledOptions = shuffleArray(options);
   
   return {
     type: 'pattern',
     question: `ما هو الرقم التالي في السلسلة؟\n${pattern.seq.join(' → ')} → ?`,
-    options,
-    correctIndex: options.indexOf(pattern.next),
+    options: shuffledOptions,
+    correctIndex: shuffledOptions.indexOf(pattern.next),
     hint: pattern.hint,
     timeLimit: Math.max(20 - level, 10),
     points: 15 + level * 5,
@@ -241,7 +241,7 @@ const generateLogicChallenge = (level) => {
     },
   ];
   
-  const puzzle = puzzles[Math.floor(Math.random() * puzzles.length)];
+  const puzzle = pickRandom(puzzles, puzzles[0]);
   
   return {
     type: 'logic',
@@ -278,7 +278,7 @@ const generateWordChallenge = (level) => {
     { question: 'أكمل: العقل السليم في الجسم ...', options: ['القوي', 'السليم', 'الكبير', 'الصغير'], answer: 1 },
   ];
   
-  const challenge = challenges[Math.floor(Math.random() * challenges.length)];
+  const challenge = pickRandom(challenges, challenges[0]);
   
   return {
     type: 'word',
@@ -319,14 +319,14 @@ const generateMemoryChallenge = (level) => {
       options.push(option);
     }
   }
-  options.sort(() => Math.random() - 0.5);
+  const shuffledOptions = shuffleArray(options);
   
   return {
     type: 'memory',
     sequence: sequence,
     question: `احفظ التسلسل ثم أجب:\nما هو العنصر رقم ${askIndex + 1}؟`,
-    options,
-    correctIndex: options.indexOf(correctAnswer),
+    options: shuffledOptions,
+    correctIndex: shuffledOptions.indexOf(correctAnswer),
     timeLimit: Math.max(10 + sequenceLength * 2, 8),
     points: 15 + level * 5,
     showSequenceFor: 3 + sequenceLength,
@@ -335,7 +335,7 @@ const generateMemoryChallenge = (level) => {
 
 // توليد تحدي عشوائي
 const generateChallenge = (level) => {
-  const type = CHALLENGE_TYPES[Math.floor(Math.random() * CHALLENGE_TYPES.length)];
+  const type = pickRandom(CHALLENGE_TYPES, 'math');
   
   switch (type) {
     case 'math': return generateMathChallenge(level);
@@ -364,7 +364,7 @@ const SequenceDisplay = ({ sequence, onComplete }) => {
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [sequence]);
+  }, [sequence, onComplete]);
   
   return (
     <View style={styles.sequenceContainer}>
@@ -394,6 +394,7 @@ const SequenceDisplay = ({ sequence, onComplete }) => {
 // اللعبة الرئيسية
 const AIQuestGame = ({ mode, onComplete, onClose }) => {
   const [level, setLevel] = useState(1);
+  const [completedChallenges, setCompletedChallenges] = useState(0);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
   const [currentChallenge, setCurrentChallenge] = useState(null);
@@ -412,29 +413,31 @@ const AIQuestGame = ({ mode, onComplete, onClose }) => {
   // بدء لعبة جديدة
   useEffect(() => {
     startNewChallenge();
-    return () => clearInterval(timerRef.current);
+    return () => clearTimeout(timerRef.current);
   }, []);
   
   // مؤقت
   useEffect(() => {
-    if (timeLeft > 0 && !answered && !gameOver && !showingSequence) {
+    if (timeLeft > 0 && answered === null && !gameOver && !showingSequence) {
       timerRef.current = setTimeout(() => setTimeLeft(t => t - 1), 1000);
       
       // تحريك شريط التقدم
+      const timeLimit = currentChallenge?.timeLimit || 1;
       Animated.timing(progressAnim, {
-        toValue: (timeLeft - 1) / currentChallenge?.timeLimit || 1,
+        toValue: Math.max(0, (timeLeft - 1) / timeLimit),
         duration: 1000,
         useNativeDriver: false,
       }).start();
-    } else if (timeLeft === 0 && !answered && currentChallenge) {
+    } else if (timeLeft === 0 && answered === null && currentChallenge && !gameOver) {
       handleAnswer(-1); // انتهى الوقت
     }
     
     return () => clearTimeout(timerRef.current);
-  }, [timeLeft, answered, gameOver, showingSequence]);
+  }, [timeLeft, answered, gameOver, showingSequence, currentChallenge]);
   
-  const startNewChallenge = () => {
-    const challenge = generateChallenge(level);
+  const startNewChallenge = (levelOverride = null) => {
+    const targetLevel = levelOverride ?? level;
+    const challenge = generateChallenge(targetLevel);
     setCurrentChallenge(challenge);
     setTimeLeft(challenge.timeLimit);
     setAnswered(null);
@@ -443,16 +446,19 @@ const AIQuestGame = ({ mode, onComplete, onClose }) => {
     // إذا كان تحدي ذاكرة، عرض التسلسل أولاً
     if (challenge.type === 'memory') {
       setShowingSequence(true);
+    } else {
+      setShowingSequence(false);
     }
   };
   
   const handleSequenceComplete = () => {
+    if (!currentChallenge) return;
     setShowingSequence(false);
     setTimeLeft(currentChallenge.timeLimit);
   };
   
   const handleAnswer = (index) => {
-    if (answered !== null) return;
+    if (answered !== null || !currentChallenge || gameOver) return;
     setAnswered(index);
     clearTimeout(timerRef.current);
     
@@ -463,29 +469,47 @@ const AIQuestGame = ({ mode, onComplete, onClose }) => {
       gameSounds.correct();
       const bonus = Math.floor(timeLeft * 2);
       const streakBonus = streak >= 3 ? 10 : 0;
-      setScore(s => s + currentChallenge.points + bonus + streakBonus);
-      setStreak(s => {
-        const newStreak = s + 1;
-        if (newStreak > highestStreak) setHighestStreak(newStreak);
-        if (newStreak >= 3) gameSounds.levelUp();
-        return newStreak;
-      });
+      const earnedScore = currentChallenge.points + bonus + streakBonus;
+      const nextScore = score + earnedScore;
+      const nextStreak = streak + 1;
+      const nextCompleted = completedChallenges + 1;
+      const nextLevel = Math.floor(nextCompleted / 3) + 1;
+      const nextAiScore = Math.max(0, aiScore - 5);
+
+      setScore(nextScore);
+      setStreak(nextStreak);
+      setCompletedChallenges(nextCompleted);
+      setLevel(nextLevel);
+      if (nextStreak > highestStreak) setHighestStreak(nextStreak);
+      if (nextStreak >= 3) gameSounds.levelUp();
       
       // AI يخسر قليلاً
-      setAiScore(s => Math.max(0, s - 5));
+      setAiScore(nextAiScore);
+
+      if (nextCompleted >= MAX_CHALLENGES) {
+        const playerWon = nextScore > nextAiScore;
+        setGameOver(true);
+        if (playerWon) gameSounds.win();
+        else gameSounds.lose();
+        setTimeout(() => {
+          const awarded = Math.max(10, Math.floor(nextScore / 10));
+          onComplete && onComplete(awarded, playerWon ? 'win' : 'lose');
+        }, 900);
+        return;
+      }
       
       setTimeout(() => {
-        if ((level % 3 === 0) && level > 0) {
-          setLevel(l => l + 1);
-        }
-        startNewChallenge();
-      }, 1500);
+        startNewChallenge(nextLevel);
+      }, 1200);
     } else {
       // إجابة خاطئة
       gameSounds.wrong();
       setStreak(0);
-      setLives(l => l - 1);
-      setAiScore(s => s + currentChallenge.points);
+      const nextLives = lives - 1;
+      const nextAiScore = aiScore + currentChallenge.points;
+      const playerWon = score > nextAiScore;
+      setLives(nextLives);
+      setAiScore(nextAiScore);
       
       // اهتزاز
       Animated.sequence([
@@ -495,18 +519,18 @@ const AIQuestGame = ({ mode, onComplete, onClose }) => {
         Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
       ]).start();
       
-      if (lives <= 1) {
+      if (nextLives <= 0) {
         setGameOver(true);
-        const won = score > aiScore;
-        if (won) gameSounds.win(); else gameSounds.lose();
+        if (playerWon) gameSounds.win();
+        else gameSounds.lose();
         setTimeout(() => {
-          onComplete(Math.floor(score / 10), won ? 'win' : 'lose');
+          const awarded = Math.max(10, Math.floor(score / 10));
+          onComplete && onComplete(awarded, playerWon ? 'win' : 'lose');
         }, 1000);
       } else {
         setTimeout(() => {
-          setLevel(l => Math.max(1, l));
           startNewChallenge();
-        }, 2000);
+        }, 1400);
       }
     }
   };
@@ -647,6 +671,7 @@ const AIQuestGame = ({ mode, onComplete, onClose }) => {
         </View>
         <View style={styles.vsContainer}>
           <Text style={styles.vsTextSmall}>VS</Text>
+          <Text style={styles.roundText}>{completedChallenges}/{MAX_CHALLENGES}</Text>
           {streak >= 3 && (
             <View style={styles.streakBadge}>
               <Ionicons name="flame" size={14} color="#FFF" />
@@ -819,6 +844,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#666',
+  },
+  roundText: {
+    fontSize: 11,
+    color: '#94a3b8',
+    marginTop: 2,
   },
   streakBadge: {
     flexDirection: 'row',

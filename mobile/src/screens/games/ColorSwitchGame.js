@@ -45,7 +45,14 @@ const ColorSwitchGame = ({ mode, onComplete, onClose }) => {
     return () => clearInterval(timerRef.current);
   }, []);
 
+  useEffect(() => {
+    if (gameStarted && !gameOver && timeLeft <= 0) {
+      endGame();
+    }
+  }, [timeLeft, gameStarted, gameOver]);
+
   const startGame = () => {
+    clearInterval(timerRef.current);
     setGameStarted(true);
     setScore(0);
     setCombo(0);
@@ -82,11 +89,11 @@ const ColorSwitchGame = ({ mode, onComplete, onClose }) => {
   };
 
   const endGame = () => {
+    if (gameOver) return;
     clearInterval(timerRef.current);
     setGameOver(true);
-    if (score > highScore) {
-      setHighScore(score);
-    }
+    const nextHighScore = Math.max(highScore, score);
+    setHighScore(nextHighScore);
     
     let points = Math.min(18, Math.floor(score / 2));
     if (score >= 30) points = 22;
@@ -99,6 +106,7 @@ const ColorSwitchGame = ({ mode, onComplete, onClose }) => {
   };
 
   const handleAnswer = (isMatch) => {
+    if (gameOver || !currentColor || !displayedColorName) return;
     const actualMatch = currentColor.name === displayedColorName.name;
     const correct = isMatch === actualMatch;
     
