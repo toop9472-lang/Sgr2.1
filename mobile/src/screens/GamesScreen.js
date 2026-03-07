@@ -22,17 +22,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { WebView } from 'react-native-webview';
 import api from '../services/api';
-import storage from '../services/storage';
 import multiplayerService from '../services/multiplayer';
-import ChessGame from './games/ChessGame';
-import BrickBreakerGame from './games/BrickBreakerGame';
-import AIQuestGame from './games/AIQuestGame';
-import MemoryGame from './games/MemoryGame';
-import SnakeGame from './games/SnakeGame';
-import ColorSwitchGame from './games/ColorSwitchGame';
-import MathRaceGame from './games/MathRaceGame';
-import WordRaceGame from './games/WordRaceGame';
-import MillionaireScreen from './MillionaireScreen';
 import { triviaQuestions, riddlesQuestions } from '../data/questionsData';
 import AdChallengesModal from '../components/AdChallengesModal';
 import SaqrFortunesScreen from './SaqrFortunesScreen';
@@ -525,7 +515,7 @@ const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
       <View style={styles.importedFooter}>
         <View style={styles.importedScoreBox}>
           <Ionicons name="flash" size={16} color="#fbbf24" />
-          <Text style={styles.importedScoreText}>Score {score}</Text>
+          <Text style={styles.importedScoreText}>النقاط {score}</Text>
         </View>
         {useExternalSource ? (
           <TouchableOpacity style={styles.importedSwitchBtn} onPress={() => setUseExternalSource(false)}>
@@ -1924,7 +1914,7 @@ const GamesScreen = ({
   const games = useMemo(() => ([
     {
       id: 'aiquest',
-      name: 'AI Quest Infinity',
+      name: 'مهمة الذكاء',
       icon: 'sparkles',
       secondaryIcon: 'hardware-chip-outline',
       colors: ['rgba(236,72,153,0.45)', 'rgba(147,51,234,0.38)'],
@@ -1940,7 +1930,7 @@ const GamesScreen = ({
     },
     {
       id: 'chess',
-      name: 'Grand Chess',
+      name: 'الشطرنج الملكي',
       icon: 'shield-half',
       secondaryIcon: 'trail-sign-outline',
       colors: ['rgba(124,58,237,0.45)', 'rgba(30,41,59,0.4)'],
@@ -1956,7 +1946,7 @@ const GamesScreen = ({
     },
     {
       id: 'tictactoe',
-      name: 'Arena X-O',
+      name: 'ساحة إكس-أو',
       icon: 'grid',
       secondaryIcon: 'wifi-outline',
       colors: ['rgba(249,115,22,0.48)', 'rgba(234,88,12,0.35)'],
@@ -1974,7 +1964,7 @@ const GamesScreen = ({
     },
     {
       id: 'tactix',
-      name: 'TactiX 4x4',
+      name: 'تكتيك 4×4',
       icon: 'grid-outline',
       secondaryIcon: 'flash-outline',
       colors: ['rgba(59,130,246,0.5)', 'rgba(14,116,144,0.34)'],
@@ -1992,7 +1982,7 @@ const GamesScreen = ({
     },
     {
       id: 'memory',
-      name: 'Memory Matrix',
+      name: 'مصفوفة الذاكرة',
       icon: 'layers-outline',
       secondaryIcon: 'scan-outline',
       colors: ['rgba(20,184,166,0.46)', 'rgba(15,118,110,0.34)'],
@@ -2008,7 +1998,7 @@ const GamesScreen = ({
     },
     {
       id: 'snake',
-      name: 'Neon Snake Rush',
+      name: 'الثعبان النيون',
       icon: 'git-branch',
       secondaryIcon: 'flame-outline',
       colors: ['rgba(34,197,94,0.46)', 'rgba(21,128,61,0.34)'],
@@ -2018,13 +2008,13 @@ const GamesScreen = ({
       maxPoints: 22,
       online: false,
       onlineCost: 0,
-      category: 'Arcade',
+      category: 'حركي',
       badge: 'Turbo',
       trend: '',
     },
     {
       id: 'brickbreaker',
-      name: 'Brick Storm',
+      name: 'عاصفة الطوب',
       icon: 'cube',
       secondaryIcon: 'sparkles-outline',
       colors: ['rgba(236,72,153,0.45)', 'rgba(190,24,93,0.34)'],
@@ -2034,13 +2024,13 @@ const GamesScreen = ({
       maxPoints: 23,
       online: false,
       onlineCost: 0,
-      category: 'Arcade',
+      category: 'حركي',
       badge: '',
       trend: '',
     },
     {
       id: 'puzzle',
-      name: 'Puzzle Studio',
+      name: 'استوديو الألغاز',
       icon: 'apps-outline',
       secondaryIcon: 'image-outline',
       colors: ['rgba(59,130,246,0.45)', 'rgba(30,64,175,0.34)'],
@@ -2056,7 +2046,7 @@ const GamesScreen = ({
     },
     {
       id: 'trivia',
-      name: 'Trivia Prime',
+      name: 'تحدي المعلومات',
       icon: 'school',
       secondaryIcon: 'help-circle-outline',
       colors: ['rgba(16,185,129,0.46)', 'rgba(4,120,87,0.34)'],
@@ -2072,7 +2062,7 @@ const GamesScreen = ({
     },
     {
       id: 'mathrace',
-      name: 'Math Blitz',
+      name: 'خاطف الرياضيات',
       icon: 'calculator',
       secondaryIcon: 'speedometer-outline',
       colors: ['rgba(139,92,246,0.45)', 'rgba(109,40,217,0.33)'],
@@ -2088,7 +2078,7 @@ const GamesScreen = ({
     },
     {
       id: 'wordrace',
-      name: 'Word Arena',
+      name: 'ساحة الكلمات',
       icon: 'text-outline',
       secondaryIcon: 'language-outline',
       colors: ['rgba(6,182,212,0.45)', 'rgba(8,145,178,0.33)'],
@@ -2104,7 +2094,7 @@ const GamesScreen = ({
     },
     {
       id: 'colorswitch',
-      name: 'Color Reactor',
+      name: 'مفاعل الألوان',
       icon: 'color-palette',
       secondaryIcon: 'flash-outline',
       colors: ['rgba(244,63,94,0.45)', 'rgba(225,29,72,0.35)'],
@@ -2120,7 +2110,7 @@ const GamesScreen = ({
     },
     {
       id: 'riddles',
-      name: 'Riddle Mania',
+      name: 'هوس الألغاز',
       icon: 'bulb-outline',
       secondaryIcon: 'help-buoy-outline',
       colors: ['rgba(234,179,8,0.45)', 'rgba(202,138,4,0.33)'],
@@ -2132,12 +2122,12 @@ const GamesScreen = ({
       onlineCost: 0,
       backendGameId: 'riddles',
       category: 'ألغاز',
-      badge: 'Mind',
+      badge: 'ذكاء',
       trend: '',
     },
     {
       id: 'millionaire',
-      name: 'Millionaire Live',
+      name: 'المليونير المباشر',
       icon: 'cash-outline',
       secondaryIcon: 'trophy-outline',
       colors: ['rgba(245,158,11,0.45)', 'rgba(217,119,6,0.33)'],
@@ -2149,7 +2139,7 @@ const GamesScreen = ({
       onlineCost: 0,
       backendGameId: 'millionaire',
       category: 'مميز',
-      badge: 'Show',
+      badge: 'نخبة',
       trend: 'Top',
     },
     {
@@ -2190,7 +2180,7 @@ const GamesScreen = ({
     },
     {
       id: 'brickstormx',
-      name: 'Brick Storm X',
+      name: 'عاصفة الطوب X',
       icon: 'cube-outline',
       secondaryIcon: 'flash-outline',
       colors: ['rgba(236,72,153,0.45)', 'rgba(124,58,237,0.33)'],
@@ -2202,13 +2192,13 @@ const GamesScreen = ({
       onlineCost: 0,
       backendGameId: 'brickbreaker',
       variant: 'x',
-      category: 'Arcade',
+      category: 'حركي',
       badge: 'Hard',
       trend: '',
     },
     {
       id: 'puzzlemaster',
-      name: 'Puzzle Master',
+      name: 'خبير الألغاز',
       icon: 'apps',
       secondaryIcon: 'flash-outline',
       colors: ['rgba(59,130,246,0.45)', 'rgba(99,102,241,0.33)'],
@@ -2221,12 +2211,12 @@ const GamesScreen = ({
       backendGameId: 'puzzle',
       variant: 'master',
       category: 'ألغاز',
-      badge: 'Pro',
+      badge: 'احتراف',
       trend: '',
     },
     {
       id: 'triviaplus',
-      name: 'Trivia Plus',
+      name: 'معلومات بلس',
       icon: 'school-outline',
       secondaryIcon: 'rocket-outline',
       colors: ['rgba(16,185,129,0.45)', 'rgba(59,130,246,0.32)'],
@@ -2239,12 +2229,12 @@ const GamesScreen = ({
       backendGameId: 'trivia',
       variant: 'plus',
       category: 'ثقافة',
-      badge: 'Plus',
+      badge: 'متقدم',
       trend: '',
     },
     {
       id: 'wordmaster',
-      name: 'Word Master',
+      name: 'خبير الكلمات',
       icon: 'text-outline',
       secondaryIcon: 'flash-outline',
       colors: ['rgba(6,182,212,0.45)', 'rgba(14,165,233,0.33)'],
@@ -2262,7 +2252,7 @@ const GamesScreen = ({
     },
     {
       id: 'reactiontap',
-      name: 'Reaction Tap',
+      name: 'ضربة رد الفعل',
       icon: 'flash',
       secondaryIcon: 'timer-outline',
       colors: ['rgba(239,68,68,0.46)', 'rgba(249,115,22,0.34)'],
@@ -2274,12 +2264,12 @@ const GamesScreen = ({
       onlineCost: 0,
       backendGameId: 'reactiontap',
       category: 'سرعة',
-      badge: 'New',
-      trend: 'Hot',
+      badge: 'جديد',
+      trend: 'رائج',
     },
     {
       id: 'sequencesprint',
-      name: 'Sequence Sprint',
+      name: 'سباق التسلسل',
       icon: 'analytics',
       secondaryIcon: 'sparkles-outline',
       colors: ['rgba(16,185,129,0.46)', 'rgba(6,182,212,0.34)'],
@@ -2291,7 +2281,7 @@ const GamesScreen = ({
       onlineCost: 0,
       backendGameId: 'sequencesprint',
       category: 'منطق',
-      badge: 'Fresh',
+      badge: 'مميز',
       trend: '',
     },
     {
@@ -2914,80 +2904,15 @@ const GamesScreen = ({
 
   // Render active game
   if (activeGame) {
-    const gameProps = {
-      mode: gameMode,
-      onComplete: handleGameComplete,
-      onClose: closeGame,
-      // Props للعب الأونلاين
-      isOnline: gameMode === 'online',
-      opponent: onlineOpponent,
-      isMyTurn: isMyTurn,
-      matchData: matchData,
-      onSendMove: (move) => multiplayerService.sendMove(move),
-    };
-
-    if (IMPORTED_PRO_GAME_IDS.includes(activeGame)) {
-      const importedGame = getGameById(activeGame) || games.find((g) => g.id === activeGame);
-      return (
-        <ImportedArcadeGame
-          game={importedGame}
-          mode={gameMode}
-          onComplete={handleGameComplete}
-          onClose={closeGame}
-        />
-      );
-    }
-    
-    switch (activeGame) {
-      case 'aiquest':
-        return <AIQuestGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
-      case 'chess':
-        return <ChessGame {...gameProps} />;
-      case 'tictactoe':
-        return <TicTacToeGame {...gameProps} variant="classic" title="Arena X-O" />;
-      case 'tactix':
-        return <TicTacToeGame {...gameProps} variant="pro4" title="TactiX 4x4" />;
-      case 'brickbreaker':
-        return <BrickBreakerGame difficulty={gameMode === 'ai_hard' ? 'hard' : 'medium'} onComplete={handleGameComplete} onClose={closeGame} />;
-      case 'brickstormx':
-        return <BrickBreakerGame difficulty="hard" onComplete={handleGameComplete} onClose={closeGame} />;
-      case 'puzzle':
-        return <PuzzleGame {...gameProps} />;
-      case 'puzzlemaster':
-        return <PuzzleGame {...gameProps} mode="master" />;
-      case 'trivia':
-        return <TriviaGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
-      case 'triviaplus':
-        return <TriviaGame mode="plus" onComplete={handleGameComplete} onClose={closeGame} />;
-      case 'riddles':
-        return <RiddlesGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
-      case 'memory':
-        return <MemoryGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
-      case 'memoryflash':
-        return <MemoryGame mode="flash" onComplete={handleGameComplete} onClose={closeGame} />;
-      case 'snake':
-        return <SnakeGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
-      case 'snakefury':
-        return <SnakeGame mode="fury" onComplete={handleGameComplete} onClose={closeGame} />;
-      case 'mathrace':
-        return <MathRaceGame {...gameProps} />;
-      case 'wordrace':
-        return <WordRaceGame {...gameProps} />;
-      case 'wordmaster':
-        return <WordRaceGame {...gameProps} mode="master" />;
-      case 'colorswitch':
-        return <ColorSwitchGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
-      case 'reactiontap':
-        return <ReactionTapGame onComplete={handleGameComplete} onClose={closeGame} />;
-      case 'sequencesprint':
-        return <SequenceSprintGame onComplete={handleGameComplete} onClose={closeGame} />;
-      case 'oddoneout':
-        return <OddOneOutGame onComplete={handleGameComplete} onClose={closeGame} />;
-      case 'millionaire':
-        return <MillionaireScreen onComplete={handleGameComplete} onClose={closeGame} />;
-      default:
-        return <ComingSoonGame name={games.find(g => g.id === activeGame)?.name || 'لعبة'} onClose={closeGame} />;
-    }
+    const importedGame = getGameById(activeGame) || games.find((g) => g.id === activeGame);
+    return (
+      <ImportedArcadeGame
+        game={importedGame}
+        mode={gameMode}
+        onComplete={handleGameComplete}
+        onClose={closeGame}
+      />
+    );
   }
 
   // Mode selector modal

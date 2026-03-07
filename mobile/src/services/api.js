@@ -20,6 +20,11 @@ const envCandidates = [
 ].map(normalizeApiBaseUrl).filter(Boolean);
 
 const API_URL = envCandidates[0] || DEFAULT_API_URL;
+const EXTRA_FALLBACK_APIS = [
+  'https://quality-restore-1.preview.emergentagent.com',
+].map(normalizeApiBaseUrl).filter(Boolean);
+const API_BASE_CANDIDATES = Array.from(new Set([API_URL, ...envCandidates, ...EXTRA_FALLBACK_APIS]));
+let activeApiBase = API_BASE_CANDIDATES[0] || API_URL;
 
 // Connection check timeout - increased for better reliability
 const CONNECTION_TIMEOUT = 20000; // 20 seconds
@@ -68,30 +73,35 @@ const checkConnection = async () => {
   try {
     const healthEndpoints = ['/api/health', '/health'];
     let connected = false;
+    const baseCandidates = Array.from(new Set([activeApiBase, ...API_BASE_CANDIDATES].filter(Boolean)));
 
-    for (const endpoint of healthEndpoints) {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
-      try {
-        debugLog('Checking connection to:', `${API_URL}${endpoint}`);
-        const response = await fetch(`${API_URL}${endpoint}`, {
-          method: 'GET',
-          signal: controller.signal,
-          headers: {
-            Accept: 'application/json',
-            'Cache-Control': 'no-cache',
-          },
-        });
+    for (const baseUrl of baseCandidates) {
+      for (const endpoint of healthEndpoints) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+        try {
+          debugLog('Checking connection to:', `${baseUrl}${endpoint}`);
+          const response = await fetch(`${baseUrl}${endpoint}`, {
+            method: 'GET',
+            signal: controller.signal,
+            headers: {
+              Accept: 'application/json',
+              'Cache-Control': 'no-cache',
+            },
+          });
 
-        if (response.ok) {
-          connected = true;
-          break;
+          if (response.ok) {
+            connected = true;
+            activeApiBase = baseUrl;
+            break;
+          }
+        } catch (_) {
+          // Try next health endpoint/base
+        } finally {
+          clearTimeout(timeoutId);
         }
-      } catch (_) {
-        // Try next health endpoint
-      } finally {
-        clearTimeout(timeoutId);
       }
+      if (connected) break;
     }
 
     lastConnectionCheck = now;
@@ -118,8 +128,8 @@ const refreshConnectionStatus = () => {
 };
 
 export const api = {
-  baseUrl: API_URL,
-  BASE_URL: API_URL,
+  baseUrl: activeApiBase,
+  BASE_URL: activeApiBase,
   
   // Check connection
   checkConnection,
@@ -144,16 +154,25 @@ export const api = {
     if (!refreshToken) return null;
     
     try {
-      const response = await fetch(`${API_URL}/api/auth/refresh-token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: refreshToken }),
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        accessToken = data.token;
-        return accessToken;
+      const baseCandidates = Array.from(new Set([this.baseUrl, activeApiBase, ...API_BASE_CANDIDATES].filter(Boolean)));
+      for (const baseUrl of baseCandidates) {
+        try {
+          const response = await fetch(`${baseUrl}/api/auth/refresh-token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refreshToken }),
+          });
+          if (!response.ok) continue;
+
+          const data = await response.json();
+          accessToken = data.token;
+          activeApiBase = baseUrl;
+          this.baseUrl = baseUrl;
+          this.BASE_URL = baseUrl;
+          return accessToken;
+        } catch (_) {
+          // Try next candidate base URL.
+        }
       }
     } catch (error) {
       console.error('Token refresh failed:', error);
@@ -163,6 +182,14 @@ export const api = {
   
   // Generic fetch with error handling and auto token refresh
   async fetch(endpoint, options = {}) {
+    const buildConnectionError = (error) => {
+      if (error?.name === 'AbortError') return new Error('CONNECTION_TIMEOUT');
+      if (error?.message === 'Network request failed' || error?.message === 'Failed to fetch') {
+        return new Error('NO_CONNECTION');
+      }
+      return error;
+    };
+
     try {
       const headers = {
         'Content-Type': 'application/json',
@@ -174,20 +201,48 @@ export const api = {
         headers.Authorization = `Bearer ${accessToken}`;
       }
       
-      // Log the request in development only
-      debugLog(`API Request: ${API_URL}${endpoint}`);
-      
-      // Create abort controller for timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), CONNECTION_TIMEOUT);
-      
-      let response = await fetch(`${API_URL}${endpoint}`, {
-        ...options,
-        headers,
-        signal: controller.signal,
-      });
-      
-      clearTimeout(timeoutId);
+      const doRequest = async (baseUrl) => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), CONNECTION_TIMEOUT);
+        try {
+          return await fetch(`${baseUrl}${endpoint}`, {
+            ...options,
+            headers,
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timeoutId);
+        }
+      };
+
+      const baseCandidates = Array.from(new Set([this.baseUrl, activeApiBase, ...API_BASE_CANDIDATES].filter(Boolean)));
+      let response = null;
+      let lastNetworkError = null;
+
+      for (const baseUrl of baseCandidates) {
+        // Log the request in development only
+        debugLog(`API Request: ${baseUrl}${endpoint}`);
+        try {
+          response = await doRequest(baseUrl);
+          activeApiBase = baseUrl;
+          this.baseUrl = baseUrl;
+          this.BASE_URL = baseUrl;
+          break;
+        } catch (initialError) {
+          const normalizedError = buildConnectionError(initialError);
+          if (['NO_CONNECTION', 'CONNECTION_TIMEOUT'].includes(normalizedError?.message)) {
+            lastNetworkError = normalizedError;
+            refreshConnectionStatus();
+            await new Promise((resolve) => setTimeout(resolve, 250));
+            continue;
+          }
+          throw normalizedError;
+        }
+      }
+
+      if (!response) {
+        throw lastNetworkError || new Error('NO_CONNECTION');
+      }
       
       // Log response status in development only
       debugLog(`API Response: ${response.status} for ${endpoint}`);
@@ -197,7 +252,7 @@ export const api = {
         const newToken = await this.refreshAccessToken();
         if (newToken) {
           headers.Authorization = `Bearer ${newToken}`;
-          response = await fetch(`${API_URL}${endpoint}`, {
+          response = await fetch(`${this.baseUrl}${endpoint}`, {
             ...options,
             headers,
           });
@@ -208,14 +263,10 @@ export const api = {
     } catch (error) {
       // Log error for debugging
       console.error(`API Error for ${endpoint}:`, error.message);
-      
-      // Check if it's an abort error (timeout)
-      if (error.name === 'AbortError') {
-        throw new Error('CONNECTION_TIMEOUT');
-      }
-      // Network error
-      if (error.message === 'Network request failed' || error.message === 'Failed to fetch') {
-        throw new Error('NO_CONNECTION');
+
+      const normalizedError = buildConnectionError(error);
+      if (normalizedError?.message === 'CONNECTION_TIMEOUT' || normalizedError?.message === 'NO_CONNECTION') {
+        throw normalizedError;
       }
       console.error('API Error:', error);
       throw error;
@@ -226,15 +277,28 @@ export const api = {
   async fetchWithFallback(endpoints, options = {}) {
     const candidates = Array.isArray(endpoints) ? endpoints : [endpoints];
     let lastResponse = null;
+    let lastError = null;
 
     for (const endpoint of candidates) {
-      const response = await this.fetch(endpoint, options);
-      lastResponse = response;
-      if (![404, 405].includes(response.status)) {
-        return response;
+      try {
+        const response = await this.fetch(endpoint, options);
+        lastResponse = response;
+        if (![404, 405].includes(response.status)) {
+          return response;
+        }
+      } catch (error) {
+        lastError = error;
+        // Continue trying alternative endpoints for connectivity fluctuations.
+        if (['NO_CONNECTION', 'CONNECTION_TIMEOUT'].includes(error?.message)) {
+          continue;
+        }
+        throw error;
       }
     }
 
+    if (!lastResponse && lastError) {
+      throw lastError;
+    }
     return lastResponse;
   },
 
