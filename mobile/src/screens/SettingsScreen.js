@@ -12,10 +12,11 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import storage from '../services/storage';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const SettingsScreen = ({ onBack, onLogout }) => {
   const [theme, setTheme] = useState('dark');
-  const [language, setLanguage] = useState('ar');
+  const { language, setLanguage, supportedLanguages } = useLanguage();
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
 
@@ -26,9 +27,7 @@ const SettingsScreen = ({ onBack, onLogout }) => {
   const loadSettings = async () => {
     try {
       const savedTheme = await AsyncStorage.getItem('saqr_theme');
-      const savedLanguage = await AsyncStorage.getItem('saqr_language');
       if (savedTheme) setTheme(savedTheme);
-      if (savedLanguage) setLanguage(savedLanguage);
     } catch (error) {
       console.log('Error loading settings:', error);
     }
@@ -48,12 +47,11 @@ const SettingsScreen = ({ onBack, onLogout }) => {
 
   const saveLanguage = async (newLanguage) => {
     try {
-      // Save in both keys for compatibility
+      // Save in both keys for compatibility and update app context immediately.
       await AsyncStorage.setItem('saqr_language', newLanguage);
-      await AsyncStorage.setItem('app_language', newLanguage); // For LanguageContext
-      setLanguage(newLanguage);
+      await setLanguage(newLanguage);
       setShowLanguageModal(false);
-      Alert.alert('تم الحفظ', 'تم تغيير اللغة بنجاح. أعد تشغيل التطبيق لتفعيل التغييرات.');
+      Alert.alert('تم الحفظ', 'تم تغيير اللغة بنجاح');
     } catch (error) {
       console.log('Error saving language:', error);
     }
@@ -65,14 +63,11 @@ const SettingsScreen = ({ onBack, onLogout }) => {
     { id: 'system', name: 'حسب النظام', icon: 'phone-portrait' },
   ];
 
-  const languages = [
-    { code: 'ar', name: 'العربية', icon: 'globe' },
-    { code: 'en', name: 'English', icon: 'globe' },
-    { code: 'fr', name: 'Francais', icon: 'globe' },
-    { code: 'tr', name: 'Turkce', icon: 'globe' },
-    { code: 'ur', name: 'اردو', icon: 'globe' },
-    { code: 'hi', name: 'Hindi', icon: 'globe' },
-  ];
+  const languages = supportedLanguages.map((lang) => ({
+    code: lang.code,
+    name: lang.name,
+    icon: 'globe',
+  }));
 
   const getThemeName = () => themes.find(t => t.id === theme)?.name || 'داكن';
   const getLanguageName = () => languages.find(l => l.code === language)?.name || 'العربية';

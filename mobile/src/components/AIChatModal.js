@@ -11,6 +11,7 @@ import {
   Platform,
   ActivityIndicator,
   StyleSheet,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
@@ -165,7 +166,10 @@ const AIChatModal = ({ visible, onClose }) => {
             </TouchableOpacity>
             <View style={styles.titleContainer}>
               <View style={styles.aiIconBg}>
-                <Ionicons name="sparkles" size={18} color="#60a5fa" />
+                <Image source={require('../../assets/logo_saqr.png')} style={styles.aiFalconIcon} resizeMode="cover" />
+                <View style={styles.aiWaveBadge}>
+                  <Ionicons name="hand-right" size={8} color="#0f172a" />
+                </View>
               </View>
               <Text style={styles.title}>المساعد الذكي</Text>
             </View>
@@ -272,6 +276,25 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(96,165,250,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
+  },
+  aiFalconIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+  },
+  aiWaveBadge: {
+    position: 'absolute',
+    right: -3,
+    top: -2,
+    width: 13,
+    height: 13,
+    borderRadius: 7,
+    backgroundColor: '#fde68a',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#fef3c7',
   },
   title: { color: '#FFF', fontSize: 18, fontWeight: 'bold' },
 

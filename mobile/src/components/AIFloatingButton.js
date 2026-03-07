@@ -1,6 +1,6 @@
 // AI Floating Button - زر المساعد الذكي المحسن
 import React, { useEffect, useRef } from 'react';
-import { TouchableOpacity, StyleSheet, Animated, View } from 'react-native';
+import { TouchableOpacity, StyleSheet, Animated, View, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -26,6 +26,34 @@ const AIFloatingButton = ({ onPress }) => {
     ).start();
   }, []);
 
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(rotateAnim, {
+          toValue: 1,
+          duration: 420,
+          useNativeDriver: true,
+        }),
+        Animated.timing(rotateAnim, {
+          toValue: -1,
+          duration: 420,
+          useNativeDriver: true,
+        }),
+        Animated.timing(rotateAnim, {
+          toValue: 0,
+          duration: 380,
+          useNativeDriver: true,
+        }),
+        Animated.delay(1200),
+      ])
+    ).start();
+  }, []);
+
+  const waveRotation = rotateAnim.interpolate({
+    inputRange: [-1, 0, 1],
+    outputRange: ['-12deg', '0deg', '12deg'],
+  });
+
   return (
     <TouchableOpacity 
       style={styles.container} 
@@ -41,15 +69,18 @@ const AIFloatingButton = ({ onPress }) => {
       />
       
       {/* الزر الرئيسي */}
-      <LinearGradient 
-        colors={['#6366f1', '#8b5cf6', '#a855f7']} 
+      <LinearGradient
+        colors={['#38bdf8', '#6366f1', '#8b5cf6']}
         style={styles.button}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        {/* ايقونة الذكاء الاصطناعي */}
+        {/* صقر مبهج */}
         <View style={styles.iconContainer}>
-          <Ionicons name="hardware-chip" size={24} color="#FFF" />
+          <Image source={require('../../assets/logo_saqr.png')} style={styles.falconLogo} resizeMode="cover" />
+          <Animated.View style={[styles.waveBadge, { transform: [{ rotate: waveRotation }] }]}>
+            <Ionicons name="hand-right" size={9} color="#0f172a" />
+          </Animated.View>
         </View>
         
         {/* نقاط الذكاء الاصطناعي */}
@@ -75,7 +106,7 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: 'rgba(139, 92, 246, 0.25)',
+    backgroundColor: 'rgba(99, 102, 241, 0.24)',
     top: -7,
     left: -7,
   },
@@ -86,7 +117,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 10,
-    shadowColor: '#8b5cf6',
+    shadowColor: '#6366f1',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
@@ -98,6 +129,26 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  falconLogo: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.45)',
+  },
+  waveBadge: {
+    position: 'absolute',
+    right: -2,
+    top: 0,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#fde68a',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#fef3c7',
   },
   aiDots: {
     position: 'absolute',

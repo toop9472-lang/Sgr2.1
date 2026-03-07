@@ -1,5 +1,5 @@
 // Language Switcher Component - Circular Design
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,41 +10,26 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
-const LANGUAGES = [
-  { code: 'ar', name: 'العربية', flag: '🇸🇦', rtl: true },
-  { code: 'en', name: 'English', flag: '🇺🇸', rtl: false },
-  { code: 'fr', name: 'Français', flag: '🇫🇷', rtl: false },
-  { code: 'tr', name: 'Türkçe', flag: '🇹🇷', rtl: false },
-  { code: 'ur', name: 'اردو', flag: '🇵🇰', rtl: true },
-  { code: 'hi', name: 'हिन्दी', flag: '🇮🇳', rtl: false },
-];
+const LANGUAGE_FLAGS = {
+  ar: '🇸🇦',
+  en: '🇺🇸',
+  fr: '🇫🇷',
+  tr: '🇹🇷',
+};
 
 const LanguageSwitcher = ({ onLanguageChange, style }) => {
-  const [currentLanguage, setCurrentLanguage] = useState('ar');
+  const { language, setLanguage, supportedLanguages } = useLanguage();
   const [showModal, setShowModal] = useState(false);
-
-  useEffect(() => {
-    loadLanguage();
-  }, []);
-
-  const loadLanguage = async () => {
-    try {
-      const savedLanguage = await AsyncStorage.getItem('saqr_language');
-      if (savedLanguage) {
-        setCurrentLanguage(savedLanguage);
-      }
-    } catch (error) {
-      console.log('Error loading language:', error);
-    }
-  };
 
   const selectLanguage = async (langCode) => {
     try {
+      await setLanguage(langCode);
+      // Backward compatibility for screens still reading legacy key.
       await AsyncStorage.setItem('saqr_language', langCode);
-      setCurrentLanguage(langCode);
       setShowModal(false);
       if (onLanguageChange) {
         onLanguageChange(langCode);
@@ -54,7 +39,11 @@ const LanguageSwitcher = ({ onLanguageChange, style }) => {
     }
   };
 
-  const currentLang = LANGUAGES.find(l => l.code === currentLanguage) || LANGUAGES[0];
+  const uiLanguages = supportedLanguages.map((lang) => ({
+    ...lang,
+    flag: LANGUAGE_FLAGS[lang.code] || '🌐',
+  }));
+  const currentLang = uiLanguages.find(l => l.code === language) || uiLanguages[0];
 
   return (
     <>
@@ -88,12 +77,12 @@ const LanguageSwitcher = ({ onLanguageChange, style }) => {
 
             {/* Languages Grid */}
             <View style={styles.languagesGrid}>
-              {LANGUAGES.map((lang) => (
+              {uiLanguages.map((lang) => (
                 <TouchableOpacity
                   key={lang.code}
                   style={[
                     styles.languageItem,
-                    currentLanguage === lang.code && styles.languageItemSelected
+                    language === lang.code && styles.languageItemSelected
                   ]}
                   onPress={() => selectLanguage(lang.code)}
                   activeOpacity={0.7}
@@ -101,11 +90,11 @@ const LanguageSwitcher = ({ onLanguageChange, style }) => {
                   <Text style={styles.langFlag}>{lang.flag}</Text>
                   <Text style={[
                     styles.langName,
-                    currentLanguage === lang.code && styles.langNameSelected
+                    language === lang.code && styles.langNameSelected
                   ]}>
                     {lang.name}
                   </Text>
-                  {currentLanguage === lang.code && (
+                  {language === lang.code && (
                     <View style={styles.checkMark}>
                       <Ionicons name="checkmark" size={14} color="#FFF" />
                     </View>

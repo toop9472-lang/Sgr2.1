@@ -15,7 +15,6 @@ import {
   StyleSheet,
   Image,
   ImageBackground,
-  Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,10 +22,11 @@ import * as WebBrowser from 'expo-web-browser';
 import { signInWithGoogle, signInWithApple } from '../services/authProviders';
 import api from '../services/api';
 import storage from '../services/storage';
-import colors from '../styles/colors';
 
 // Premium Background Image
 const AUTH_BG_IMAGE = 'https://static.prod-images.emergentagent.com/jobs/40eca190-5242-4463-8c95-bc5f66df29cb/images/e35d59ccd161791b6e9cbecdfa426302685267afa2c8e806fa233976816403de.png';
+const AUTH_FORM_GRADIENT = ['#131729', '#181f38', '#121b33'];
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Warm up browser for faster OAuth
 WebBrowser.maybeCompleteAuthSession();
@@ -403,8 +403,15 @@ const AuthScreen = ({ onLogin }) => {
 
   // Email auth (existing)
   const handleEmailAuth = async () => {
-    if (!email.trim() || !password.trim()) {
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPassword = password.trim();
+
+    if (!normalizedEmail || !normalizedPassword) {
       Alert.alert('خطأ', 'يرجى ملء جميع الحقول');
+      return;
+    }
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
+      Alert.alert('خطأ', 'صيغة البريد الإلكتروني غير صحيحة');
       return;
     }
     if (mode === 'email_register' && !name.trim()) {
@@ -420,7 +427,7 @@ const AuthScreen = ({ onLogin }) => {
       if (__DEV__) console.log('Auth started:', mode);
 
       if (mode === 'email_register') {
-        response = await api.register(email, password, name);
+        response = await api.register(normalizedEmail, normalizedPassword, name.trim());
         data = await response.json().catch(() => ({}));
         
         if (response.ok && (data.token || data.success)) {
@@ -429,7 +436,7 @@ const AuthScreen = ({ onLogin }) => {
             await storage.setUserData(data.user);
             onLogin(data.user);
           } else {
-            const loginResponse = await api.login(email, password);
+            const loginResponse = await api.login(normalizedEmail, normalizedPassword);
             const loginData = await loginResponse.json();
             if (loginResponse.ok) {
               await storage.setToken(loginData.token);
@@ -443,7 +450,7 @@ const AuthScreen = ({ onLogin }) => {
           Alert.alert('خطأ', message);
         }
       } else {
-        response = await api.login(email, password);
+        response = await api.login(normalizedEmail, normalizedPassword);
         data = await response.json().catch(() => ({}));
         
         if (__DEV__) console.log('Login response:', response.ok, data?.token ? 'has token' : 'no token');
@@ -626,7 +633,7 @@ const AuthScreen = ({ onLogin }) => {
         resizeMode="cover"
       >
         <LinearGradient 
-          colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)', 'rgba(0,0,0,0.9)']} 
+          colors={['rgba(15,23,42,0.28)', 'rgba(30,41,59,0.66)', 'rgba(30,27,75,0.84)']}
           style={styles.container}
         >
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -729,7 +736,7 @@ const AuthScreen = ({ onLogin }) => {
   // ==================== PHONE LOGIN ====================
   if (mode === 'phone_login') {
     return (
-      <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
+      <LinearGradient colors={AUTH_FORM_GRADIENT} style={styles.container}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
             <View style={styles.content}>
@@ -813,7 +820,7 @@ const AuthScreen = ({ onLogin }) => {
   // ==================== PHONE REGISTER ====================
   if (mode === 'phone_register') {
     return (
-      <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
+      <LinearGradient colors={AUTH_FORM_GRADIENT} style={styles.container}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
             <View style={styles.content}>
@@ -872,7 +879,7 @@ const AuthScreen = ({ onLogin }) => {
   // ==================== PHONE OTP (Registration) ====================
   if (mode === 'phone_otp') {
     return (
-      <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
+      <LinearGradient colors={AUTH_FORM_GRADIENT} style={styles.container}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
             <View style={styles.content}>
@@ -972,7 +979,7 @@ const AuthScreen = ({ onLogin }) => {
   // ==================== PHONE LOGIN OTP (2FA) ====================
   if (mode === 'phone_login_otp') {
     return (
-      <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
+      <LinearGradient colors={AUTH_FORM_GRADIENT} style={styles.container}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
             <View style={styles.content}>
@@ -1019,7 +1026,7 @@ const AuthScreen = ({ onLogin }) => {
   // ==================== FORGOT PASSWORD ====================
   if (mode === 'forgot_password') {
     return (
-      <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
+      <LinearGradient colors={AUTH_FORM_GRADIENT} style={styles.container}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
             <View style={styles.content}>
@@ -1070,7 +1077,7 @@ const AuthScreen = ({ onLogin }) => {
   // ==================== RESET PASSWORD ====================
   if (mode === 'reset_password') {
     return (
-      <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
+      <LinearGradient colors={AUTH_FORM_GRADIENT} style={styles.container}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
             <View style={styles.content}>
@@ -1150,7 +1157,7 @@ const AuthScreen = ({ onLogin }) => {
   // ==================== EMAIL LOGIN/REGISTER ====================
   if (mode === 'email_login' || mode === 'email_register') {
     return (
-      <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
+      <LinearGradient colors={AUTH_FORM_GRADIENT} style={styles.container}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
             <View style={styles.content}>
@@ -1251,8 +1258,8 @@ const AuthScreen = ({ onLogin }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { flexGrow: 1, justifyContent: 'center', paddingVertical: 40 },
-  content: { paddingHorizontal: 24 },
+  scroll: { flexGrow: 1, justifyContent: 'center', paddingVertical: 34 },
+  content: { paddingHorizontal: 22, width: '100%', maxWidth: 520, alignSelf: 'center' },
   
   // Logo with Glow
   logoContainer: {
@@ -1278,13 +1285,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFF',
     textAlign: 'center',
-    textShadowColor: 'rgba(96, 165, 250, 0.5)',
+    textShadowColor: 'rgba(99, 102, 241, 0.45)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 10,
   },
   tagline: {
     fontSize: 16,
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(241,245,249,0.86)',
     textAlign: 'center',
     marginBottom: 36,
     letterSpacing: 0.5,
@@ -1310,9 +1317,9 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: '#888',
+    color: 'rgba(226,232,240,0.78)',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
 
   // Apple Button - Glass Effect
@@ -1321,13 +1328,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: 'rgba(15,23,42,0.72)',
     paddingVertical: 16,
     borderRadius: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-    backdropFilter: 'blur(10px)',
+    borderColor: 'rgba(226,232,240,0.28)',
   },
   appleBtnText: {
     color: '#FFF',
@@ -1342,11 +1348,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: '#4285F4',
+    backgroundColor: '#4f7cf7',
     paddingVertical: 16,
     borderRadius: 16,
     marginBottom: 12,
-    shadowColor: '#4285F4',
+    shadowColor: '#4f7cf7',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -1402,15 +1408,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: 'rgba(96, 165, 250, 0.1)',
+    backgroundColor: 'rgba(129, 140, 248, 0.16)',
     paddingVertical: 14,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(96, 165, 250, 0.3)',
+    borderColor: 'rgba(129, 140, 248, 0.38)',
     marginBottom: 12,
   },
   emailText: {
-    color: '#60a5fa',
+    color: '#c7d2fe',
     fontSize: 15,
     fontWeight: '500',
   },
@@ -1439,15 +1445,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'rgba(255, 255, 255, 0.07)',
     paddingVertical: 14,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(226,232,240,0.2)',
     marginBottom: 20,
   },
   guestBtnText: {
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(226,232,240,0.78)',
     fontSize: 15,
   },
 
@@ -1472,19 +1478,19 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1a1a24',
-    borderRadius: 14,
+    backgroundColor: 'rgba(15,23,42,0.78)',
+    borderRadius: 16,
     paddingHorizontal: 16,
-    marginBottom: 16,
+    marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#2a2a3a',
+    borderColor: 'rgba(148,163,184,0.22)',
   },
   inputIcon: {
     marginRight: 12,
   },
   input: {
     flex: 1,
-    paddingVertical: 16,
+    paddingVertical: 15,
     fontSize: 16,
     color: '#FFF',
     textAlign: 'right',
@@ -1505,10 +1511,10 @@ const styles = StyleSheet.create({
   otpInput: {
     width: 48,
     height: 56,
-    backgroundColor: '#1a1a24',
+    backgroundColor: 'rgba(15,23,42,0.75)',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#2a2a3a',
+    borderColor: 'rgba(148,163,184,0.24)',
     color: '#FFF',
     fontSize: 24,
     fontWeight: 'bold',
@@ -1562,11 +1568,16 @@ const styles = StyleSheet.create({
 
   // Submit
   submitBtn: {
-    backgroundColor: '#2563eb',
+    backgroundColor: '#4f46e5',
     paddingVertical: 16,
-    borderRadius: 14,
+    borderRadius: 16,
     alignItems: 'center',
     marginBottom: 20,
+    shadowColor: '#6366f1',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.32,
+    shadowRadius: 10,
+    elevation: 5,
   },
   submitText: {
     color: '#FFF',
@@ -1583,12 +1594,12 @@ const styles = StyleSheet.create({
     marginTop: -8,
   },
   switchText: {
-    color: '#888',
+    color: 'rgba(203,213,225,0.86)',
     fontSize: 14,
     textAlign: 'center',
   },
   switchBold: {
-    color: '#60a5fa',
+    color: '#c7d2fe',
     fontWeight: '600',
   },
   guestLink: {
@@ -1602,13 +1613,13 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   terms: {
-    color: '#666',
+    color: 'rgba(203,213,225,0.7)',
     fontSize: 12,
     textAlign: 'center',
     marginTop: 16,
   },
   termsLink: {
-    color: '#60a5fa',
+    color: '#c7d2fe',
   },
 });
 

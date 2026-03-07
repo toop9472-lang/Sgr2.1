@@ -18,7 +18,11 @@ export const LanguageProvider = ({ children }) => {
 
   const loadSavedLanguage = async () => {
     try {
-      const savedLanguage = await AsyncStorage.getItem('app_language');
+      const [appLanguage, legacyLanguage] = await Promise.all([
+        AsyncStorage.getItem('app_language'),
+        AsyncStorage.getItem('saqr_language'),
+      ]);
+      const savedLanguage = appLanguage || legacyLanguage;
       if (savedLanguage && translations[savedLanguage]) {
         setLanguageState(savedLanguage);
         const langConfig = SUPPORTED_LANGUAGES.find(l => l.code === savedLanguage);
@@ -40,6 +44,7 @@ export const LanguageProvider = ({ children }) => {
 
       // Save to storage
       await AsyncStorage.setItem('app_language', langCode);
+      await AsyncStorage.setItem('saqr_language', langCode);
       
       // Update state
       setLanguageState(langCode);
