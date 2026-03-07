@@ -44,6 +44,29 @@ const resolveIconName = (iconName, fallback = 'ellipse-outline') => (
 );
 const FREE_PLAYS_PER_GAME = 2;
 const AD_UNLOCK_SESSIONS = 3;
+const ONLINE_GLOBAL_CHAT_INVITE_COST = 5;
+const IMPORTED_PRO_GAME_IDS = [
+  'aiquest',
+  'chess',
+  'tictactoe',
+  'tactix',
+  'memory',
+  'snake',
+  'brickbreaker',
+  'puzzle',
+  'trivia',
+  'mathrace',
+  'wordrace',
+  'colorswitch',
+  'riddles',
+  'millionaire',
+  'brickstormx',
+  'puzzlemaster',
+  'triviaplus',
+  'wordmaster',
+  'reactiontap',
+  'sequencesprint',
+];
 const adGateStorageKey = (userId) => `saqr_games_ad_gate_v3_${userId || 'guest'}`;
 
 // ==================== PREMIUM GAME CARD COMPONENT ====================
@@ -124,7 +147,7 @@ const GameCard = ({ game, onPress, pulseAnim, gameCost }) => {
 };
 
 // ==================== MODE SELECTOR ====================
-const ModeSelector = ({ onSelectMode, onClose, gameName }) => (
+const ModeSelector = ({ onSelectMode, onClose, gameName, hasOnline, chatInviteCost }) => (
   <View style={styles.modeContainer}>
     <View style={styles.modeHeader}>
       <TouchableOpacity onPress={onClose} style={styles.modeCloseBtn}>
@@ -137,13 +160,33 @@ const ModeSelector = ({ onSelectMode, onClose, gameName }) => (
     <Text style={styles.modeSubtitle}>اختر نوع اللعب</Text>
     
     <View style={styles.modeOptions}>
-      <TouchableOpacity style={styles.modeOption} onPress={() => onSelectMode('online')}>
-        <LinearGradient colors={['#3b82f6', '#1d4ed8']} style={styles.modeGradient}>
-          <Ionicons name="globe-outline" size={40} color="#FFF" />
-          <Text style={styles.modeOptionTitle}>أونلاين</Text>
-          <Text style={styles.modeOptionDesc}>تحدى لاعبين حقيقيين</Text>
-        </LinearGradient>
-      </TouchableOpacity>
+      {hasOnline ? (
+        <>
+          <TouchableOpacity style={styles.modeOption} onPress={() => onSelectMode('online')}>
+            <LinearGradient colors={['#3b82f6', '#1d4ed8']} style={styles.modeGradient}>
+              <Ionicons name="globe-outline" size={40} color="#FFF" />
+              <Text style={styles.modeOptionTitle}>أونلاين سريع</Text>
+              <Text style={styles.modeOptionDesc}>تحدى لاعبين حقيقيين فورًا</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.modeOption} onPress={() => onSelectMode('online_chat_invite')}>
+            <LinearGradient colors={['#8b5cf6', '#6366f1']} style={styles.modeGradient}>
+              <Ionicons name="chatbubbles-outline" size={40} color="#FFF" />
+              <Text style={styles.modeOptionTitle}>دعوة من الشات العام</Text>
+              <Text style={styles.modeOptionDesc}>خصم {chatInviteCost} ألماسات ونشر دعوة أونلاين</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.modeOption} onPress={() => onSelectMode('online_friend_invite')}>
+            <LinearGradient colors={['#22c55e', '#16a34a']} style={styles.modeGradient}>
+              <Ionicons name="people-outline" size={40} color="#FFF" />
+              <Text style={styles.modeOptionTitle}>دعوة صديق</Text>
+              <Text style={styles.modeOptionDesc}>إرسال دعوة مجانية للأصدقاء</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </>
+      ) : null}
       
       <TouchableOpacity style={styles.modeOption} onPress={() => onSelectMode('ai_medium')}>
         <LinearGradient colors={['#10b981', '#059669']} style={styles.modeGradient}>
@@ -1465,6 +1508,11 @@ const GamesScreen = ({
   const [showAdChallenges, setShowAdChallenges] = useState(false);
   const [showSaqrFortunes, setShowSaqrFortunes] = useState(false);
   const [showAdUnlockModal, setShowAdUnlockModal] = useState(false);
+  const [showFriendInviteModal, setShowFriendInviteModal] = useState(false);
+  const [friendInviteGameId, setFriendInviteGameId] = useState(null);
+  const [friendsForInvite, setFriendsForInvite] = useState([]);
+  const [loadingFriendsInvite, setLoadingFriendsInvite] = useState(false);
+  const [submittingInvite, setSubmittingInvite] = useState(false);
   const [pendingAdGame, setPendingAdGame] = useState(null);
   const [adGateState, setAdGateState] = useState({ freePlays: {}, adCredits: {} });
   
@@ -1887,15 +1935,10 @@ const GamesScreen = ({
   }), []);
 
   const visibleGames = useMemo(() => {
-    // Remove near-duplicate variants and keep one polished entry per core game.
-    const seenKeys = new Set();
-    return games
-      .filter((game) => {
-        const key = `${game.backendGameId || game.id}:${game.online ? 'online' : 'solo'}`;
-        if (seenKeys.has(key)) return false;
-        seenKeys.add(key);
-        return true;
-      })
+    // Professional imported catalog: show exactly 20 curated games.
+    return IMPORTED_PRO_GAME_IDS
+      .map((id) => games.find((game) => game.id === id))
+      .filter(Boolean)
       .map((game) => ({
         ...game,
         coverImage: GAME_COVER_MAP[game.id] || GAME_COVER_MAP[game.backendGameId],
@@ -2159,54 +2202,184 @@ const GamesScreen = ({
     onQueuedGameHandled && onQueuedGameHandled();
   }, [queuedGameId, getGameById, handleGameSelect, onQueuedGameHandled]);
 
-  const handleModeSelect = async (mode) => {
-    const selectedGame = getGameById(showModeSelector);
-    if (!selectedGame) return;
+  const startOnlineMatchmaking = useCallback(async (selectedGame) => {
+    if (!selectedGame) return false;
     const backendGameId = resolveBackendGameId(selectedGame.id);
 
-    if (mode === 'online') {
-      // التحقق من الرصيد قبل الدخول
-      const cost = gameCosts[backendGameId] || selectedGame.onlineCost || 20;
-      if (balance.diamonds < cost) {
-        Alert.alert(
-          'رصيد غير كافٍ',
-          `تحتاج ${cost} ألماسة للعب أونلاين. رصيدك الحالي: ${balance.diamonds}`,
-          [
-            { text: 'إلغاء', style: 'cancel' },
-            { text: 'شراء ألماسات', onPress: () => onOpenDiamondShop && onOpenDiamondShop() }
-          ]
-        );
+    const cost = gameCosts[backendGameId] || selectedGame.onlineCost || 20;
+    if (balance.diamonds < cost) {
+      Alert.alert(
+        'رصيد غير كافٍ',
+        `تحتاج ${cost} ألماسة للعب أونلاين. رصيدك الحالي: ${balance.diamonds}`,
+        [
+          { text: 'إلغاء', style: 'cancel' },
+          { text: 'شراء ألماسات', onPress: () => onOpenDiamondShop && onOpenDiamondShop() }
+        ]
+      );
+      return false;
+    }
+
+    try {
+      const response = await api.enterOnlineGame(userId, backendGameId, true);
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        Alert.alert('خطأ', error.detail || 'حدث خطأ');
+        return false;
+      }
+
+      consumeGameSessionCredit(selectedGame.id);
+      setShowWaiting(true);
+      pendingOnlineGameRef.current = selectedGame.id;
+      fetchBalance();
+
+      if (multiplayerService.isConnected()) {
+        multiplayerService.findMatch(backendGameId);
+      } else {
+        await multiplayerService.connect(userId);
+        multiplayerService.findMatch(backendGameId);
+      }
+      return true;
+    } catch (e) {
+      if (e?.message === 'MULTIPLAYER_CONNECTION_FAILED') {
+        Alert.alert('اتصال الأونلاين', 'تعذر الاتصال بخدمة اللعب المباشر. تحقق من الشبكة ثم أعد المحاولة.');
+      } else {
+        Alert.alert('خطأ', 'حدث خطأ في الاتصال');
+      }
+      return false;
+    }
+  }, [balance.diamonds, consumeGameSessionCredit, gameCosts, onOpenDiamondShop, resolveBackendGameId, userId]);
+
+  const publishGlobalChatInvite = useCallback(async (selectedGame) => {
+    const inviteCode = `LIVE-${selectedGame.id}-${Date.now().toString(36).slice(-5).toUpperCase()}`;
+    const inviteMessage = `دعوة أونلاين للعبة ${selectedGame.name} | الكود: ${inviteCode}`;
+    try {
+      const response = await api.fetch('/api/economy/chat/send', {
+        method: 'POST',
+        body: JSON.stringify({
+          user_id: userId,
+          server_id: 'global',
+          message: inviteMessage,
+          user_name: user?.name || 'لاعب',
+          user_avatar: user?.avatar || null,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        const detail = error?.detail || {};
+        if (detail?.error === 'insufficient_diamonds') {
+          Alert.alert(
+            'ألماسات غير كافية',
+            `دعوة الشات العام تحتاج ${ONLINE_GLOBAL_CHAT_INVITE_COST} ألماسات.`,
+            [
+              { text: 'إلغاء', style: 'cancel' },
+              { text: 'شراء ألماسات', onPress: () => onOpenDiamondShop && onOpenDiamondShop() },
+            ],
+          );
+          return false;
+        }
+        Alert.alert('تعذر إرسال الدعوة', detail?.message || error?.detail || 'حدث خطأ');
+        return false;
+      }
+
+      const data = await response.json();
+      if (typeof data?.new_balance === 'number') {
+        setBalance((prev) => ({ ...prev, diamonds: data.new_balance }));
+      }
+      Alert.alert('تم نشر الدعوة', `تم نشر الدعوة في الشات العام مقابل ${ONLINE_GLOBAL_CHAT_INVITE_COST} ألماسات.`);
+      return true;
+    } catch (e) {
+      Alert.alert('خطأ', 'فشل إرسال الدعوة إلى الشات العام.');
+      return false;
+    }
+  }, [onOpenDiamondShop, user?.avatar, user?.name, userId]);
+
+  const openFriendInviteFlow = useCallback(async (selectedGame) => {
+    setFriendInviteGameId(selectedGame?.id || null);
+    setShowModeSelector(null);
+    setShowFriendInviteModal(true);
+    setLoadingFriendsInvite(true);
+
+    try {
+      const res = await api.fetch(`/api/social/friends/list/${userId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setFriendsForInvite(data.friends || []);
+      } else {
+        setFriendsForInvite([]);
+      }
+    } catch (e) {
+      setFriendsForInvite([]);
+    } finally {
+      setLoadingFriendsInvite(false);
+    }
+  }, [userId]);
+
+  const sendFriendInviteAndStart = useCallback(async (friend) => {
+    const selectedGame = getGameById(friendInviteGameId);
+    if (!selectedGame || !friend) return;
+
+    setSubmittingInvite(true);
+    try {
+      const backendGameId = resolveBackendGameId(selectedGame.id);
+      const invitationRes = await api.fetch('/api/invitations/create', {
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'game',
+          game_id: backendGameId,
+          message: `دعوة أونلاين للعبة ${selectedGame.name}`,
+        }),
+      });
+
+      if (!invitationRes.ok) {
+        const error = await invitationRes.json().catch(() => ({}));
+        Alert.alert('تعذر إرسال الدعوة', error?.detail || 'حدث خطأ');
         return;
       }
 
-      // خصم الألماسات
-      try {
-        const response = await api.enterOnlineGame(userId, backendGameId, true);
-        if (response.ok) {
-          consumeGameSessionCredit(selectedGame.id);
-          setShowWaiting(true);
-          pendingOnlineGameRef.current = selectedGame.id;
-          fetchBalance();
-          
-          // البحث عن منافس حقيقي عبر WebSocket
-          if (multiplayerService.isConnected()) {
-            multiplayerService.findMatch(backendGameId);
-          } else {
-            // إعادة الاتصال والبحث
-            await multiplayerService.connect(userId);
-            multiplayerService.findMatch(backendGameId);
-          }
-        } else {
-          const error = await response.json().catch(() => ({}));
-          Alert.alert('خطأ', error.detail || 'حدث خطأ');
-        }
-      } catch (e) {
-        if (e?.message === 'MULTIPLAYER_CONNECTION_FAILED') {
-          Alert.alert('اتصال الأونلاين', 'تعذر الاتصال بخدمة اللعب المباشر. تحقق من الشبكة ثم أعد المحاولة.');
-        } else {
-          Alert.alert('خطأ', 'حدث خطأ في الاتصال');
-        }
+      const invitationData = await invitationRes.json().catch(() => ({}));
+      const inviteCode = invitationData?.invitation?.code;
+      if (inviteCode) {
+        await api.fetch('/api/social/messages/send', {
+          method: 'POST',
+          body: JSON.stringify({
+            from_user_id: userId,
+            to_user_id: friend.id,
+            from_user_name: user?.name || 'لاعب',
+            message: `دعوة مجانية أونلاين للعبة ${selectedGame.name}\nكود الدعوة: ${inviteCode}`,
+          }),
+        }).catch(() => ({}));
       }
+
+      Alert.alert('تم', 'تم إرسال الدعوة للصديق مجانًا، وسيبدأ البحث عن خصم الآن.');
+      setShowFriendInviteModal(false);
+      await startOnlineMatchmaking(selectedGame);
+    } catch (e) {
+      Alert.alert('خطأ', 'حدث خطأ أثناء إنشاء دعوة الصديق.');
+    } finally {
+      setSubmittingInvite(false);
+    }
+  }, [friendInviteGameId, getGameById, resolveBackendGameId, startOnlineMatchmaking, user?.name, userId]);
+
+  const handleModeSelect = async (mode) => {
+    const selectedGame = getGameById(showModeSelector);
+    if (!selectedGame) return;
+
+    if (mode === 'online') {
+      await startOnlineMatchmaking(selectedGame);
+      return;
+    }
+
+    if (mode === 'online_chat_invite') {
+      const sent = await publishGlobalChatInvite(selectedGame);
+      if (!sent) return;
+      await startOnlineMatchmaking(selectedGame);
+      return;
+    }
+
+    if (mode === 'online_friend_invite') {
+      await openFriendInviteFlow(selectedGame);
+      return;
     } else {
       consumeGameSessionCredit(selectedGame.id);
       setActiveGame(selectedGame.id);
@@ -2417,6 +2590,8 @@ const GamesScreen = ({
             gameName={games.find(g => g.id === showModeSelector)?.name}
             onSelectMode={handleModeSelect}
             onClose={() => setShowModeSelector(null)}
+            hasOnline={!!games.find(g => g.id === showModeSelector)?.online}
+            chatInviteCost={ONLINE_GLOBAL_CHAT_INVITE_COST}
           />
         )}
       </LinearGradient>
@@ -2672,6 +2847,57 @@ const GamesScreen = ({
           setPendingAdGame(null);
         }}
       />
+
+      <Modal transparent animationType="fade" visible={showFriendInviteModal}>
+        <View style={styles.inviteModalOverlay}>
+          <View style={styles.inviteModalCard}>
+            <LinearGradient colors={['#161625', '#101221']} style={styles.inviteModalGradient}>
+              <View style={styles.inviteModalHeader}>
+                <Text style={styles.inviteModalTitle}>دعوة صديق أونلاين (مجاني)</Text>
+                <TouchableOpacity onPress={() => setShowFriendInviteModal(false)} style={styles.inviteModalClose}>
+                  <Ionicons name="close" size={20} color="#fff" />
+                </TouchableOpacity>
+              </View>
+
+              {loadingFriendsInvite ? (
+                <View style={styles.inviteLoadingWrap}>
+                  <ActivityIndicator color="#60a5fa" />
+                  <Text style={styles.inviteLoadingText}>جاري تحميل الأصدقاء...</Text>
+                </View>
+              ) : friendsForInvite.length === 0 ? (
+                <View style={styles.inviteLoadingWrap}>
+                  <Ionicons name="people-outline" size={36} color="#64748b" />
+                  <Text style={styles.inviteLoadingText}>لا يوجد أصدقاء لإرسال دعوة حالياً.</Text>
+                </View>
+              ) : (
+                <ScrollView style={styles.inviteFriendsList} showsVerticalScrollIndicator={false}>
+                  {friendsForInvite.map((friend) => (
+                    <TouchableOpacity
+                      key={friend.id}
+                      style={styles.inviteFriendRow}
+                      onPress={() => sendFriendInviteAndStart(friend)}
+                      disabled={submittingInvite}
+                    >
+                      <View style={styles.inviteFriendAvatar}>
+                        <Text style={styles.inviteFriendAvatarText}>{(friend.name || 'U').charAt(0).toUpperCase()}</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.inviteFriendName}>{friend.name}</Text>
+                        <Text style={styles.inviteFriendSub}>دعوة مجانية للعب أونلاين</Text>
+                      </View>
+                      {submittingInvite ? (
+                        <ActivityIndicator color="#22c55e" />
+                      ) : (
+                        <Ionicons name="send" size={18} color="#22c55e" />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
+            </LinearGradient>
+          </View>
+        </View>
+      </Modal>
 
       {/* Ad Challenges Modal (Legacy) */}
       <AdChallengesModal
@@ -3058,6 +3284,92 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
     fontSize: 13,
     fontWeight: '600',
+  },
+
+  inviteModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  inviteModalCard: {
+    width: '100%',
+    maxWidth: 390,
+    borderRadius: 18,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
+  inviteModalGradient: {
+    maxHeight: '78%',
+    padding: 16,
+  },
+  inviteModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  inviteModalTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  inviteModalClose: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
+  inviteLoadingWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 26,
+    gap: 8,
+  },
+  inviteLoadingText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 13,
+  },
+  inviteFriendsList: {
+    marginTop: 4,
+  },
+  inviteFriendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    marginBottom: 8,
+  },
+  inviteFriendAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(59,130,246,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inviteFriendAvatarText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  inviteFriendName: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  inviteFriendSub: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 11,
+    marginTop: 2,
   },
   
   // Game Common
