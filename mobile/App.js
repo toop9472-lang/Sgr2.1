@@ -1,7 +1,7 @@
 // Saqr Mobile App - Main Entry Point
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, ActivityIndicator, Text, BackHandler, Alert, Image, I18nManager, LogBox, useColorScheme } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Text, BackHandler, Alert, Image, I18nManager, LogBox } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import colors from './src/styles/colors';
 
@@ -37,9 +37,6 @@ import SaqrFortunesScreen from './src/screens/SaqrFortunesScreen';
 import FriendsScreen from './src/screens/FriendsScreen';
 import PrivateMessagesScreen from './src/screens/PrivateMessagesScreen';
 import InvitationsScreen from './src/screens/InvitationsScreen';
-import MillionaireScreen from './src/screens/MillionaireScreen';
-import OnboardingScreen from './src/screens/OnboardingScreen';
-import LeaderboardScreen from './src/screens/LeaderboardScreen';
 
 // Components
 import BottomNav from './src/components/BottomNav';
@@ -73,11 +70,6 @@ try {
 
 // Main App Content (wrapped with providers)
 function AppContent() {
-  // Theme support
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
-  
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -89,25 +81,19 @@ function AppContent() {
   const [showAchievements, setShowAchievements] = useState(false);
   const [showShop, setShowShop] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
-  const [showMillionaire, setShowMillionaire] = useState(false);
-  const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [networkStatus, setNetworkStatus] = useState('checking');
   const [settings, setSettings] = useState(null);
   const [balanceRefresh, setBalanceRefresh] = useState(0);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [queuedGameId, setQueuedGameId] = useState(null);
 
   // Language context
-  const { language, t } = useLanguage();
+  const { language } = useLanguage();
   
   // Achievements context
   const { 
     newAchievement, 
     clearNewAchievement, 
     updateCurrency,
-    recordAdWatched,
-    recordAppShared,
   } = useAchievements();
 
   // Notification listener ref
@@ -240,10 +226,6 @@ function AppContent() {
 
   const initApp = async () => {
     try {
-      // Skip connection check - go directly to loading saved data
-      // This prevents false "no internet" errors
-      setNetworkStatus('connected');
-      
       // Load saved user data
       const [savedToken, savedUser] = await Promise.all([
         storage.getToken(),
@@ -323,16 +305,6 @@ function AppContent() {
     setIsAuthenticated(true);
   };
 
-  const handleGuestMode = () => {
-    setUser({ 
-      name: 'زائر', 
-      points: 0, 
-      isGuest: true,
-      id: 'guest_' + Date.now()
-    });
-    setIsAuthenticated(true);
-  };
-
   const handleLogout = async () => {
     await storage.clearAll();
     setUser(null);
@@ -351,16 +323,6 @@ function AppContent() {
       // Update achievements
       await updateCurrency(points, 0);
     }
-  };
-
-  // Handle ad watched for achievements
-  const handleAdWatched = async () => {
-    await recordAdWatched();
-  };
-
-  // Handle app shared for achievements
-  const handleAppShared = async () => {
-    await recordAppShared();
   };
 
   const handleDailyRewardClaimed = (data) => {
@@ -412,7 +374,7 @@ function AppContent() {
 
   // Auth Screen
   if (!isAuthenticated) {
-    return <AuthScreen onLogin={handleLogin} onGuestMode={handleGuestMode} />;
+    return <AuthScreen onLogin={handleLogin} />;
   }
 
   // Main App
@@ -580,31 +542,6 @@ function AppContent() {
       {showAdminPanel && (
         <View style={StyleSheet.absoluteFill}>
           <AdminWebViewScreen onClose={() => setShowAdminPanel(false)} />
-        </View>
-      )}
-
-      {/* Millionaire Game Screen */}
-      {showMillionaire && (
-        <View style={StyleSheet.absoluteFill}>
-          <MillionaireScreen
-            onClose={() => setShowMillionaire(false)}
-            onComplete={(points, result) => {
-              if (result === 'win') {
-                setUser(prev => ({ ...prev, points: (prev.points || 0) + points }));
-                setBalanceRefresh(prev => prev + 1);
-              }
-            }}
-          />
-        </View>
-      )}
-
-      {/* Leaderboard Screen */}
-      {showLeaderboard && (
-        <View style={StyleSheet.absoluteFill}>
-          <LeaderboardScreen
-            userId={user?.id}
-            onClose={() => setShowLeaderboard(false)}
-          />
         </View>
       )}
 

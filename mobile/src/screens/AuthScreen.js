@@ -343,7 +343,7 @@ const AuthScreen = ({ onLogin }) => {
     setIsLoading(true);
     try {
       const response = await api.forgotPassword(cleanPhone);
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       
       if (response.ok) {
         setCountdown(60);
@@ -437,7 +437,7 @@ const AuthScreen = ({ onLogin }) => {
             onLogin(data.user);
           } else {
             const loginResponse = await api.login(normalizedEmail, normalizedPassword);
-            const loginData = await loginResponse.json();
+            const loginData = await loginResponse.json().catch(() => ({}));
             if (loginResponse.ok) {
               await storage.setToken(loginData.token);
               await storage.setUserData(loginData.user);
@@ -489,7 +489,7 @@ const AuthScreen = ({ onLogin }) => {
         response = await api.forgotPassword(cleanPhone);
       }
       
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       if (response.ok) {
         setCountdown(60);
         if (data.otp_debug) {
