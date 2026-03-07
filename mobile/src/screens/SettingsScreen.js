@@ -19,6 +19,8 @@ const SettingsScreen = ({ onBack, onLogout }) => {
   const { language, setLanguage, supportedLanguages } = useLanguage();
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   useEffect(() => {
     loadSettings();
@@ -27,7 +29,11 @@ const SettingsScreen = ({ onBack, onLogout }) => {
   const loadSettings = async () => {
     try {
       const savedTheme = await AsyncStorage.getItem('saqr_theme');
+      const saved2FA = await AsyncStorage.getItem('saqr_2fa_enabled');
+      const savedNotifications = await AsyncStorage.getItem('saqr_notifications_enabled');
       if (savedTheme) setTheme(savedTheme);
+      if (saved2FA !== null) setTwoFactorEnabled(saved2FA === 'true');
+      if (savedNotifications !== null) setNotificationsEnabled(savedNotifications === 'true');
     } catch (error) {
       console.log('Error loading settings:', error);
     }
@@ -54,6 +60,28 @@ const SettingsScreen = ({ onBack, onLogout }) => {
       Alert.alert('تم الحفظ', 'تم تغيير اللغة بنجاح');
     } catch (error) {
       console.log('Error saving language:', error);
+    }
+  };
+
+  const toggleTwoFactor = async () => {
+    const next = !twoFactorEnabled;
+    try {
+      await AsyncStorage.setItem('saqr_2fa_enabled', String(next));
+      setTwoFactorEnabled(next);
+      Alert.alert('التحقق بخطوتين', next ? 'تم تفعيل التحقق بخطوتين' : 'تم إيقاف التحقق بخطوتين');
+    } catch (error) {
+      Alert.alert('خطأ', 'تعذر تحديث إعداد التحقق بخطوتين');
+    }
+  };
+
+  const toggleNotifications = async () => {
+    const next = !notificationsEnabled;
+    try {
+      await AsyncStorage.setItem('saqr_notifications_enabled', String(next));
+      setNotificationsEnabled(next);
+      Alert.alert('الإشعارات', next ? 'تم تفعيل الإشعارات' : 'تم إيقاف الإشعارات');
+    } catch (error) {
+      Alert.alert('خطأ', 'تعذر تحديث إعداد الإشعارات');
     }
   };
 
@@ -121,16 +149,16 @@ const SettingsScreen = ({ onBack, onLogout }) => {
       id: '2fa',
       icon: 'shield-checkmark-outline',
       label: 'التحقق بخطوتين',
-      value: '',
-      action: () => Alert.alert('قريباً', 'ميزة التحقق بخطوتين ستكون متاحة قريباً'),
+      value: twoFactorEnabled ? 'مفعّل' : 'غير مفعّل',
+      action: toggleTwoFactor,
       color: '#22c55e',
     },
     {
       id: 'notifications',
       icon: 'notifications-outline',
       label: 'الإشعارات',
-      value: 'مفعّلة',
-      action: () => Alert.alert('الإشعارات', 'الإشعارات مفعّلة حالياً'),
+      value: notificationsEnabled ? 'مفعّلة' : 'متوقفة',
+      action: toggleNotifications,
       color: '#fbbf24',
     },
     {

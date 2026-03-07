@@ -132,7 +132,7 @@ const AdvertiserDashboardScreen = ({ navigation }) => {
 
           <TouchableOpacity
             style={styles.createAdBtn}
-            onPress={() => navigation.navigate('Advertiser')}
+            onPress={() => navigation.navigate('advertiser')}
           >
             <Ionicons name="add-circle-outline" size={18} color="#60a5fa" />
             <Text style={styles.createAdBtnText}>إنشاء إعلان جديد</Text>
@@ -217,7 +217,7 @@ const AdvertiserDashboardScreen = ({ navigation }) => {
             <Text style={styles.sectionTitle}>إعلاناتي</Text>
             <TouchableOpacity
               style={styles.addBtn}
-              onPress={() => navigation.navigate('Advertiser')}
+              onPress={() => navigation.navigate('advertiser')}
             >
               <Ionicons name="add" size={18} color="#FFF" />
               <Text style={styles.addBtnText}>إعلان جديد</Text>
@@ -230,7 +230,7 @@ const AdvertiserDashboardScreen = ({ navigation }) => {
               <Text style={styles.emptyText}>لا توجد إعلانات بعد</Text>
               <TouchableOpacity
                 style={styles.emptyBtn}
-                onPress={() => navigation.navigate('Advertiser')}
+                onPress={() => navigation.navigate('advertiser')}
               >
                 <Text style={styles.emptyBtnText}>أنشئ إعلانك الأول</Text>
               </TouchableOpacity>

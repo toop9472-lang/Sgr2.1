@@ -13,6 +13,7 @@ import {
   TextInput,
   Share,
   ActivityIndicator,
+  Clipboard,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,7 +21,15 @@ import api from '../services/api';
 import storage from '../services/storage';
 import { useAchievements } from '../services/AchievementsContext';
 
-const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenShop, onOpenAdminPanel }) => {
+const ProfileScreen = ({
+  user,
+  onLogout,
+  onNavigate,
+  onOpenAchievements,
+  onOpenShop,
+  onOpenAdminPanel,
+  onUpdateProfile,
+}) => {
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
@@ -132,6 +141,7 @@ const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenS
   };
 
   const copyReferralCode = () => {
+    Clipboard.setString(referralCode);
     Alert.alert('تم النسخ', `تم نسخ كود الإحالة: ${referralCode}`);
   };
 
@@ -224,6 +234,17 @@ const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenS
     );
   };
 
+  const handleSaveProfile = () => {
+    const trimmedName = editName.trim();
+    if (!trimmedName) {
+      Alert.alert('خطأ', 'يرجى إدخال اسم صحيح');
+      return;
+    }
+    onUpdateProfile && onUpdateProfile({ name: trimmedName });
+    setShowEditProfile(false);
+    Alert.alert('تم', 'تم تحديث الاسم بنجاح');
+  };
+
   const menuItems = [
     { id: 'shop', icon: 'cart', label: 'المتجر', action: onOpenShop, color: '#3b82f6' },
     { id: 'achievements', icon: 'trophy', label: 'الإنجازات', action: onOpenAchievements, color: '#fbbf24' },
@@ -249,7 +270,7 @@ const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenS
       <View style={styles.content}>
         {/* Profile Header */}
         <View style={styles.profileHeader}>
-          <TouchableOpacity style={styles.avatar} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.avatar} activeOpacity={0.8} onPress={() => setShowEditProfile(true)}>
             <Text style={styles.avatarText}>{(user?.name || 'U')[0].toUpperCase()}</Text>
             <View style={styles.editAvatarBadge}>
               <Ionicons name="camera" size={12} color="#FFF" />
@@ -467,6 +488,35 @@ const ProfileScreen = ({ user, onLogout, onNavigate, onOpenAchievements, onOpenS
               ) : (
                 <Text style={styles.modalButtonText}>تغيير كلمة المرور</Text>
               )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Edit Profile Modal */}
+      <Modal visible={showEditProfile} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>تعديل الملف الشخصي</Text>
+              <TouchableOpacity onPress={() => setShowEditProfile(false)}>
+                <Ionicons name="close" size={24} color="#FFF" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>الاسم</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="أدخل اسمك"
+                placeholderTextColor="rgba(255,255,255,0.3)"
+                value={editName}
+                onChangeText={setEditName}
+              />
+            </View>
+
+            <TouchableOpacity style={styles.modalButton} onPress={handleSaveProfile}>
+              <Text style={styles.modalButtonText}>حفظ التغييرات</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -1136,7 +1136,17 @@ const RiddlesGame = ({ mode, onComplete, onClose }) => {
 };
 
 // ==================== MAIN GAMES SCREEN ====================
-const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievements, balanceRefresh, language, onClose }) => {
+const GamesScreen = ({
+  user,
+  onPointsEarned,
+  onOpenDiamondShop,
+  onOpenAchievements,
+  balanceRefresh,
+  language,
+  queuedGameId,
+  onQueuedGameHandled,
+  onClose,
+}) => {
   const [activeGame, setActiveGame] = useState(null);
   const [gameMode, setGameMode] = useState(null);
   const [showModeSelector, setShowModeSelector] = useState(null);
@@ -1748,6 +1758,17 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
 
     launchGame(gameId);
   };
+
+  useEffect(() => {
+    if (!queuedGameId) return;
+    const game = getGameById(queuedGameId);
+    if (!game) {
+      onQueuedGameHandled && onQueuedGameHandled();
+      return;
+    }
+    handleGameSelect(queuedGameId);
+    onQueuedGameHandled && onQueuedGameHandled();
+  }, [queuedGameId, getGameById, handleGameSelect, onQueuedGameHandled]);
 
   const handleModeSelect = async (mode) => {
     const selectedGame = getGameById(showModeSelector);

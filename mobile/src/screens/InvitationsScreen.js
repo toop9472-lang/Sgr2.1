@@ -18,6 +18,8 @@ import {
   Clipboard,
   FlatList,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -577,42 +579,44 @@ const JoinByCodeModal = ({ visible, onClose, onJoin }) => {
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.modalOverlay}>
-        <View style={styles.codeModalContent}>
-          <LinearGradient
-            colors={['#1a1a2e', '#0f0f1a']}
-            style={styles.codeModalGradient}
-          >
-            <Ionicons name="ticket-outline" size={50} color="#60a5fa" />
-            <Text style={styles.codeModalTitle}>أدخل كود الدعوة</Text>
-            
-            <TextInput
-              style={styles.codeInput}
-              value={code}
-              onChangeText={(text) => setCode(text.toUpperCase())}
-              placeholder="XXXXXX"
-              placeholderTextColor="#444"
-              maxLength={6}
-              autoCapitalize="characters"
-            />
-            
-            <View style={styles.codeModalActions}>
-              <TouchableOpacity style={styles.codeModalCancel} onPress={onClose}>
-                <Text style={styles.codeModalCancelText}>إلغاء</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.codeModalJoin, loading && { opacity: 0.5 }]}
-                onPress={handleJoin}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#FFF" size="small" />
-                ) : (
-                  <Text style={styles.codeModalJoinText}>انضمام</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </LinearGradient>
-        </View>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.codeModalKeyboard}>
+          <View style={styles.codeModalContent}>
+            <LinearGradient
+              colors={['#1a1a2e', '#0f0f1a']}
+              style={styles.codeModalGradient}
+            >
+              <Ionicons name="ticket-outline" size={50} color="#60a5fa" />
+              <Text style={styles.codeModalTitle}>أدخل كود الدعوة</Text>
+              
+              <TextInput
+                style={styles.codeInput}
+                value={code}
+                onChangeText={(text) => setCode(text.toUpperCase())}
+                placeholder="XXXXXX"
+                placeholderTextColor="#444"
+                maxLength={6}
+                autoCapitalize="characters"
+              />
+              
+              <View style={styles.codeModalActions}>
+                <TouchableOpacity style={styles.codeModalCancel} onPress={onClose}>
+                  <Text style={styles.codeModalCancelText}>إلغاء</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.codeModalJoin, loading && { opacity: 0.5 }]}
+                  onPress={handleJoin}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#FFF" size="small" />
+                  ) : (
+                    <Text style={styles.codeModalJoinText}>انضمام</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </LinearGradient>
+          </View>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   );
@@ -925,7 +929,11 @@ const InvitationsScreen = ({ user, onClose, onPlayGame }) => {
                       onDecline={(id) => respondToChallenge(id, false)}
                       onPlay={(ch) => {
                         gameSounds.levelUp();
-                        onPlayGame?.(ch.game_id, ch);
+                        if (onPlayGame) {
+                          onPlayGame(ch.game_id, ch);
+                        } else {
+                          Alert.alert('فتح اللعبة', 'سيتم تحويلك إلى صفحة الألعاب لبدء التحدي.');
+                        }
                       }}
                     />
                   ))
@@ -1651,11 +1659,13 @@ const styles = StyleSheet.create({
   },
   
   // Join By Code Modal
+  codeModalKeyboard: {
+    width: '100%',
+    alignItems: 'center',
+  },
   codeModalContent: {
-    position: 'absolute',
-    top: '30%',
-    left: 20,
-    right: 20,
+    width: '90%',
+    maxWidth: 420,
     borderRadius: 24,
     overflow: 'hidden',
   },

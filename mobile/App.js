@@ -96,6 +96,7 @@ function AppContent() {
   const [settings, setSettings] = useState(null);
   const [balanceRefresh, setBalanceRefresh] = useState(0);
   const [selectedFriend, setSelectedFriend] = useState(null);
+  const [queuedGameId, setQueuedGameId] = useState(null);
 
   // Language context
   const { language, t } = useLanguage();
@@ -423,6 +424,7 @@ function AppContent() {
           <BalanceHeader 
             userId={user.id}
             onDiamondPress={() => setShowDiamondShop(true)}
+            onGemsPress={() => setCurrentPage('fortunes')}
             refreshTrigger={balanceRefresh}
           />
         )}
@@ -448,6 +450,11 @@ function AppContent() {
             onOpenAchievements={() => setShowAchievements(true)}
             onOpenShop={() => setShowShop(true)}
             onOpenAdminPanel={() => setShowAdminPanel(true)}
+            onUpdateProfile={async (updates) => {
+              const updatedUser = { ...(user || {}), ...(updates || {}) };
+              setUser(updatedUser);
+              await storage.setUserData(updatedUser);
+            }}
           />
         )}
         {currentPage === 'settings' && (
@@ -483,6 +490,8 @@ function AppContent() {
             onOpenAchievements={() => setShowAchievements(true)}
             balanceRefresh={balanceRefresh}
             language={language}
+            queuedGameId={queuedGameId}
+            onQueuedGameHandled={() => setQueuedGameId(null)}
             onClose={() => setCurrentPage('home')}
           />
         )}
@@ -509,7 +518,8 @@ function AppContent() {
               setCurrentPage('messages');
             }}
             onOpenGameInvite={(friend) => {
-              // TODO: Open game invite modal
+              setSelectedFriend(friend);
+              setCurrentPage('invitations');
             }}
           />
         )}
@@ -523,7 +533,17 @@ function AppContent() {
         {currentPage === 'invitations' && (
           <InvitationsScreen 
             user={user}
-            onClose={() => setCurrentPage('home')}
+            onClose={() => setCurrentPage(selectedFriend ? 'friends' : 'home')}
+            onPlayGame={(gameId) => {
+              const gameIdMap = {
+                math: 'mathrace',
+                word: 'wordrace',
+                brick: 'brickbreaker',
+              };
+              const normalizedGameId = gameIdMap[gameId] || gameId;
+              setQueuedGameId(normalizedGameId);
+              setCurrentPage('games');
+            }}
           />
         )}
       </LinearGradient>
@@ -621,7 +641,7 @@ function AppContent() {
       />
 
       {/* Bottom Navigation - إخفاء عند فتح الألعاب أو الدردشة أو الأصدقاء */}
-      {!['games', 'chat', 'fortunes', 'friends', 'messages'].includes(currentPage) && (
+      {!['games', 'chat', 'fortunes', 'friends', 'messages', 'invitations'].includes(currentPage) && (
         <BottomNav
           currentPage={currentPage}
           onNavigate={setCurrentPage}
