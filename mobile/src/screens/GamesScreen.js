@@ -38,25 +38,25 @@ const AD_UNLOCK_SESSIONS = 3;
 const ONLINE_GLOBAL_CHAT_INVITE_COST = 5;
 const EXTERNAL_GAME_URLS = {
   aiquest: 'https://mikkun.github.io/evade-and-destroy/',
-  chess: 'https://hextris.io/',
+  chess: 'https://play.tetris.com/',
   tictactoe: 'https://susam.net/invaders.html',
-  tactix: 'https://rblopes.github.io/phaser-3-snake-game/',
-  memory: 'https://chanmeng666.github.io/html-brick-game/',
+  tactix: 'https://play2048.co/',
+  memory: 'https://hextris.io/',
   snake: 'https://rblopes.github.io/phaser-3-snake-game/',
   brickbreaker: 'https://chanmeng666.github.io/html-brick-game/',
   puzzle: 'https://phaserjs.github.io/editor-example-volcano/',
-  trivia: 'https://hextris.io/',
-  mathrace: 'https://play2048.co/',
-  wordrace: 'https://hextris.io/',
-  colorswitch: 'https://hextris.io/',
-  riddles: 'https://susam.net/invaders.html',
-  millionaire: 'https://mikkun.github.io/evade-and-destroy/',
-  brickstormx: 'https://chanmeng666.github.io/html-brick-game/',
-  puzzlemaster: 'https://phaserjs.github.io/editor-example-volcano/',
-  triviaplus: 'https://play2048.co/',
-  wordmaster: 'https://hextris.io/',
-  reactiontap: 'https://mikkun.github.io/evade-and-destroy/',
-  sequencesprint: 'https://hextris.io/',
+  trivia: 'https://scottrippey.github.io/xquestjs/',
+  mathrace: 'https://fk652.github.io/Galactic-Defender/',
+  wordrace: 'https://ale4ero.github.io/Inter-Galactic/',
+  colorswitch: 'https://hunghvu.github.io/8-bit-armageddon/',
+  riddles: 'https://sentrychris.github.io/undeadbytes/',
+  millionaire: 'https://lorgan3.github.io/sorcerers/',
+  brickstormx: 'https://jignasp.github.io/Alien-Attacker/',
+  puzzlemaster: 'https://szvitek.github.io/phaser-demo/',
+  triviaplus: 'https://2048game.com/',
+  wordmaster: 'https://flappybird.io/',
+  reactiontap: 'https://www.google.com/logos/2010/pacman10-i.html',
+  sequencesprint: 'https://www.sudokuonline.io/',
 };
 const IMPORTED_PRO_GAME_IDS = [
   'aiquest',
@@ -387,6 +387,7 @@ const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
   const [webLoading, setWebLoading] = useState(true);
   const completedRef = useRef(false);
   const fallbackNotifiedRef = useRef(false);
+  const blockedNavNotifiedRef = useRef(false);
   const externalOrigin = useMemo(() => getOriginSafe(game?.externalUrl || ''), [game?.externalUrl]);
 
   const claimPoints = useCallback(() => {
@@ -399,6 +400,7 @@ const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
   useEffect(() => {
     completedRef.current = false;
     fallbackNotifiedRef.current = false;
+    blockedNavNotifiedRef.current = false;
     setScore(0);
     setLives(3);
     setFinished(false);
@@ -421,6 +423,11 @@ const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
   const allowNavigation = useCallback((request) => {
     if (!useExternalSource || !externalOrigin) return true;
     const url = request?.url || '';
+    const mainDocumentURL = request?.mainDocumentURL || '';
+    if (mainDocumentURL && mainDocumentURL !== url) return true;
+    const isTopFrame = request?.isTopFrame ?? true;
+    // Allow subresource requests (scripts/images/fonts) from CDN domains.
+    if (!isTopFrame) return true;
     if (
       url.startsWith('about:blank')
       || url.startsWith('data:')
@@ -480,16 +487,24 @@ const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
           onLoadEnd={() => setWebLoading(false)}
           onShouldStartLoadWithRequest={(request) => {
             const allowed = allowNavigation(request);
-            if (!allowed) fallbackToInternal();
+            if (!allowed) {
+              if (!blockedNavNotifiedRef.current) {
+                blockedNavNotifiedRef.current = true;
+                Alert.alert('رابط خارجي محظور', 'تم منع فتح رابط خارج اللعبة. ستبقى داخل التطبيق.');
+              }
+            }
             return allowed;
           }}
           onNavigationStateChange={(navState) => {
             if (!useExternalSource || !externalOrigin || !navState?.url) return;
             try {
               const navOrigin = new URL(navState.url).origin;
-              if (navOrigin !== externalOrigin) fallbackToInternal();
+              if (navOrigin !== externalOrigin) {
+                // Keep external game running; block only top-level external hops.
+                return;
+              }
             } catch (_) {
-              fallbackToInternal();
+              // Ignore parse errors and keep current session.
             }
           }}
           onError={() => fallbackToInternal()}
