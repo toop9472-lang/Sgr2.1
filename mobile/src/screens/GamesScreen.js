@@ -20,6 +20,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { WebView } from 'react-native-webview';
 import api from '../services/api';
 import storage from '../services/storage';
 import multiplayerService from '../services/multiplayer';
@@ -143,6 +144,281 @@ const GameCard = ({ game, onPress, pulseAnim, gameCost }) => {
         </LinearGradient>
       </TouchableOpacity>
     </Animated.View>
+  );
+};
+
+const IMPORTED_GAME_PRESETS = {
+  default: { accent: '#3b82f6', secondary: '#8b5cf6', obstacleSize: 18, speed: 2.1, spawnRate: 46 },
+  aiquest: { accent: '#ec4899', secondary: '#8b5cf6', obstacleSize: 16, speed: 2.2, spawnRate: 44 },
+  chess: { accent: '#f59e0b', secondary: '#334155', obstacleSize: 20, speed: 2.0, spawnRate: 48 },
+  tictactoe: { accent: '#f97316', secondary: '#fb7185', obstacleSize: 16, speed: 2.4, spawnRate: 42 },
+  tactix: { accent: '#3b82f6', secondary: '#06b6d4', obstacleSize: 15, speed: 2.6, spawnRate: 40 },
+  memory: { accent: '#14b8a6', secondary: '#22d3ee', obstacleSize: 17, speed: 2.1, spawnRate: 45 },
+  snake: { accent: '#22c55e', secondary: '#84cc16', obstacleSize: 17, speed: 2.35, spawnRate: 43 },
+  brickbreaker: { accent: '#ec4899', secondary: '#f43f5e', obstacleSize: 18, speed: 2.3, spawnRate: 42 },
+  puzzle: { accent: '#3b82f6', secondary: '#6366f1', obstacleSize: 17, speed: 2.15, spawnRate: 45 },
+  trivia: { accent: '#10b981', secondary: '#0ea5e9', obstacleSize: 16, speed: 2.25, spawnRate: 44 },
+  mathrace: { accent: '#8b5cf6', secondary: '#3b82f6', obstacleSize: 16, speed: 2.45, spawnRate: 41 },
+  wordrace: { accent: '#06b6d4', secondary: '#14b8a6', obstacleSize: 16, speed: 2.25, spawnRate: 43 },
+  colorswitch: { accent: '#f43f5e', secondary: '#f59e0b', obstacleSize: 14, speed: 2.7, spawnRate: 39 },
+  riddles: { accent: '#eab308', secondary: '#f97316', obstacleSize: 18, speed: 2.15, spawnRate: 45 },
+  millionaire: { accent: '#f59e0b', secondary: '#facc15', obstacleSize: 19, speed: 2.2, spawnRate: 44 },
+  brickstormx: { accent: '#ec4899', secondary: '#8b5cf6', obstacleSize: 15, speed: 2.75, spawnRate: 38 },
+  puzzlemaster: { accent: '#3b82f6', secondary: '#22d3ee', obstacleSize: 16, speed: 2.5, spawnRate: 40 },
+  triviaplus: { accent: '#10b981', secondary: '#22c55e', obstacleSize: 16, speed: 2.5, spawnRate: 40 },
+  wordmaster: { accent: '#06b6d4', secondary: '#38bdf8', obstacleSize: 15, speed: 2.6, spawnRate: 39 },
+  reactiontap: { accent: '#ef4444', secondary: '#f97316', obstacleSize: 13, speed: 2.95, spawnRate: 36 },
+  sequencesprint: { accent: '#22c55e', secondary: '#06b6d4', obstacleSize: 16, speed: 2.65, spawnRate: 39 },
+};
+
+const buildImportedGameHtml = (game) => {
+  const preset = IMPORTED_GAME_PRESETS[game?.id] || IMPORTED_GAME_PRESETS.default;
+  const gameName = (game?.name || 'Imported Action Game').replace(/'/g, '');
+  return `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<style>
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #0b1020; }
+  canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+(() => {
+  const accent = '${preset.accent}';
+  const secondary = '${preset.secondary}';
+  const obstacleSize = ${preset.obstacleSize};
+  const baseSpeed = ${preset.speed};
+  const spawnRate = ${preset.spawnRate};
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  const state = {
+    w: 0, h: 0, time: 0, score: 0, lives: 3, ended: false,
+    playerX: 0, playerY: 0, playerR: 18, obstacles: [], particles: []
+  };
+
+  function post(type, payload) {
+    try {
+      window.ReactNativeWebView && window.ReactNativeWebView.postMessage(JSON.stringify({ type, ...payload }));
+    } catch (_) {}
+  }
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    state.w = canvas.width;
+    state.h = canvas.height;
+    state.playerY = state.h - 80;
+    if (!state.playerX) state.playerX = state.w * 0.5;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+  function rand(min, max) { return Math.random() * (max - min) + min; }
+
+  function spawnObstacle() {
+    const lane = Math.floor(rand(0, 5));
+    const laneW = state.w / 5;
+    const x = lane * laneW + laneW * 0.5;
+    const color = Math.random() > 0.5 ? accent : secondary;
+    state.obstacles.push({ x, y: -30, r: obstacleSize, v: baseSpeed + rand(0.2, 1.3), c: color });
+  }
+
+  function addBurst(x, y, color) {
+    for (let i = 0; i < 8; i++) {
+      state.particles.push({
+        x, y, vx: rand(-2, 2), vy: rand(-2, 2), life: rand(12, 24), color
+      });
+    }
+  }
+
+  function drawBackground() {
+    const g = ctx.createLinearGradient(0, 0, 0, state.h);
+    g.addColorStop(0, '#0f172a');
+    g.addColorStop(1, '#0b1020');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, state.w, state.h);
+
+    for (let i = 0; i < 20; i++) {
+      const y = (state.time * 0.4 + i * 40) % state.h;
+      ctx.fillStyle = 'rgba(255,255,255,0.06)';
+      ctx.fillRect(0, y, state.w, 1);
+    }
+  }
+
+  function drawPlayer() {
+    ctx.beginPath();
+    ctx.arc(state.playerX, state.playerY, state.playerR, 0, Math.PI * 2);
+    ctx.fillStyle = accent;
+    ctx.shadowColor = accent;
+    ctx.shadowBlur = 18;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  function drawHUD() {
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.fillText('${gameName}', 16, 28);
+    ctx.fillStyle = 'rgba(255,255,255,0.86)';
+    ctx.font = 'bold 15px sans-serif';
+    ctx.fillText('Score: ' + state.score, 16, 52);
+    ctx.fillText('Lives: ' + state.lives, state.w - 86, 28);
+  }
+
+  function collide(a, b) {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    const r = a.r + b.r;
+    return dx * dx + dy * dy <= r * r;
+  }
+
+  function tick() {
+    if (state.ended) return;
+    state.time += 1;
+    state.score += 1;
+
+    if (state.time % spawnRate === 0) spawnObstacle();
+
+    state.obstacles.forEach((o) => {
+      o.y += o.v;
+      if (collide({ x: o.x, y: o.y, r: o.r }, { x: state.playerX, y: state.playerY, r: state.playerR })) {
+        o.hit = true;
+        state.lives -= 1;
+        addBurst(o.x, o.y, o.c);
+        post('lives', { lives: state.lives });
+      }
+    });
+
+    state.obstacles = state.obstacles.filter((o) => !o.hit && o.y < state.h + 40);
+
+    state.particles.forEach((p) => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life -= 1;
+    });
+    state.particles = state.particles.filter((p) => p.life > 0);
+
+    if (state.time % 25 === 0) post('score', { score: state.score });
+
+    if (state.lives <= 0) {
+      state.ended = true;
+      post('complete', { score: state.score });
+    }
+  }
+
+  function draw() {
+    drawBackground();
+
+    state.obstacles.forEach((o) => {
+      ctx.beginPath();
+      ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
+      ctx.fillStyle = o.c;
+      ctx.shadowColor = o.c;
+      ctx.shadowBlur = 12;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    });
+
+    state.particles.forEach((p) => {
+      ctx.globalAlpha = Math.max(0, p.life / 24);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2.4, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+
+    drawPlayer();
+    drawHUD();
+  }
+
+  function loop() {
+    tick();
+    draw();
+    if (!state.ended) requestAnimationFrame(loop);
+  }
+
+  function updateX(clientX) {
+    state.playerX = clamp(clientX, 20, state.w - 20);
+  }
+
+  window.addEventListener('mousemove', (e) => updateX(e.clientX));
+  window.addEventListener('touchstart', (e) => updateX(e.touches[0].clientX), { passive: true });
+  window.addEventListener('touchmove', (e) => updateX(e.touches[0].clientX), { passive: true });
+
+  post('ready', {});
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>`;
+};
+
+const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
+  const [score, setScore] = useState(0);
+  const [lives, setLives] = useState(3);
+  const [finished, setFinished] = useState(false);
+  const completedRef = useRef(false);
+
+  const claimPoints = useCallback(() => {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    const calculated = Math.max(8, Math.min(36, Math.floor(score / 18)));
+    onComplete(calculated, mode === 'online' ? 'draw' : 'win');
+  }, [mode, onComplete, score]);
+
+  return (
+    <View style={styles.importedGameContainer}>
+      <View style={styles.importedGameHeader}>
+        <TouchableOpacity onPress={onClose} style={styles.importedGameBack}>
+          <Ionicons name="arrow-back" size={22} color="#fff" />
+        </TouchableOpacity>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.importedGameTitle}>{game?.name || 'Arcade'}</Text>
+          <Text style={styles.importedGameSub}>Imported HD Action Engine</Text>
+        </View>
+        <View style={styles.importedStatPill}>
+          <Ionicons name="heart" size={14} color="#f43f5e" />
+          <Text style={styles.importedStatText}>{lives}</Text>
+        </View>
+      </View>
+
+      <View style={styles.importedWebWrap}>
+        <WebView
+          originWhitelist={['*']}
+          source={{ html: buildImportedGameHtml(game) }}
+          javaScriptEnabled
+          domStorageEnabled
+          onMessage={(event) => {
+            try {
+              const data = JSON.parse(event.nativeEvent.data || '{}');
+              if (data.type === 'score' && typeof data.score === 'number') setScore(data.score);
+              if (data.type === 'lives' && typeof data.lives === 'number') setLives(data.lives);
+              if (data.type === 'complete') setFinished(true);
+            } catch (_) {}
+          }}
+          style={styles.importedWebView}
+        />
+      </View>
+
+      <View style={styles.importedFooter}>
+        <View style={styles.importedScoreBox}>
+          <Ionicons name="flash" size={16} color="#fbbf24" />
+          <Text style={styles.importedScoreText}>Score {score}</Text>
+        </View>
+        <TouchableOpacity
+          style={[styles.importedClaimBtn, finished && styles.importedClaimBtnReady]}
+          onPress={claimPoints}
+        >
+          <Text style={styles.importedClaimText}>{finished ? 'تحصيل النقاط' : 'إنهاء الجولة'}</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 };
 
@@ -2526,6 +2802,18 @@ const GamesScreen = ({
       matchData: matchData,
       onSendMove: (move) => multiplayerService.sendMove(move),
     };
+
+    if (IMPORTED_PRO_GAME_IDS.includes(activeGame)) {
+      const importedGame = getGameById(activeGame) || games.find((g) => g.id === activeGame);
+      return (
+        <ImportedArcadeGame
+          game={importedGame}
+          mode={gameMode}
+          onComplete={handleGameComplete}
+          onClose={closeGame}
+        />
+      );
+    }
     
     switch (activeGame) {
       case 'aiquest':
@@ -3370,6 +3658,101 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.6)',
     fontSize: 11,
     marginTop: 2,
+  },
+
+  importedGameContainer: {
+    flex: 1,
+    backgroundColor: '#0a0a0f',
+    paddingTop: 44,
+  },
+  importedGameHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 12,
+    paddingBottom: 10,
+  },
+  importedGameBack: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  importedGameTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  importedGameSub: {
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 11,
+    marginTop: 1,
+  },
+  importedStatPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(255,255,255,0.09)',
+    borderRadius: 14,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+  },
+  importedStatText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  importedWebWrap: {
+    flex: 1,
+    marginHorizontal: 10,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.09)',
+  },
+  importedWebView: {
+    flex: 1,
+    backgroundColor: '#0b1020',
+  },
+  importedFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 16,
+  },
+  importedScoreBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(251,191,36,0.13)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  importedScoreText: {
+    color: '#fde68a',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  importedClaimBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#475569',
+    borderRadius: 12,
+    paddingVertical: 11,
+  },
+  importedClaimBtnReady: {
+    backgroundColor: '#3b82f6',
+  },
+  importedClaimText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '800',
   },
   
   // Game Common
