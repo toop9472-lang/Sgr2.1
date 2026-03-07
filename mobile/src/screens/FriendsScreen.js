@@ -11,12 +11,14 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  RefreshControl,
   Dimensions,
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import api from '../services/api';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
@@ -122,6 +124,7 @@ const SearchResultCard = ({ user, onAddFriend, pending }) => {
 
 // المكون الرئيسي
 const FriendsScreen = ({ user, onClose, onOpenMessages, onOpenGameInvite }) => {
+  const { language } = useLanguage();
   const [activeTab, setActiveTab] = useState('friends');
   const [friends, setFriends] = useState([]);
   const [requests, setRequests] = useState({ incoming: [], outgoing: [] });
@@ -129,13 +132,18 @@ const FriendsScreen = ({ user, onClose, onOpenMessages, onOpenGameInvite }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadData();
   }, []);
 
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = async (isPullToRefresh = false) => {
+    if (isPullToRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     try {
       // Load friends
       const friendsRes = await api.fetch(`/api/social/friends/list/${user?.id}`);
@@ -152,9 +160,15 @@ const FriendsScreen = ({ user, onClose, onOpenMessages, onOpenGameInvite }) => {
       }
     } catch (e) {
       console.error('Error loading data:', e);
+      Alert.alert('خطأ', 'تعذر تحميل بيانات الأصدقاء حالياً');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const handleRefresh = () => {
+    loadData(true);
   };
 
   const searchUsers = async () => {
@@ -281,7 +295,7 @@ const FriendsScreen = ({ user, onClose, onOpenMessages, onOpenGameInvite }) => {
           <View style={styles.emptyContainer}>
             <Ionicons name="people-outline" size={60} color="#444" />
             <Text style={styles.emptyText}>لا يوجد أصدقاء</Text>
-            <Text style={styles.emptySubtext}>ابحث عن أصدقاء جدد!</Text>
+            <Text style={styles.emptySubtext}>{language === 'ar' ? 'ابحث عن أصدقاء جدد!' : 'Search for new friends'}</Text>
           </View>
         ) : (
           <FlatList
@@ -297,6 +311,9 @@ const FriendsScreen = ({ user, onClose, onOpenMessages, onOpenGameInvite }) => {
             )}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#60a5fa" />
+            }
           />
         );
 
@@ -305,7 +322,7 @@ const FriendsScreen = ({ user, onClose, onOpenMessages, onOpenGameInvite }) => {
         return totalRequests === 0 ? (
           <View style={styles.emptyContainer}>
             <Ionicons name="mail-outline" size={60} color="#444" />
-            <Text style={styles.emptyText}>لا توجد طلبات</Text>
+            <Text style={styles.emptyText}>{language === 'ar' ? 'لا توجد طلبات' : 'No requests'}</Text>
           </View>
         ) : (
           <FlatList
@@ -324,6 +341,9 @@ const FriendsScreen = ({ user, onClose, onOpenMessages, onOpenGameInvite }) => {
             )}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#60a5fa" />
+            }
             ListHeaderComponent={() => (
               <>
                 {requests.incoming.length > 0 && (
@@ -341,7 +361,7 @@ const FriendsScreen = ({ user, onClose, onOpenMessages, onOpenGameInvite }) => {
               <Ionicons name="search" size={20} color="#666" />
               <TextInput
                 style={styles.searchInput}
-                placeholder="ابحث عن مستخدمين..."
+                placeholder={language === 'ar' ? 'ابحث عن مستخدمين...' : 'Search users...'}
                 placeholderTextColor="#666"
                 value={searchQuery}
                 onChangeText={setSearchQuery}
@@ -373,7 +393,7 @@ const FriendsScreen = ({ user, onClose, onOpenMessages, onOpenGameInvite }) => {
             ) : searchQuery && !searching ? (
               <View style={styles.emptyContainer}>
                 <Ionicons name="search-outline" size={60} color="#444" />
-                <Text style={styles.emptyText}>لا توجد نتائج</Text>
+                <Text style={styles.emptyText}>{language === 'ar' ? 'لا توجد نتائج' : 'No results found'}</Text>
               </View>
             ) : null}
           </View>
@@ -392,7 +412,7 @@ const FriendsScreen = ({ user, onClose, onOpenMessages, onOpenGameInvite }) => {
           <TouchableOpacity onPress={onClose} style={styles.backBtn}>
             <Ionicons name="arrow-back" size={24} color="#FFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>الأصدقاء</Text>
+          <Text style={styles.headerTitle}>{language === 'ar' ? 'الأصدقاء' : 'Friends'}</Text>
           <View style={styles.friendsCount}>
             <Ionicons name="people" size={16} color="#22c55e" />
             <Text style={styles.countText}>{friends.length}</Text>
@@ -402,9 +422,9 @@ const FriendsScreen = ({ user, onClose, onOpenMessages, onOpenGameInvite }) => {
         {/* Tabs */}
         <View style={styles.tabs}>
           {[
-            { id: 'friends', icon: 'people', label: 'أصدقائي' },
-            { id: 'requests', icon: 'mail', label: 'الطلبات', badge: requests.incoming.length },
-            { id: 'search', icon: 'search', label: 'بحث' },
+            { id: 'friends', icon: 'people', label: language === 'ar' ? 'أصدقائي' : 'Friends' },
+            { id: 'requests', icon: 'mail', label: language === 'ar' ? 'الطلبات' : 'Requests', badge: requests.incoming.length },
+            { id: 'search', icon: 'search', label: language === 'ar' ? 'بحث' : 'Search' },
           ].map(tab => (
             <TouchableOpacity
               key={tab.id}
@@ -426,6 +446,22 @@ const FriendsScreen = ({ user, onClose, onOpenMessages, onOpenGameInvite }) => {
               )}
             </TouchableOpacity>
           ))}
+        </View>
+
+        {/* Quick stats */}
+        <View style={styles.quickStatsRow}>
+          <View style={styles.quickStatItem}>
+            <Text style={styles.quickStatLabel}>{language === 'ar' ? 'الأصدقاء' : 'Friends'}</Text>
+            <Text style={styles.quickStatValue}>{friends.length}</Text>
+          </View>
+          <View style={styles.quickStatItem}>
+            <Text style={styles.quickStatLabel}>{language === 'ar' ? 'الواردة' : 'Incoming'}</Text>
+            <Text style={styles.quickStatValue}>{requests.incoming.length}</Text>
+          </View>
+          <View style={styles.quickStatItem}>
+            <Text style={styles.quickStatLabel}>{language === 'ar' ? 'الصادرة' : 'Outgoing'}</Text>
+            <Text style={styles.quickStatValue}>{requests.outgoing.length}</Text>
+          </View>
         </View>
 
         {/* Content */}
@@ -490,6 +526,31 @@ const styles = StyleSheet.create({
   },
   tabText: { color: '#888', fontSize: 12, fontWeight: '500' },
   activeTabText: { color: '#3b82f6' },
+  quickStatsRow: {
+    flexDirection: 'row',
+    marginHorizontal: 16,
+    marginBottom: 8,
+    gap: 8,
+  },
+  quickStatItem: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(148,163,184,0.22)',
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  quickStatLabel: {
+    color: '#94a3b8',
+    fontSize: 11,
+    marginBottom: 4,
+  },
+  quickStatValue: {
+    color: '#e2e8f0',
+    fontSize: 16,
+    fontWeight: '700',
+  },
   badge: {
     backgroundColor: '#ef4444',
     width: 18,

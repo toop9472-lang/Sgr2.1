@@ -47,7 +47,7 @@ class ReferralService {
   // مشاركة رابط الإحالة
   async shareReferralLink(userId, userName = 'صديقك') {
     const link = this.generateReferralLink(userId);
-    const message = `🦅 ${userName} يدعوك لتجربة تطبيق صقر!\n\nاربح نقاط وماس من الإعلانات والألعاب.\nسجل الآن واحصل على ${REFERRAL_REWARDS.REFEREE_POINTS} نقطة مجاناً!\n\n${link}`;
+    const message = `${userName} يدعوك لتجربة تطبيق صقر!\n\nاربح نقاط وماس من الإعلانات والألعاب.\nسجل الآن واحصل على ${REFERRAL_REWARDS.REFEREE_POINTS} نقطة مجاناً!\n\n${link}`;
     
     try {
       const result = await Share.share({

@@ -1,8 +1,9 @@
 // Saqr Mobile App - Main Entry Point
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, ActivityIndicator, Text, BackHandler, Alert, Image, I18nManager, LogBox } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Text, BackHandler, Alert, Image, I18nManager, LogBox, TouchableOpacity, Appearance } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import colors from './src/styles/colors';
 
 // Ignore specific warnings that don't affect functionality
@@ -85,6 +86,9 @@ function AppContent() {
   const [balanceRefresh, setBalanceRefresh] = useState(0);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [queuedGameId, setQueuedGameId] = useState(null);
+  const [themeMode, setThemeMode] = useState('dark');
+  const [systemColorScheme, setSystemColorScheme] = useState(Appearance.getColorScheme() || 'dark');
+  const userId = user?.id || user?.user_id;
 
   // Language context
   const { language } = useLanguage();
@@ -107,6 +111,13 @@ function AppContent() {
       // Note: RTL changes require app restart to take effect
     }
   }, [language]);
+
+  useEffect(() => {
+    const sub = Appearance.addChangeListener(({ colorScheme }) => {
+      setSystemColorScheme(colorScheme || 'dark');
+    });
+    return () => sub?.remove?.();
+  }, []);
 
   // Initialize app
   useEffect(() => {
@@ -281,6 +292,10 @@ function AppContent() {
 
       // Load settings
       await loadSettings();
+      const storedTheme = await AsyncStorage.getItem('saqr_theme');
+      if (storedTheme) {
+        setThemeMode(storedTheme);
+      }
     } catch (error) {
       console.error('Init error:', error);
     } finally {
@@ -336,10 +351,19 @@ function AppContent() {
     setBalanceRefresh(prev => prev + 1);
   };
 
+  const handleThemeChange = (nextTheme) => {
+    setThemeMode(nextTheme || 'dark');
+  };
+
+  const effectiveTheme = themeMode === 'system' ? (systemColorScheme === 'light' ? 'light' : 'dark') : themeMode;
+  const appGradient = effectiveTheme === 'light'
+    ? ['#f8fafc', '#eef2ff', '#e2e8f0']
+    : colors.gradients.dark;
+
   // Loading Screen
   if (isLoading) {
     return (
-      <LinearGradient colors={colors.gradients.dark} style={styles.loadingContainer}>
+      <LinearGradient colors={appGradient} style={styles.loadingContainer}>
         <View style={styles.loadingLogoContainer}>
           <Image 
             source={require('./assets/logo_saqr.png')} 
@@ -349,7 +373,7 @@ function AppContent() {
         </View>
         <Text style={styles.loadingAppName}>صقر</Text>
         <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
-        <Text style={styles.loadingText}>جاري التحميل...</Text>
+        <Text style={[styles.loadingText, effectiveTheme === 'light' && styles.loadingTextLight]}>جاري التحميل...</Text>
       </LinearGradient>
     );
   }
@@ -379,12 +403,12 @@ function AppContent() {
 
   // Main App
   return (
-    <View style={styles.container}>
-      <LinearGradient colors={colors.gradients.dark} style={styles.mainArea}>
+    <View style={[styles.container, effectiveTheme === 'light' && styles.containerLight]}>
+      <LinearGradient colors={appGradient} style={styles.mainArea}>
         {/* Balance Header - عرض الرصيد في أعلى الصفحة */}
         {user && !user.isGuest && (
           <BalanceHeader 
-            userId={user.id}
+            userId={userId}
             onDiamondPress={() => setShowDiamondShop(true)}
             onGemsPress={() => setCurrentPage('fortunes')}
             refreshTrigger={balanceRefresh}
@@ -423,6 +447,8 @@ function AppContent() {
           <SettingsScreen 
             onBack={() => setCurrentPage('profile')}
             onLogout={handleLogout}
+            currentTheme={themeMode}
+            onThemeChange={handleThemeChange}
           />
         )}
         {currentPage === 'advertiser' && (
@@ -565,7 +591,7 @@ function AppContent() {
       <DailyRewardsModal
         visible={showDailyRewards}
         onClose={() => setShowDailyRewards(false)}
-        userId={user?.id}
+        userId={userId}
         onRewardClaimed={handleDailyRewardClaimed}
       />
 
@@ -573,7 +599,7 @@ function AppContent() {
       <DiamondShopModal
         visible={showDiamondShop}
         onClose={() => setShowDiamondShop(false)}
-        userId={user?.id}
+        userId={userId}
         onPurchaseComplete={handleDiamondPurchase}
       />
 
@@ -587,7 +613,7 @@ function AppContent() {
         />
       )}
 
-      <StatusBar style="light" />
+      <StatusBar style={effectiveTheme === 'light' ? 'dark' : 'light'} />
     </View>
   );
 }
@@ -607,6 +633,7 @@ function App() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.dark.bg },
+  containerLight: { backgroundColor: colors.light.bg },
   mainArea: { flex: 1 }, // No fixed padding - handled per screen
   
   loadingContainer: { 
@@ -641,6 +668,9 @@ const styles = StyleSheet.create({
     marginTop: 16, 
     fontSize: 16 
   },
+  loadingTextLight: {
+    color: '#334155',
+  },
 });
 
 // Error Boundary Component
@@ -668,7 +698,7 @@ class ErrorBoundary extends React.Component {
       return (
         <View style={errorStyles.container}>
           <LinearGradient colors={['#0a0a0f', '#1a1a2e']} style={errorStyles.gradient}>
-            <Text style={errorStyles.icon}>⚠️</Text>
+            <Text style={errorStyles.icon}>!</Text>
             <Text style={errorStyles.title}>حدث خطأ غير متوقع</Text>
             <Text style={errorStyles.message}>نعتذر عن هذا الخطأ. يرجى المحاولة مرة أخرى.</Text>
             <TouchableOpacity style={errorStyles.retryBtn} onPress={this.handleRetry}>

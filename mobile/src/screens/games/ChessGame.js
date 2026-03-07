@@ -786,9 +786,13 @@ const ChessGame = ({ mode, onComplete, onClose }) => {
         {gameOver && (
           <View style={styles.gameOverOverlay}>
             <View style={styles.gameOverModal}>
-              <Text style={styles.gameOverEmoji}>
-                {winner === 'w' ? '🏆' : winner === 'b' ? '😔' : '🤝'}
-              </Text>
+              <View style={styles.gameOverIconWrap}>
+                <Ionicons
+                  name={winner === 'w' ? 'trophy' : winner === 'b' ? 'close-circle' : 'remove-circle'}
+                  size={52}
+                  color={winner === 'w' ? '#fbbf24' : winner === 'b' ? '#ef4444' : '#93c5fd'}
+                />
+              </View>
               <Text style={styles.gameOverTitle}>
                 {winner === 'w' ? 'فوز!' : winner === 'b' ? 'خسارة' : 'تعادل'}
               </Text>
@@ -1061,8 +1065,13 @@ const createStyles = (boardSize, squareSize, isCompactScreen) => StyleSheet.crea
     borderWidth: 1,
     borderColor: 'rgba(96,165,250,0.35)',
   },
-  gameOverEmoji: {
-    fontSize: 56,
+  gameOverIconWrap: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 14,
   },
   gameOverTitle: {

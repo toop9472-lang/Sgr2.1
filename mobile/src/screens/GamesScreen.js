@@ -81,7 +81,11 @@ const GameCard = ({ game, onPress, pulseAnim, gameCost }) => {
             <LinearGradient colors={game.colors} style={styles.gameArtGlow} />
             <View style={[styles.gameArtOrb, { borderColor: `${game.accent}66` }]}>
               <LinearGradient colors={game.orbGradient} style={styles.gameArtOrbGradient}>
-                <Ionicons name={resolveIconName(game.icon, 'game-controller-outline')} size={34} color="#fff" />
+                {game.coverImage ? (
+                  <Image source={{ uri: game.coverImage }} style={styles.gameArtImage} resizeMode="cover" />
+                ) : (
+                  <Ionicons name={resolveIconName(game.icon, 'game-controller-outline')} size={34} color="#fff" />
+                )}
                 {game.secondaryIcon ? (
                   <View style={styles.gameSecondaryIcon}>
                     <Ionicons name={resolveIconName(game.secondaryIcon, 'sparkles-outline')} size={12} color="#fff" />
@@ -89,7 +93,6 @@ const GameCard = ({ game, onPress, pulseAnim, gameCost }) => {
                 ) : null}
               </LinearGradient>
             </View>
-            <Text style={styles.gameEmoji}>{game.emoji}</Text>
           </View>
 
           <View style={styles.gameCardFooter}>
@@ -1169,6 +1172,7 @@ const GamesScreen = ({
   const glowAnim = useRef(new Animated.Value(0)).current;
   const pendingOnlineGameRef = useRef(null);
   const adRewardedRef = useRef(false);
+  const userId = user?.id || user?.user_id;
 
   // كتالوج الألعاب الجديد (12 لعبة: فردي + أونلاين)
   const games = useMemo(() => ([
@@ -1177,7 +1181,6 @@ const GamesScreen = ({
       name: 'AI Quest Infinity',
       icon: 'sparkles',
       secondaryIcon: 'hardware-chip-outline',
-      emoji: '🤖',
       colors: ['rgba(236,72,153,0.45)', 'rgba(147,51,234,0.38)'],
       orbGradient: ['#ec4899', '#8b5cf6'],
       accent: '#ec4899',
@@ -1194,7 +1197,6 @@ const GamesScreen = ({
       name: 'Grand Chess',
       icon: 'shield-half',
       secondaryIcon: 'trail-sign-outline',
-      emoji: '♟️',
       colors: ['rgba(124,58,237,0.45)', 'rgba(30,41,59,0.4)'],
       orbGradient: ['#8b5cf6', '#4c1d95'],
       accent: '#8b5cf6',
@@ -1211,7 +1213,6 @@ const GamesScreen = ({
       name: 'Arena X-O',
       icon: 'grid',
       secondaryIcon: 'wifi-outline',
-      emoji: '⚔️',
       colors: ['rgba(249,115,22,0.48)', 'rgba(234,88,12,0.35)'],
       orbGradient: ['#f97316', '#ea580c'],
       accent: '#f97316',
@@ -1230,7 +1231,6 @@ const GamesScreen = ({
       name: 'TactiX 4x4',
       icon: 'grid-outline',
       secondaryIcon: 'flash-outline',
-      emoji: '🧠',
       colors: ['rgba(59,130,246,0.5)', 'rgba(14,116,144,0.34)'],
       orbGradient: ['#3b82f6', '#0ea5e9'],
       accent: '#3b82f6',
@@ -1249,7 +1249,6 @@ const GamesScreen = ({
       name: 'Memory Matrix',
       icon: 'layers-outline',
       secondaryIcon: 'scan-outline',
-      emoji: '🧩',
       colors: ['rgba(20,184,166,0.46)', 'rgba(15,118,110,0.34)'],
       orbGradient: ['#14b8a6', '#0f766e'],
       accent: '#14b8a6',
@@ -1266,7 +1265,6 @@ const GamesScreen = ({
       name: 'Neon Snake Rush',
       icon: 'git-branch',
       secondaryIcon: 'flame-outline',
-      emoji: '🐍',
       colors: ['rgba(34,197,94,0.46)', 'rgba(21,128,61,0.34)'],
       orbGradient: ['#22c55e', '#15803d'],
       accent: '#22c55e',
@@ -1283,7 +1281,6 @@ const GamesScreen = ({
       name: 'Brick Storm',
       icon: 'cube',
       secondaryIcon: 'sparkles-outline',
-      emoji: '🧱',
       colors: ['rgba(236,72,153,0.45)', 'rgba(190,24,93,0.34)'],
       orbGradient: ['#ec4899', '#be185d'],
       accent: '#ec4899',
@@ -1300,7 +1297,6 @@ const GamesScreen = ({
       name: 'Puzzle Studio',
       icon: 'apps-outline',
       secondaryIcon: 'image-outline',
-      emoji: '🖼️',
       colors: ['rgba(59,130,246,0.45)', 'rgba(30,64,175,0.34)'],
       orbGradient: ['#3b82f6', '#1e40af'],
       accent: '#3b82f6',
@@ -1317,7 +1313,6 @@ const GamesScreen = ({
       name: 'Trivia Prime',
       icon: 'school',
       secondaryIcon: 'help-circle-outline',
-      emoji: '📚',
       colors: ['rgba(16,185,129,0.46)', 'rgba(4,120,87,0.34)'],
       orbGradient: ['#10b981', '#047857'],
       accent: '#10b981',
@@ -1334,7 +1329,6 @@ const GamesScreen = ({
       name: 'Math Blitz',
       icon: 'calculator',
       secondaryIcon: 'speedometer-outline',
-      emoji: '➗',
       colors: ['rgba(139,92,246,0.45)', 'rgba(109,40,217,0.33)'],
       orbGradient: ['#8b5cf6', '#6d28d9'],
       accent: '#8b5cf6',
@@ -1351,7 +1345,6 @@ const GamesScreen = ({
       name: 'Word Arena',
       icon: 'text-outline',
       secondaryIcon: 'language-outline',
-      emoji: '✍️',
       colors: ['rgba(6,182,212,0.45)', 'rgba(8,145,178,0.33)'],
       orbGradient: ['#06b6d4', '#0891b2'],
       accent: '#06b6d4',
@@ -1368,7 +1361,6 @@ const GamesScreen = ({
       name: 'Color Reactor',
       icon: 'color-palette',
       secondaryIcon: 'flash-outline',
-      emoji: '🎨',
       colors: ['rgba(244,63,94,0.45)', 'rgba(225,29,72,0.35)'],
       orbGradient: ['#f43f5e', '#e11d48'],
       accent: '#f43f5e',
@@ -1385,7 +1377,6 @@ const GamesScreen = ({
       name: 'Riddle Mania',
       icon: 'bulb-outline',
       secondaryIcon: 'help-buoy-outline',
-      emoji: '💡',
       colors: ['rgba(234,179,8,0.45)', 'rgba(202,138,4,0.33)'],
       orbGradient: ['#eab308', '#ca8a04'],
       accent: '#eab308',
@@ -1403,7 +1394,6 @@ const GamesScreen = ({
       name: 'Millionaire Live',
       icon: 'cash-outline',
       secondaryIcon: 'trophy-outline',
-      emoji: '💰',
       colors: ['rgba(245,158,11,0.45)', 'rgba(217,119,6,0.33)'],
       orbGradient: ['#f59e0b', '#d97706'],
       accent: '#f59e0b',
@@ -1421,7 +1411,6 @@ const GamesScreen = ({
       name: 'Snake Fury',
       icon: 'git-branch',
       secondaryIcon: 'flame',
-      emoji: '⚡',
       colors: ['rgba(34,197,94,0.46)', 'rgba(16,185,129,0.34)'],
       orbGradient: ['#22c55e', '#10b981'],
       accent: '#22c55e',
@@ -1440,7 +1429,6 @@ const GamesScreen = ({
       name: 'Memory Flash',
       icon: 'scan-outline',
       secondaryIcon: 'timer-outline',
-      emoji: '🪄',
       colors: ['rgba(20,184,166,0.46)', 'rgba(6,182,212,0.34)'],
       orbGradient: ['#14b8a6', '#06b6d4'],
       accent: '#14b8a6',
@@ -1459,7 +1447,6 @@ const GamesScreen = ({
       name: 'Brick Storm X',
       icon: 'cube-outline',
       secondaryIcon: 'flash-outline',
-      emoji: '💥',
       colors: ['rgba(236,72,153,0.45)', 'rgba(124,58,237,0.33)'],
       orbGradient: ['#ec4899', '#8b5cf6'],
       accent: '#ec4899',
@@ -1478,7 +1465,6 @@ const GamesScreen = ({
       name: 'Puzzle Master',
       icon: 'apps',
       secondaryIcon: 'flash-outline',
-      emoji: '🧠',
       colors: ['rgba(59,130,246,0.45)', 'rgba(99,102,241,0.33)'],
       orbGradient: ['#3b82f6', '#6366f1'],
       accent: '#3b82f6',
@@ -1497,7 +1483,6 @@ const GamesScreen = ({
       name: 'Trivia Plus',
       icon: 'school-outline',
       secondaryIcon: 'rocket-outline',
-      emoji: '🌍',
       colors: ['rgba(16,185,129,0.45)', 'rgba(59,130,246,0.32)'],
       orbGradient: ['#10b981', '#3b82f6'],
       accent: '#10b981',
@@ -1516,7 +1501,6 @@ const GamesScreen = ({
       name: 'Word Master',
       icon: 'text-outline',
       secondaryIcon: 'flash-outline',
-      emoji: '📝',
       colors: ['rgba(6,182,212,0.45)', 'rgba(14,165,233,0.33)'],
       orbGradient: ['#06b6d4', '#0ea5e9'],
       accent: '#06b6d4',
@@ -1532,7 +1516,52 @@ const GamesScreen = ({
     },
   ]), []);
 
-  const getGameById = useCallback((gameId) => games.find((g) => g.id === gameId), [games]);
+  const GAME_COVER_MAP = useMemo(() => ({
+    aiquest: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/e25830e67b07b9abd00a45cfdba92ba9699cedf84dd86dc00ee05ea23d562afc.png',
+    chess: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/5f7d92f290baa8d87bddc9fac33a18f8f09afa56e556b7e66faf34518194c56b.png',
+    tictactoe: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e02071f57750c77c0db321a70a51ed7bceb6eeb4df5f78e29d834466fcf3f354.png',
+    memory: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/4d3046cfc1a9d31450a57219cfbd557c5dbee891f4bc793b5c782bdd9e9c112d.png',
+    snake: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/2abaadcae5e79b9f0fb8beb005410c0d4e020163500cfde37b75485bea913ea2.png',
+    brickbreaker: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/41eae3dfab42e60e7a57f9291dbf06c43e5e3e8b6629673c00658c524c1a237e.png',
+    puzzle: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/790aea00464f3094d85b3ec7bcb2afb006df8e90e0f04201191220ec251f21df.png',
+    trivia: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/9571396ba276f9f9cf70ce0622c4303850d05054256c99581ef235eec62d9760.png',
+    mathrace: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/859703c501805508bde619abff117e247072d5e95f5d1c5713f5c43febcc9c87.png',
+    wordrace: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/1686eb6c53be174737bae618b3efe2ae326d4a885e6864935b7dc822635a6c92.png',
+    colorswitch: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/79182119b4edb90ee55759d8b825745a99a765ec39d10e36ff547c01b5c07d08.png',
+    riddles: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/bcdacd75d090c4626f5432d13b9b6c4c4560cc34282e9424de1cbc6732f06abf.png',
+    millionaire: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png',
+  }), []);
+
+  const visibleGames = useMemo(() => {
+    // Remove near-duplicate variants and keep one polished entry per core game.
+    const seenKeys = new Set();
+    return games
+      .filter((game) => {
+        const key = `${game.backendGameId || game.id}:${game.online ? 'online' : 'solo'}`;
+        if (seenKeys.has(key)) return false;
+        seenKeys.add(key);
+        return true;
+      })
+      .map((game) => ({
+        ...game,
+        coverImage: GAME_COVER_MAP[game.id] || GAME_COVER_MAP[game.backendGameId],
+      }));
+  }, [GAME_COVER_MAP, games]);
+
+  const getGameById = useCallback((gameId) => {
+    const directVisible = visibleGames.find((g) => g.id === gameId);
+    if (directVisible) return directVisible;
+
+    const legacyEntry = games.find((g) => g.id === gameId);
+    if (!legacyEntry) return null;
+
+    // Map legacy duplicated variants to their active visible equivalent.
+    const mapped = visibleGames.find((g) => (
+      (g.backendGameId || g.id) === (legacyEntry.backendGameId || legacyEntry.id)
+      && !!g.online === !!legacyEntry.online
+    ));
+    return mapped || legacyEntry;
+  }, [games, visibleGames]);
   const resolveBackendGameId = useCallback((gameId) => {
     const game = getGameById(gameId);
     return game?.backendGameId || gameId;
@@ -1541,7 +1570,7 @@ const GamesScreen = ({
   useEffect(() => {
     const loadGateState = async () => {
       try {
-        const saved = await AsyncStorage.getItem(adGateStorageKey(user?.id));
+        const saved = await AsyncStorage.getItem(adGateStorageKey(userId));
         if (!saved) return;
         const parsed = JSON.parse(saved);
         setAdGateState({
@@ -1553,11 +1582,11 @@ const GamesScreen = ({
       }
     };
     loadGateState();
-  }, [user?.id]);
+  }, [userId]);
 
   useEffect(() => {
-    AsyncStorage.setItem(adGateStorageKey(user?.id), JSON.stringify(adGateState)).catch(() => {});
-  }, [adGateState, user?.id]);
+    AsyncStorage.setItem(adGateStorageKey(userId), JSON.stringify(adGateState)).catch(() => {});
+  }, [adGateState, userId]);
 
   const isGameLockedByAds = useCallback((gameId) => {
     const freePlays = adGateState.freePlays?.[gameId] || 0;
@@ -1613,7 +1642,7 @@ const GamesScreen = ({
       console.log('Match found!', data);
       setShowWaiting(false);
       setMatchData(data);
-      setOnlineOpponent(data.players.find(p => p !== user?.id));
+      setOnlineOpponent(data.players.find((p) => p !== userId));
       setIsMyTurn(data.your_turn);
       const targetGame = pendingOnlineGameRef.current || data.game_type;
       setActiveGame(targetGame);
@@ -1653,7 +1682,7 @@ const GamesScreen = ({
       unsubGameEnded();
       unsubConnectionLost();
     };
-  }, [user?.id]);
+  }, [userId]);
 
   useEffect(() => {
     fetchLeaderboard();
@@ -1662,14 +1691,14 @@ const GamesScreen = ({
     startAnimations();
 
     // Connect to multiplayer service
-    if (user?.id) {
-      multiplayerService.connect(user.id).catch(e => console.log('WS connect error:', e));
+    if (userId) {
+      multiplayerService.connect(userId).catch(e => console.log('WS connect error:', e));
     }
 
     return () => {
       multiplayerService.disconnect();
     };
-  }, [user?.id]);
+  }, [userId]);
 
   useEffect(() => {
     if (balanceRefresh) {
@@ -1678,12 +1707,12 @@ const GamesScreen = ({
   }, [balanceRefresh]);
 
   const fetchBalance = async () => {
-    if (!user?.id) {
+    if (!userId) {
       if (__DEV__) console.log('GamesScreen: No user ID for balance');
       return;
     }
     try {
-      const response = await api.getBalance(user.id);
+      const response = await api.getBalance(userId);
       if (response.ok) {
         const data = await response.json();
         setBalance(prevBalance => ({ ...prevBalance, ...data }));
@@ -1730,7 +1759,7 @@ const GamesScreen = ({
         const data = await response.json();
         setLeaderboard(data.leaderboard || []);
         // Find user rank
-        const userRank = data.leaderboard?.findIndex(l => l.user_id === user?.id);
+        const userRank = data.leaderboard?.findIndex((l) => l.user_id === userId);
         if (userRank >= 0) {
           setUserStats({ rank: userRank + 1, points: data.leaderboard[userRank].saqr_points, games: 0 });
         }
@@ -1792,7 +1821,7 @@ const GamesScreen = ({
 
       // خصم الألماسات
       try {
-        const response = await api.enterOnlineGame(user.id, backendGameId, true);
+        const response = await api.enterOnlineGame(userId, backendGameId, true);
         if (response.ok) {
           consumeGameSessionCredit(selectedGame.id);
           setShowWaiting(true);
@@ -1804,15 +1833,19 @@ const GamesScreen = ({
             multiplayerService.findMatch(backendGameId);
           } else {
             // إعادة الاتصال والبحث
-            await multiplayerService.connect(user.id);
+            await multiplayerService.connect(userId);
             multiplayerService.findMatch(backendGameId);
           }
         } else {
-          const error = await response.json();
+          const error = await response.json().catch(() => ({}));
           Alert.alert('خطأ', error.detail || 'حدث خطأ');
         }
       } catch (e) {
-        Alert.alert('خطأ', 'حدث خطأ في الاتصال');
+        if (e?.message === 'MULTIPLAYER_CONNECTION_FAILED') {
+          Alert.alert('اتصال الأونلاين', 'تعذر الاتصال بخدمة اللعب المباشر. تحقق من الشبكة ثم أعد المحاولة.');
+        } else {
+          Alert.alert('خطأ', 'حدث خطأ في الاتصال');
+        }
       }
     } else {
       consumeGameSessionCredit(selectedGame.id);
@@ -1863,14 +1896,14 @@ const GamesScreen = ({
     
     // إرسال نتيجة اللعبة للخصم إذا كانت أونلاين
     if (isOnline) {
-      multiplayerService.endGame({ points }, won ? user.id : onlineOpponent);
+      multiplayerService.endGame({ points }, won ? userId : onlineOpponent);
     }
     
     try {
       const backendGameId = resolveBackendGameId(activeGame);
       const opponentCost = gameCosts[backendGameId] || 20;
       const response = await api.recordGameResult(
-        user.id,
+        userId,
         backendGameId,
         isOnline,
         won,
@@ -1937,7 +1970,7 @@ const GamesScreen = ({
     if (type === 'diamonds') {
       // إضافة الألماسات للمستخدم
       try {
-        const response = await api.addDiamonds(user.id, amount, 'ad_challenge_reward');
+        const response = await api.addDiamonds(userId, amount, 'ad_challenge_reward');
         if (response.ok) {
           fetchBalance();
         }
@@ -2169,17 +2202,17 @@ const GamesScreen = ({
           <Text style={styles.sectionTitle}>مكتبة الألعاب</Text>
           <View style={styles.gamesCountPill}>
             <Ionicons name="rocket-outline" size={12} color="#93c5fd" />
-            <Text style={styles.gamesCountText}>{games.length} لعبة</Text>
+            <Text style={styles.gamesCountText}>{visibleGames.length} لعبة</Text>
           </View>
         </View>
         <View style={styles.gamesContainer}>
-          {games.map(game => (
+          {visibleGames.map(game => (
             <GameCard
               key={game.id}
               game={game}
               onPress={() => handleGameSelect(game.id)}
               pulseAnim={pulseAnim}
-              gameCost={gameCosts[game.id]}
+              gameCost={gameCosts[game.backendGameId || game.id]}
             />
           ))}
         </View>
@@ -2481,6 +2514,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  gameArtImage: {
+    width: '100%',
+    height: '100%',
+  },
   gameSecondaryIcon: {
     position: 'absolute',
     right: 10,
@@ -2491,11 +2528,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.18)',
-  },
-  gameEmoji: {
-    position: 'absolute',
-    bottom: 0,
-    fontSize: 18,
   },
   gameCardFooter: {
     gap: 6,

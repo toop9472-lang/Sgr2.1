@@ -13,13 +13,13 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const STREAK_REWARDS = [
-  { day: 1, reward: 5, type: 'points', icon: '⭐' },
-  { day: 2, reward: 10, type: 'points', icon: '⭐' },
-  { day: 3, reward: 5, type: 'diamonds', icon: '💎' },
-  { day: 4, reward: 15, type: 'points', icon: '⭐' },
-  { day: 5, reward: 10, type: 'diamonds', icon: '💎' },
-  { day: 6, reward: 25, type: 'points', icon: '⭐' },
-  { day: 7, reward: 20, type: 'diamonds', icon: '🎁' },
+  { day: 1, reward: 5, type: 'points', icon: 'star' },
+  { day: 2, reward: 10, type: 'points', icon: 'star' },
+  { day: 3, reward: 5, type: 'diamonds', icon: 'diamond' },
+  { day: 4, reward: 15, type: 'points', icon: 'star' },
+  { day: 5, reward: 10, type: 'diamonds', icon: 'diamond' },
+  { day: 6, reward: 25, type: 'points', icon: 'star' },
+  { day: 7, reward: 20, type: 'diamonds', icon: 'gift' },
 ];
 
 const DailyStreakModal = ({ visible, onClose, onClaim, streak = 0, todayClaimed = false }) => {
@@ -55,9 +55,9 @@ const DailyStreakModal = ({ visible, onClose, onClaim, streak = 0, todayClaimed 
             <Ionicons name="close" size={24} color="rgba(255,255,255,0.6)" />
           </TouchableOpacity>
 
-          <Animated.Text style={[styles.eagleEmoji, { transform: [{ translateY: bounceAnim }] }]}>
-            🦅
-          </Animated.Text>
+          <Animated.View style={[styles.eagleEmoji, { transform: [{ translateY: bounceAnim }] }]}>
+            <Ionicons name="shield" size={36} color="#60a5fa" />
+          </Animated.View>
           
           <Text style={styles.title}>التسجيل اليومي</Text>
           <Text style={styles.streakText}>
@@ -82,7 +82,7 @@ const DailyStreakModal = ({ visible, onClose, onClaim, streak = 0, todayClaimed 
                   ]}
                 >
                   <Text style={styles.dayNumber}>يوم {day.day}</Text>
-                  <Text style={styles.dayIcon}>{day.icon}</Text>
+                  <Ionicons name={day.icon} size={18} color={day.type === 'diamonds' ? '#60a5fa' : '#fbbf24'} style={styles.dayIcon} />
                   <Text style={styles.dayReward}>
                     {day.reward} {day.type === 'diamonds' ? 'ماسة' : 'نقطة'}
                   </Text>

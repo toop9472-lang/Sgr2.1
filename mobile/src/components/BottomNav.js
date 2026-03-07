@@ -11,15 +11,17 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const hasNotch = Platform.OS === 'ios' && SCREEN_HEIGHT >= 812;
 
 const BottomNav = ({ currentPage, onNavigate, onAdsPress, onGamesPress }) => {
+  const { t, language } = useLanguage();
   const navItems = [
-    { id: 'home', label: 'الرئيسية', icon: 'home', iconOutline: 'home-outline' },
-    { id: 'advertiser', label: 'أعلن', icon: 'megaphone', iconOutline: 'megaphone-outline' },
-    { id: 'profile', label: 'حسابي', icon: 'person', iconOutline: 'person-outline' },
+    { id: 'home', label: language === 'ar' ? 'الرئيسية' : 'Home', icon: 'home', iconOutline: 'home-outline' },
+    { id: 'advertiser', label: language === 'ar' ? 'أعلن' : 'Advertise', icon: 'megaphone', iconOutline: 'megaphone-outline' },
+    { id: 'profile', label: language === 'ar' ? 'حسابي' : 'Profile', icon: 'person', iconOutline: 'person-outline' },
   ];
 
   const NavButton = ({ item }) => {
@@ -66,7 +68,7 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress, onGamesPress }) => {
               end={{ x: 1, y: 1 }}
             >
               <Ionicons name="game-controller" size={20} color="#FFF" />
-              <Text style={styles.centerButtonText}>ألعاب</Text>
+              <Text style={styles.centerButtonText}>{t('games')}</Text>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -84,7 +86,7 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress, onGamesPress }) => {
               end={{ x: 1, y: 1 }}
             >
               <Ionicons name="play-circle" size={20} color="#FFF" />
-              <Text style={styles.centerButtonText}>شاهد</Text>
+              <Text style={styles.centerButtonText}>{language === 'ar' ? 'شاهد' : 'Watch'}</Text>
             </LinearGradient>
           </TouchableOpacity>
 

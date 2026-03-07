@@ -21,28 +21,28 @@ const ONBOARDING_SLIDES = [
     id: '1',
     title: 'مرحباً في صقر',
     description: 'تطبيق المكافآت الأول في المملكة!\nاربح نقاط وماس من الإعلانات والألعاب',
-    icon: '🦅',
+    icon: 'shield',
     colors: ['#1e3a5f', '#0a1929'],
   },
   {
     id: '2',
     title: 'شاهد واربح',
     description: 'شاهد إعلانات قصيرة واحصل على جواهر صقر\n500 جوهرة = 1 ريال سعودي',
-    icon: '📺',
+    icon: 'tv',
     colors: ['#1e3a5f', '#0a1929'],
   },
   {
     id: '3',
     title: 'العب واستمتع',
     description: '12 لعبة ممتعة بانتظارك!\nالشطرنج، الثعبان، من سيربح المليون والمزيد',
-    icon: '🎮',
+    icon: 'game-controller',
     colors: ['#1e3a5f', '#0a1929'],
   },
   {
     id: '4',
     title: 'ادعُ أصدقاءك',
     description: 'احصل على 100 نقطة لكل صديق يسجل!\nشارك رابط الدعوة الآن',
-    icon: '👥',
+    icon: 'people',
     colors: ['#1e3a5f', '#0a1929'],
   },
 ];
@@ -86,7 +86,7 @@ const OnboardingScreen = ({ onComplete }) => {
     return (
       <LinearGradient colors={item.colors} style={styles.slide}>
         <Animated.View style={[styles.slideContent, { transform: [{ scale }], opacity }]}>
-          <Text style={styles.slideIcon}>{item.icon}</Text>
+          <Ionicons name={item.icon} size={72} color="#60a5fa" style={styles.slideIcon} />
           <Text style={styles.slideTitle}>{item.title}</Text>
           <Text style={styles.slideDescription}>{item.description}</Text>
         </Animated.View>

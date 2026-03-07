@@ -58,7 +58,7 @@ class AdMobService {
       
       return true;
     } catch (error) {
-      console.error('❌ فشل تهيئة AdMob:', error);
+      console.error('فشل تهيئة AdMob:', error);
       return false;
     }
   }
@@ -77,7 +77,7 @@ class AdMobService {
 
     const adUnitId = this.getRewardedAdUnitId();
     
-    console.log('📥 جاري تحميل الإعلان المكافئ...', adUnitId);
+    console.log('جاري تحميل الإعلان المكافئ...', adUnitId);
     
     // إنشاء إعلان جديد
     this.rewardedAd = RewardedAd.createForAdRequest(adUnitId, {
@@ -99,7 +99,7 @@ class AdMobService {
     const unsubscribeLoaded = this.rewardedAd.addAdEventListener(
       RewardedAdEventType.LOADED,
       () => {
-        console.log('✅ تم تحميل الإعلان المكافئ');
+        console.log('تم تحميل الإعلان المكافئ');
         this.isAdLoaded = true;
         this.loadRetryCount = 0;
         this.notifyListeners('loaded');
@@ -110,14 +110,14 @@ class AdMobService {
     const unsubscribeError = this.rewardedAd.addAdEventListener(
       AdEventType.ERROR,
       (error) => {
-        console.error('❌ خطأ في تحميل الإعلان:', error);
+        console.error('خطأ في تحميل الإعلان:', error);
         this.isAdLoaded = false;
         this.notifyListeners('error', error);
         
         // إعادة المحاولة
         if (this.loadRetryCount < this.maxRetries) {
           this.loadRetryCount++;
-          console.log(`🔄 إعادة المحاولة ${this.loadRetryCount}/${this.maxRetries}...`);
+          console.log(`إعادة المحاولة ${this.loadRetryCount}/${this.maxRetries}...`);
           setTimeout(() => this.loadRewardedAd(), 3000);
         }
       }
@@ -127,7 +127,7 @@ class AdMobService {
     const unsubscribeClosed = this.rewardedAd.addAdEventListener(
       AdEventType.CLOSED,
       () => {
-        console.log('📴 تم إغلاق الإعلان');
+        console.log('تم إغلاق الإعلان');
         this.isAdLoaded = false;
         this.notifyListeners('closed');
         

@@ -81,7 +81,7 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
               // الحصول على URL الأصلي
               const originUrl = typeof window !== 'undefined' 
                 ? window.location.origin 
-                : 'https://quality-restore-1.preview.emergentagent.com';
+                : api.baseUrl;
               
               // إنشاء جلسة دفع Stripe
               const response = await api.fetch('/api/diamond-payments/checkout/create', {

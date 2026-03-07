@@ -25,18 +25,18 @@ const CARD_SIZE = (screenWidth - 48 - (CARD_MARGIN * 2 * GRID_COLS)) / GRID_COLS
 
 // الرموز المستخدمة
 const SYMBOLS = [
-  { emoji: '🎮', color: '#ef4444' },
-  { emoji: '🎯', color: '#f97316' },
-  { emoji: '🎲', color: '#fbbf24' },
-  { emoji: '🎪', color: '#22c55e' },
-  { emoji: '🎨', color: '#3b82f6' },
-  { emoji: '🎭', color: '#8b5cf6' },
-  { emoji: '🎵', color: '#ec4899' },
-  { emoji: '🎬', color: '#06b6d4' },
-  { emoji: '⚽', color: '#84cc16' },
-  { emoji: '🏀', color: '#f97316' },
-  { emoji: '🎾', color: '#eab308' },
-  { emoji: '🎱', color: '#1f2937' },
+  { icon: 'game-controller', color: '#ef4444' },
+  { icon: 'flash', color: '#f97316' },
+  { icon: 'cube', color: '#fbbf24' },
+  { icon: 'leaf', color: '#22c55e' },
+  { icon: 'color-palette', color: '#3b82f6' },
+  { icon: 'planet', color: '#8b5cf6' },
+  { icon: 'musical-notes', color: '#ec4899' },
+  { icon: 'videocam', color: '#06b6d4' },
+  { icon: 'football', color: '#84cc16' },
+  { icon: 'basketball', color: '#f97316' },
+  { icon: 'tennisball', color: '#eab308' },
+  { icon: 'diamond', color: '#1f2937' },
 ];
 
 const MemoryGame = ({ mode, onComplete, onClose }) => {
@@ -109,7 +109,7 @@ const MemoryGame = ({ mode, onComplete, onClose }) => {
 
     setIsResolving(true);
 
-    if (cards[first].emoji === cards[second].emoji) {
+    if (cards[first].icon === cards[second].icon) {
       // تطابق!
       gameSounds.memoryMatch();
       const gainedScore = 100 * (1 + combo * 0.2);
@@ -236,7 +236,7 @@ const MemoryGame = ({ mode, onComplete, onClose }) => {
             colors={['#3b82f6', '#1d4ed8']}
             style={styles.cardGradient}
           >
-            <Text style={styles.cardBackIcon}>❓</Text>
+            <Ionicons name="help" size={26} color="#FFF" />
           </LinearGradient>
         </Animated.View>
         
@@ -251,7 +251,7 @@ const MemoryGame = ({ mode, onComplete, onClose }) => {
             },
           ]}
         >
-          <Text style={styles.cardEmoji}>{card.emoji}</Text>
+          <Ionicons name={card.icon} size={30} color={card.color || '#1e293b'} />
           {matched.includes(index) && (
             <View style={styles.matchedBadge}>
               <Ionicons name="checkmark" size={16} color="#22c55e" />
@@ -350,7 +350,9 @@ const MemoryGame = ({ mode, onComplete, onClose }) => {
         {gameOver && (
           <View style={styles.gameOverOverlay}>
             <View style={styles.gameOverModal}>
-              <Text style={styles.gameOverEmoji}>🎉</Text>
+              <View style={styles.gameOverIconWrap}>
+                <Ionicons name="trophy" size={46} color="#fbbf24" />
+              </View>
               <Text style={styles.gameOverTitle}>أحسنت!</Text>
               <Text style={styles.gameOverSubtitle}>أكملت اللعبة</Text>
               
@@ -370,7 +372,7 @@ const MemoryGame = ({ mode, onComplete, onClose }) => {
               </View>
 
               {bestTime && timer <= bestTime && (
-                <Text style={styles.newRecord}>🏆 أفضل وقت!</Text>
+                <Text style={styles.newRecord}>أفضل وقت جديد</Text>
               )}
 
               <View style={styles.gameOverButtons}>
@@ -561,8 +563,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '85%',
   },
-  gameOverEmoji: {
-    fontSize: 60,
+  gameOverIconWrap: {
+    width: 78,
+    height: 78,
+    borderRadius: 39,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 12,
   },
   gameOverTitle: {

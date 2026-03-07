@@ -73,6 +73,7 @@ const AuthScreen = ({ onLogin }) => {
       if (typeof data === 'string' && data.trim()) return data;
       return data?.detail || data?.message || fallbackMessage;
     } catch (_) {
+      if (response.status === 404) return 'تعذر الوصول لخدمة تسجيل الدخول. تحقق من إعدادات الخادم.';
       if (response.status === 401) return 'بيانات تسجيل الدخول غير صحيحة';
       if (response.status === 429) return 'تم تجاوز عدد المحاولات المسموح. حاول لاحقاً';
       if (response.status >= 500) return 'الخادم مشغول حالياً. حاول بعد قليل';
@@ -119,13 +120,16 @@ const AuthScreen = ({ onLogin }) => {
   const handleGuestLogin = async () => {
     setIsLoading(true);
     try {
+      const guestId = `guest_${Date.now()}`;
       const guestUser = {
-        user_id: 'guest_' + Date.now(),
+        user_id: guestId,
+        id: guestId,
         email: 'guest@saqr.app',
         name: 'زائر',
         points: 0,
         total_earned: 0,
-        is_guest: true
+        is_guest: true,
+        isGuest: true,
       };
       await storage.setUserData(guestUser);
       await storage.setToken('guest_token');
@@ -404,7 +408,7 @@ const AuthScreen = ({ onLogin }) => {
   // Email auth (existing)
   const handleEmailAuth = async () => {
     const normalizedEmail = email.trim().toLowerCase();
-    const normalizedPassword = password.trim();
+    const normalizedPassword = password;
 
     if (!normalizedEmail || !normalizedPassword) {
       Alert.alert('خطأ', 'يرجى ملء جميع الحقول');

@@ -33,11 +33,11 @@ const SPEEDS = {
 
 // أنواع الطعام المختلفة
 const FOOD_TYPES = [
-  { emoji: '🍎', points: 10, color: '#ef4444' },
-  { emoji: '🍊', points: 15, color: '#f97316' },
-  { emoji: '🍇', points: 20, color: '#8b5cf6' },
-  { emoji: '⭐', points: 30, color: '#fbbf24' },
-  { emoji: '💎', points: 50, color: '#3b82f6' },
+  { icon: 'ellipse', points: 10, color: '#ef4444' },
+  { icon: 'flame', points: 15, color: '#f97316' },
+  { icon: 'diamond', points: 20, color: '#8b5cf6' },
+  { icon: 'star', points: 30, color: '#fbbf24' },
+  { icon: 'flash', points: 50, color: '#3b82f6' },
 ];
 
 const SnakeGame = ({ mode = 'medium', onComplete, onClose }) => {
@@ -148,7 +148,7 @@ const SnakeGame = ({ mode = 'medium', onComplete, onClose }) => {
       
       setBonusFood({
         ...pos,
-        type: { emoji: '🌟', points: 100, color: '#fbbf24' },
+        type: { icon: 'sparkles', points: 100, color: '#fbbf24' },
         expiresAt: Date.now() + 5000,
       });
       
@@ -302,7 +302,7 @@ const SnakeGame = ({ mode = 'medium', onComplete, onClose }) => {
               <Ionicons name="close" size={28} color="#FFF" />
             </TouchableOpacity>
             
-            <Text style={styles.gameTitle}>🐍 الثعبان</Text>
+            <Text style={styles.gameTitle}>الثعبان</Text>
             <Text style={styles.gameSubtitle}>اسحب للتحكم في الاتجاه</Text>
             
             <View style={styles.difficultyOptions}>
@@ -352,7 +352,7 @@ const SnakeGame = ({ mode = 'medium', onComplete, onClose }) => {
               { rotate: direction.x === 1 ? '0deg' : direction.x === -1 ? '180deg' : direction.y === 1 ? '90deg' : '-90deg' }
             ]
           }]}>
-            <Text style={styles.snakeEmoji}>🐍</Text>
+            <Ionicons name="caret-forward" size={12} color="#fff" />
           </View>
         )}
         {isSnakeBody && (
@@ -363,12 +363,12 @@ const SnakeGame = ({ mode = 'medium', onComplete, onClose }) => {
         )}
         {isFood && (
           <Animated.View style={[styles.food, { transform: [{ scale: foodAnim }] }]}>
-            <Text style={styles.foodEmoji}>{food.type.emoji}</Text>
+            <Ionicons name={food.type.icon} size={12} color="#fff" />
           </Animated.View>
         )}
         {isBonusFood && (
           <Animated.View style={[styles.bonusFood, { transform: [{ scale: foodAnim }] }]}>
-            <Text style={styles.foodEmoji}>{bonusFood.type.emoji}</Text>
+            <Ionicons name={bonusFood.type.icon} size={12} color="#fff" />
           </Animated.View>
         )}
       </View>
@@ -413,7 +413,7 @@ const SnakeGame = ({ mode = 'medium', onComplete, onClose }) => {
         </View>
 
         {/* نص التعليمات */}
-        <Text style={styles.swipeHint}>👆 اسحب للتحكم</Text>
+        <Text style={styles.swipeHint}>اسحب للتحكم</Text>
 
         {/* Game Board with Touch */}
         <View style={styles.boardContainer} {...panResponder.panHandlers}>
@@ -430,7 +430,7 @@ const SnakeGame = ({ mode = 'medium', onComplete, onClose }) => {
         {isPaused && !gameOver && (
           <View style={styles.pauseOverlay}>
             <View style={styles.pauseModal}>
-              <Text style={styles.pauseEmoji}>⏸️</Text>
+              <Ionicons name="pause-circle" size={54} color="#60a5fa" style={styles.pauseIcon} />
               <Text style={styles.pauseTitle}>إيقاف مؤقت</Text>
               <TouchableOpacity style={styles.resumeBtn} onPress={togglePause}>
                 <Text style={styles.resumeText}>استمرار</Text>
@@ -443,13 +443,16 @@ const SnakeGame = ({ mode = 'medium', onComplete, onClose }) => {
         {gameOver && (
           <View style={styles.gameOverOverlay}>
             <View style={styles.gameOverModal}>
-              <Text style={styles.gameOverEmoji}>
-                {score >= 100 ? '🏆' : score >= 50 ? '👏' : '😢'}
-              </Text>
+              <Ionicons
+                name={score >= 100 ? 'trophy' : score >= 50 ? 'thumbs-up' : 'close-circle'}
+                size={54}
+                color={score >= 100 ? '#fbbf24' : score >= 50 ? '#22c55e' : '#ef4444'}
+                style={styles.gameOverIcon}
+              />
               <Text style={styles.gameOverTitle}>انتهت اللعبة!</Text>
               <Text style={styles.finalScore}>{score} نقطة</Text>
               {isNewRecord && score > 0 && (
-                <Text style={styles.newRecord}>🎉 رقم قياسي جديد!</Text>
+                <Text style={styles.newRecord}>رقم قياسي جديد</Text>
               )}
               <View style={styles.gameOverStats}>
                 <Text style={styles.statLabel}>الطول: {snake.length}</Text>
@@ -620,9 +623,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  snakeEmoji: {
-    fontSize: CELL_SIZE - 4,
-  },
   snakeBody: {
     width: CELL_SIZE - 4,
     height: CELL_SIZE - 4,
@@ -643,9 +643,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  foodEmoji: {
-    fontSize: CELL_SIZE - 6,
-  },
 
   // Pause
   pauseOverlay: {
@@ -660,7 +657,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: 'center',
   },
-  pauseEmoji: { fontSize: 48, marginBottom: 16 },
+  pauseIcon: { marginBottom: 16 },
   pauseTitle: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -694,7 +691,7 @@ const styles = StyleSheet.create({
     width: '85%',
     maxWidth: 320,
   },
-  gameOverEmoji: { fontSize: 56, marginBottom: 12 },
+  gameOverIcon: { marginBottom: 12 },
   gameOverTitle: {
     fontSize: 26,
     fontWeight: 'bold',

@@ -319,9 +319,13 @@ const MathRaceGame = ({ mode, onComplete, onClose }) => {
         {gameOver && (
           <View style={styles.gameOverOverlay}>
             <View style={styles.gameOverModal}>
-              <Text style={styles.gameOverEmoji}>
-                {score >= 500 ? '🏆' : score >= 200 ? '⭐' : '📊'}
-              </Text>
+              <View style={styles.gameOverIconWrap}>
+                <Ionicons
+                  name={score >= 500 ? 'trophy' : score >= 200 ? 'medal' : 'stats-chart'}
+                  size={46}
+                  color={score >= 500 ? '#fbbf24' : score >= 200 ? '#60a5fa' : '#94a3b8'}
+                />
+              </View>
               <Text style={styles.gameOverTitle}>انتهى الوقت!</Text>
               <Text style={styles.finalScore}>{score} نقطة</Text>
               
@@ -561,8 +565,13 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#3b82f6',
   },
-  gameOverEmoji: {
-    fontSize: 60,
+  gameOverIconWrap: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 12,
   },
   gameOverTitle: {

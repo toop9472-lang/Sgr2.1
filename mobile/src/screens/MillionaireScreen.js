@@ -246,7 +246,7 @@ const MillionaireScreen = ({ onClose, onComplete }) => {
           </TouchableOpacity>
           
           <View style={styles.startScreen}>
-            <Text style={styles.logoText}>💰</Text>
+            <Ionicons name="cash" size={72} color="#fbbf24" style={styles.logoIcon} />
             <Text style={styles.title}>من سيربح المليون</Text>
             <Text style={styles.subtitle}>15 سؤال للوصول للمليون!</Text>
             
@@ -284,7 +284,7 @@ const MillionaireScreen = ({ onClose, onComplete }) => {
       <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
         <View style={styles.overlay}>
           <View style={styles.resultScreen}>
-            <Text style={styles.resultEmoji}>🏆</Text>
+            <Ionicons name="trophy" size={72} color="#fbbf24" style={styles.resultIcon} />
             <Text style={styles.resultTitle}>مبروك!</Text>
             <Text style={styles.resultSubtitle}>ربحت المليون!</Text>
             <Text style={styles.resultPrize}>1,000,000</Text>
@@ -305,7 +305,7 @@ const MillionaireScreen = ({ onClose, onComplete }) => {
       <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
         <View style={styles.overlay}>
           <View style={styles.resultScreen}>
-            <Text style={styles.resultEmoji}>😢</Text>
+            <Ionicons name="close-circle" size={72} color="#ef4444" style={styles.resultIcon} />
             <Text style={styles.resultTitle}>للأسف!</Text>
             <Text style={styles.resultSubtitle}>الإجابة الصحيحة كانت:</Text>
             <Text style={styles.correctAnswer}>{currentQuestion.a[currentQuestion.correct]}</Text>
@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
 
   // Start Screen
   startScreen: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  logoText: { fontSize: 80, marginBottom: 10 },
+  logoIcon: { marginBottom: 10 },
   title: { fontSize: 32, fontWeight: 'bold', color: '#fbbf24', marginBottom: 8 },
   subtitle: { fontSize: 16, color: 'rgba(255,255,255,0.7)', marginBottom: 30 },
   rulesCard: { backgroundColor: 'rgba(255,255,255,0.1)', padding: 20, borderRadius: 16, width: '100%', marginBottom: 20 },
@@ -616,7 +616,7 @@ const styles = StyleSheet.create({
 
   // Result
   resultScreen: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  resultEmoji: { fontSize: 80, marginBottom: 16 },
+  resultIcon: { marginBottom: 16 },
   resultTitle: { fontSize: 32, fontWeight: 'bold', color: '#FFF', marginBottom: 8 },
   resultSubtitle: { fontSize: 16, color: 'rgba(255,255,255,0.7)', marginBottom: 16 },
   resultPrize: { fontSize: 48, fontWeight: 'bold', color: '#fbbf24', marginBottom: 8 },

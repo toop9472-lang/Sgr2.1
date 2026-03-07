@@ -1,7 +1,8 @@
 // Multiplayer Game Service - خدمة اللعب الجماعي
 import api from './api';
 
-const API_BASE = api.baseUrl || 'https://quality-restore-1.preview.emergentagent.com';
+const API_BASE = api.baseUrl || 'https://saqrpointscom.store';
+const toWsBase = (url) => url.replace('https://', 'wss://').replace('http://', 'ws://').replace(/\/+$/, '');
 
 class MultiplayerService {
   constructor() {
@@ -24,34 +25,63 @@ class MultiplayerService {
 
       this.playerId = playerId;
       this.manuallyDisconnected = false;
-      const wsUrl = API_BASE.replace('https://', 'wss://').replace('http://', 'ws://');
-      
-      this.ws = new WebSocket(`${wsUrl}/ws/game/${playerId}`);
 
-      this.ws.onopen = () => {
-        console.log('WebSocket connected');
-        this.reconnectAttempts = 0;
-        resolve();
-      };
+      const wsBase = toWsBase(API_BASE);
+      const socketCandidates = [
+        `${wsBase}/ws/game/${playerId}`,
+        `${wsBase}/api/ws/game/${playerId}`,
+      ];
+      let candidateIndex = 0;
+      let settled = false;
 
-      this.ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          this.handleMessage(data);
-        } catch (e) {
-          console.log('WS message parse error:', e);
+      const openNextCandidate = () => {
+        if (candidateIndex >= socketCandidates.length) {
+          if (!settled) {
+            settled = true;
+            reject(new Error('MULTIPLAYER_CONNECTION_FAILED'));
+          }
+          return;
         }
+
+        const socketUrl = socketCandidates[candidateIndex];
+        candidateIndex += 1;
+        this.ws = new WebSocket(socketUrl);
+
+        this.ws.onopen = () => {
+          settled = true;
+          console.log('WebSocket connected:', socketUrl);
+          this.reconnectAttempts = 0;
+          resolve();
+        };
+
+        this.ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            this.handleMessage(data);
+          } catch (e) {
+            console.log('WS message parse error:', e);
+          }
+        };
+
+        this.ws.onerror = () => {
+          if (!settled) {
+            this.ws = null;
+            openNextCandidate();
+          }
+        };
+
+        this.ws.onclose = () => {
+          if (!settled) {
+            this.ws = null;
+            openNextCandidate();
+            return;
+          }
+          console.log('WebSocket closed');
+          this.handleDisconnect();
+        };
       };
 
-      this.ws.onerror = (error) => {
-        console.log('WebSocket error:', error);
-        reject(error);
-      };
-
-      this.ws.onclose = () => {
-        console.log('WebSocket closed');
-        this.handleDisconnect();
-      };
+      openNextCandidate();
     });
   }
 

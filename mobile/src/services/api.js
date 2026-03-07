@@ -2,10 +2,24 @@
 // Production Server - Emergent Host
 import NetInfo from '@react-native-community/netinfo';
 
-const API_URL =
-  process.env.EXPO_PUBLIC_API_URL ||
-  process.env.API_URL ||
-  'https://quality-restore-1.preview.emergentagent.com';
+const DEFAULT_API_URL = 'https://saqrpointscom.store';
+const normalizeApiBaseUrl = (value) => {
+  if (!value || typeof value !== 'string') return null;
+  const trimmed = value.trim().replace(/\/+$/, '');
+  if (!trimmed) return null;
+  // In case someone sets ".../api" directly in env vars.
+  return trimmed.endsWith('/api') ? trimmed.slice(0, -4) : trimmed;
+};
+
+const envCandidates = [
+  process.env.EXPO_PUBLIC_BACKEND_URL,
+  process.env.EXPO_PUBLIC_API_URL,
+  process.env.API_URL,
+  process.env.BACKEND_URL,
+  process.env.REACT_APP_BACKEND_URL,
+].map(normalizeApiBaseUrl).filter(Boolean);
+
+const API_URL = envCandidates[0] || DEFAULT_API_URL;
 
 // Connection check timeout - increased for better reliability
 const CONNECTION_TIMEOUT = 20000; // 20 seconds
@@ -52,38 +66,38 @@ const checkConnection = async () => {
   }
 
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
-    
-    debugLog('Checking connection to:', API_URL);
-    
-    const response = await fetch(`${API_URL}/api/health`, {
-      method: 'GET',
-      signal: controller.signal,
-      headers: {
-        'Accept': 'application/json',
-        'Cache-Control': 'no-cache',
-      },
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (response.ok) {
-      const data = await response.json();
-      const isConnected = data.status === 'healthy';
-      
-      // Cache the result
-      lastConnectionCheck = now;
-      lastConnectionResult = isConnected;
-      
-      debugLog('Connection check result:', isConnected);
-      return isConnected;
+    const healthEndpoints = ['/api/health', '/health'];
+    let connected = false;
+
+    for (const endpoint of healthEndpoints) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+      try {
+        debugLog('Checking connection to:', `${API_URL}${endpoint}`);
+        const response = await fetch(`${API_URL}${endpoint}`, {
+          method: 'GET',
+          signal: controller.signal,
+          headers: {
+            Accept: 'application/json',
+            'Cache-Control': 'no-cache',
+          },
+        });
+
+        if (response.ok) {
+          connected = true;
+          break;
+        }
+      } catch (_) {
+        // Try next health endpoint
+      } finally {
+        clearTimeout(timeoutId);
+      }
     }
-    
-    // Server responded but not healthy - still consider as connected
+
     lastConnectionCheck = now;
-    lastConnectionResult = true; // Server is reachable, just not healthy
-    return true;
+    lastConnectionResult = connected;
+    debugLog('Connection check result:', connected);
+    return connected;
   } catch (error) {
     debugLog('Connection check failed:', error.message);
     
@@ -208,9 +222,25 @@ export const api = {
     }
   },
 
+  // Try multiple API paths for backward compatibility
+  async fetchWithFallback(endpoints, options = {}) {
+    const candidates = Array.isArray(endpoints) ? endpoints : [endpoints];
+    let lastResponse = null;
+
+    for (const endpoint of candidates) {
+      const response = await this.fetch(endpoint, options);
+      lastResponse = response;
+      if (![404, 405].includes(response.status)) {
+        return response;
+      }
+    }
+
+    return lastResponse;
+  },
+
   // Auth
   async login(email, password) {
-    const response = await this.fetch('/api/auth/signin', {
+    const response = await this.fetchWithFallback(['/api/auth/signin', '/api/auth/login'], {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
@@ -231,7 +261,7 @@ export const api = {
   },
 
   async register(email, password, name) {
-    const response = await this.fetch('/api/auth/register', {
+    const response = await this.fetchWithFallback(['/api/auth/register', '/api/auth/signup'], {
       method: 'POST',
       body: JSON.stringify({ email, password, name }),
     });

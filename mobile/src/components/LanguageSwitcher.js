@@ -14,11 +14,11 @@ import { useLanguage } from '../i18n/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
-const LANGUAGE_FLAGS = {
-  ar: '🇸🇦',
-  en: '🇺🇸',
-  fr: '🇫🇷',
-  tr: '🇹🇷',
+const LANGUAGE_LABELS = {
+  ar: 'AR',
+  en: 'EN',
+  fr: 'FR',
+  tr: 'TR',
 };
 
 const LanguageSwitcher = ({ onLanguageChange, style }) => {
@@ -41,7 +41,7 @@ const LanguageSwitcher = ({ onLanguageChange, style }) => {
 
   const uiLanguages = supportedLanguages.map((lang) => ({
     ...lang,
-    flag: LANGUAGE_FLAGS[lang.code] || '🌐',
+    shortLabel: LANGUAGE_LABELS[lang.code] || lang.code.toUpperCase(),
   }));
   const currentLang = uiLanguages.find(l => l.code === language) || uiLanguages[0];
 
@@ -53,7 +53,7 @@ const LanguageSwitcher = ({ onLanguageChange, style }) => {
         onPress={() => setShowModal(true)}
         activeOpacity={0.8}
       >
-        <Text style={styles.flagEmoji}>{currentLang.flag}</Text>
+        <Text style={styles.flagEmoji}>{currentLang.shortLabel}</Text>
       </TouchableOpacity>
 
       {/* Language Selection Modal */}
@@ -87,7 +87,7 @@ const LanguageSwitcher = ({ onLanguageChange, style }) => {
                   onPress={() => selectLanguage(lang.code)}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.langFlag}>{lang.flag}</Text>
+                  <Text style={styles.langFlag}>{lang.shortLabel}</Text>
                   <Text style={[
                     styles.langName,
                     language === lang.code && styles.langNameSelected

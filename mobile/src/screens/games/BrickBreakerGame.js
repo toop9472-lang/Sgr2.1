@@ -50,11 +50,11 @@ const BRICK_COLORS = [
 
 // Power-ups
 const POWERUPS = [
-  { type: 'wide', icon: '📏', color: '#3b82f6', effect: 'توسيع المضرب' },
-  { type: 'multi', icon: '🔥', color: '#ef4444', effect: 'كرات متعددة' },
-  { type: 'slow', icon: '🐢', color: '#22c55e', effect: 'إبطاء الكرة' },
-  { type: 'life', icon: '❤️', color: '#ec4899', effect: 'حياة إضافية' },
-  { type: 'time', icon: '⏰', color: '#fbbf24', effect: '+15 ثانية' },
+  { type: 'wide', icon: 'resize', color: '#3b82f6', effect: 'توسيع المضرب' },
+  { type: 'multi', icon: 'flame', color: '#ef4444', effect: 'كرات متعددة' },
+  { type: 'slow', icon: 'hourglass', color: '#22c55e', effect: 'إبطاء الكرة' },
+  { type: 'life', icon: 'heart', color: '#ec4899', effect: 'حياة إضافية' },
+  { type: 'time', icon: 'time', color: '#fbbf24', effect: '+15 ثانية' },
 ];
 
 const BrickBreakerGame = ({ difficulty = 'medium', onComplete, onClose }) => {
@@ -318,7 +318,7 @@ const BrickBreakerGame = ({ difficulty = 'medium', onComplete, onClose }) => {
               <Ionicons name="close" size={28} color="#FFF" />
             </TouchableOpacity>
             
-            <Text style={styles.gameTitle}>🧱 تكسير الطوب</Text>
+            <Text style={styles.gameTitle}>تكسير الطوب</Text>
             <Text style={styles.gameSubtitle}>10 مراحل • تحدي الوقت</Text>
             
             <View style={styles.levelsGrid}>
@@ -346,7 +346,7 @@ const BrickBreakerGame = ({ difficulty = 'medium', onComplete, onClose }) => {
       <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
         <View style={styles.overlay}>
           <View style={styles.resultScreen}>
-            <Text style={styles.resultEmoji}>🎉</Text>
+            <Ionicons name="checkmark-circle" size={56} color="#22c55e" style={styles.resultIcon} />
             <Text style={styles.resultTitle}>مرحلة {currentLevel + 1} مكتملة!</Text>
             <Text style={styles.resultScore}>{score} نقطة</Text>
             <Text style={styles.resultTime}>الوقت المتبقي: {timeLeft}ث</Text>
@@ -370,7 +370,12 @@ const BrickBreakerGame = ({ difficulty = 'medium', onComplete, onClose }) => {
       <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
         <View style={styles.overlay}>
           <View style={styles.resultScreen}>
-            <Text style={styles.resultEmoji}>{gameState === 'won' ? '🏆' : '💔'}</Text>
+            <Ionicons
+              name={gameState === 'won' ? 'trophy' : 'close-circle'}
+              size={56}
+              color={gameState === 'won' ? '#fbbf24' : '#ef4444'}
+              style={styles.resultIcon}
+            />
             <Text style={styles.resultTitle}>
               {gameState === 'won' ? 'فوز مذهل!' : 'انتهت اللعبة'}
             </Text>
@@ -428,7 +433,7 @@ const BrickBreakerGame = ({ difficulty = 'medium', onComplete, onClose }) => {
           
           <View style={styles.livesContainer}>
             {[...Array(lives)].map((_, i) => (
-              <Text key={i} style={styles.lifeIcon}>❤️</Text>
+              <Ionicons key={i} name="heart" size={16} color="#f43f5e" style={styles.lifeIcon} />
             ))}
           </View>
         </View>
@@ -457,11 +462,11 @@ const BrickBreakerGame = ({ difficulty = 'medium', onComplete, onClose }) => {
               >
                 {brick.hits > 1 && (
                   <View style={styles.strongBrick}>
-                    <Text style={styles.strongBrickText}>🛡️</Text>
+                    <Ionicons name="shield" size={10} color="#FFF" />
                   </View>
                 )}
                 {brick.powerup && (
-                  <Text style={styles.powerupIcon}>{brick.powerup.icon}</Text>
+                  <Ionicons name={brick.powerup.icon} size={11} color="#fff" style={styles.powerupIcon} />
                 )}
               </LinearGradient>
             ))}
@@ -491,7 +496,7 @@ const BrickBreakerGame = ({ difficulty = 'medium', onComplete, onClose }) => {
         {gameState === 'paused' && (
           <View style={styles.pauseOverlay}>
             <View style={styles.pauseModal}>
-              <Text style={styles.pauseEmoji}>⏸️</Text>
+              <Ionicons name="pause-circle" size={54} color="#60a5fa" style={styles.pauseIcon} />
               <Text style={styles.pauseTitle}>إيقاف مؤقت</Text>
               <TouchableOpacity style={styles.resumeBtn} onPress={() => setGameState('playing')}>
                 <Text style={styles.resumeText}>استمرار</Text>
@@ -586,7 +591,7 @@ const styles = StyleSheet.create({
   timerValue: { fontSize: 22, fontWeight: 'bold', color: '#fbbf24' },
   timerCriticalText: { color: '#ef4444' },
   livesContainer: { flexDirection: 'row', gap: 4 },
-  lifeIcon: { fontSize: 18 },
+  lifeIcon: { marginHorizontal: 2 },
 
   // Combo
   comboContainer: {
@@ -620,8 +625,7 @@ const styles = StyleSheet.create({
     top: 2,
     right: 2,
   },
-  strongBrickText: { fontSize: 10 },
-  powerupIcon: { fontSize: 12 },
+  powerupIcon: { marginTop: 1 },
   ball: {
     position: 'absolute',
     width: BALL_SIZE,
@@ -644,7 +648,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  resultEmoji: { fontSize: 60, marginBottom: 16 },
+  resultIcon: { marginBottom: 16 },
   resultTitle: { fontSize: 28, fontWeight: 'bold', color: '#FFF', marginBottom: 8 },
   resultScore: { fontSize: 36, fontWeight: 'bold', color: '#fbbf24', marginBottom: 8 },
   resultTime: { fontSize: 14, color: 'rgba(255,255,255,0.7)', marginBottom: 8 },
@@ -686,7 +690,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: 'center',
   },
-  pauseEmoji: { fontSize: 48, marginBottom: 16 },
+  pauseIcon: { marginBottom: 16 },
   pauseTitle: { fontSize: 24, fontWeight: 'bold', color: '#FFF', marginBottom: 20 },
   resumeBtn: {
     backgroundColor: '#22c55e',

@@ -14,9 +14,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import storage from '../services/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 
-const SettingsScreen = ({ onBack, onLogout }) => {
-  const [theme, setTheme] = useState('dark');
-  const { language, setLanguage, supportedLanguages } = useLanguage();
+const SettingsScreen = ({ onBack, onLogout, currentTheme = 'dark', onThemeChange }) => {
+  const [theme, setTheme] = useState(currentTheme);
+  const { language, setLanguage, supportedLanguages, t } = useLanguage();
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
@@ -25,6 +25,10 @@ const SettingsScreen = ({ onBack, onLogout }) => {
   useEffect(() => {
     loadSettings();
   }, []);
+
+  useEffect(() => {
+    setTheme(currentTheme);
+  }, [currentTheme]);
 
   const loadSettings = async () => {
     try {
@@ -44,8 +48,9 @@ const SettingsScreen = ({ onBack, onLogout }) => {
       await AsyncStorage.setItem('saqr_theme', newTheme);
       await AsyncStorage.setItem('app_theme', newTheme); // For ThemeContext if exists
       setTheme(newTheme);
+      if (onThemeChange) onThemeChange(newTheme);
       setShowThemeModal(false);
-      Alert.alert('تم الحفظ', 'تم تغيير المظهر بنجاح');
+      Alert.alert(t('success'), language === 'ar' ? 'تم تغيير المظهر بنجاح' : 'Theme updated successfully');
     } catch (error) {
       console.log('Error saving theme:', error);
     }
@@ -57,7 +62,7 @@ const SettingsScreen = ({ onBack, onLogout }) => {
       await AsyncStorage.setItem('saqr_language', newLanguage);
       await setLanguage(newLanguage);
       setShowLanguageModal(false);
-      Alert.alert('تم الحفظ', 'تم تغيير اللغة بنجاح');
+      Alert.alert(t('success'), language === 'ar' ? 'تم تغيير اللغة بنجاح' : 'Language updated successfully');
     } catch (error) {
       console.log('Error saving language:', error);
     }
@@ -68,7 +73,7 @@ const SettingsScreen = ({ onBack, onLogout }) => {
     try {
       await AsyncStorage.setItem('saqr_2fa_enabled', String(next));
       setTwoFactorEnabled(next);
-      Alert.alert('التحقق بخطوتين', next ? 'تم تفعيل التحقق بخطوتين' : 'تم إيقاف التحقق بخطوتين');
+      Alert.alert(language === 'ar' ? 'التحقق بخطوتين' : 'Two-Factor Authentication', next ? (language === 'ar' ? 'تم تفعيل التحقق بخطوتين' : 'Two-factor authentication enabled') : (language === 'ar' ? 'تم إيقاف التحقق بخطوتين' : 'Two-factor authentication disabled'));
     } catch (error) {
       Alert.alert('خطأ', 'تعذر تحديث إعداد التحقق بخطوتين');
     }
@@ -79,16 +84,16 @@ const SettingsScreen = ({ onBack, onLogout }) => {
     try {
       await AsyncStorage.setItem('saqr_notifications_enabled', String(next));
       setNotificationsEnabled(next);
-      Alert.alert('الإشعارات', next ? 'تم تفعيل الإشعارات' : 'تم إيقاف الإشعارات');
+      Alert.alert(t('notifications'), next ? (language === 'ar' ? 'تم تفعيل الإشعارات' : 'Notifications enabled') : (language === 'ar' ? 'تم إيقاف الإشعارات' : 'Notifications disabled'));
     } catch (error) {
-      Alert.alert('خطأ', 'تعذر تحديث إعداد الإشعارات');
+      Alert.alert(t('error'), language === 'ar' ? 'تعذر تحديث إعداد الإشعارات' : 'Unable to update notifications setting');
     }
   };
 
   const themes = [
-    { id: 'dark', name: 'داكن', icon: 'moon' },
-    { id: 'light', name: 'فاتح', icon: 'sunny' },
-    { id: 'system', name: 'حسب النظام', icon: 'phone-portrait' },
+    { id: 'dark', name: language === 'ar' ? 'داكن' : 'Dark', icon: 'moon' },
+    { id: 'light', name: language === 'ar' ? 'فاتح' : 'Light', icon: 'sunny' },
+    { id: 'system', name: language === 'ar' ? 'حسب النظام' : 'System', icon: 'phone-portrait' },
   ];
 
   const languages = supportedLanguages.map((lang) => ({
@@ -97,18 +102,18 @@ const SettingsScreen = ({ onBack, onLogout }) => {
     icon: 'globe',
   }));
 
-  const getThemeName = () => themes.find(t => t.id === theme)?.name || 'داكن';
-  const getLanguageName = () => languages.find(l => l.code === language)?.name || 'العربية';
+  const getThemeName = () => themes.find(tItem => tItem.id === theme)?.name || (language === 'ar' ? 'داكن' : 'Dark');
+  const getLanguageName = () => languages.find(l => l.code === language)?.name || (language === 'ar' ? 'العربية' : 'Arabic');
 
   // Handle logout
   const handleLogout = () => {
     Alert.alert(
-      'تسجيل الخروج',
-      'هل أنت متأكد من تسجيل الخروج؟',
+      t('logout'),
+      language === 'ar' ? 'هل أنت متأكد من تسجيل الخروج؟' : 'Are you sure you want to logout?',
       [
-        { text: 'إلغاء', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         { 
-          text: 'تسجيل الخروج', 
+          text: t('logout'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -120,7 +125,7 @@ const SettingsScreen = ({ onBack, onLogout }) => {
               }
             } catch (error) {
               console.log('Logout error:', error);
-              Alert.alert('خطأ', 'حدث خطأ أثناء تسجيل الخروج');
+              Alert.alert(t('error'), language === 'ar' ? 'حدث خطأ أثناء تسجيل الخروج' : 'Logout failed');
             }
           }
         }
@@ -132,7 +137,7 @@ const SettingsScreen = ({ onBack, onLogout }) => {
     {
       id: 'language',
       icon: 'globe-outline',
-      label: 'اللغة',
+      label: t('language'),
       value: getLanguageName(),
       action: () => setShowLanguageModal(true),
       color: '#3b82f6',
@@ -140,7 +145,7 @@ const SettingsScreen = ({ onBack, onLogout }) => {
     {
       id: 'theme',
       icon: 'color-palette-outline',
-      label: 'المظهر',
+      label: language === 'ar' ? 'المظهر' : 'Theme',
       value: getThemeName(),
       action: () => setShowThemeModal(true),
       color: '#a855f7',
@@ -148,23 +153,23 @@ const SettingsScreen = ({ onBack, onLogout }) => {
     {
       id: '2fa',
       icon: 'shield-checkmark-outline',
-      label: 'التحقق بخطوتين',
-      value: twoFactorEnabled ? 'مفعّل' : 'غير مفعّل',
+      label: language === 'ar' ? 'التحقق بخطوتين' : 'Two-Factor Auth',
+      value: twoFactorEnabled ? (language === 'ar' ? 'مفعّل' : 'Enabled') : (language === 'ar' ? 'غير مفعّل' : 'Disabled'),
       action: toggleTwoFactor,
       color: '#22c55e',
     },
     {
       id: 'notifications',
       icon: 'notifications-outline',
-      label: 'الإشعارات',
-      value: notificationsEnabled ? 'مفعّلة' : 'متوقفة',
+      label: t('notifications'),
+      value: notificationsEnabled ? (language === 'ar' ? 'مفعّلة' : 'Enabled') : (language === 'ar' ? 'متوقفة' : 'Disabled'),
       action: toggleNotifications,
       color: '#fbbf24',
     },
     {
       id: 'logout',
       icon: 'log-out-outline',
-      label: 'تسجيل الخروج',
+      label: t('logout'),
       value: '',
       action: handleLogout,
       color: '#ef4444',
@@ -178,7 +183,7 @@ const SettingsScreen = ({ onBack, onLogout }) => {
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
           <Ionicons name="arrow-forward" size={24} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>الإعدادات</Text>
+        <Text style={styles.headerTitle}>{t('settings')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -218,7 +223,7 @@ const SettingsScreen = ({ onBack, onLogout }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>اختر اللغة</Text>
+            <Text style={styles.modalTitle}>{language === 'ar' ? 'اختر اللغة' : 'Select Language'}</Text>
               <TouchableOpacity onPress={() => setShowLanguageModal(false)}>
                 <Ionicons name="close" size={24} color="#FFF" />
               </TouchableOpacity>
@@ -255,7 +260,7 @@ const SettingsScreen = ({ onBack, onLogout }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>اختر المظهر</Text>
+            <Text style={styles.modalTitle}>{language === 'ar' ? 'اختر المظهر' : 'Select Theme'}</Text>
               <TouchableOpacity onPress={() => setShowThemeModal(false)}>
                 <Ionicons name="close" size={24} color="#FFF" />
               </TouchableOpacity>
