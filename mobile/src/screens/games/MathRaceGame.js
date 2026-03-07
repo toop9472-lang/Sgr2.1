@@ -6,15 +6,13 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Dimensions,
   Animated,
   ImageBackground,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import gameSounds from '../../utils/gameSounds';
 import { shuffleArray } from '../../utils/random';
-
-const { width: screenWidth } = Dimensions.get('window');
 
 // خلفية اللعبة
 const GAME_BG = 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/859703c501805508bde619abff117e247072d5e95f5d1c5713f5c43febcc9c87.png';
@@ -23,6 +21,10 @@ const GAME_DURATION = 60; // ثانية
 const OPERATIONS = ['+', '-', '×', '÷'];
 
 const MathRaceGame = ({ mode, onComplete, onClose }) => {
+  const { width: windowWidth } = useWindowDimensions();
+  const compact = windowWidth < 360;
+  const optionWidth = Math.min(220, Math.max(120, (windowWidth - 68) / 2));
+
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [maxStreak, setMaxStreak] = useState(0);
@@ -268,13 +270,13 @@ const MathRaceGame = ({ mode, onComplete, onClose }) => {
         {question && (
           <Animated.View style={[styles.questionBox, { transform: [{ translateX: shakeAnim }] }]}>
             <View style={styles.questionInner}>
-              <Text style={styles.questionNum}>{question.num1}</Text>
+              <Text style={[styles.questionNum, compact && styles.questionNumCompact]}>{question.num1}</Text>
               <View style={[styles.operationBadge, { backgroundColor: getOperationColor(question.operation) }]}>
                 <Text style={styles.operationText}>{question.operation}</Text>
               </View>
-              <Text style={styles.questionNum}>{question.num2}</Text>
+              <Text style={[styles.questionNum, compact && styles.questionNumCompact]}>{question.num2}</Text>
               <Text style={styles.equalsSign}>=</Text>
-              <Text style={styles.questionMark}>?</Text>
+              <Text style={[styles.questionMark, compact && styles.questionMarkCompact]}>?</Text>
             </View>
           </Animated.View>
         )}
@@ -290,6 +292,7 @@ const MathRaceGame = ({ mode, onComplete, onClose }) => {
                 key={index}
                 style={[
                   styles.optionBtn,
+                  { width: optionWidth },
                   isSelected && isThisCorrect && styles.optionCorrect,
                   isSelected && selectedOption === option && !isThisCorrect && styles.optionWrong,
                 ]}
@@ -475,6 +478,9 @@ const styles = StyleSheet.create({
     fontSize: 48,
     fontWeight: 'bold',
   },
+  questionNumCompact: {
+    fontSize: 40,
+  },
   operationBadge: {
     width: 50,
     height: 50,
@@ -497,6 +503,9 @@ const styles = StyleSheet.create({
     fontSize: 48,
     fontWeight: 'bold',
   },
+  questionMarkCompact: {
+    fontSize: 40,
+  },
 
   optionsGrid: {
     flexDirection: 'row',
@@ -506,7 +515,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   optionBtn: {
-    width: (screenWidth - 64) / 2,
     height: 70,
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: 16,

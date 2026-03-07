@@ -1,16 +1,16 @@
 // Chess Game - Professional Chess with Full Rules
 // قوانين الشطرنج العالمية الكاملة: التبييت، الأكل بالتجاوز، ترقية البيدق، كش مات
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  Dimensions,
-  Alert,
   Animated,
   Modal,
   ImageBackground,
+  ScrollView,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -19,14 +19,9 @@ import gameSounds from '../../utils/gameSounds';
 // AI-Generated Professional Background
 const GAME_BG = 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/5f7d92f290baa8d87bddc9fac33a18f8f09afa56e556b7e66faf34518194c56b.png';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-const BOARD_SIZE = Math.min(screenWidth - 16, screenHeight * 0.55, 450);
-const SQUARE_SIZE = BOARD_SIZE / 8;
-
-// قطع الشطرنج - Unicode - نفس الشكل (مملوء) لكلا اللونين
-// استخدام القطع المملوءة فقط (♚♛♜♝♞♟) والتمييز باللون
+// قطع شطرنج احترافية: أبيض/أسود برموز مختلفة
 const PIECES = {
-  white: { king: '\u265A', queen: '\u265B', rook: '\u265C', bishop: '\u265D', knight: '\u265E', pawn: '\u265F' },
+  white: { king: '\u2654', queen: '\u2655', rook: '\u2656', bishop: '\u2657', knight: '\u2658', pawn: '\u2659' },
   black: { king: '\u265A', queen: '\u265B', rook: '\u265C', bishop: '\u265D', knight: '\u265E', pawn: '\u265F' },
 };
 
@@ -390,6 +385,16 @@ const getBestMove = (board, castlingRights, enPassantSquare) => {
 
 // المكون الرئيسي
 const ChessGame = ({ mode, onComplete, onClose }) => {
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isCompactScreen = windowHeight < 760;
+  const boardSize = useMemo(() => {
+    const maxByWidth = Math.max(220, windowWidth - 32);
+    const maxByHeight = Math.max(220, windowHeight * (isCompactScreen ? 0.44 : 0.5));
+    return Math.min(maxByWidth, maxByHeight, 430);
+  }, [windowWidth, windowHeight, isCompactScreen]);
+  const squareSize = boardSize / 8;
+  const styles = useMemo(() => createStyles(boardSize, squareSize, isCompactScreen), [boardSize, squareSize, isCompactScreen]);
+
   const [board, setBoard] = useState(INITIAL_BOARD.map(row => [...row]));
   const [selected, setSelected] = useState(null);
   const [validMoves, setValidMoves] = useState([]);
@@ -630,9 +635,9 @@ const ChessGame = ({ mode, onComplete, onClose }) => {
         style={[
           styles.square,
           { 
-            backgroundColor: isLight ? '#F0D9B5' : '#B58863',
-            borderWidth: isSelected ? 3 : 0,
-            borderColor: '#FFD700',
+            backgroundColor: isLight ? '#f6e7c8' : '#8a6543',
+            borderWidth: isSelected ? 2 : 0,
+            borderColor: '#facc15',
           },
           isLastMoveSquare && styles.lastMoveSquare,
           isKingSquare && styles.checkSquare,
@@ -650,23 +655,18 @@ const ChessGame = ({ mode, onComplete, onClose }) => {
           <View style={styles.captureIndicator} />
         )}
 
-        {/* القطعة - نفس الشكل بألوان مختلفة (تصميم احترافي) */}
+        {/* القطعة */}
         {pieceDisplay && (
-          <Text 
-            style={[
-              styles.piece, 
-              { 
-                // استخدام ألوان متباينة للقطع - أبيض فاتح / أسود داكن
-                color: pieceDisplay.color === 'white' ? '#FFFFFF' : '#1a1a1a',
-                // إضافة حدود للقطع البيضاء لتظهر بوضوح
-                textShadowColor: pieceDisplay.color === 'white' ? '#000000' : '#666666',
-                textShadowOffset: { width: 0, height: 0 },
-                textShadowRadius: pieceDisplay.color === 'white' ? 3 : 1,
-              }
-            ]}
-          >
-            {pieceDisplay.char}
-          </Text>
+          <View style={[styles.pieceWrap, pieceDisplay.color === 'white' ? styles.whitePieceWrap : styles.blackPieceWrap]}>
+            <Text
+              style={[
+                styles.piece,
+                pieceDisplay.color === 'white' ? styles.whitePiece : styles.blackPiece,
+              ]}
+            >
+              {pieceDisplay.char}
+            </Text>
+          </View>
         )}
       </TouchableOpacity>
     );
@@ -675,75 +675,83 @@ const ChessGame = ({ mode, onComplete, onClose }) => {
   return (
     <ImageBackground source={{ uri: GAME_BG }} style={styles.container} resizeMode="cover">
       <View style={styles.overlay}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Ionicons name="close" size={24} color="#FFF" />
-          </TouchableOpacity>
-          <Text style={styles.title}>الشطرنج</Text>
-          <TouchableOpacity style={styles.resetButton} onPress={resetGame}>
-            <Ionicons name="refresh" size={20} color="#FFF" />
-          </TouchableOpacity>
-        </View>
+        <ScrollView
+          bounces={false}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <Ionicons name="close" size={24} color="#FFF" />
+            </TouchableOpacity>
+            <Text style={styles.title}>الشطرنج الملكي</Text>
+            <TouchableOpacity style={styles.resetButton} onPress={resetGame}>
+              <Ionicons name="refresh" size={20} color="#FFF" />
+            </TouchableOpacity>
+          </View>
 
-        {/* Status */}
-        <View style={styles.statusBar}>
-          {gameStatus === 'check' && (
-            <Animated.View style={[styles.statusBadge, styles.checkBadge]}>
-              <Text style={styles.statusText}>كش!</Text>
-            </Animated.View>
-          )}
-          {thinking && (
-            <View style={[styles.statusBadge, styles.thinkingBadge]}>
-              <Text style={styles.statusText}>الخصم يفكر...</Text>
-            </View>
-          )}
-          {!gameOver && !thinking && gameStatus !== 'check' && (
-            <View style={styles.turnIndicator}>
-              <View style={[styles.turnDot, turn === 'w' ? styles.whiteDot : styles.blackDot]} />
-              <Text style={styles.turnText}>{turn === 'w' ? 'دورك' : 'دور الخصم'}</Text>
-            </View>
-          )}
-        </View>
-
-        {/* القطع المأكولة - الخصم */}
-        <View style={styles.capturedRow}>
-          {captured.black.map((p, i) => (
-            <Text key={i} style={styles.capturedPiece}>{getPieceDisplay(p)?.char}</Text>
-          ))}
-        </View>
-
-        {/* اللوحة */}
-        <View style={styles.boardContainer}>
-          <View style={styles.board}>
-            {board.map((row, rIdx) => (
-              <View key={rIdx} style={styles.row}>
-                {row.map((_, cIdx) => renderSquare(rIdx, cIdx))}
+          {/* Status */}
+          <View style={styles.statusBar}>
+            {gameStatus === 'check' && (
+              <Animated.View style={[styles.statusBadge, styles.checkBadge]}>
+                <Text style={styles.statusText}>كش!</Text>
+              </Animated.View>
+            )}
+            {thinking && (
+              <View style={[styles.statusBadge, styles.thinkingBadge]}>
+                <Text style={styles.statusText}>الخصم يفكر...</Text>
               </View>
-            ))}
+            )}
+            {!gameOver && !thinking && gameStatus !== 'check' && (
+              <View style={styles.turnIndicator}>
+                <View style={[styles.turnDot, turn === 'w' ? styles.whiteDot : styles.blackDot]} />
+                <Text style={styles.turnText}>{turn === 'w' ? 'دورك' : 'دور الخصم'}</Text>
+              </View>
+            )}
           </View>
-          
-          {/* أرقام الصفوف */}
-          <View style={styles.rowNumbers}>
-            {[8, 7, 6, 5, 4, 3, 2, 1].map(n => (
-              <Text key={n} style={styles.boardLabel}>{n}</Text>
-            ))}
-          </View>
-          
-          {/* حروف الأعمدة */}
-          <View style={styles.colLetters}>
-            {['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].map(l => (
-              <Text key={l} style={styles.boardLabel}>{l}</Text>
-            ))}
-          </View>
-        </View>
 
-        {/* القطع المأكولة - اللاعب */}
-        <View style={styles.capturedRow}>
-          {captured.white.map((p, i) => (
-            <Text key={i} style={styles.capturedPiece}>{getPieceDisplay(p)?.char}</Text>
-          ))}
-        </View>
+          {/* القطع المأكولة - الخصم */}
+          <View style={styles.capturedRow}>
+            {captured.black.map((p, i) => (
+              <Text key={i} style={styles.capturedPiece}>{getPieceDisplay(p)?.char}</Text>
+            ))}
+          </View>
+
+          {/* اللوحة */}
+          <View style={styles.boardContainer}>
+            <LinearGradient colors={['#facc15', '#b45309', '#facc15']} style={styles.boardFrame}>
+              <View style={styles.board}>
+                {board.map((row, rIdx) => (
+                  <View key={rIdx} style={styles.row}>
+                    {row.map((_, cIdx) => renderSquare(rIdx, cIdx))}
+                  </View>
+                ))}
+              </View>
+            </LinearGradient>
+
+            {/* أرقام الصفوف */}
+            <View style={styles.rowNumbers}>
+              {[8, 7, 6, 5, 4, 3, 2, 1].map(n => (
+                <Text key={n} style={styles.boardLabel}>{n}</Text>
+              ))}
+            </View>
+
+            {/* حروف الأعمدة */}
+            <View style={styles.colLetters}>
+              {['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].map(l => (
+                <Text key={l} style={styles.boardLabel}>{l}</Text>
+              ))}
+            </View>
+          </View>
+
+          {/* القطع المأكولة - اللاعب */}
+          <View style={styles.capturedRow}>
+            {captured.white.map((p, i) => (
+              <Text key={i} style={styles.capturedPiece}>{getPieceDisplay(p)?.char}</Text>
+            ))}
+          </View>
+        </ScrollView>
 
         {/* نافذة ترقية البيدق */}
         <Modal visible={!!showPromotion} transparent animationType="fade">
@@ -757,7 +765,12 @@ const ChessGame = ({ mode, onComplete, onClose }) => {
                     style={styles.promotionOption}
                     onPress={() => handlePromotion(type)}
                   >
-                    <Text style={styles.promotionPiece}>
+                    <Text
+                      style={[
+                        styles.promotionPiece,
+                        showPromotion?.color === 'w' ? styles.whitePiece : styles.blackPiece,
+                      ]}
+                    >
                       {PIECES[showPromotion?.color === 'w' ? 'white' : 'black'][
                         { q: 'queen', r: 'rook', b: 'bishop', n: 'knight' }[type]
                       ]}
@@ -798,43 +811,46 @@ const ChessGame = ({ mode, onComplete, onClose }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (boardSize, squareSize, isCompactScreen) => StyleSheet.create({
   container: { flex: 1 },
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
-  
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.58)' },
+  scrollContent: { flexGrow: 1, paddingBottom: isCompactScreen ? 14 : 24 },
+
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 50,
-    paddingBottom: 10,
+    paddingTop: isCompactScreen ? 38 : 52,
+    paddingBottom: 8,
   },
   closeButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.14)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
-    fontSize: 24,
+    fontSize: isCompactScreen ? 22 : 24,
     fontWeight: 'bold',
     color: '#FFF',
+    letterSpacing: 0.3,
   },
   resetButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.14)',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   statusBar: {
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingTop: 4,
+    paddingBottom: 8,
   },
   statusBadge: {
     paddingHorizontal: 16,
@@ -865,7 +881,7 @@ const styles = StyleSheet.create({
     borderColor: '#FFF',
   },
   whiteDot: { backgroundColor: '#FFF' },
-  blackDot: { backgroundColor: '#1a1a1a' },
+  blackDot: { backgroundColor: '#111827' },
   turnText: {
     color: '#FFF',
     fontSize: 16,
@@ -874,80 +890,118 @@ const styles = StyleSheet.create({
   capturedRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    paddingVertical: 8,
-    minHeight: 40,
+    alignItems: 'center',
+    paddingVertical: 6,
+    minHeight: 36,
     flexWrap: 'wrap',
+    marginHorizontal: 10,
   },
   capturedPiece: {
-    fontSize: 20,
+    fontSize: Math.max(17, squareSize * 0.5),
     marginHorizontal: 2,
+    color: '#e5e7eb',
   },
 
   boardContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 8,
+    paddingTop: 6,
+    paddingBottom: 18,
+    marginHorizontal: 18,
+  },
+  boardFrame: {
+    padding: 5,
+    borderRadius: 10,
+    shadowColor: '#f59e0b',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 7,
   },
   board: {
-    width: BOARD_SIZE,
-    height: BOARD_SIZE,
-    borderWidth: 4,
-    borderColor: '#8B4513',
-    borderRadius: 4,
+    width: boardSize,
+    height: boardSize,
+    borderRadius: 6,
     overflow: 'hidden',
+    backgroundColor: '#000',
   },
   row: {
     flexDirection: 'row',
   },
   square: {
-    width: SQUARE_SIZE,
-    height: SQUARE_SIZE,
+    width: squareSize,
+    height: squareSize,
     justifyContent: 'center',
     alignItems: 'center',
   },
   lastMoveSquare: {
-    backgroundColor: '#FFEB3B50',
+    backgroundColor: 'rgba(251, 191, 36, 0.42)',
   },
   checkSquare: {
-    backgroundColor: '#ff000060',
+    backgroundColor: 'rgba(239, 68, 68, 0.4)',
+  },
+  pieceWrap: {
+    width: squareSize * 0.8,
+    height: squareSize * 0.8,
+    borderRadius: squareSize * 0.4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  whitePieceWrap: {
+    backgroundColor: 'rgba(255,255,255,0.16)',
+  },
+  blackPieceWrap: {
+    backgroundColor: 'rgba(0,0,0,0.2)',
   },
   piece: {
-    fontSize: SQUARE_SIZE * 0.75,
-    fontWeight: 'bold',
+    fontSize: squareSize * 0.74,
+    fontWeight: '700',
+  },
+  whitePiece: {
+    color: '#f8fafc',
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  blackPiece: {
+    color: '#111827',
+    textShadowColor: 'rgba(255,255,255,0.35)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   validMoveIndicator: {
-    width: SQUARE_SIZE * 0.3,
-    height: SQUARE_SIZE * 0.3,
-    borderRadius: SQUARE_SIZE * 0.15,
-    backgroundColor: 'rgba(0, 150, 0, 0.5)',
+    width: squareSize * 0.28,
+    height: squareSize * 0.28,
+    borderRadius: squareSize * 0.14,
+    backgroundColor: 'rgba(34, 197, 94, 0.55)',
   },
   captureIndicator: {
     position: 'absolute',
-    width: SQUARE_SIZE - 4,
-    height: SQUARE_SIZE - 4,
-    borderRadius: (SQUARE_SIZE - 4) / 2,
-    borderWidth: 3,
-    borderColor: 'rgba(255, 0, 0, 0.6)',
+    width: squareSize - 4,
+    height: squareSize - 4,
+    borderRadius: (squareSize - 4) / 2,
+    borderWidth: 2.5,
+    borderColor: 'rgba(239, 68, 68, 0.75)',
   },
   rowNumbers: {
     position: 'absolute',
-    left: -18,
-    top: 8,
-    height: BOARD_SIZE,
+    left: -14,
+    top: 10,
+    height: boardSize,
     justifyContent: 'space-around',
   },
   colLetters: {
     position: 'absolute',
-    bottom: -20,
-    left: 8,
-    width: BOARD_SIZE,
+    bottom: -8,
+    left: 6,
+    width: boardSize,
     flexDirection: 'row',
     justifyContent: 'space-around',
   },
   boardLabel: {
-    color: '#888',
-    fontSize: 12,
-    fontWeight: '600',
+    color: 'rgba(229,231,235,0.75)',
+    fontSize: 11,
+    fontWeight: '700',
   },
 
   // Promotion Modal
@@ -958,10 +1012,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   promotionModal: {
-    backgroundColor: '#1a1a2e',
-    padding: 24,
+    backgroundColor: '#131524',
+    padding: 22,
     borderRadius: 20,
     alignItems: 'center',
+    width: '88%',
+    maxWidth: 380,
+    borderWidth: 1,
+    borderColor: 'rgba(250,204,21,0.45)',
   },
   promotionTitle: {
     color: '#FFF',
@@ -971,18 +1029,19 @@ const styles = StyleSheet.create({
   },
   promotionOptions: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 12,
   },
   promotionOption: {
-    width: 60,
-    height: 60,
-    backgroundColor: '#F0D9B5',
-    borderRadius: 10,
+    width: 58,
+    height: 58,
+    backgroundColor: '#f6e7c8',
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
   promotionPiece: {
-    fontSize: 40,
+    fontSize: 36,
+    color: '#111827',
   },
 
   // Game Over Modal
@@ -993,33 +1052,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   gameOverModal: {
-    backgroundColor: '#1a1a2e',
-    padding: 32,
+    backgroundColor: '#111827',
+    padding: 28,
     borderRadius: 24,
     alignItems: 'center',
-    width: '80%',
+    width: '86%',
+    maxWidth: 380,
+    borderWidth: 1,
+    borderColor: 'rgba(96,165,250,0.35)',
   },
   gameOverEmoji: {
-    fontSize: 60,
-    marginBottom: 16,
+    fontSize: 56,
+    marginBottom: 14,
   },
   gameOverTitle: {
     color: '#FFF',
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: 'bold',
     marginBottom: 8,
   },
   gameOverSubtitle: {
-    color: '#888',
-    fontSize: 16,
-    marginBottom: 24,
+    color: '#9ca3af',
+    fontSize: 15,
+    marginBottom: 22,
+    textAlign: 'center',
   },
   gameOverButtons: {
     width: '100%',
-    gap: 12,
+    gap: 10,
   },
   playAgainButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#2563eb',
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
@@ -1030,7 +1093,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   exitButton: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',

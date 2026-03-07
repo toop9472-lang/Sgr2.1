@@ -5,10 +5,9 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Dimensions,
   TextInput,
-  Alert,
   ImageBackground,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,9 +17,6 @@ import { pickRandom } from '../../utils/random';
 // AI-Generated Professional Background
 const GAME_BG = 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/1686eb6c53be174737bae618b3efe2ae326d4a885e6864935b7dc822635a6c92.png';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-const isTablet = screenWidth > 600;
-const GAME_WIDTH = isTablet ? Math.min(screenWidth * 0.7, 500) : screenWidth;
 const GAME_TIME = 90;
 
 // كلمات عربية مع تلميحات
@@ -97,6 +93,11 @@ const normalizeArabicWord = (value) => {
 };
 
 const WordRaceGame = ({ mode, isOnline, onComplete, onClose }) => {
+  const { width: windowWidth } = useWindowDimensions();
+  const compactLayout = windowWidth < 360;
+  const wordFontSize = compactLayout ? 36 : 48;
+  const wordLetterSpacing = compactLayout ? 4 : 8;
+
   const [currentWord, setCurrentWord] = useState(null);
   const [shuffledWord, setShuffledWord] = useState('');
   const [userInput, setUserInput] = useState('');
@@ -253,7 +254,7 @@ const WordRaceGame = ({ mode, isOnline, onComplete, onClose }) => {
       </View>
 
       {/* Stats */}
-      <View style={styles.statsRow}>
+      <View style={[styles.statsRow, compactLayout && styles.statsRowCompact]}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{wordsFound}</Text>
           <Text style={styles.statLabel}>كلمات</Text>
@@ -271,7 +272,9 @@ const WordRaceGame = ({ mode, isOnline, onComplete, onClose }) => {
         </View>
         
         <LinearGradient colors={['#1e1e28', '#252532']} style={styles.wordCard}>
-          <Text style={styles.shuffledWord}>{shuffledWord}</Text>
+            <Text style={[styles.shuffledWord, { fontSize: wordFontSize, letterSpacing: wordLetterSpacing }]}>
+              {shuffledWord}
+            </Text>
           {streak >= 3 && (
             <View style={styles.streakBadge}>
               <Ionicons name="flame" size={16} color="#f59e0b" />
@@ -383,6 +386,9 @@ const styles = StyleSheet.create({
     gap: 40,
     padding: 16,
   },
+  statsRowCompact: {
+    gap: 22,
+  },
   statItem: { alignItems: 'center' },
   statValue: { color: '#FFF', fontSize: 28, fontWeight: 'bold' },
   statLabel: { color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 4 },
@@ -413,6 +419,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFF',
     letterSpacing: 8,
+    textAlign: 'center',
   },
   streakBadge: {
     position: 'absolute',
@@ -495,7 +502,8 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: 'center',
     marginHorizontal: 20,
-    minWidth: 300,
+    width: '92%',
+    maxWidth: 360,
   },
   gameOverTitle: {
     fontSize: 26,
