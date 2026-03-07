@@ -1,6 +1,6 @@
 // Games Screen - Professional Gaming Hub with Multiplayer
 // Puzzle, Chess, Tic-Tac-Toe, Trivia, Riddles, Brick Breaker - Online & vs AI
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -42,83 +42,75 @@ const resolveIconName = (iconName, fallback = 'ellipse-outline') => (
   ioniconGlyphMap[iconName] ? iconName : fallback
 );
 
-// ==================== GAME CARD COMPONENT - PROFESSIONAL DESIGN ====================
+// ==================== PREMIUM GAME CARD COMPONENT ====================
 const GameCard = ({ game, onPress, pulseAnim, gameCost }) => {
-  const [showInfo, setShowInfo] = useState(false);
-  
-  const handlePressIn = () => setShowInfo(true);
-  const handlePressOut = () => setShowInfo(false);
-  
   return (
     <Animated.View style={[styles.gameCardWrapper, { transform: [{ scale: pulseAnim }] }]}>
-      <TouchableOpacity 
-        style={styles.gameCard} 
-        onPress={onPress} 
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        activeOpacity={0.95}
-      >
-        {/* Background Image */}
-        {game.image ? (
-          <Image 
-            source={{ uri: game.image }} 
-            style={styles.gameCardImage}
-            resizeMode="cover"
-          />
-        ) : (
-          <LinearGradient 
-            colors={game.colors} 
-            style={styles.gameCardImage} 
-            start={{ x: 0, y: 0 }} 
-            end={{ x: 1, y: 1 }}
-          >
-            <Ionicons name={resolveIconName(game.icon, 'apps-outline')} size={60} color="rgba(255,255,255,0.3)" />
-          </LinearGradient>
-        )}
-        
-        {/* Dark Overlay */}
-        <View style={[styles.gameCardOverlay, showInfo && styles.gameCardOverlayActive]} />
-        
-        {/* Badge - Always visible */}
-        {game.badge ? (
-          <View style={styles.gameBadgeNew}>
-            <Text style={styles.gameBadgeTextNew}>{game.badge}</Text>
+      <TouchableOpacity style={styles.gameCard} onPress={onPress} activeOpacity={0.9}>
+        <LinearGradient
+          colors={['rgba(18,18,28,0.98)', 'rgba(11,11,18,0.98)']}
+          style={styles.gameCardShell}
+        >
+          <View style={styles.gameTopRow}>
+            <View style={styles.gameModePills}>
+              <View style={[styles.modePill, game.online ? styles.modePillOnline : styles.modePillSolo]}>
+                <Ionicons
+                  name={game.online ? 'wifi' : 'person'}
+                  size={10}
+                  color={game.online ? '#60a5fa' : '#22c55e'}
+                />
+                <Text style={[styles.modePillText, { color: game.online ? '#60a5fa' : '#22c55e' }]}>
+                  {game.online ? 'أونلاين' : 'فردي'}
+                </Text>
+              </View>
+              {game.trend ? (
+                <View style={styles.trendPill}>
+                  <Ionicons name="trending-up" size={10} color="#fbbf24" />
+                  <Text style={styles.trendPillText}>{game.trend}</Text>
+                </View>
+              ) : null}
+            </View>
+            {game.badge ? <Text style={styles.gameBadgeLabel}>{game.badge}</Text> : null}
           </View>
-        ) : null}
-        
-        {/* Online indicator - Always visible */}
-        {game.online && (
-          <View style={styles.onlineIndicator}>
-            <View style={styles.onlineDotNew} />
+
+          <View style={styles.gameArtContainer}>
+            <LinearGradient colors={game.colors} style={styles.gameArtGlow} />
+            <View style={[styles.gameArtOrb, { borderColor: `${game.accent}66` }]}>
+              <LinearGradient colors={game.orbGradient} style={styles.gameArtOrbGradient}>
+                <Ionicons name={resolveIconName(game.icon, 'game-controller-outline')} size={34} color="#fff" />
+                {game.secondaryIcon ? (
+                  <View style={styles.gameSecondaryIcon}>
+                    <Ionicons name={resolveIconName(game.secondaryIcon, 'sparkles-outline')} size={12} color="#fff" />
+                  </View>
+                ) : null}
+              </LinearGradient>
+            </View>
+            <Text style={styles.gameEmoji}>{game.emoji}</Text>
           </View>
-        )}
-        
-        {/* Game Info - Shows on press */}
-        {showInfo && (
-          <View style={styles.gameInfoOverlay}>
+
+          <View style={styles.gameCardFooter}>
             <Text style={styles.gameNameNew}>{game.name}</Text>
-            <Text style={styles.gameDescNew}>{game.description}</Text>
-            <View style={styles.gameTagsRow}>
-              <View style={styles.pointsTagNew}>
-                <Ionicons name="star" size={12} color="#fbbf24" />
-                <Text style={styles.pointsTextNew}>+{game.maxPoints}</Text>
+            <Text style={styles.gameDescNew} numberOfLines={2}>
+              {game.description}
+            </Text>
+            <View style={styles.gameMetaRow}>
+              <View style={styles.metaPill}>
+                <Ionicons name="sparkles" size={12} color="#fbbf24" />
+                <Text style={styles.metaPillText}>حتى +{game.maxPoints}</Text>
               </View>
-              <View style={styles.categoryTagNew}>
-                <Text style={styles.categoryTextNew}>{game.category}</Text>
+              <View style={styles.metaPill}>
+                <Ionicons name="layers-outline" size={12} color="#94a3b8" />
+                <Text style={styles.metaPillText}>{game.category}</Text>
               </View>
+              {game.online && (
+                <View style={styles.metaPill}>
+                  <Ionicons name="diamond" size={12} color="#60a5fa" />
+                  <Text style={styles.metaPillText}>{gameCost || game.onlineCost || 20}</Text>
+                </View>
+              )}
             </View>
           </View>
-        )}
-        
-        {/* Bottom gradient for name visibility when not pressed */}
-        {!showInfo && (
-          <LinearGradient 
-            colors={['transparent', 'rgba(0,0,0,0.8)']} 
-            style={styles.gameCardBottomGradient}
-          >
-            <Text style={styles.gameNameSmall}>{game.name}</Text>
-          </LinearGradient>
-        )}
+        </LinearGradient>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -192,13 +184,73 @@ const WaitingScreen = ({ onCancel, gameType }) => {
 };
 
 // ==================== TIC TAC TOE GAME ====================
-const TicTacToeGame = ({ mode, onComplete, onClose, isOnline, opponent, isMyTurn: initialTurn, matchData, onSendMove }) => {
-  const [board, setBoard] = useState(Array(9).fill(null));
+const TicTacToeGame = ({
+  mode,
+  onComplete,
+  onClose,
+  isOnline,
+  isMyTurn: initialTurn,
+  onSendMove,
+  variant = 'classic',
+  title = 'Arena X-O',
+}) => {
+  const boardSize = variant === 'pro4' ? 4 : 3;
+  const totalCells = boardSize * boardSize;
+  const rewardMap = variant === 'pro4'
+    ? { win: 26, lose: 7, draw: 12 }
+    : { win: 20, lose: 5, draw: 10 };
+
+  const [board, setBoard] = useState(() => Array(totalCells).fill(null));
   const [isPlayerTurn, setIsPlayerTurn] = useState(isOnline ? initialTurn : true);
   const [gameOver, setGameOver] = useState(false);
   const [winner, setWinner] = useState(null);
   const [scores, setScores] = useState({ player: 0, opponent: 0, draws: 0 });
-  const [opponentName, setOpponentName] = useState(isOnline ? 'منافس' : (mode === 'online' ? 'منافس' : 'الكمبيوتر'));
+  const [opponentName] = useState(isOnline ? 'منافس' : 'الكمبيوتر');
+
+  const checkWinner = useCallback((squares) => {
+    for (let row = 0; row < boardSize; row += 1) {
+      const first = squares[row * boardSize];
+      if (first && Array.from({ length: boardSize }).every((_, c) => squares[row * boardSize + c] === first)) {
+        return first;
+      }
+    }
+
+    for (let col = 0; col < boardSize; col += 1) {
+      const first = squares[col];
+      if (first && Array.from({ length: boardSize }).every((_, r) => squares[r * boardSize + col] === first)) {
+        return first;
+      }
+    }
+
+    const mainDiag = squares[0];
+    if (mainDiag && Array.from({ length: boardSize }).every((_, i) => squares[i * boardSize + i] === mainDiag)) {
+      return mainDiag;
+    }
+
+    const antiDiag = squares[boardSize - 1];
+    if (antiDiag && Array.from({ length: boardSize }).every((_, i) => squares[i * boardSize + (boardSize - 1 - i)] === antiDiag)) {
+      return antiDiag;
+    }
+
+    return squares.every((s) => s !== null) ? 'draw' : null;
+  }, [boardSize]);
+
+  const handleGameEnd = useCallback((result) => {
+    setGameOver(true);
+    if (result === 'X') {
+      setWinner('player');
+      setScores((s) => ({ ...s, player: s.player + 1 }));
+      onComplete(rewardMap.win, 'win');
+    } else if (result === 'O') {
+      setWinner('opponent');
+      setScores((s) => ({ ...s, opponent: s.opponent + 1 }));
+      onComplete(rewardMap.lose, 'lose');
+    } else {
+      setWinner('draw');
+      setScores((s) => ({ ...s, draws: s.draws + 1 }));
+      onComplete(rewardMap.draw, 'draw');
+    }
+  }, [onComplete, rewardMap.draw, rewardMap.lose, rewardMap.win]);
 
   // استقبال حركات الخصم الأونلاين
   useEffect(() => {
@@ -207,17 +259,15 @@ const TicTacToeGame = ({ mode, onComplete, onClose, isOnline, opponent, isMyTurn
       if (!data.move || typeof data.move.position !== 'number') return;
       const movePos = data.move.position;
 
-      setBoard(prevBoard => {
-        // تجاهل الحركة غير الصالحة أو المكررة
-        if (movePos < 0 || movePos > 8 || prevBoard[movePos] || gameOver) {
+      setBoard((prevBoard) => {
+        if (movePos < 0 || movePos >= totalCells || prevBoard[movePos] || gameOver) {
           return prevBoard;
         }
         const nextBoard = [...prevBoard];
         nextBoard[movePos] = 'O';
-
         const result = checkWinner(nextBoard);
         if (result) {
-          handleGameEnd(result, nextBoard);
+          handleGameEnd(result);
         } else {
           setIsPlayerTurn(true);
         }
@@ -226,40 +276,7 @@ const TicTacToeGame = ({ mode, onComplete, onClose, isOnline, opponent, isMyTurn
     });
 
     return () => unsubMove();
-  }, [isOnline, gameOver]);
-
-  const winPatterns = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8],
-    [0, 3, 6], [1, 4, 7], [2, 5, 8],
-    [0, 4, 8], [2, 4, 6]
-  ];
-
-  const checkWinner = (squares) => {
-    for (let pattern of winPatterns) {
-      const [a, b, c] = pattern;
-      if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-        return squares[a];
-      }
-    }
-    return squares.every(s => s !== null) ? 'draw' : null;
-  };
-
-  const handleGameEnd = (result, newBoard) => {
-    setGameOver(true);
-    if (result === 'X') {
-      setWinner('player');
-      setScores(s => ({ ...s, player: s.player + 1 }));
-      onComplete(20, 'win');
-    } else if (result === 'O') {
-      setWinner('opponent');
-      setScores(s => ({ ...s, opponent: s.opponent + 1 }));
-      onComplete(5, 'lose');
-    } else {
-      setWinner('draw');
-      setScores(s => ({ ...s, draws: s.draws + 1 }));
-      onComplete(10, 'draw');
-    }
-  };
+  }, [checkWinner, gameOver, handleGameEnd, isOnline, totalCells]);
 
   const minimax = (squares, isMax, depth = 0) => {
     const result = checkWinner(squares);
@@ -269,7 +286,7 @@ const TicTacToeGame = ({ mode, onComplete, onClose, isOnline, opponent, isMyTurn
 
     if (isMax) {
       let best = -Infinity;
-      for (let i = 0; i < 9; i++) {
+      for (let i = 0; i < 9; i += 1) {
         if (!squares[i]) {
           squares[i] = 'O';
           best = Math.max(best, minimax(squares, false, depth + 1));
@@ -277,34 +294,60 @@ const TicTacToeGame = ({ mode, onComplete, onClose, isOnline, opponent, isMyTurn
         }
       }
       return best;
-    } else {
-      let best = Infinity;
-      for (let i = 0; i < 9; i++) {
-        if (!squares[i]) {
-          squares[i] = 'X';
-          best = Math.min(best, minimax(squares, true, depth + 1));
-          squares[i] = null;
-        }
-      }
-      return best;
     }
+
+    let best = Infinity;
+    for (let i = 0; i < 9; i += 1) {
+      if (!squares[i]) {
+        squares[i] = 'X';
+        best = Math.min(best, minimax(squares, true, depth + 1));
+        squares[i] = null;
+      }
+    }
+    return best;
   };
 
   const getAIMove = (currentBoard) => {
-    const empty = currentBoard.map((s, i) => s === null ? i : null).filter(i => i !== null);
-    
-    if (mode === 'ai_medium') {
-      // 50% chance of best move, 50% random
-      if (Math.random() < 0.5) {
+    const empty = currentBoard
+      .map((s, i) => (s === null ? i : null))
+      .filter((i) => i !== null);
+
+    if (empty.length === 0) return null;
+
+    if (totalCells > 9) {
+      const findCriticalMove = (symbol) => {
+        for (const idx of empty) {
+          currentBoard[idx] = symbol;
+          const wins = checkWinner(currentBoard) === symbol;
+          currentBoard[idx] = null;
+          if (wins) return idx;
+        }
+        return null;
+      };
+
+      if (mode === 'ai_medium' && Math.random() < 0.45) {
         return empty[Math.floor(Math.random() * empty.length)];
       }
+
+      const winningMove = findCriticalMove('O');
+      if (winningMove !== null) return winningMove;
+
+      const blockingMove = findCriticalMove('X');
+      if (blockingMove !== null) return blockingMove;
+
+      const center = Math.floor(totalCells / 2);
+      if (currentBoard[center] === null) return center;
+
+      return empty[Math.floor(Math.random() * empty.length)];
     }
-    
-    // Hard mode - always best move
+
+    if (mode === 'ai_medium' && Math.random() < 0.5) {
+      return empty[Math.floor(Math.random() * empty.length)];
+    }
+
     let bestScore = -Infinity;
     let bestMove = empty[0];
-    
-    for (let i of empty) {
+    for (const i of empty) {
       currentBoard[i] = 'O';
       const score = minimax(currentBoard, false);
       currentBoard[i] = null;
@@ -323,20 +366,18 @@ const TicTacToeGame = ({ mode, onComplete, onClose, isOnline, opponent, isMyTurn
     newBoard[index] = 'X';
     setBoard(newBoard);
 
-    // إرسال الحركة للخصم الأونلاين
     if (isOnline && onSendMove) {
       onSendMove({ position: index, symbol: 'X' });
     }
 
     const result = checkWinner(newBoard);
     if (result) {
-      handleGameEnd(result, newBoard);
+      handleGameEnd(result);
       return;
     }
 
     setIsPlayerTurn(false);
-    
-    // AI Move (فقط إذا كان اللعب ضد الكمبيوتر)
+
     if (!isOnline && (mode === 'ai_medium' || mode === 'ai_hard')) {
       setTimeout(() => {
         const aiIndex = getAIMove([...newBoard]);
@@ -345,21 +386,25 @@ const TicTacToeGame = ({ mode, onComplete, onClose, isOnline, opponent, isMyTurn
           setBoard([...newBoard]);
           const aiResult = checkWinner(newBoard);
           if (aiResult) {
-            handleGameEnd(aiResult, newBoard);
+            handleGameEnd(aiResult);
           } else {
             setIsPlayerTurn(true);
           }
         }
-      }, 600);
+      }, variant === 'pro4' ? 450 : 600);
     }
   };
 
   const resetGame = () => {
-    setBoard(Array(9).fill(null));
+    setBoard(Array(totalCells).fill(null));
     setIsPlayerTurn(isOnline ? initialTurn : true);
     setGameOver(false);
     setWinner(null);
   };
+
+  const boardWidth = Math.min(width - 60, variant === 'pro4' ? 360 : 320);
+  const cellSize = (boardWidth - 20) / boardSize;
+  const iconSize = boardSize === 4 ? 38 : 50;
 
   return (
     <View style={styles.gameContainer}>
@@ -367,13 +412,12 @@ const TicTacToeGame = ({ mode, onComplete, onClose, isOnline, opponent, isMyTurn
         <TouchableOpacity onPress={onClose} style={styles.headerBtn}>
           <Ionicons name="arrow-back" size={24} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.gameTitle}>إكس أو</Text>
+        <Text style={styles.gameTitle}>{title}</Text>
         <TouchableOpacity onPress={resetGame} style={styles.headerBtn}>
           <Ionicons name="refresh" size={22} color="#60a5fa" />
         </TouchableOpacity>
       </View>
 
-      {/* Score Board */}
       <View style={styles.scoreBoard}>
         <View style={[styles.scorePlayer, isPlayerTurn && !gameOver && styles.activePlayer]}>
           <Ionicons name="person" size={20} color="#60a5fa" />
@@ -385,43 +429,49 @@ const TicTacToeGame = ({ mode, onComplete, onClose, isOnline, opponent, isMyTurn
           <Text style={styles.drawsNum}>{scores.draws}</Text>
         </View>
         <View style={[styles.scorePlayer, !isPlayerTurn && !gameOver && styles.activePlayer]}>
-          <Ionicons name={mode === 'online' ? 'person' : 'hardware-chip'} size={20} color="#f59e0b" />
+          <Ionicons name={isOnline ? 'person' : 'hardware-chip'} size={20} color="#f59e0b" />
           <Text style={styles.scoreLabel}>{opponentName}</Text>
           <Text style={styles.scoreNum}>{scores.opponent}</Text>
         </View>
       </View>
 
-      {/* Board */}
-      <View style={styles.tttBoard}>
-        {board.map((cell, idx) => (
-          <TouchableOpacity
-            key={idx}
-            style={[
-              styles.tttCell,
-              idx % 3 !== 2 && styles.cellBorderR,
-              idx < 6 && styles.cellBorderB,
-            ]}
-            onPress={() => handlePress(idx)}
-            activeOpacity={0.7}
-          >
-            {cell && (
-              <Ionicons
-                name={cell === 'X' ? 'close' : 'ellipse-outline'}
-                size={50}
-                color={cell === 'X' ? '#60a5fa' : '#f59e0b'}
-              />
-            )}
-          </TouchableOpacity>
-        ))}
+      <View style={[styles.tttBoard, { width: boardWidth }]}>
+        {board.map((cell, idx) => {
+          const row = Math.floor(idx / boardSize);
+          const col = idx % boardSize;
+          return (
+            <TouchableOpacity
+              key={idx}
+              style={[
+                styles.tttCell,
+                {
+                  width: cellSize,
+                  height: cellSize,
+                },
+                col !== boardSize - 1 && styles.cellBorderR,
+                row !== boardSize - 1 && styles.cellBorderB,
+              ]}
+              onPress={() => handlePress(idx)}
+              activeOpacity={0.7}
+            >
+              {cell && (
+                <Ionicons
+                  name={cell === 'X' ? 'close' : 'ellipse-outline'}
+                  size={iconSize}
+                  color={cell === 'X' ? '#60a5fa' : '#f59e0b'}
+                />
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
-      {/* Turn Indicator */}
       {!gameOver && (
         <View style={styles.turnIndicator}>
-          <Ionicons 
-            name={isPlayerTurn ? 'close' : 'ellipse-outline'} 
-            size={24} 
-            color={isPlayerTurn ? '#60a5fa' : '#f59e0b'} 
+          <Ionicons
+            name={isPlayerTurn ? 'close' : 'ellipse-outline'}
+            size={24}
+            color={isPlayerTurn ? '#60a5fa' : '#f59e0b'}
           />
           <Text style={styles.turnText}>
             {isPlayerTurn ? 'دورك' : `دور ${opponentName}`}
@@ -429,13 +479,12 @@ const TicTacToeGame = ({ mode, onComplete, onClose, isOnline, opponent, isMyTurn
         </View>
       )}
 
-      {/* Game Over */}
       {gameOver && (
         <View style={styles.resultCard}>
-          <Ionicons 
-            name={winner === 'player' ? 'trophy' : winner === 'draw' ? 'remove' : 'sad'} 
-            size={50} 
-            color={winner === 'player' ? '#fbbf24' : winner === 'draw' ? '#888' : '#ef4444'} 
+          <Ionicons
+            name={winner === 'player' ? 'trophy' : winner === 'draw' ? 'remove' : 'sad'}
+            size={50}
+            color={winner === 'player' ? '#fbbf24' : winner === 'draw' ? '#888' : '#ef4444'}
           />
           <Text style={styles.resultText}>
             {winner === 'player' ? 'فوز!' : winner === 'draw' ? 'تعادل' : 'خسارة'}
@@ -1069,180 +1118,225 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
+  const pendingOnlineGameRef = useRef(null);
 
-  // قائمة الألعاب المحسنة مع صور جذابة
-  const games = [
-    { 
-      id: 'aiquest', 
-      name: 'AI Quest', 
-      icon: 'sparkles', 
-      colors: ['#ec4899', '#9333ea'], 
-      description: 'تحدى الذكاء الاصطناعي في مغامرة ذهنية', 
-      maxPoints: 30, 
-      online: false, 
+  // كتالوج الألعاب الجديد (12 لعبة: فردي + أونلاين)
+  const games = useMemo(() => ([
+    {
+      id: 'aiquest',
+      name: 'AI Quest Infinity',
+      icon: 'sparkles',
+      secondaryIcon: 'hardware-chip-outline',
+      emoji: '🤖',
+      colors: ['rgba(236,72,153,0.45)', 'rgba(147,51,234,0.38)'],
+      orbGradient: ['#ec4899', '#8b5cf6'],
+      accent: '#ec4899',
+      description: 'تحديات ذكاء متقدمة متعددة المراحل بإيقاع احترافي.',
+      maxPoints: 32,
+      online: false,
       onlineCost: 0,
-      category: 'ذكاء اصطناعي',
-      badge: 'جديد ومميز',
-      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/06c2b9af28e999d11dc9acb5d070338281a993c4674d4d7d0b6ab3e3924d1af0.png'
+      category: 'ذكاء',
+      badge: 'PRO',
+      trend: 'رائج',
     },
-    { 
-      id: 'chess', 
-      name: 'الشطرنج', 
-      icon: 'game-controller', 
-      colors: ['#7c3aed', '#4c1d95'], 
-      description: 'لعبة الملوك والاستراتيجية', 
-      maxPoints: 25, 
-      online: false, 
-      onlineCost: 30,
+    {
+      id: 'chess',
+      name: 'Grand Chess',
+      icon: 'shield-half',
+      secondaryIcon: 'trail-sign-outline',
+      emoji: '♟️',
+      colors: ['rgba(124,58,237,0.45)', 'rgba(30,41,59,0.4)'],
+      orbGradient: ['#8b5cf6', '#4c1d95'],
+      accent: '#8b5cf6',
+      description: 'شطرنج تكتيكي بواجهة نظيفة وحساب نقاط متوازن.',
+      maxPoints: 26,
+      online: false,
+      onlineCost: 0,
       category: 'استراتيجية',
-      badge: 'مميز',
-      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/0500bcacbed800176055c4bfd28202347eb75abe6213e15f19f8214fd6f6934d.png'
+      badge: 'Elite',
+      trend: '',
     },
-    { 
-      id: 'tictactoe', 
-      name: 'إكس أو', 
-      icon: 'grid', 
-      colors: ['#f97316', '#c2410c'], 
-      description: 'تحدى منافسك وفكر بذكاء', 
-      maxPoints: 20, 
-      online: true, 
+    {
+      id: 'tictactoe',
+      name: 'Arena X-O',
+      icon: 'grid',
+      secondaryIcon: 'wifi-outline',
+      emoji: '⚔️',
+      colors: ['rgba(249,115,22,0.48)', 'rgba(234,88,12,0.35)'],
+      orbGradient: ['#f97316', '#ea580c'],
+      accent: '#f97316',
+      description: 'نسخة أونلاين سريعة جدًا لمواجهات مباشرة.',
+      maxPoints: 24,
+      online: true,
       onlineCost: 20,
-      category: 'سريعة',
-      badge: 'شعبي',
-      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/33709ad279c09e5cbaf629cd65397cd2a03bdecb4a5f09b043937f27adce9655.png'
+      backendGameId: 'tictactoe',
+      variant: 'classic',
+      category: 'أونلاين',
+      badge: 'Live',
+      trend: 'PvP',
     },
-    { 
-      id: 'memory', 
-      name: 'الذاكرة', 
-      icon: 'copy', 
-      colors: ['#14b8a6', '#0f766e'], 
-      description: 'اختبر ذاكرتك وركز', 
-      maxPoints: 18, 
-      online: false, 
-      onlineCost: 0,
-      category: 'ذهنية',
-      badge: '',
-      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/d95bce93defbebf9a6d2636f84df8aeb947c97057c22f296d5ca555efcda590a.png'
-    },
-    { 
-      id: 'snake', 
-      name: 'الثعبان', 
-      icon: 'git-branch', 
-      colors: ['#22c55e', '#15803d'], 
-      description: 'اللعبة الكلاسيكية المحبوبة', 
-      maxPoints: 20, 
-      online: false, 
-      onlineCost: 0,
-      category: 'كلاسيكية',
-      badge: 'كلاسيك',
-      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8eef33008cf96dbd01341bd90a1df8c5494d684ed2338f0ec60cbfaea7916d94.png'
-    },
-    { 
-      id: 'trivia', 
-      name: 'أسئلة ثقافية', 
-      icon: 'school', 
-      colors: ['#10b981', '#047857'], 
-      description: 'اختبر معلوماتك العامة', 
-      maxPoints: 25, 
-      online: false, 
-      onlineCost: 20,
-      category: 'ثقافية',
-      badge: '250+ سؤال',
-      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/2e924ada5224a07199229ac54b22bc84571b59dd3494a46bdf0fb78324571ebe.png'
-    },
-    { 
-      id: 'puzzle', 
-      name: 'تركيب الصور', 
-      icon: 'apps-outline', 
-      colors: ['#3b82f6', '#1e40af'], 
-      description: 'رتب القطع لتكمل الصورة', 
-      maxPoints: 20, 
-      online: false, 
+    {
+      id: 'tactix',
+      name: 'TactiX 4x4',
+      icon: 'grid-outline',
+      secondaryIcon: 'flash-outline',
+      emoji: '🧠',
+      colors: ['rgba(59,130,246,0.5)', 'rgba(14,116,144,0.34)'],
+      orbGradient: ['#3b82f6', '#0ea5e9'],
+      accent: '#3b82f6',
+      description: 'إكس أو موسعة 4x4 مع عمق تكتيكي أعلى.',
+      maxPoints: 28,
+      online: true,
       onlineCost: 25,
-      category: 'ذهنية',
-      badge: '',
-      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/bd130ce79e7d79d40534d82131b67692c7a04e98d0df4b307a820569e59db691.png'
+      backendGameId: 'tictactoe',
+      variant: 'pro4',
+      category: 'أونلاين',
+      badge: 'New',
+      trend: 'Hot',
     },
-    { 
-      id: 'riddles', 
-      name: 'الألغاز', 
-      icon: 'bulb', 
-      colors: ['#eab308', '#ca8a04'], 
-      description: 'حل الألغاز الذكية', 
-      maxPoints: 20, 
-      online: false, 
+    {
+      id: 'memory',
+      name: 'Memory Matrix',
+      icon: 'layers-outline',
+      secondaryIcon: 'scan-outline',
+      emoji: '🧩',
+      colors: ['rgba(20,184,166,0.46)', 'rgba(15,118,110,0.34)'],
+      orbGradient: ['#14b8a6', '#0f766e'],
+      accent: '#14b8a6',
+      description: 'مصفوفة ذاكرة دقيقة بتصاعد صعوبة احترافي.',
+      maxPoints: 20,
+      online: false,
       onlineCost: 0,
-      category: 'ذهنية',
-      badge: '',
-      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/6061e4d9950403e2f315a7c6107f5d29edc233cdaf36be8b85729592b42204fa.png'
+      category: 'تركيز',
+      badge: 'Focus',
+      trend: '',
     },
-    { 
-      id: 'brickbreaker', 
-      name: 'تكسير الطوب', 
-      icon: 'cube', 
-      colors: ['#ec4899', '#be185d'], 
-      description: 'كسّر كل الطوب واربح', 
-      maxPoints: 20, 
-      online: false, 
+    {
+      id: 'snake',
+      name: 'Neon Snake Rush',
+      icon: 'git-branch',
+      secondaryIcon: 'flame-outline',
+      emoji: '🐍',
+      colors: ['rgba(34,197,94,0.46)', 'rgba(21,128,61,0.34)'],
+      orbGradient: ['#22c55e', '#15803d'],
+      accent: '#22c55e',
+      description: 'إيقاع أسرع وكومبو أعلى وتحكم أكثر سلاسة.',
+      maxPoints: 22,
+      online: false,
       onlineCost: 0,
-      category: 'آركيد',
-      badge: '',
-      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/2c127006856812b413c3027b7f9ba09fd5e94799f03b1e60073bd5ac01db192e.png'
+      category: 'Arcade',
+      badge: 'Turbo',
+      trend: '',
     },
-    { 
-      id: 'mathrace', 
-      name: 'سباق الحساب', 
-      icon: 'calculator', 
-      colors: ['#8b5cf6', '#6d28d9'], 
-      description: 'حل المعادلات بسرعة', 
-      maxPoints: 22, 
-      online: false, 
-      onlineCost: 20,
+    {
+      id: 'brickbreaker',
+      name: 'Brick Storm',
+      icon: 'cube',
+      secondaryIcon: 'sparkles-outline',
+      emoji: '🧱',
+      colors: ['rgba(236,72,153,0.45)', 'rgba(190,24,93,0.34)'],
+      orbGradient: ['#ec4899', '#be185d'],
+      accent: '#ec4899',
+      description: 'مراحل متدرجة وتأثيرات كومبو محسّنة للمحترفين.',
+      maxPoints: 23,
+      online: false,
+      onlineCost: 0,
+      category: 'Arcade',
+      badge: '',
+      trend: '',
+    },
+    {
+      id: 'puzzle',
+      name: 'Puzzle Studio',
+      icon: 'apps-outline',
+      secondaryIcon: 'image-outline',
+      emoji: '🖼️',
+      colors: ['rgba(59,130,246,0.45)', 'rgba(30,64,175,0.34)'],
+      orbGradient: ['#3b82f6', '#1e40af'],
+      accent: '#3b82f6',
+      description: 'ألغاز صور ممتعة بدقة عالية ومراحل متنوعة.',
+      maxPoints: 21,
+      online: false,
+      onlineCost: 0,
+      category: 'ألغاز',
+      badge: '',
+      trend: '',
+    },
+    {
+      id: 'trivia',
+      name: 'Trivia Prime',
+      icon: 'school',
+      secondaryIcon: 'help-circle-outline',
+      emoji: '📚',
+      colors: ['rgba(16,185,129,0.46)', 'rgba(4,120,87,0.34)'],
+      orbGradient: ['#10b981', '#047857'],
+      accent: '#10b981',
+      description: 'أسئلة متجددة وصياغة احترافية بتحديات دقيقة.',
+      maxPoints: 26,
+      online: false,
+      onlineCost: 0,
+      category: 'ثقافة',
+      badge: '250+',
+      trend: '',
+    },
+    {
+      id: 'mathrace',
+      name: 'Math Blitz',
+      icon: 'calculator',
+      secondaryIcon: 'speedometer-outline',
+      emoji: '➗',
+      colors: ['rgba(139,92,246,0.45)', 'rgba(109,40,217,0.33)'],
+      orbGradient: ['#8b5cf6', '#6d28d9'],
+      accent: '#8b5cf6',
+      description: 'سرعة حساب مذهلة مع تقييم لحظي وديناميكي.',
+      maxPoints: 24,
+      online: false,
+      onlineCost: 0,
       category: 'رياضيات',
-      badge: 'تحدي',
-      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/fb08724fcfd075f573cb6caa85234087c2f60b88557963d258dde0df765d428e.png'
+      badge: 'Pro',
+      trend: '',
     },
-    { 
-      id: 'wordrace', 
-      name: 'سباق الكلمات', 
-      icon: 'text-outline', 
-      colors: ['#06b6d4', '#0891b2'], 
-      description: 'اكتشف الكلمات المخفية', 
-      maxPoints: 22, 
-      online: false, 
-      onlineCost: 25,
-      category: 'لغوية',
-      badge: '',
-      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/2fc4dbd204a4ac22336dd2ff47174c2615ad00a97496165b44ede71820f884e3.png'
-    },
-    { 
-      id: 'colorswitch', 
-      name: 'تبديل الألوان', 
-      icon: 'color-palette', 
-      colors: ['#f43f5e', '#e11d48'], 
-      description: 'سرعة التفاعل مع الألوان', 
-      maxPoints: 18, 
-      online: false, 
+    {
+      id: 'wordrace',
+      name: 'Word Arena',
+      icon: 'text-outline',
+      secondaryIcon: 'language-outline',
+      emoji: '✍️',
+      colors: ['rgba(6,182,212,0.45)', 'rgba(8,145,178,0.33)'],
+      orbGradient: ['#06b6d4', '#0891b2'],
+      accent: '#06b6d4',
+      description: 'تحديات كلمات سريعة مع دعم عربي محسّن.',
+      maxPoints: 24,
+      online: false,
       onlineCost: 0,
-      category: 'سريعة',
+      category: 'لغوي',
       badge: '',
-      image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/3a0211bd8e37c202ba475214f6cd4a78086e29615fbe36f18fa7b822d0ec5faf.png'
+      trend: '',
     },
-    // لعبة من سيربح المليون - مخفية مؤقتاً
-    // { 
-    //   id: 'millionaire', 
-    //   name: 'من سيربح المليون', 
-    //   icon: 'cash', 
-    //   colors: ['#fbbf24', '#f59e0b'], 
-    //   description: '15 سؤال للمليون!', 
-    //   maxPoints: 100, 
-    //   online: false, 
-    //   onlineCost: 0,
-    //   category: 'مميزة',
-    //   badge: 'جديد',
-    //   image: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png'
-    // },
-  ];
+    {
+      id: 'colorswitch',
+      name: 'Color Reactor',
+      icon: 'color-palette',
+      secondaryIcon: 'flash-outline',
+      emoji: '🎨',
+      colors: ['rgba(244,63,94,0.45)', 'rgba(225,29,72,0.35)'],
+      orbGradient: ['#f43f5e', '#e11d48'],
+      accent: '#f43f5e',
+      description: 'اختبر سرعة ردّ الفعل في نمط بصري متوهج.',
+      maxPoints: 19,
+      online: false,
+      onlineCost: 0,
+      category: 'رد فعل',
+      badge: '',
+      trend: '',
+    },
+  ]), []);
+
+  const getGameById = useCallback((gameId) => games.find((g) => g.id === gameId), [games]);
+  const resolveBackendGameId = useCallback((gameId) => {
+    const game = getGameById(gameId);
+    return game?.backendGameId || gameId;
+  }, [getGameById]);
 
   // Multiplayer event handlers
   useEffect(() => {
@@ -1252,9 +1346,11 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
       setMatchData(data);
       setOnlineOpponent(data.players.find(p => p !== user?.id));
       setIsMyTurn(data.your_turn);
-      setActiveGame(data.game_type);
+      const targetGame = pendingOnlineGameRef.current || data.game_type;
+      setActiveGame(targetGame);
       setGameMode('online');
       setShowModeSelector(null);
+      pendingOnlineGameRef.current = null;
     });
 
     const unsubOpponentMove = multiplayerService.on('opponentMove', (data) => {
@@ -1275,11 +1371,18 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
       console.log('Game ended:', data);
     });
 
+    const unsubConnectionLost = multiplayerService.on('connectionLost', () => {
+      setShowWaiting(false);
+      pendingOnlineGameRef.current = null;
+      Alert.alert('انقطع الاتصال', 'تعذر إكمال البحث عن منافس. حاول مرة أخرى.');
+    });
+
     return () => {
       unsubMatchFound();
       unsubOpponentMove();
       unsubPlayerLeft();
       unsubGameEnded();
+      unsubConnectionLost();
     };
   }, [user?.id]);
 
@@ -1371,7 +1474,9 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
   };
 
   const handleGameSelect = (gameId) => {
-    const game = games.find(g => g.id === gameId);
+    const game = getGameById(gameId);
+    if (!game) return;
+
     if (game.online) {
       setShowModeSelector(gameId);
     } else {
@@ -1381,9 +1486,13 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
   };
 
   const handleModeSelect = async (mode) => {
+    const selectedGame = getGameById(showModeSelector);
+    if (!selectedGame) return;
+    const backendGameId = resolveBackendGameId(selectedGame.id);
+
     if (mode === 'online') {
       // التحقق من الرصيد قبل الدخول
-      const cost = gameCosts[showModeSelector] || 20;
+      const cost = gameCosts[backendGameId] || selectedGame.onlineCost || 20;
       if (balance.diamonds < cost) {
         Alert.alert(
           'رصيد غير كافٍ',
@@ -1398,18 +1507,19 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
 
       // خصم الألماسات
       try {
-        const response = await api.enterOnlineGame(user.id, showModeSelector, true);
+        const response = await api.enterOnlineGame(user.id, backendGameId, true);
         if (response.ok) {
           setShowWaiting(true);
+          pendingOnlineGameRef.current = selectedGame.id;
           fetchBalance();
           
           // البحث عن منافس حقيقي عبر WebSocket
           if (multiplayerService.isConnected()) {
-            multiplayerService.findMatch(showModeSelector);
+            multiplayerService.findMatch(backendGameId);
           } else {
             // إعادة الاتصال والبحث
             await multiplayerService.connect(user.id);
-            multiplayerService.findMatch(showModeSelector);
+            multiplayerService.findMatch(backendGameId);
           }
         } else {
           const error = await response.json();
@@ -1419,7 +1529,7 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
         Alert.alert('خطأ', 'حدث خطأ في الاتصال');
       }
     } else {
-      setActiveGame(showModeSelector);
+      setActiveGame(selectedGame.id);
       setGameMode(mode);
       setShowModeSelector(null);
     }
@@ -1429,6 +1539,7 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
     multiplayerService.cancelSearch();
     setShowWaiting(false);
     setShowModeSelector(null);
+    pendingOnlineGameRef.current = null;
   };
 
   const handleGameComplete = async (points, result) => {
@@ -1441,8 +1552,15 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
     }
     
     try {
-      const opponentCost = gameCosts[activeGame] || 20;
-      const response = await api.recordGameResult(user.id, activeGame, isOnline, won, isOnline ? opponentCost : 0);
+      const backendGameId = resolveBackendGameId(activeGame);
+      const opponentCost = gameCosts[backendGameId] || 20;
+      const response = await api.recordGameResult(
+        user.id,
+        backendGameId,
+        isOnline,
+        won,
+        isOnline ? opponentCost : 0
+      );
       if (response.ok) {
         const data = await response.json();
         if (onPointsEarned && data.points_awarded > 0) {
@@ -1469,6 +1587,7 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
       setOnlineOpponent(null);
       setIsMyTurn(false);
       setMatchData(null);
+      pendingOnlineGameRef.current = null;
     }
     
     fetchLeaderboard();
@@ -1481,6 +1600,7 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
       setOnlineOpponent(null);
       setIsMyTurn(false);
       setMatchData(null);
+      pendingOnlineGameRef.current = null;
     }
     setActiveGame(null);
     setGameMode(null);
@@ -1532,15 +1652,15 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
       case 'chess':
         return <ChessGame {...gameProps} />;
       case 'tictactoe':
-        return <TicTacToeGame {...gameProps} />;
+        return <TicTacToeGame {...gameProps} variant="classic" title="Arena X-O" />;
+      case 'tactix':
+        return <TicTacToeGame {...gameProps} variant="pro4" title="TactiX 4x4" />;
       case 'brickbreaker':
         return <BrickBreakerGame difficulty={gameMode === 'ai_hard' ? 'hard' : 'medium'} onComplete={handleGameComplete} onClose={closeGame} />;
       case 'puzzle':
         return <PuzzleGame {...gameProps} />;
       case 'trivia':
         return <TriviaGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
-      case 'riddles':
-        return <RiddlesGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
       case 'memory':
         return <MemoryGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
       case 'snake':
@@ -1588,7 +1708,7 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
           </TouchableOpacity>
           <View style={styles.headerTitleContainer}>
             <Text style={styles.mainTitle}>الألعاب</Text>
-            <Text style={styles.mainSub}>العب وتنافس واكسب النقاط</Text>
+            <Text style={styles.mainSub}>12 تجربة متطورة • فردي + أونلاين</Text>
           </View>
           <View style={{ width: 44 }} />
         </View>
@@ -1596,7 +1716,7 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
         {/* Daily Points Progress */}
         <View style={styles.dailyProgressCard}>
           <View style={styles.dailyProgressHeader}>
-            <Ionicons name="today" size={18} color="#10b981" />
+            <Ionicons name="calendar-outline" size={18} color="#10b981" />
             <Text style={styles.dailyProgressTitle}>النقاط اليومية</Text>
           </View>
           <View style={styles.dailyProgressBar}>
@@ -1716,7 +1836,13 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
         </TouchableOpacity>
 
         {/* Games */}
-        <Text style={styles.sectionTitle}>اختر لعبة</Text>
+        <View style={styles.gamesHeaderRow}>
+          <Text style={styles.sectionTitle}>مكتبة الألعاب</Text>
+          <View style={styles.gamesCountPill}>
+            <Ionicons name="rocket-outline" size={12} color="#93c5fd" />
+            <Text style={styles.gamesCountText}>{games.length} لعبة</Text>
+          </View>
+        </View>
         <View style={styles.gamesContainer}>
           {games.map(game => (
             <GameCard
@@ -1891,30 +2017,180 @@ const styles = StyleSheet.create({
   newBadge: { backgroundColor: '#22c55e', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   newBadgeText: { color: '#FFF', fontSize: 10, fontWeight: 'bold' },
   
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#FFF', textAlign: 'right', marginHorizontal: 20, marginBottom: 12 },
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#FFF', textAlign: 'right', marginBottom: 12 },
+  gamesHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: 20,
+  },
+  gamesCountPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(96,165,250,0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(96,165,250,0.3)',
+  },
+  gamesCountText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#93c5fd',
+  },
   
-  gamesContainer: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 12, justifyContent: 'space-between', marginBottom: 20 },
-  gameCardWrapper: { width: (width - 48) / 2, marginHorizontal: 4, marginBottom: 12 },
-  gameCard: { borderRadius: 20, overflow: 'hidden', height: 180, position: 'relative' },
-  gameCardImage: { width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, justifyContent: 'center', alignItems: 'center' },
-  gameCardOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.1)' },
-  gameCardOverlayActive: { backgroundColor: 'rgba(0,0,0,0.6)' },
-  gameCardBottomGradient: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingVertical: 12, paddingHorizontal: 12, alignItems: 'center' },
-  gameNameSmall: { fontSize: 14, fontWeight: '700', color: '#FFF', textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 },
-  
-  // New Professional Styles
-  gameBadgeNew: { position: 'absolute', top: 10, left: 10, backgroundColor: '#f59e0b', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, zIndex: 20 },
-  gameBadgeTextNew: { fontSize: 10, fontWeight: '800', color: '#000' },
-  onlineIndicator: { position: 'absolute', top: 10, right: 10, zIndex: 20 },
-  onlineDotNew: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#22c55e', borderWidth: 2, borderColor: '#FFF' },
-  gameInfoOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', padding: 16, zIndex: 15 },
-  gameNameNew: { fontSize: 18, fontWeight: '800', color: '#FFF', marginBottom: 6, textAlign: 'center', textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4 },
-  gameDescNew: { fontSize: 12, color: 'rgba(255,255,255,0.9)', marginBottom: 12, textAlign: 'center' },
-  gameTagsRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  pointsTagNew: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, gap: 4 },
-  pointsTextNew: { fontSize: 12, color: '#fbbf24', fontWeight: '700' },
-  categoryTagNew: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12 },
-  categoryTextNew: { fontSize: 11, color: '#FFF', fontWeight: '600' },
+  gamesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 12,
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  gameCardWrapper: {
+    width: (width - 48) / 2,
+    marginHorizontal: 4,
+    marginBottom: 12,
+  },
+  gameCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    minHeight: 228,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.02)',
+  },
+  gameCardShell: {
+    flex: 1,
+    padding: 12,
+    gap: 10,
+  },
+  gameTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  gameModePills: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  modePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  modePillSolo: {
+    borderColor: 'rgba(34,197,94,0.45)',
+    backgroundColor: 'rgba(34,197,94,0.14)',
+  },
+  modePillOnline: {
+    borderColor: 'rgba(96,165,250,0.45)',
+    backgroundColor: 'rgba(96,165,250,0.14)',
+  },
+  modePillText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  trendPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(251,191,36,0.35)',
+    backgroundColor: 'rgba(251,191,36,0.14)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  trendPillText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#fbbf24',
+  },
+  gameBadgeLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#e2e8f0',
+  },
+  gameArtContainer: {
+    height: 88,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gameArtGlow: {
+    position: 'absolute',
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    opacity: 0.85,
+  },
+  gameArtOrb: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 1.5,
+    overflow: 'hidden',
+  },
+  gameArtOrbGradient: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gameSecondaryIcon: {
+    position: 'absolute',
+    right: 10,
+    top: 9,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.18)',
+  },
+  gameEmoji: {
+    position: 'absolute',
+    bottom: 0,
+    fontSize: 18,
+  },
+  gameCardFooter: {
+    gap: 6,
+  },
+  gameNameNew: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#FFF',
+  },
+  gameDescNew: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.72)',
+    lineHeight: 16,
+    minHeight: 32,
+  },
+  gameMetaRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  metaPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  metaPillText: {
+    fontSize: 10,
+    color: '#cbd5e1',
+    fontWeight: '700',
+  },
   
   // Old styles kept for compatibility
   gameCardGradient: { padding: 16, alignItems: 'center', minHeight: 180 },

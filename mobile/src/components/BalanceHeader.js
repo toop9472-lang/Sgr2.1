@@ -11,6 +11,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 
+const CurrencyOrb = ({ colors, icon, iconColor }) => (
+  <LinearGradient colors={colors} style={styles.currencyOrb}>
+    <Ionicons name={icon} size={14} color={iconColor} />
+  </LinearGradient>
+);
+
 const BalanceHeader = ({ userId, onDiamondPress, onGemsPress, refreshTrigger }) => {
   const [balance, setBalance] = useState({
     saqr_points: 0,
@@ -73,7 +79,7 @@ const BalanceHeader = ({ userId, onDiamondPress, onGemsPress, refreshTrigger }) 
             end={{ x: 1, y: 1 }}
           >
             <View style={styles.iconWrapper}>
-              <Ionicons name="sparkles" size={14} color="#f472b6" />
+              <CurrencyOrb colors={['rgba(244,114,182,0.45)', 'rgba(192,132,252,0.35)']} icon="sparkles" iconColor="#fce7f3" />
             </View>
             <Text style={styles.gemsValue}>{formatNumber(balance.saqr_gems)}</Text>
           </LinearGradient>
@@ -92,7 +98,7 @@ const BalanceHeader = ({ userId, onDiamondPress, onGemsPress, refreshTrigger }) 
             end={{ x: 1, y: 1 }}
           >
             <View style={styles.iconWrapper}>
-              <Ionicons name="diamond" size={14} color="#60a5fa" />
+              <CurrencyOrb colors={['rgba(59,130,246,0.5)', 'rgba(6,182,212,0.38)']} icon="diamond" iconColor="#dbeafe" />
             </View>
             <Text style={styles.diamondValue}>{formatNumber(balance.diamonds)}</Text>
             <View style={styles.addIcon}>
@@ -107,7 +113,7 @@ const BalanceHeader = ({ userId, onDiamondPress, onGemsPress, refreshTrigger }) 
             colors={['rgba(251,191,36,0.15)', 'rgba(245,158,11,0.1)']}
             style={styles.pointsGradient}
           >
-            <Ionicons name="star" size={14} color="#fbbf24" />
+            <CurrencyOrb colors={['rgba(251,191,36,0.45)', 'rgba(245,158,11,0.3)']} icon="star" iconColor="#fffbeb" />
             <Text style={styles.pointsValue}>{formatNumber(balance.saqr_points)}</Text>
           </LinearGradient>
         </View>
@@ -149,6 +155,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  currencyOrb: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   gemsValue: {
     fontSize: 14,

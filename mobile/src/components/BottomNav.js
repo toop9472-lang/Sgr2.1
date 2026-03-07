@@ -58,8 +58,9 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress, onGamesPress }) => {
             activeOpacity={0.8}
             style={styles.centerButton}
           >
+            <View style={styles.centerButtonGlow} />
             <LinearGradient
-              colors={['#84cc16', '#65a30d']}
+              colors={['#a3e635', '#65a30d']}
               style={styles.gamesButtonGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -75,8 +76,9 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress, onGamesPress }) => {
             activeOpacity={0.8}
             style={styles.centerButton}
           >
+            <View style={[styles.centerButtonGlow, { backgroundColor: 'rgba(236,72,153,0.32)' }]} />
             <LinearGradient
-              colors={['#ef4444', '#dc2626']}
+              colors={['#f43f5e', '#be123c']}
               style={styles.watchButtonGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -146,11 +148,21 @@ const styles = StyleSheet.create({
   centerButton: {
     borderRadius: 20,
     overflow: 'hidden',
+    position: 'relative',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
+  },
+  centerButtonGlow: {
+    position: 'absolute',
+    width: 100,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: 'rgba(132,204,22,0.3)',
+    top: 0,
+    left: 0,
   },
   gamesButtonGradient: {
     flexDirection: 'row',

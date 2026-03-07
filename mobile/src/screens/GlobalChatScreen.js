@@ -2,7 +2,7 @@
 // دردشة مفتوحة مع إيموجي صقر الخاصة بالتطبيق
 // تصميم احترافي متقدم مع تفاعلات سلسة
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import {
   View,
   Text,
@@ -81,8 +81,8 @@ const parseMessageWithEmojis = (text) => {
 };
 
 // مكون عرض الرسالة مع الإيموجي
-const MessageContent = ({ text, isOwn }) => {
-  const parts = parseMessageWithEmojis(text);
+const MessageContent = memo(({ text, isOwn }) => {
+  const parts = useMemo(() => parseMessageWithEmojis(text), [text]);
   
   return (
     <View style={styles.messageContentContainer}>
@@ -104,10 +104,10 @@ const MessageContent = ({ text, isOwn }) => {
       })}
     </View>
   );
-};
+});
 
 // مكون الرسالة الاحترافي
-const ChatMessageItem = ({ message, isOwn, onReact }) => {
+const ChatMessageItem = memo(({ message, isOwn }) => {
   const scaleAnim = useRef(new Animated.Value(0)).current;
   
   useEffect(() => {
@@ -164,7 +164,7 @@ const ChatMessageItem = ({ message, isOwn, onReact }) => {
       </View>
     </Animated.View>
   );
-};
+});
 
 // لوحة إيموجي صقر
 const SaqrEmojiPicker = ({ visible, onSelect, onClose }) => {
@@ -353,10 +353,61 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
   const [diamonds, setDiamonds] = useState(0);
   const [showInsufficientModal, setShowInsufficientModal] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [onlineUsers, setOnlineUsers] = useState(Math.floor(Math.random() * 50) + 10);
+  const [onlineUsers, setOnlineUsers] = useState(0);
   const flatListRef = useRef(null);
   const pollInterval = useRef(null);
   const headerAnim = useRef(new Animated.Value(0)).current;
+  const userId = user?.id || user?.user_id;
+
+  const loadBalance = useCallback(async () => {
+    try {
+      // First, try to get diamonds from user object directly
+      if (user?.diamonds !== undefined) {
+        setDiamonds(user.diamonds);
+      }
+      
+      if (!userId) {
+        return;
+      }
+      
+      const response = await api.getBalance(userId);
+      if (response.ok) {
+        const data = await response.json();
+        setDiamonds(data.diamonds || 0);
+      }
+    } catch (e) {
+      if (user?.diamonds !== undefined) {
+        setDiamonds(user.diamonds);
+      }
+    }
+  }, [user?.diamonds, userId]);
+
+  const loadMessages = useCallback(async (showLoading = true) => {
+    try {
+      if (showLoading) setLoading(true);
+      
+      const response = await api.fetch(`/api/economy/chat/messages/${selectedServer.id}?limit=100`);
+      if (response.ok) {
+        const data = await response.json();
+        const nextMessages = Array.isArray(data.messages) ? data.messages : [];
+        setMessages(nextMessages);
+
+        const serverOnlineCount = Number(
+          data.online_users_count ?? data.online_users ?? data.online_count ?? data.active_users
+        );
+        if (Number.isFinite(serverOnlineCount) && serverOnlineCount > 0) {
+          setOnlineUsers(serverOnlineCount);
+        } else {
+          const activeUsers = new Set(nextMessages.map((m) => m.user_id).filter(Boolean)).size;
+          setOnlineUsers(Math.max(1, activeUsers));
+        }
+      }
+    } catch (e) {
+      console.log('Error loading messages:', e);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedServer.id]);
 
   useEffect(() => {
     Animated.timing(headerAnim, {
@@ -370,66 +421,16 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
     
     pollInterval.current = setInterval(() => {
       loadMessages(false);
-      // تحديث عدد المتصلين بشكل عشوائي
-      setOnlineUsers(prev => prev + Math.floor(Math.random() * 3) - 1);
-    }, 3000);
+    }, 5000);
 
     return () => {
       if (pollInterval.current) {
         clearInterval(pollInterval.current);
       }
     };
-  }, [selectedServer]);
+  }, [headerAnim, loadBalance, loadMessages, selectedServer.id]);
 
-  const loadBalance = async () => {
-    try {
-      // First, try to get diamonds from user object directly
-      if (user?.diamonds !== undefined) {
-        setDiamonds(user.diamonds);
-        console.log('Balance from user object:', user.diamonds);
-      }
-      
-      // Then try to fetch from API for most up-to-date balance
-      const userId = user?.id || user?.user_id;
-      if (!userId) {
-        console.log('No user ID available for balance check');
-        return;
-      }
-      
-      const response = await api.getBalance(userId);
-      if (response.ok) {
-        const data = await response.json();
-        setDiamonds(data.diamonds || 0);
-        console.log('Balance from API:', data.diamonds);
-      } else {
-        console.log('Balance API failed, using user object value');
-      }
-    } catch (e) {
-      console.log('Error loading balance:', e);
-      // Fallback to user object if API fails
-      if (user?.diamonds !== undefined) {
-        setDiamonds(user.diamonds);
-      }
-    }
-  };
-
-  const loadMessages = async (showLoading = true) => {
-    try {
-      if (showLoading) setLoading(true);
-      
-      const response = await api.fetch(`/api/economy/chat/messages/${selectedServer.id}?limit=100`);
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data.messages || []);
-      }
-    } catch (e) {
-      console.log('Error loading messages:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const sendMessage = async () => {
+  const sendMessage = useCallback(async () => {
     if (!newMessage.trim()) return;
     
     if (diamonds < MESSAGE_COST) {
@@ -445,7 +446,7 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
       const response = await api.fetch('/api/economy/chat/send', {
         method: 'POST',
         body: JSON.stringify({
-          user_id: user?.id,
+          user_id: userId,
           server_id: selectedServer.id,
           message: newMessage.trim(),
           user_name: user?.name || 'مستخدم',
@@ -459,7 +460,15 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
         setDiamonds(data.new_balance);
         gameSounds.correct();
         
-        setMessages(prev => [...prev, data.chat_message]);
+        if (data.chat_message) {
+          const incomingId = data.chat_message.id || data.chat_message.message_id;
+          setMessages((prev) => {
+            if (incomingId && prev.some((m) => (m.id || m.message_id) === incomingId)) {
+              return prev;
+            }
+            return [...prev, data.chat_message];
+          });
+        }
         
         setTimeout(() => {
           flatListRef.current?.scrollToEnd({ animated: true });
@@ -478,19 +487,27 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
     } finally {
       setSending(false);
     }
-  };
+  }, [diamonds, newMessage, selectedServer.id, sending, user?.avatar, user?.name, userId]);
 
-  const handleServerChange = (server) => {
+  const handleServerChange = useCallback((server) => {
     gameSounds.buttonTap();
     setSelectedServer(server);
     setMessages([]);
     setLoading(true);
-  };
+    setOnlineUsers(0);
+  }, []);
 
-  const handleEmojiSelect = (emoji) => {
+  const handleEmojiSelect = useCallback((emoji) => {
     setNewMessage(prev => prev + emoji.code);
     setShowEmojiPicker(false);
-  };
+  }, []);
+
+  const renderMessage = useCallback(({ item }) => (
+    <ChatMessageItem
+      message={item}
+      isOwn={item.user_id === userId}
+    />
+  ), [userId]);
 
   const handleWatchAds = () => {
     setShowInsufficientModal(false);
@@ -586,15 +603,18 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
             <FlatList
               ref={flatListRef}
               data={messages}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <ChatMessageItem
-                  message={item}
-                  isOwn={item.user_id === user?.id}
-                />
-              )}
+              keyExtractor={(item, index) =>
+                String(item.id || item.message_id || `${item.user_id || 'u'}-${item.timestamp || 't'}-${index}`)
+              }
+              renderItem={renderMessage}
               contentContainerStyle={styles.messagesList}
               showsVerticalScrollIndicator={false}
+              initialNumToRender={16}
+              maxToRenderPerBatch={20}
+              windowSize={12}
+              removeClippedSubviews
+              keyboardShouldPersistTaps="handled"
+              updateCellsBatchingPeriod={50}
               onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
             />
           )}
