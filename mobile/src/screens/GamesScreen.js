@@ -19,6 +19,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import storage from '../services/storage';
 import multiplayerService from '../services/multiplayer';
@@ -41,6 +42,9 @@ const ioniconGlyphMap = Ionicons?.glyphMap || {};
 const resolveIconName = (iconName, fallback = 'ellipse-outline') => (
   ioniconGlyphMap[iconName] ? iconName : fallback
 );
+const FREE_PLAYS_PER_GAME = 2;
+const AD_UNLOCK_SESSIONS = 3;
+const adGateStorageKey = (userId) => `saqr_games_ad_gate_v3_${userId || 'guest'}`;
 
 // ==================== PREMIUM GAME CARD COMPONENT ====================
 const GameCard = ({ game, onPress, pulseAnim, gameCost }) => {
@@ -180,6 +184,38 @@ const WaitingScreen = ({ onCancel, gameType }) => {
         <Text style={styles.cancelText}>إلغاء</Text>
       </TouchableOpacity>
     </View>
+  );
+};
+
+// ==================== AD CONTINUE MODAL ====================
+const AdContinueModal = ({ visible, gameName, onWatchAd, onClose }) => {
+  if (!visible) return null;
+
+  return (
+    <Modal transparent animationType="fade" visible>
+      <View style={styles.adModalOverlay}>
+        <View style={styles.adModalCard}>
+          <LinearGradient colors={['#161625', '#0f0f1b']} style={styles.adModalGradient}>
+            <View style={styles.adModalIcon}>
+              <Ionicons name="play-circle" size={34} color="#fff" />
+            </View>
+            <Text style={styles.adModalTitle}>تابع اللعب بدون إزعاج</Text>
+            <Text style={styles.adModalSub}>
+              لمواصلة لعب {gameName || 'اللعبة'}، شاهد إعلانًا واحدًا فقط وسنفتح لك 3 جولات إضافية.
+            </Text>
+            <TouchableOpacity style={styles.adModalPrimaryBtn} onPress={onWatchAd} activeOpacity={0.9}>
+              <LinearGradient colors={['#ec4899', '#9333ea']} style={styles.adModalPrimaryGradient}>
+                <Ionicons name="sparkles" size={16} color="#fff" />
+                <Text style={styles.adModalPrimaryText}>شاهد إعلان وتابع الآن</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.adModalSecondaryBtn} onPress={onClose} activeOpacity={0.8}>
+              <Text style={styles.adModalSecondaryText}>لاحقًا</Text>
+            </TouchableOpacity>
+          </LinearGradient>
+        </View>
+      </View>
+    </Modal>
   );
 };
 
@@ -1115,10 +1151,14 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
   const [matchData, setMatchData] = useState(null);
   const [showAdChallenges, setShowAdChallenges] = useState(false);
   const [showSaqrFortunes, setShowSaqrFortunes] = useState(false);
+  const [showAdUnlockModal, setShowAdUnlockModal] = useState(false);
+  const [pendingAdGame, setPendingAdGame] = useState(null);
+  const [adGateState, setAdGateState] = useState({ freePlays: {}, adCredits: {} });
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
   const pendingOnlineGameRef = useRef(null);
+  const adRewardedRef = useRef(false);
 
   // كتالوج الألعاب الجديد (12 لعبة: فردي + أونلاين)
   const games = useMemo(() => ([
@@ -1330,12 +1370,231 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
       badge: '',
       trend: '',
     },
+    {
+      id: 'riddles',
+      name: 'Riddle Mania',
+      icon: 'bulb-outline',
+      secondaryIcon: 'help-buoy-outline',
+      emoji: '💡',
+      colors: ['rgba(234,179,8,0.45)', 'rgba(202,138,4,0.33)'],
+      orbGradient: ['#eab308', '#ca8a04'],
+      accent: '#eab308',
+      description: 'ألغاز ممتعة بذكاء تصاعدي لرفع التفاعل.',
+      maxPoints: 22,
+      online: false,
+      onlineCost: 0,
+      backendGameId: 'riddles',
+      category: 'ألغاز',
+      badge: 'Mind',
+      trend: '',
+    },
+    {
+      id: 'millionaire',
+      name: 'Millionaire Live',
+      icon: 'cash-outline',
+      secondaryIcon: 'trophy-outline',
+      emoji: '💰',
+      colors: ['rgba(245,158,11,0.45)', 'rgba(217,119,6,0.33)'],
+      orbGradient: ['#f59e0b', '#d97706'],
+      accent: '#f59e0b',
+      description: 'تجربة أسئلة نهائية بإثارة متصاعدة.',
+      maxPoints: 40,
+      online: false,
+      onlineCost: 0,
+      backendGameId: 'millionaire',
+      category: 'مميز',
+      badge: 'Show',
+      trend: 'Top',
+    },
+    {
+      id: 'snakefury',
+      name: 'Snake Fury',
+      icon: 'git-branch',
+      secondaryIcon: 'flame',
+      emoji: '⚡',
+      colors: ['rgba(34,197,94,0.46)', 'rgba(16,185,129,0.34)'],
+      orbGradient: ['#22c55e', '#10b981'],
+      accent: '#22c55e',
+      description: 'نمط ثعبان أسرع بمضاعف نقاط عالي.',
+      maxPoints: 25,
+      online: false,
+      onlineCost: 0,
+      backendGameId: 'snake',
+      variant: 'fury',
+      category: 'Arcade',
+      badge: 'Fast',
+      trend: '',
+    },
+    {
+      id: 'memoryflash',
+      name: 'Memory Flash',
+      icon: 'scan-outline',
+      secondaryIcon: 'timer-outline',
+      emoji: '🪄',
+      colors: ['rgba(20,184,166,0.46)', 'rgba(6,182,212,0.34)'],
+      orbGradient: ['#14b8a6', '#06b6d4'],
+      accent: '#14b8a6',
+      description: 'ذاكرة سريعة بإيقاع خاطف ومكافآت أعلى.',
+      maxPoints: 23,
+      online: false,
+      onlineCost: 0,
+      backendGameId: 'memory',
+      variant: 'flash',
+      category: 'تركيز',
+      badge: '',
+      trend: '',
+    },
+    {
+      id: 'brickstormx',
+      name: 'Brick Storm X',
+      icon: 'cube-outline',
+      secondaryIcon: 'flash-outline',
+      emoji: '💥',
+      colors: ['rgba(236,72,153,0.45)', 'rgba(124,58,237,0.33)'],
+      orbGradient: ['#ec4899', '#8b5cf6'],
+      accent: '#ec4899',
+      description: 'تكسير طوب بنمط مكثف وصعوبة أعلى.',
+      maxPoints: 27,
+      online: false,
+      onlineCost: 0,
+      backendGameId: 'brickbreaker',
+      variant: 'x',
+      category: 'Arcade',
+      badge: 'Hard',
+      trend: '',
+    },
+    {
+      id: 'puzzlemaster',
+      name: 'Puzzle Master',
+      icon: 'apps',
+      secondaryIcon: 'flash-outline',
+      emoji: '🧠',
+      colors: ['rgba(59,130,246,0.45)', 'rgba(99,102,241,0.33)'],
+      orbGradient: ['#3b82f6', '#6366f1'],
+      accent: '#3b82f6',
+      description: 'ألغاز صور أسرع بزمن أقصر للتحدي.',
+      maxPoints: 24,
+      online: false,
+      onlineCost: 0,
+      backendGameId: 'puzzle',
+      variant: 'master',
+      category: 'ألغاز',
+      badge: 'Pro',
+      trend: '',
+    },
+    {
+      id: 'triviaplus',
+      name: 'Trivia Plus',
+      icon: 'school-outline',
+      secondaryIcon: 'rocket-outline',
+      emoji: '🌍',
+      colors: ['rgba(16,185,129,0.45)', 'rgba(59,130,246,0.32)'],
+      orbGradient: ['#10b981', '#3b82f6'],
+      accent: '#10b981',
+      description: 'أسئلة متنوعة بإيقاع أسرع ومكافآت أقوى.',
+      maxPoints: 28,
+      online: false,
+      onlineCost: 0,
+      backendGameId: 'trivia',
+      variant: 'plus',
+      category: 'ثقافة',
+      badge: 'Plus',
+      trend: '',
+    },
+    {
+      id: 'wordmaster',
+      name: 'Word Master',
+      icon: 'text-outline',
+      secondaryIcon: 'flash-outline',
+      emoji: '📝',
+      colors: ['rgba(6,182,212,0.45)', 'rgba(14,165,233,0.33)'],
+      orbGradient: ['#06b6d4', '#0ea5e9'],
+      accent: '#06b6d4',
+      description: 'كلمات أصعب وتحفيز أعلى لوقت أطول.',
+      maxPoints: 28,
+      online: false,
+      onlineCost: 0,
+      backendGameId: 'wordrace',
+      variant: 'master',
+      category: 'لغوي',
+      badge: '',
+      trend: '',
+    },
   ]), []);
 
   const getGameById = useCallback((gameId) => games.find((g) => g.id === gameId), [games]);
   const resolveBackendGameId = useCallback((gameId) => {
     const game = getGameById(gameId);
     return game?.backendGameId || gameId;
+  }, [getGameById]);
+
+  useEffect(() => {
+    const loadGateState = async () => {
+      try {
+        const saved = await AsyncStorage.getItem(adGateStorageKey(user?.id));
+        if (!saved) return;
+        const parsed = JSON.parse(saved);
+        setAdGateState({
+          freePlays: parsed?.freePlays || {},
+          adCredits: parsed?.adCredits || {},
+        });
+      } catch (e) {
+        if (__DEV__) console.log('Ad gate load error:', e.message);
+      }
+    };
+    loadGateState();
+  }, [user?.id]);
+
+  useEffect(() => {
+    AsyncStorage.setItem(adGateStorageKey(user?.id), JSON.stringify(adGateState)).catch(() => {});
+  }, [adGateState, user?.id]);
+
+  const isGameLockedByAds = useCallback((gameId) => {
+    const freePlays = adGateState.freePlays?.[gameId] || 0;
+    const adCredits = adGateState.adCredits?.[gameId] || 0;
+    return freePlays >= FREE_PLAYS_PER_GAME && adCredits <= 0;
+  }, [adGateState.adCredits, adGateState.freePlays]);
+
+  const consumeGameSessionCredit = useCallback((gameId) => {
+    setAdGateState((prev) => {
+      const freePlays = prev.freePlays?.[gameId] || 0;
+      const adCredits = prev.adCredits?.[gameId] || 0;
+
+      if (adCredits > 0) {
+        return {
+          ...prev,
+          adCredits: { ...prev.adCredits, [gameId]: Math.max(0, adCredits - 1) },
+        };
+      }
+
+      return {
+        ...prev,
+        freePlays: { ...prev.freePlays, [gameId]: freePlays + 1 },
+      };
+    });
+  }, []);
+
+  const unlockAndConsumeGameSession = useCallback((gameId) => {
+    setAdGateState((prev) => {
+      const freePlays = prev.freePlays?.[gameId] || 0;
+      const adCredits = (prev.adCredits?.[gameId] || 0) + AD_UNLOCK_SESSIONS;
+      return {
+        ...prev,
+        freePlays: { ...prev.freePlays, [gameId]: freePlays },
+        adCredits: { ...prev.adCredits, [gameId]: Math.max(0, adCredits - 1) },
+      };
+    });
+  }, []);
+
+  const launchGame = useCallback((gameId) => {
+    const game = getGameById(gameId);
+    if (!game) return;
+    if (game.online) {
+      setShowModeSelector(gameId);
+    } else {
+      setActiveGame(gameId);
+      setGameMode('solo');
+    }
   }, [getGameById]);
 
   // Multiplayer event handlers
@@ -1477,12 +1736,17 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
     const game = getGameById(gameId);
     if (!game) return;
 
-    if (game.online) {
-      setShowModeSelector(gameId);
-    } else {
-      setActiveGame(gameId);
-      setGameMode('solo');
+    if (isGameLockedByAds(gameId)) {
+      setPendingAdGame(gameId);
+      setShowAdUnlockModal(true);
+      return;
     }
+
+    if (!game.online) {
+      consumeGameSessionCredit(gameId);
+    }
+
+    launchGame(gameId);
   };
 
   const handleModeSelect = async (mode) => {
@@ -1509,6 +1773,7 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
       try {
         const response = await api.enterOnlineGame(user.id, backendGameId, true);
         if (response.ok) {
+          consumeGameSessionCredit(selectedGame.id);
           setShowWaiting(true);
           pendingOnlineGameRef.current = selectedGame.id;
           fetchBalance();
@@ -1529,6 +1794,7 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
         Alert.alert('خطأ', 'حدث خطأ في الاتصال');
       }
     } else {
+      consumeGameSessionCredit(selectedGame.id);
       setActiveGame(selectedGame.id);
       setGameMode(mode);
       setShowModeSelector(null);
@@ -1540,6 +1806,34 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
     setShowWaiting(false);
     setShowModeSelector(null);
     pendingOnlineGameRef.current = null;
+  };
+
+  const handleWatchAdToContinue = () => {
+    setShowAdUnlockModal(false);
+    adRewardedRef.current = false;
+    setShowSaqrFortunes(true);
+  };
+
+  const handleFortunesClose = () => {
+    setShowSaqrFortunes(false);
+    fetchBalance();
+
+    if (!pendingAdGame) {
+      adRewardedRef.current = false;
+      return;
+    }
+
+    if (adRewardedRef.current) {
+      const gameToStart = pendingAdGame;
+      setPendingAdGame(null);
+      adRewardedRef.current = false;
+      unlockAndConsumeGameSession(gameToStart);
+      Alert.alert('تم الفتح', 'ممتاز! حصلت على 3 جولات إضافية.');
+      launchGame(gameToStart);
+      return;
+    }
+
+    Alert.alert('للمتابعة', 'شاهد إعلانًا كاملاً في صفحة الإعلانات ثم ارجع للمتابعة.');
   };
 
   const handleGameComplete = async (points, result) => {
@@ -1657,18 +1951,32 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
         return <TicTacToeGame {...gameProps} variant="pro4" title="TactiX 4x4" />;
       case 'brickbreaker':
         return <BrickBreakerGame difficulty={gameMode === 'ai_hard' ? 'hard' : 'medium'} onComplete={handleGameComplete} onClose={closeGame} />;
+      case 'brickstormx':
+        return <BrickBreakerGame difficulty="hard" onComplete={handleGameComplete} onClose={closeGame} />;
       case 'puzzle':
         return <PuzzleGame {...gameProps} />;
+      case 'puzzlemaster':
+        return <PuzzleGame {...gameProps} mode="master" />;
       case 'trivia':
         return <TriviaGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
+      case 'triviaplus':
+        return <TriviaGame mode="plus" onComplete={handleGameComplete} onClose={closeGame} />;
+      case 'riddles':
+        return <RiddlesGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
       case 'memory':
         return <MemoryGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
+      case 'memoryflash':
+        return <MemoryGame mode="flash" onComplete={handleGameComplete} onClose={closeGame} />;
       case 'snake':
         return <SnakeGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
+      case 'snakefury':
+        return <SnakeGame mode="fury" onComplete={handleGameComplete} onClose={closeGame} />;
       case 'mathrace':
         return <MathRaceGame {...gameProps} />;
       case 'wordrace':
         return <WordRaceGame {...gameProps} />;
+      case 'wordmaster':
+        return <WordRaceGame {...gameProps} mode="master" />;
       case 'colorswitch':
         return <ColorSwitchGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
       case 'millionaire':
@@ -1708,7 +2016,7 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
           </TouchableOpacity>
           <View style={styles.headerTitleContainer}>
             <Text style={styles.mainTitle}>الألعاب</Text>
-            <Text style={styles.mainSub}>12 تجربة متطورة • فردي + أونلاين</Text>
+            <Text style={styles.mainSub}>{`${games.length} تجربة متطورة • فردي + أونلاين`}</Text>
           </View>
           <View style={{ width: 44 }} />
         </View>
@@ -1926,14 +2234,24 @@ const GamesScreen = ({ user, onPointsEarned, onOpenDiamondShop, onOpenAchievemen
         <View style={StyleSheet.absoluteFill}>
           <SaqrFortunesScreen
             user={user}
-            onClose={() => {
-              setShowSaqrFortunes(false);
+            onClose={handleFortunesClose}
+            onBalanceUpdate={() => {
+              adRewardedRef.current = true;
               fetchBalance();
             }}
-            onBalanceUpdate={fetchBalance}
           />
         </View>
       )}
+
+      <AdContinueModal
+        visible={showAdUnlockModal}
+        gameName={getGameById(pendingAdGame)?.name}
+        onWatchAd={handleWatchAdToContinue}
+        onClose={() => {
+          setShowAdUnlockModal(false);
+          setPendingAdGame(null);
+        }}
+      />
 
       {/* Ad Challenges Modal (Legacy) */}
       <AdChallengesModal
@@ -2252,6 +2570,76 @@ const styles = StyleSheet.create({
   waitingDesc: { fontSize: 14, color: '#888', marginTop: 8, textAlign: 'center' },
   cancelBtn: { marginTop: 30, paddingHorizontal: 30, paddingVertical: 12, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 12 },
   cancelText: { color: '#FFF', fontSize: 16 },
+
+  // Ad Continue Modal
+  adModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.72)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  adModalCard: {
+    width: '100%',
+    maxWidth: 380,
+    borderRadius: 22,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  adModalGradient: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  adModalIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    backgroundColor: 'rgba(236,72,153,0.35)',
+  },
+  adModalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#FFF',
+    marginBottom: 8,
+  },
+  adModalSub: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.78)',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 18,
+  },
+  adModalPrimaryBtn: {
+    width: '100%',
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  adModalPrimaryGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+  },
+  adModalPrimaryText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  adModalSecondaryBtn: {
+    marginTop: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  adModalSecondaryText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 13,
+    fontWeight: '600',
+  },
   
   // Game Common
   gameContainer: { flex: 1, backgroundColor: '#0a0a0f', padding: 20, paddingTop: 50 },
