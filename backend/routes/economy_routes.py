@@ -34,6 +34,7 @@ GEMS_PER_RIYAL = 500
 
 # تكلفة الرسالة في الدردشة (بالألماسات)
 CHAT_MESSAGE_COST = 5
+SOLO_ROUND_DIAMOND_COST = 1
 
 # باقات شحن الألماسات (SAR)
 DIAMOND_PACKAGES = [
@@ -470,7 +471,8 @@ async def get_game_costs():
     return {
         "online_costs": ONLINE_GAME_COSTS,
         "winner_bonuses": WINNER_DIAMOND_BONUS,
-        "note": "اللعب أوفلاين مجاني دائماً!"
+        "solo_round_cost": SOLO_ROUND_DIAMOND_COST,
+        "note": f"تكلفة الجولة الأوفلاين عبر نظام الجولات: {SOLO_ROUND_DIAMOND_COST} ألماسة."
     }
 
 @router.post("/initialize-user/{user_id}")
@@ -514,6 +516,12 @@ class AddDiamondsRequest(BaseModel):
     user_id: str
     amount: int
     source: str = "ad_reward"  # مصدر الألماسات: ad_reward, challenge_reward, etc.
+
+class SpendDiamondsDirectRequest(BaseModel):
+    user_id: str
+    amount: int
+    source: str = "game_round"
+    game_id: Optional[str] = None
 
 @router.post("/add-diamonds")
 async def add_diamonds_reward(request: AddDiamondsRequest):
@@ -567,6 +575,55 @@ async def add_diamonds_reward(request: AddDiamondsRequest):
     }
 
 
+@router.post("/spend-diamonds")
+async def spend_diamonds(request: SpendDiamondsDirectRequest):
+    """خصم ألماسات بشكل مباشر (مثل تكلفة الجولة الواحدة)"""
+    if request.amount <= 0 or request.amount > 500:
+        raise HTTPException(status_code=400, detail="قيمة الخصم غير صالحة")
+
+    user = await db.users.find_one(
+        {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]}
+    )
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+
+    current_diamonds = user.get("diamonds", 0)
+    if current_diamonds < request.amount:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "insufficient_diamonds",
+                "required": request.amount,
+                "current": current_diamonds,
+            },
+        )
+
+    remaining = current_diamonds - request.amount
+    await db.users.update_one(
+        {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]},
+        {
+            "$set": {"diamonds": remaining},
+            "$push": {
+                "diamond_transactions": {
+                    "type": "spend",
+                    "amount": -request.amount,
+                    "source": request.source,
+                    "game_id": request.game_id,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "balance_after": remaining,
+                }
+            },
+        },
+    )
+
+    return {
+        "success": True,
+        "spent": request.amount,
+        "remaining": remaining,
+        "message": f"تم خصم {request.amount} ألماسة.",
+    }
+
+
 
 # ==================== AD WATCHING REWARDS - جواهر صقر من الإعلانات ====================
 
@@ -574,17 +631,12 @@ class AdWatchRewardRequest(BaseModel):
     user_id: str
     watch_duration_seconds: int  # مدة المشاهدة بالثواني
     ad_type: str = "video"  # نوع الإعلان
-    gems_earned: int = 1  # جواهر صقر المكتسبة
+    gems_earned: int = 0  # اختياري: يسمح بفرض قيمة جوائز خاصة
 
 @router.post("/ad-watch-reward")
 async def claim_ad_watch_reward(request: AdWatchRewardRequest):
     """مكافأة مشاهدة الإعلان - جواهر صقر للاستبدال بالمال + ألماسات للاستخدام"""
-    
-    # حساب جواهر صقر (للاستبدال بالمال)
-    gems_earned = request.gems_earned if request.gems_earned > 0 else 1
-    
-    # حساب الألماسات (للاستخدام داخل التطبيق)
-    diamonds_earned = max(1, request.watch_duration_seconds // 60)
+    watch_seconds = max(0, int(request.watch_duration_seconds or 0))
     
     # التحقق من وجود المستخدم
     user = await db.users.find_one(
@@ -593,7 +645,19 @@ async def claim_ad_watch_reward(request: AdWatchRewardRequest):
     
     if not user:
         raise HTTPException(status_code=404, detail="المستخدم غير موجود")
-    
+
+    # 1 جوهرة صقر لكل 60 ثانية مشاهدة (بشكل تراكمي)
+    carry_seconds = int(user.get("ad_watch_carry_seconds", 0) or 0)
+    total_seconds = carry_seconds + watch_seconds
+    if request.gems_earned > 0:
+        gems_earned = int(request.gems_earned)
+    else:
+        gems_earned = total_seconds // 60
+    new_carry_seconds = total_seconds % 60
+
+    # كل إعلان مكتمل يعطي ألماسة واحدة على الأقل
+    diamonds_earned = max(1, watch_seconds // 60)
+
     current_gems = user.get("saqr_gems", 0)
     new_gems = current_gems + gems_earned
     
@@ -606,9 +670,14 @@ async def claim_ad_watch_reward(request: AdWatchRewardRequest):
         {
             "$set": {
                 "saqr_gems": new_gems,
-                "diamonds": new_diamonds
+                "diamonds": new_diamonds,
+                "ad_watch_carry_seconds": new_carry_seconds,
             },
-            "$inc": {"total_ads_watched": 1, "total_ad_gems": gems_earned},
+            "$inc": {
+                "total_ads_watched": 1,
+                "total_ad_gems": gems_earned,
+                "total_ad_diamonds": diamonds_earned,
+            },
             "$push": {
                 "saqr_gems_transactions": {
                     "type": "ad_watch",
@@ -644,6 +713,7 @@ async def claim_ad_watch_reward(request: AdWatchRewardRequest):
         "diamonds_earned": diamonds_earned,
         "new_gems_balance": new_gems,
         "new_diamonds_balance": new_diamonds,
+        "carry_seconds": new_carry_seconds,
         "gems_value_usd": new_gems / GEMS_PER_RIYAL,
         "message": f"حصلت على {gems_earned} جوهرة صقر و {diamonds_earned} ألماسة!"
     }

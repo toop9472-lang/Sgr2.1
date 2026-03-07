@@ -656,6 +656,19 @@ export const api = {
     });
   },
 
+  // Spend diamonds for one round / action
+  async spendDiamonds(userId, amount, source = 'game_round', gameId = null) {
+    return this.fetch('/api/economy/spend-diamonds', {
+      method: 'POST',
+      body: JSON.stringify({
+        user_id: userId,
+        amount,
+        source,
+        game_id: gameId,
+      }),
+    });
+  },
+
   // Enter online game (spend diamonds)
   async enterOnlineGame(userId, gameId, isOnline) {
     return this.fetch('/api/economy/enter-game', {

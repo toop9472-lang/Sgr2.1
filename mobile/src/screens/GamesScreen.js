@@ -22,6 +22,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { WebView } from 'react-native-webview';
 import api from '../services/api';
+import admobService from '../services/admobService';
 import multiplayerService from '../services/multiplayer';
 import { triviaQuestions, riddlesQuestions } from '../data/questionsData';
 import AdChallengesModal from '../components/AdChallengesModal';
@@ -33,8 +34,9 @@ const ioniconGlyphMap = Ionicons?.glyphMap || {};
 const resolveIconName = (iconName, fallback = 'ellipse-outline') => (
   ioniconGlyphMap[iconName] ? iconName : fallback
 );
-const FREE_PLAYS_PER_GAME = 2;
-const AD_UNLOCK_SESSIONS = 3;
+const SOLO_ROUND_DIAMOND_COST = 1;
+const AD_WATCH_DURATION_SECONDS = 30;
+const GEMS_SECONDS_PER_UNIT = 60;
 const ONLINE_GLOBAL_CHAT_INVITE_COST = 5;
 const EXTERNAL_GAME_URLS = {
   aiquest: 'https://mikkun.github.io/evade-and-destroy/',
@@ -80,7 +82,7 @@ const IMPORTED_PRO_GAME_IDS = [
   'reactiontap',
   'sequencesprint',
 ];
-const adGateStorageKey = (userId) => `saqr_games_ad_gate_v3_${userId || 'guest'}`;
+const adCarryStorageKey = (userId) => `saqr_games_ad_carry_seconds_${userId || 'guest'}`;
 
 // ==================== PREMIUM GAME CARD COMPONENT ====================
 const GameCard = ({ game, onPress, pulseAnim, gameCost }) => {
@@ -145,12 +147,12 @@ const GameCard = ({ game, onPress, pulseAnim, gameCost }) => {
                 <Ionicons name="layers-outline" size={12} color="#94a3b8" />
                 <Text style={styles.metaPillText}>{game.category}</Text>
               </View>
-              {game.online && (
-                <View style={styles.metaPill}>
-                  <Ionicons name="diamond" size={12} color="#60a5fa" />
-                  <Text style={styles.metaPillText}>{gameCost || game.onlineCost || 20}</Text>
-                </View>
-              )}
+              <View style={styles.metaPill}>
+                <Ionicons name="diamond" size={12} color="#60a5fa" />
+                <Text style={styles.metaPillText}>
+                  {game.online ? (gameCost || game.onlineCost || 20) : SOLO_ROUND_DIAMOND_COST}
+                </Text>
+              </View>
             </View>
           </View>
         </LinearGradient>
@@ -637,7 +639,7 @@ const WaitingScreen = ({ onCancel, gameType }) => {
 };
 
 // ==================== AD CONTINUE MODAL ====================
-const AdContinueModal = ({ visible, gameName, onWatchAd, onClose }) => {
+const AdContinueModal = ({ visible, gameName, onWatchAd, onClose, loading = false }) => {
   if (!visible) return null;
 
   return (
@@ -650,12 +652,24 @@ const AdContinueModal = ({ visible, gameName, onWatchAd, onClose }) => {
             </View>
             <Text style={styles.adModalTitle}>تابع اللعب بدون إزعاج</Text>
             <Text style={styles.adModalSub}>
-              لمواصلة لعب {gameName || 'اللعبة'}، شاهد إعلانًا واحدًا فقط وسنفتح لك 3 جولات إضافية.
+              لمواصلة لعب {gameName || 'اللعبة'} تحتاج ألماس. شاهد إعلانًا لتحصل على ألماس مباشر،
+              ويتم احتساب جوهرة صقر لكل دقيقة مشاهدة تراكمية (500 جوهرة = 1 ريال).
             </Text>
-            <TouchableOpacity style={styles.adModalPrimaryBtn} onPress={onWatchAd} activeOpacity={0.9}>
+            <TouchableOpacity
+              style={styles.adModalPrimaryBtn}
+              onPress={onWatchAd}
+              activeOpacity={0.9}
+              disabled={loading}
+            >
               <LinearGradient colors={['#ec4899', '#9333ea']} style={styles.adModalPrimaryGradient}>
-                <Ionicons name="sparkles" size={16} color="#fff" />
-                <Text style={styles.adModalPrimaryText}>شاهد إعلان وتابع الآن</Text>
+                {loading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="sparkles" size={16} color="#fff" />
+                    <Text style={styles.adModalPrimaryText}>شاهد إعلان وتابع الآن</Text>
+                  </>
+                )}
               </LinearGradient>
             </TouchableOpacity>
             <TouchableOpacity style={styles.adModalSecondaryBtn} onPress={onClose} activeOpacity={0.8}>
@@ -1917,12 +1931,11 @@ const GamesScreen = ({
   const [loadingFriendsInvite, setLoadingFriendsInvite] = useState(false);
   const [submittingInvite, setSubmittingInvite] = useState(false);
   const [pendingAdGame, setPendingAdGame] = useState(null);
-  const [adGateState, setAdGateState] = useState({ freePlays: {}, adCredits: {} });
+  const [adUnlockLoading, setAdUnlockLoading] = useState(false);
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
   const pendingOnlineGameRef = useRef(null);
-  const adRewardedRef = useRef(false);
   const userId = user?.id || user?.user_id;
 
   // كتالوج الألعاب: 12 أساسية + ألعاب جديدة مستقلة
@@ -2356,63 +2369,149 @@ const GamesScreen = ({
     return fallbackMap[backendId] || backendId;
   }, [getGameById]);
 
-  useEffect(() => {
-    const loadGateState = async () => {
-      try {
-        const saved = await AsyncStorage.getItem(adGateStorageKey(userId));
-        if (!saved) return;
-        const parsed = JSON.parse(saved);
-        setAdGateState({
-          freePlays: parsed?.freePlays || {},
-          adCredits: parsed?.adCredits || {},
-        });
-      } catch (e) {
-        if (__DEV__) console.log('Ad gate load error:', e.message);
+  const spendSoloRoundDiamonds = useCallback(async (selectedGame) => {
+    if (!selectedGame || !userId) return { ok: false, reason: 'missing_data' };
+    const backendGameId = resolveBackendGameId(selectedGame.id);
+    if ((balance.diamonds || 0) < SOLO_ROUND_DIAMOND_COST) {
+      return { ok: false, reason: 'insufficient_diamonds', required: SOLO_ROUND_DIAMOND_COST };
+    }
+
+    try {
+      const response = await api.spendDiamonds(
+        userId,
+        SOLO_ROUND_DIAMOND_COST,
+        'solo_round_entry',
+        backendGameId,
+      );
+
+      if (!response.ok) {
+        if ([404, 405].includes(response.status)) {
+          // Fallback for older backends: enforce local round cost to keep gameplay rules consistent.
+          setBalance((prev) => ({
+            ...prev,
+            diamonds: Math.max(0, (prev.diamonds || 0) - SOLO_ROUND_DIAMOND_COST),
+          }));
+          return { ok: true, fallbackLocal: true };
+        }
+        const error = await response.json().catch(() => ({}));
+        const detail = error?.detail || {};
+        if (detail?.error === 'insufficient_diamonds') {
+          return {
+            ok: false,
+            reason: 'insufficient_diamonds',
+            required: detail?.required || SOLO_ROUND_DIAMOND_COST,
+            current: detail?.current ?? balance.diamonds,
+          };
+        }
+        return { ok: false, reason: 'api_error' };
       }
-    };
-    loadGateState();
-  }, [userId]);
 
-  useEffect(() => {
-    AsyncStorage.setItem(adGateStorageKey(userId), JSON.stringify(adGateState)).catch(() => {});
-  }, [adGateState, userId]);
+      const data = await response.json().catch(() => ({}));
+      if (typeof data?.remaining === 'number') {
+        setBalance((prev) => ({ ...prev, diamonds: data.remaining }));
+      }
 
-  const isGameLockedByAds = useCallback((gameId) => {
-    const freePlays = adGateState.freePlays?.[gameId] || 0;
-    const adCredits = adGateState.adCredits?.[gameId] || 0;
-    return freePlays >= FREE_PLAYS_PER_GAME && adCredits <= 0;
-  }, [adGateState.adCredits, adGateState.freePlays]);
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, reason: 'network_error' };
+    }
+  }, [balance.diamonds, resolveBackendGameId, userId]);
 
-  const consumeGameSessionCredit = useCallback((gameId) => {
-    setAdGateState((prev) => {
-      const freePlays = prev.freePlays?.[gameId] || 0;
-      const adCredits = prev.adCredits?.[gameId] || 0;
+  const grantAdEconomyReward = useCallback(async ({ source = 'games_ad', silent = false } = {}) => {
+    if (!userId) return { success: false, error: 'missing_user' };
 
-      if (adCredits > 0) {
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    let adCompleted = false;
+
+    try {
+      if (__DEV__) {
+        await sleep(1200);
+        adCompleted = true;
+      } else {
+        const initialized = await admobService.initialize();
+        if (!initialized) {
+          if (!silent) Alert.alert('الإعلانات', 'تعذر تهيئة إعلان المكافأة حالياً.');
+          return { success: false, error: 'admob_init_failed' };
+        }
+
+        const start = Date.now();
+        while (!admobService.isReady() && Date.now() - start < 15000) {
+          await sleep(500);
+        }
+        if (!admobService.isReady()) {
+          if (!silent) Alert.alert('الإعلانات', 'لا يوجد إعلان متاح الآن، حاول بعد لحظات.');
+          return { success: false, error: 'ad_not_ready' };
+        }
+
+        const adResult = await admobService.showRewardedAd();
+        adCompleted = Boolean(adResult?.success && adResult?.rewarded);
+      }
+    } catch (e) {
+      if (!silent) Alert.alert('الإعلانات', 'حدثت مشكلة أثناء تشغيل الإعلان.');
+      return { success: false, error: 'ad_runtime_error' };
+    }
+
+    if (!adCompleted) {
+      if (!silent) Alert.alert('تنبيه', 'يجب إكمال الإعلان للحصول على المكافأة.');
+      return { success: false, error: 'ad_not_completed' };
+    }
+
+    try {
+      const response = await api.claimAdWatchReward(userId, AD_WATCH_DURATION_SECONDS, source);
+      if (response.ok) {
+        const data = await response.json();
+        if (typeof data?.new_diamonds_balance === 'number') {
+          setBalance((prev) => ({ ...prev, diamonds: data.new_diamonds_balance }));
+        }
+        if (!silent) {
+          Alert.alert(
+            'مكافأة الإعلان',
+            `+${data?.diamonds_earned || 0} ألماسة\n+${data?.saqr_gems_earned || 0} جوهرة صقر`,
+          );
+        }
         return {
-          ...prev,
-          adCredits: { ...prev.adCredits, [gameId]: Math.max(0, adCredits - 1) },
+          success: true,
+          diamondsEarned: data?.diamonds_earned || 0,
+          gemsEarned: data?.saqr_gems_earned || 0,
         };
       }
+    } catch (_) {
+      // Fallback below
+    }
 
-      return {
-        ...prev,
-        freePlays: { ...prev.freePlays, [gameId]: freePlays + 1 },
-      };
-    });
-  }, []);
+    // Fallback economy grant when ad-watch endpoint is unavailable.
+    try {
+      const diamondRes = await api.addDiamonds(userId, 1, `${source}_fallback`);
+      if (diamondRes.ok) {
+        const d = await diamondRes.json().catch(() => ({}));
+        if (typeof d?.new_balance === 'number') {
+          setBalance((prev) => ({ ...prev, diamonds: d.new_balance }));
+        }
+      }
 
-  const unlockAndConsumeGameSession = useCallback((gameId) => {
-    setAdGateState((prev) => {
-      const freePlays = prev.freePlays?.[gameId] || 0;
-      const adCredits = (prev.adCredits?.[gameId] || 0) + AD_UNLOCK_SESSIONS;
-      return {
-        ...prev,
-        freePlays: { ...prev.freePlays, [gameId]: freePlays },
-        adCredits: { ...prev.adCredits, [gameId]: Math.max(0, adCredits - 1) },
-      };
-    });
-  }, []);
+      const carryRaw = await AsyncStorage.getItem(adCarryStorageKey(userId));
+      const previousCarry = Number.parseInt(carryRaw || '0', 10) || 0;
+      const combined = previousCarry + AD_WATCH_DURATION_SECONDS;
+      const gemsToGrant = Math.floor(combined / GEMS_SECONDS_PER_UNIT);
+      const carrySeconds = combined % GEMS_SECONDS_PER_UNIT;
+      await AsyncStorage.setItem(adCarryStorageKey(userId), String(carrySeconds));
+
+      if (gemsToGrant > 0) {
+        await api.addSaqrGems(userId, gemsToGrant, `${source}_fallback_minutes`);
+      }
+
+      if (!silent) {
+        Alert.alert(
+          'مكافأة الإعلان',
+          `+1 ألماسة${gemsToGrant > 0 ? `\n+${gemsToGrant} جوهرة صقر` : ''}`,
+        );
+      }
+      return { success: true, diamondsEarned: 1, gemsEarned: gemsToGrant };
+    } catch (e) {
+      if (!silent) Alert.alert('خطأ', 'تعذر منح مكافأة الإعلان، حاول مرة أخرى.');
+      return { success: false, error: 'reward_grant_failed' };
+    }
+  }, [userId]);
 
   const launchGame = useCallback((gameId) => {
     const game = getGameById(gameId);
@@ -2560,22 +2659,25 @@ const GamesScreen = ({
     }
   };
 
-  const handleGameSelect = (gameId) => {
+  const handleGameSelect = useCallback(async (gameId) => {
     const game = getGameById(gameId);
     if (!game) return;
 
-    if (isGameLockedByAds(gameId)) {
-      setPendingAdGame(gameId);
-      setShowAdUnlockModal(true);
-      return;
-    }
-
     if (!game.online) {
-      consumeGameSessionCredit(gameId);
+      const spendResult = await spendSoloRoundDiamonds(game);
+      if (!spendResult?.ok) {
+        if (spendResult?.reason === 'insufficient_diamonds') {
+          setPendingAdGame(gameId);
+          setShowAdUnlockModal(true);
+        } else {
+          Alert.alert('خطأ', 'تعذر خصم تكلفة الجولة الآن. حاول مرة أخرى.');
+        }
+        return;
+      }
     }
 
     launchGame(gameId);
-  };
+  }, [getGameById, launchGame, spendSoloRoundDiamonds]);
 
   useEffect(() => {
     if (!queuedGameId) return;
@@ -2599,6 +2701,13 @@ const GamesScreen = ({
         `تحتاج ${cost} ألماسة للعب أونلاين. رصيدك الحالي: ${balance.diamonds}`,
         [
           { text: 'إلغاء', style: 'cancel' },
+          {
+            text: 'شاهد إعلان',
+            onPress: () => {
+              setPendingAdGame(selectedGame.id);
+              setShowAdUnlockModal(true);
+            },
+          },
           { text: 'شراء ألماسات', onPress: () => onOpenDiamondShop && onOpenDiamondShop() }
         ]
       );
@@ -2613,7 +2722,6 @@ const GamesScreen = ({
         return false;
       }
 
-      consumeGameSessionCredit(selectedGame.id);
       setShowWaiting(true);
       pendingOnlineGameRef.current = selectedGame.id;
       fetchBalance();
@@ -2633,7 +2741,7 @@ const GamesScreen = ({
       }
       return false;
     }
-  }, [balance.diamonds, consumeGameSessionCredit, gameCosts, onOpenDiamondShop, resolveBackendGameId, userId]);
+  }, [balance.diamonds, gameCosts, onOpenDiamondShop, resolveBackendGameId, userId]);
 
   const publishGlobalChatInvite = useCallback(async (selectedGame) => {
     const inviteCode = `LIVE-${selectedGame.id}-${Date.now().toString(36).slice(-5).toUpperCase()}`;
@@ -2659,6 +2767,13 @@ const GamesScreen = ({
             `دعوة الشات العام تحتاج ${ONLINE_GLOBAL_CHAT_INVITE_COST} ألماسات.`,
             [
               { text: 'إلغاء', style: 'cancel' },
+              {
+                text: 'شاهد إعلان',
+                onPress: () => {
+                  setPendingAdGame(selectedGame.id);
+                  setShowAdUnlockModal(true);
+                },
+              },
               { text: 'شراء ألماسات', onPress: () => onOpenDiamondShop && onOpenDiamondShop() },
             ],
           );
@@ -2767,7 +2882,17 @@ const GamesScreen = ({
       await openFriendInviteFlow(selectedGame);
       return;
     } else {
-      consumeGameSessionCredit(selectedGame.id);
+      const spendResult = await spendSoloRoundDiamonds(selectedGame);
+      if (!spendResult?.ok) {
+        if (spendResult?.reason === 'insufficient_diamonds') {
+          setPendingAdGame(selectedGame.id);
+          setShowModeSelector(null);
+          setShowAdUnlockModal(true);
+        } else {
+          Alert.alert('خطأ', 'تعذر خصم تكلفة الجولة الآن. حاول مرة أخرى.');
+        }
+        return;
+      }
       setActiveGame(selectedGame.id);
       setGameMode(mode);
       setShowModeSelector(null);
@@ -2781,32 +2906,29 @@ const GamesScreen = ({
     pendingOnlineGameRef.current = null;
   };
 
-  const handleWatchAdToContinue = () => {
+  const handleWatchAdToContinue = async () => {
+    if (adUnlockLoading) return;
+    const gameToResume = pendingAdGame;
     setShowAdUnlockModal(false);
-    adRewardedRef.current = false;
-    setShowSaqrFortunes(true);
+    setAdUnlockLoading(true);
+
+    try {
+      const rewardResult = await grantAdEconomyReward({
+        source: 'game_round_unlock_ad',
+        silent: false,
+      });
+      if (!rewardResult?.success || !gameToResume) return;
+
+      setPendingAdGame(null);
+      await handleGameSelect(gameToResume);
+    } finally {
+      setAdUnlockLoading(false);
+    }
   };
 
   const handleFortunesClose = () => {
     setShowSaqrFortunes(false);
     fetchBalance();
-
-    if (!pendingAdGame) {
-      adRewardedRef.current = false;
-      return;
-    }
-
-    if (adRewardedRef.current) {
-      const gameToStart = pendingAdGame;
-      setPendingAdGame(null);
-      adRewardedRef.current = false;
-      unlockAndConsumeGameSession(gameToStart);
-      Alert.alert('تم الفتح', 'ممتاز! حصلت على 3 جولات إضافية.');
-      launchGame(gameToStart);
-      return;
-    }
-
-    Alert.alert('للمتابعة', 'شاهد إعلانًا كاملاً في صفحة الإعلانات ثم ارجع للمتابعة.');
   };
 
   const handleGameComplete = async (points, result) => {
@@ -2875,13 +2997,11 @@ const GamesScreen = ({
 
   // مشاهدة إعلان
   const handleWatchAd = async () => {
-    // في الإنتاج: استدعاء Google AdMob
-    // حالياً: محاكاة مشاهدة إعلان
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(true);
-      }, 1500);
+    const rewardResult = await grantAdEconomyReward({
+      source: 'games_challenge_ad',
+      silent: true,
     });
+    return Boolean(rewardResult?.success);
   };
 
   // استلام مكافأة التحدي
@@ -3164,7 +3284,6 @@ const GamesScreen = ({
             user={user}
             onClose={handleFortunesClose}
             onBalanceUpdate={() => {
-              adRewardedRef.current = true;
               fetchBalance();
             }}
           />
@@ -3175,7 +3294,9 @@ const GamesScreen = ({
         visible={showAdUnlockModal}
         gameName={getGameById(pendingAdGame)?.name}
         onWatchAd={handleWatchAdToContinue}
+        loading={adUnlockLoading}
         onClose={() => {
+          if (adUnlockLoading) return;
           setShowAdUnlockModal(false);
           setPendingAdGame(null);
         }}
