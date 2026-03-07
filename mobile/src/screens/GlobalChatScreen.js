@@ -23,6 +23,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import gameSounds from '../utils/gameSounds';
 
@@ -107,7 +108,7 @@ const MessageContent = memo(({ text, isOwn }) => {
 });
 
 // مكون الرسالة الاحترافي
-const ChatMessageItem = memo(({ message, isOwn }) => {
+const ChatMessageItem = memo(({ message, isOwn, chatFrameColor }) => {
   const scaleAnim = useRef(new Animated.Value(0)).current;
   
   useEffect(() => {
@@ -148,7 +149,13 @@ const ChatMessageItem = memo(({ message, isOwn }) => {
         </View>
       )}
       
-      <View style={[styles.messageBubble, isOwn && styles.ownMessageBubble]}>
+      <View
+        style={[
+          styles.messageBubble,
+          isOwn && styles.ownMessageBubble,
+          isOwn && chatFrameColor ? { borderColor: chatFrameColor, borderWidth: 1 } : null,
+        ]}
+      >
         {!isOwn && (
           <Text style={styles.userName}>{message.user_name}</Text>
         )}
@@ -354,10 +361,28 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
   const [showInsufficientModal, setShowInsufficientModal] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState(0);
+  const [chatFrameColor, setChatFrameColor] = useState(null);
   const flatListRef = useRef(null);
   const pollInterval = useRef(null);
   const headerAnim = useRef(new Animated.Value(0)).current;
   const userId = user?.id || user?.user_id;
+
+  useEffect(() => {
+    const loadChatFrame = async () => {
+      try {
+        const savedFrame = await AsyncStorage.getItem('selected_profile_frame');
+        if (!savedFrame) return;
+        const parsed = JSON.parse(savedFrame);
+        if (Array.isArray(parsed?.colors) && parsed.colors.length > 0) {
+          setChatFrameColor(parsed.colors[0]);
+        }
+      } catch (e) {
+        console.log('Chat frame load error:', e);
+      }
+    };
+
+    loadChatFrame();
+  }, []);
 
   const loadBalance = useCallback(async () => {
     try {
@@ -506,8 +531,9 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
     <ChatMessageItem
       message={item}
       isOwn={item.user_id === userId}
+      chatFrameColor={chatFrameColor}
     />
-  ), [userId]);
+  ), [userId, chatFrameColor]);
 
   const handleWatchAds = () => {
     setShowInsufficientModal(false);

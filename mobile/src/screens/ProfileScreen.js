@@ -1,6 +1,6 @@
 // Profile Screen - User profile and settings
 // Complete Professional Design with All Features
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -13,9 +13,10 @@ import {
   TextInput,
   Share,
   ActivityIndicator,
-  Clipboard,
+  Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import storage from '../services/storage';
@@ -39,29 +40,76 @@ const ProfileScreen = ({
   const [isLoading, setIsLoading] = useState(false);
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
   const [editName, setEditName] = useState(user?.name || '');
+  const [editAvatarUrl, setEditAvatarUrl] = useState(user?.avatar || '');
+  const [profileAvatar, setProfileAvatar] = useState(user?.avatar || '');
+  const [profileFrame, setProfileFrame] = useState(null);
+  const [economy, setEconomy] = useState({
+    saqr_points: user?.points || 0,
+    saqr_gems: user?.saqr_gems || 0,
+  });
   
   // Achievements context
   const { recordAppShared } = useAchievements();
   
-  const userPoints = user?.points || 0;
-  const totalEarned = user?.total_earned || userPoints;
+  const userGems = economy?.saqr_gems ?? user?.saqr_gems ?? 0;
   const watchedAds = user?.ads_watched || 0;
   const referralCode = user?.referral_code || 'SAQR' + (user?.id?.slice(-6) || '123456').toUpperCase();
   const referrals = user?.referrals_count || 0;
-  const dollarValue = (userPoints / 500).toFixed(2);
-  const riyalValue = dollarValue;
+  const redeemableRiyals = Math.floor(userGems / 500);
+  const riyalValue = redeemableRiyals.toFixed(0);
+  const gemsRemainder = userGems % 500;
+  const gemsProgress = (gemsRemainder / 500) * 100;
+  const gemsToNextRiyal = gemsRemainder === 0 ? 500 : 500 - gemsRemainder;
+
+  useEffect(() => {
+    const loadProfileAppearance = async () => {
+      try {
+        const savedAvatar = await AsyncStorage.getItem('selected_profile_avatar');
+        const savedFrame = await AsyncStorage.getItem('selected_profile_frame');
+        if (savedAvatar) {
+          setProfileAvatar(savedAvatar);
+          setEditAvatarUrl(savedAvatar);
+        }
+        if (savedFrame) {
+          setProfileFrame(JSON.parse(savedFrame));
+        }
+      } catch (e) {
+        console.log('Profile appearance load error:', e);
+      }
+    };
+
+    const loadBalance = async () => {
+      try {
+        const uid = user?.id || user?.user_id;
+        if (!uid) return;
+        const response = await api.getBalance(uid);
+        if (response.ok) {
+          const data = await response.json();
+          setEconomy({
+            saqr_points: data.saqr_points ?? data.points ?? 0,
+            saqr_gems: data.saqr_gems ?? 0,
+          });
+        }
+      } catch (e) {
+        console.log('Profile balance load error:', e);
+      }
+    };
+
+    loadProfileAppearance();
+    loadBalance();
+  }, [user?.id, user?.user_id]);
 
   const handleWithdraw = () => {
-    if (userPoints < 500) {
+    if (redeemableRiyals < 1) {
       Alert.alert(
         'رصيد غير كافٍ',
-        `تحتاج 500 نقطة على الأقل للسحب. لديك حالياً ${userPoints} نقطة.`,
+        `تحتاج 500 جوهرة صقر على الأقل للسحب. لديك حالياً ${userGems} جوهرة.`,
         [{ text: 'حسناً' }]
       );
     } else {
       Alert.alert(
         'طلب سحب',
-        `هل تريد سحب ${riyalValue} ر.س؟\nسيتم مراجعة طلبك خلال 24 ساعة.`,
+        `هل تريد سحب ${redeemableRiyals} ر.س؟\nسيتم خصم ${redeemableRiyals * 500} جوهرة صقر ومراجعة الطلب خلال 24 ساعة.`,
         [
           { text: 'إلغاء', style: 'cancel' },
           { text: 'تأكيد السحب', onPress: submitWithdrawal }
@@ -74,7 +122,7 @@ const ProfileScreen = ({
     setIsLoading(true);
     try {
       const token = await storage.getToken();
-      const response = await api.requestWithdrawal({ amount: parseFloat(riyalValue) }, token);
+      const response = await api.requestWithdrawal({ amount: redeemableRiyals }, token);
       if (response.ok) {
         Alert.alert('تم الطلب', 'تم إرسال طلب السحب بنجاح. سيتم مراجعته خلال 24 ساعة.');
       } else {
@@ -140,8 +188,8 @@ const ProfileScreen = ({
     }
   };
 
-  const copyReferralCode = () => {
-    Clipboard.setString(referralCode);
+  const copyReferralCode = async () => {
+    await Clipboard.setStringAsync(referralCode);
     Alert.alert('تم النسخ', `تم نسخ كود الإحالة: ${referralCode}`);
   };
 
@@ -160,7 +208,7 @@ const ProfileScreen = ({
   const handleHistory = () => {
     Alert.alert(
       'سجل المعاملات',
-      `إجمالي الإعلانات المشاهدة: ${watchedAds}\nإجمالي النقاط المكتسبة: ${totalEarned}\n\nلا توجد عمليات سحب سابقة.`,
+      `إجمالي الإعلانات المشاهدة: ${watchedAds}\nرصيد الجواهر الحالي: ${userGems}\n\nلا توجد عمليات سحب سابقة.`,
       [{ text: 'حسناً' }]
     );
   };
@@ -234,15 +282,26 @@ const ProfileScreen = ({
     );
   };
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     const trimmedName = editName.trim();
     if (!trimmedName) {
       Alert.alert('خطأ', 'يرجى إدخال اسم صحيح');
       return;
     }
-    onUpdateProfile && onUpdateProfile({ name: trimmedName });
+    const trimmedAvatarUrl = editAvatarUrl.trim();
+    if (trimmedAvatarUrl && !/^https?:\/\//i.test(trimmedAvatarUrl)) {
+      Alert.alert('خطأ', 'رابط الصورة يجب أن يبدأ بـ http أو https');
+      return;
+    }
+
+    if (trimmedAvatarUrl) {
+      await AsyncStorage.setItem('selected_profile_avatar', trimmedAvatarUrl);
+      setProfileAvatar(trimmedAvatarUrl);
+    }
+
+    onUpdateProfile && onUpdateProfile({ name: trimmedName, avatar: trimmedAvatarUrl || profileAvatar || null });
     setShowEditProfile(false);
-    Alert.alert('تم', 'تم تحديث الاسم بنجاح');
+    Alert.alert('تم', 'تم تحديث الملف الشخصي بنجاح');
   };
 
   const menuItems = [
@@ -270,8 +329,23 @@ const ProfileScreen = ({
       <View style={styles.content}>
         {/* Profile Header */}
         <View style={styles.profileHeader}>
-          <TouchableOpacity style={styles.avatar} activeOpacity={0.8} onPress={() => setShowEditProfile(true)}>
-            <Text style={styles.avatarText}>{(user?.name || 'U')[0].toUpperCase()}</Text>
+          <TouchableOpacity
+            style={[
+              styles.avatar,
+              profileFrame?.colors?.[0] ? { borderColor: profileFrame.colors[0] } : null,
+            ]}
+            activeOpacity={0.8}
+            onPress={() => {
+              setEditName(user?.name || editName);
+              setEditAvatarUrl(profileAvatar || '');
+              setShowEditProfile(true);
+            }}
+          >
+            {profileAvatar ? (
+              <Image source={{ uri: profileAvatar }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarText}>{(user?.name || 'U')[0].toUpperCase()}</Text>
+            )}
             <View style={styles.editAvatarBadge}>
               <Ionicons name="camera" size={12} color="#FFF" />
             </View>
@@ -291,21 +365,21 @@ const ProfileScreen = ({
           <View style={styles.balanceIcon}>
             <Ionicons name="wallet" size={24} color="#60a5fa" />
           </View>
-          <Text style={styles.balanceLabel}>رصيدك الحالي</Text>
+          <Text style={styles.balanceLabel}>القيمة القابلة للسحب</Text>
           <Text style={styles.balanceValue}>{riyalValue} ر.س</Text>
-          <Text style={styles.balancePoints}>{userPoints} نقطة</Text>
+          <Text style={styles.balancePoints}>{userGems} جوهرة صقر</Text>
           <View style={styles.progressContainer}>
-            <View style={[styles.progressBar, { width: `${Math.min((userPoints / 500) * 100, 100)}%` }]} />
+            <View style={[styles.progressBar, { width: `${Math.min(gemsProgress, 100)}%` }]} />
           </View>
-          <Text style={styles.progressText}>{Math.max(500 - userPoints, 0)} نقطة للسحب التالي</Text>
+          <Text style={styles.progressText}>{gemsToNextRiyal} جوهرة للريال التالي</Text>
         </View>
 
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
           <View style={styles.statBox}>
-            <Ionicons name="star" size={18} color="#fbbf24" />
-            <Text style={styles.statValue}>{userPoints}</Text>
-            <Text style={styles.statLabel}>النقاط</Text>
+            <Ionicons name="sparkles" size={18} color="#f472b6" />
+            <Text style={styles.statValue}>{userGems}</Text>
+            <Text style={styles.statLabel}>الجواهر</Text>
           </View>
           <View style={styles.statBox}>
             <Ionicons name="play-circle" size={18} color="#60a5fa" />
@@ -515,6 +589,18 @@ const ProfileScreen = ({
               />
             </View>
 
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>رابط الصورة الشخصية (اختياري)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="https://example.com/avatar.png"
+                placeholderTextColor="rgba(255,255,255,0.3)"
+                value={editAvatarUrl}
+                autoCapitalize="none"
+                onChangeText={setEditAvatarUrl}
+              />
+            </View>
+
             <TouchableOpacity style={styles.modalButton} onPress={handleSaveProfile}>
               <Text style={styles.modalButtonText}>حفظ التغييرات</Text>
             </TouchableOpacity>
@@ -540,6 +626,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 3,
     borderColor: 'rgba(96, 165, 250, 0.3)',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 40,
   },
   editAvatarBadge: {
     position: 'absolute',

@@ -16,6 +16,7 @@ import {
   ActivityIndicator,
   ImageBackground,
   Image,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -99,7 +100,7 @@ const DailyChallenge = ({ challenge, progress, claimed, onClaim }) => {
           </TouchableOpacity>
         ) : (
           <View style={styles.rewardBadge}>
-            <Ionicons name="diamond" size={12} color="#60a5fa" />
+            <Ionicons name="sparkles" size={12} color="#f472b6" />
             <Text style={styles.rewardText}>{challenge.reward}</Text>
           </View>
         )}
@@ -156,6 +157,63 @@ const MainWatchButton = ({ onPress, saqrGems, loading }) => {
   );
 };
 
+const AD_RACE_MILESTONES = [
+  { id: 'race_5', ads: 5, reward: 8 },
+  { id: 'race_10', ads: 10, reward: 18 },
+  { id: 'race_20', ads: 20, reward: 40 },
+  { id: 'race_35', ads: 35, reward: 90 },
+];
+
+const AdRaceModal = ({ visible, onClose, todayAds, claimedIds = [], onClaim }) => {
+  if (!visible) return null;
+
+  return (
+    <Modal visible={visible} transparent animationType="fade">
+      <View style={styles.raceOverlay}>
+        <View style={styles.raceCard}>
+          <LinearGradient colors={['#111827', '#0b1020']} style={styles.raceGradient}>
+            <View style={styles.raceHeader}>
+              <Text style={styles.raceTitle}>سباق الإعلانات</Text>
+              <TouchableOpacity onPress={onClose} style={styles.raceCloseBtn}>
+                <Ionicons name="close" size={18} color="#fff" />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.raceSubtitle}>أكمل مشاهدات أكثر اليوم لتحصل على جوائز إضافية.</Text>
+            <View style={styles.raceCounter}>
+              <Ionicons name="speedometer" size={16} color="#60a5fa" />
+              <Text style={styles.raceCounterText}>مشاهدات اليوم: {todayAds}</Text>
+            </View>
+
+            {AD_RACE_MILESTONES.map((milestone) => {
+              const completed = todayAds >= milestone.ads;
+              const claimed = claimedIds.includes(milestone.id);
+              return (
+                <View key={milestone.id} style={[styles.raceItem, completed && styles.raceItemDone]}>
+                  <View style={styles.raceItemLeft}>
+                    <Text style={styles.raceItemAds}>{milestone.ads} إعلان</Text>
+                    <Text style={styles.raceItemReward}>+{milestone.reward} جوهرة</Text>
+                  </View>
+                  {claimed ? (
+                    <View style={styles.raceClaimedBadge}>
+                      <Ionicons name="checkmark-circle" size={18} color="#22c55e" />
+                    </View>
+                  ) : completed ? (
+                    <TouchableOpacity style={styles.raceClaimBtn} onPress={() => onClaim(milestone)}>
+                      <Text style={styles.raceClaimText}>استلام</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <Ionicons name="lock-closed" size={16} color="#64748b" />
+                  )}
+                </View>
+              );
+            })}
+          </LinearGradient>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
 // مكون تقدم الريال - يعرض جواهر صقر
 const RiyalProgress = ({ saqrGems }) => {
   const progress = (saqrGems % GEMS_PER_RIYAL) / GEMS_PER_RIYAL * 100;
@@ -198,13 +256,16 @@ const RiyalProgress = ({ saqrGems }) => {
 
 // ==================== الشاشة الرئيسية ====================
 const SaqrFortunesScreen = ({ user, onClose, onBalanceUpdate }) => {
+  const userId = user?.id || user?.user_id;
   const [loading, setLoading] = useState(true);
   const [saqrGems, setSaqrGems] = useState(0);
   const [totalAds, setTotalAds] = useState(0);
   const [todayAds, setTodayAds] = useState(0);
   const [showRewardsCenter, setShowRewardsCenter] = useState(false);
+  const [showAdRace, setShowAdRace] = useState(false);
   const [dailyProgress, setDailyProgress] = useState({});
   const [claimedChallenges, setClaimedChallenges] = useState([]);
+  const [claimedRaceMilestones, setClaimedRaceMilestones] = useState([]);
 
   useEffect(() => {
     loadData();
@@ -213,14 +274,14 @@ const SaqrFortunesScreen = ({ user, onClose, onBalanceUpdate }) => {
   const loadData = async () => {
     try {
       // Load balance - جلب جواهر صقر
-      const balanceResponse = await api.getBalance(user.id);
+      const balanceResponse = await api.getBalance(userId);
       if (balanceResponse.ok) {
         const data = await balanceResponse.json();
         setSaqrGems(data.saqr_gems || 0);
       }
 
       // Load stats from storage
-      const statsKey = `saqr_fortunes_stats_${user.id}`;
+      const statsKey = `saqr_fortunes_stats_${userId}`;
       const savedStats = await AsyncStorage.getItem(statsKey);
       const today = new Date().toDateString();
 
@@ -233,10 +294,12 @@ const SaqrFortunesScreen = ({ user, onClose, onBalanceUpdate }) => {
           setTodayAds(0);
           setDailyProgress({});
           setClaimedChallenges([]);
+          setClaimedRaceMilestones([]);
         } else {
           setTodayAds(parsed.todayAds || 0);
           setDailyProgress(parsed.dailyProgress || {});
           setClaimedChallenges(parsed.claimedChallenges || []);
+          setClaimedRaceMilestones(parsed.claimedRaceMilestones || []);
         }
       }
     } catch (e) {
@@ -248,7 +311,7 @@ const SaqrFortunesScreen = ({ user, onClose, onBalanceUpdate }) => {
 
   const refreshBalance = async () => {
     try {
-      const response = await api.getBalance(user.id);
+      const response = await api.getBalance(userId);
       if (response.ok) {
         const data = await response.json();
         setSaqrGems(data.saqr_gems || 0);
@@ -261,7 +324,7 @@ const SaqrFortunesScreen = ({ user, onClose, onBalanceUpdate }) => {
   const handleClaimChallenge = async (challenge) => {
     try {
       // اضافة جواهر صقر بدلا من الالماس
-      const response = await api.addSaqrGems(user.id, challenge.reward, `daily_challenge_${challenge.id}`);
+      const response = await api.addSaqrGems(userId, challenge.reward, `daily_challenge_${challenge.id}`);
       if (response.ok) {
         const data = await response.json();
         setSaqrGems(data.new_balance);
@@ -285,12 +348,37 @@ const SaqrFortunesScreen = ({ user, onClose, onBalanceUpdate }) => {
     todayAds,
     dailyProgress,
     claimedChallenges,
+    claimedRaceMilestones,
     lastDate: new Date().toDateString(),
   });
 
+  const handleClaimRaceMilestone = async (milestone) => {
+    if (claimedRaceMilestones.includes(milestone.id) || todayAds < milestone.ads) {
+      return;
+    }
+
+    try {
+      const response = await api.addSaqrGems(userId, milestone.reward, `ad_race_${milestone.id}`);
+      if (!response.ok) {
+        throw new Error('failed');
+      }
+      const data = await response.json();
+      const updatedClaims = [...claimedRaceMilestones, milestone.id];
+      setClaimedRaceMilestones(updatedClaims);
+      setSaqrGems(data.new_balance || saqrGems);
+      await saveStats({
+        ...getStatsObj(),
+        claimedRaceMilestones: updatedClaims,
+      });
+      Alert.alert('تم الاستلام', `أضيفت ${milestone.reward} جوهرة صقر إلى رصيدك.`);
+    } catch (e) {
+      Alert.alert('تعذر الاستلام', 'حدث خطأ أثناء إضافة المكافأة.');
+    }
+  };
+
   const saveStats = async (stats) => {
     try {
-      await AsyncStorage.setItem(`saqr_fortunes_stats_${user.id}`, JSON.stringify(stats));
+      await AsyncStorage.setItem(`saqr_fortunes_stats_${userId}`, JSON.stringify(stats));
     } catch (e) {
       console.log('Error saving stats:', e);
     }
@@ -387,7 +475,7 @@ const SaqrFortunesScreen = ({ user, onClose, onBalanceUpdate }) => {
 
             <TouchableOpacity 
               style={styles.quickActionNew}
-              onPress={() => Alert.alert('قريبا', 'هذه الميزة قيد التطوير!')}
+              onPress={() => setShowAdRace(true)}
             >
               <ImageBackground
                 source={{ uri: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e7465c5916e65832b7442a2d8e0a6e9704c872117300e46de5f12b06c5fde836.png' }}
@@ -406,7 +494,7 @@ const SaqrFortunesScreen = ({ user, onClose, onBalanceUpdate }) => {
 
           {/* Treasure Chests */}
           <TreasureChestsSection
-            userId={user.id}
+            userId={userId}
             adsWatched={todayAds}
             onBalanceUpdate={refreshBalance}
           />
@@ -454,18 +542,32 @@ const SaqrFortunesScreen = ({ user, onClose, onBalanceUpdate }) => {
           setShowRewardsCenter(false);
           refreshBalance();
         }}
-        userId={user.id}
+        userId={userId}
         onBalanceUpdate={() => {
           refreshBalance();
-          setTodayAds(prev => prev + 1);
-          setTotalAds(prev => prev + 1);
-          saveStats({
-            ...getStatsObj(),
-            todayAds: todayAds + 1,
-            totalAds: totalAds + 1,
+          setTodayAds((prevToday) => {
+            const nextToday = prevToday + 1;
+            setTotalAds((prevTotal) => {
+              const nextTotal = prevTotal + 1;
+              saveStats({
+                ...getStatsObj(),
+                todayAds: nextToday,
+                totalAds: nextTotal,
+              });
+              return nextTotal;
+            });
+            return nextToday;
           });
           if (onBalanceUpdate) onBalanceUpdate();
         }}
+      />
+
+      <AdRaceModal
+        visible={showAdRace}
+        onClose={() => setShowAdRace(false)}
+        todayAds={todayAds}
+        claimedIds={claimedRaceMilestones}
+        onClaim={handleClaimRaceMilestone}
       />
     </View>
   );
@@ -901,14 +1003,14 @@ const styles = StyleSheet.create({
   rewardBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(96,165,250,0.15)',
+    backgroundColor: 'rgba(244,114,182,0.15)',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 12,
     gap: 4,
   },
   rewardText: {
-    color: '#60a5fa',
+    color: '#f472b6',
     fontSize: 12,
     fontWeight: '600',
   },
@@ -938,6 +1040,104 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: 'rgba(255,255,255,0.6)',
     lineHeight: 16,
+  },
+  raceOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.86)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  raceCard: {
+    width: '100%',
+    maxWidth: 380,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  raceGradient: {
+    padding: 16,
+  },
+  raceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  raceTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  raceCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  raceSubtitle: {
+    color: 'rgba(255,255,255,0.62)',
+    fontSize: 12,
+    marginBottom: 12,
+  },
+  raceCounter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(59,130,246,0.15)',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 12,
+  },
+  raceCounterText: {
+    color: '#93c5fd',
+    fontWeight: '600',
+    fontSize: 13,
+  },
+  raceItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    marginBottom: 8,
+  },
+  raceItemDone: {
+    borderColor: 'rgba(34,197,94,0.35)',
+    backgroundColor: 'rgba(34,197,94,0.08)',
+  },
+  raceItemLeft: {
+    flex: 1,
+  },
+  raceItemAds: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  raceItemReward: {
+    color: '#f472b6',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  raceClaimBtn: {
+    backgroundColor: '#22c55e',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 9,
+  },
+  raceClaimText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  raceClaimedBadge: {
+    paddingHorizontal: 4,
   },
 });
 

@@ -147,7 +147,7 @@ const TreasureChestCard = ({ chest, progress, onOpen, canOpen }) => {
           
           {/* Reward Range */}
           <View style={styles.rewardRange}>
-            <Ionicons name="diamond" size={12} color={canOpen ? '#60a5fa' : '#666'} />
+            <Ionicons name="sparkles" size={12} color={canOpen ? '#f472b6' : '#666'} />
             <Text style={[styles.rewardText, canOpen && styles.rewardTextActive]}>
               {chest.minReward} - {chest.maxReward}
             </Text>
@@ -272,10 +272,10 @@ const ChestOpeningModal = ({ visible, chest, onClose, reward }) => {
               }]}>
                 <Text style={modalStyles.rewardTitle}>مبروك!</Text>
                 <View style={modalStyles.diamondReward}>
-                  <Ionicons name="diamond" size={36} color="#60a5fa" />
+                  <Ionicons name="sparkles" size={36} color="#f472b6" />
                   <Text style={modalStyles.rewardAmount}>+{reward}</Text>
                 </View>
-                <Text style={modalStyles.rewardLabel}>ألماسة من {chest.name}</Text>
+                <Text style={modalStyles.rewardLabel}>جوهرة صقر من {chest.name}</Text>
               </Animated.View>
             )}
 
@@ -453,9 +453,9 @@ const TreasureChestsSection = ({ userId, adsWatched, onBalanceUpdate }) => {
     setProgress(newProgress);
     await saveProgress(newProgress);
 
-    // Add diamonds to user
+    // Add Saqr gems to user
     try {
-      const response = await api.addDiamonds(userId, rewardAmount, `treasure_chest_${chestType}`);
+      const response = await api.addSaqrGems(userId, rewardAmount, `treasure_chest_${chestType}`);
       if (response.ok && onBalanceUpdate) {
         onBalanceUpdate();
       }

@@ -169,8 +169,14 @@ const HomeScreen = ({
 
         {/* رصيدك */}
         <View style={styles.balanceCard}>
-          <LinearGradient colors={['#1a1a2e', '#16213e']} style={styles.balanceGradient}>
-            <Text style={styles.balanceTitle}>رصيدك الحالي</Text>
+          <LinearGradient colors={['#171a2a', '#141d36', '#111827']} style={styles.balanceGradient}>
+            <View style={styles.balanceTopRow}>
+              <Text style={styles.balanceTitle}>رصيدك الحالي</Text>
+              <View style={styles.exchangeChip}>
+                <Ionicons name="swap-horizontal" size={12} color="#22c55e" />
+                <Text style={styles.exchangeChipText}>500 جوهرة = 1 ر.س</Text>
+              </View>
+            </View>
             <View style={styles.balanceRow}>
               <View style={styles.balanceItem}>
                 <View style={[styles.balanceIcon, { backgroundColor: 'rgba(244,114,182,0.2)' }]}>
@@ -402,18 +408,45 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   balanceGradient: {
-    padding: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  balanceTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
   },
   balanceTitle: {
     color: 'rgba(255,255,255,0.7)',
     fontSize: 13,
-    textAlign: 'center',
-    marginBottom: 16,
+    fontWeight: '600',
+  },
+  exchangeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(34,197,94,0.12)',
+    borderRadius: 14,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(34,197,94,0.28)',
+  },
+  exchangeChipText: {
+    color: '#86efac',
+    fontSize: 10,
+    fontWeight: '700',
   },
   balanceRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderRadius: 14,
+    paddingVertical: 12,
   },
   balanceItem: {
     alignItems: 'center',
@@ -428,7 +461,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   balanceValue: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
     color: '#FFF',
   },

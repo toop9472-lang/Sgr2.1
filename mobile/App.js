@@ -557,8 +557,27 @@ function AppContent() {
               setUser(prev => ({ ...prev, diamonds: newBalance }));
               setBalanceRefresh(prev => prev + 1);
             }}
-            onPurchaseItem={(item) => {
-              console.log('Item purchased:', item);
+            onPurchaseItem={async (item) => {
+              if (!item || !item.type) return;
+
+              if (item.type === 'avatar' && item.image) {
+                await AsyncStorage.setItem('selected_profile_avatar', item.image);
+                setUser(prev => ({ ...prev, avatar: item.image }));
+              }
+
+              if (item.type === 'frame') {
+                await AsyncStorage.setItem('selected_profile_frame', JSON.stringify({
+                  id: item.id,
+                  colors: item.colors || null,
+                }));
+              }
+
+              if (item.type === 'theme') {
+                await AsyncStorage.setItem('selected_shop_theme', JSON.stringify({
+                  id: item.id,
+                  colors: item.colors || null,
+                }));
+              }
             }}
           />
         </View>

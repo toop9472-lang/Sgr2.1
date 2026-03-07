@@ -315,16 +315,24 @@ const RARITY_COLORS = {
 };
 
 // Shop Item Card - with AI Images
-const ShopItemCard = ({ item, owned, onPurchase, userDiamonds }) => {
+const ShopItemCard = ({ item, owned, equipped, onPurchase, onEquip, userDiamonds }) => {
   const canAfford = userDiamonds >= item.price;
   const rarity = RARITY_COLORS[item.rarity];
+  const canEquip = owned && ['avatar', 'frame', 'theme'].includes(item.type);
   
   return (
     <TouchableOpacity
       style={[styles.itemCard, owned && styles.itemCardOwned]}
-      onPress={() => !owned && onPurchase(item)}
-      activeOpacity={owned ? 1 : 0.8}
-      disabled={owned}
+      onPress={() => {
+        if (!owned) {
+          onPurchase(item);
+          return;
+        }
+        if (canEquip) {
+          onEquip(item);
+        }
+      }}
+      activeOpacity={owned ? 0.85 : 0.8}
     >
       {item.image ? (
         <View style={styles.itemImageContainer}>
@@ -371,8 +379,14 @@ const ShopItemCard = ({ item, owned, onPurchase, userDiamonds }) => {
             </View>
           ) : (
             <View style={styles.ownedTag}>
-              <Ionicons name="checkmark-circle" size={14} color="#10b981" />
-              <Text style={styles.ownedText}>مملوك</Text>
+              <Ionicons
+                name={equipped ? 'checkmark-circle' : 'checkmark-done-circle-outline'}
+                size={14}
+                color={equipped ? '#22c55e' : '#a3e635'}
+              />
+              <Text style={styles.ownedText}>
+                {equipped ? 'مفعّل' : (canEquip ? 'تفعيل' : 'مملوك')}
+              </Text>
             </View>
           )}
         </View>
@@ -500,8 +514,17 @@ const PurchaseModal = ({ item, visible, onConfirm, onCancel, userDiamonds }) => 
 
 // Main Shop Screen
 const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurchaseItem }) => {
+  const userId = user?.id || user?.user_id || 'guest';
+  const ownedItemsKey = `owned_shop_items_${userId}`;
+  const activeBoostersKey = `active_boosters_${userId}`;
+  const equippedItemsKey = `equipped_shop_items_${userId}`;
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [ownedItems, setOwnedItems] = useState([]);
+  const [equippedItems, setEquippedItems] = useState({
+    avatar: null,
+    frame: null,
+    theme: null,
+  });
   const [selectedItem, setSelectedItem] = useState(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [showDiamondShop, setShowDiamondShop] = useState(false);
@@ -510,12 +533,13 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
   // Load owned items
   useEffect(() => {
     loadOwnedItems();
+    loadEquippedItems();
     loadActiveBoosters();
-  }, []);
+  }, [ownedItemsKey, equippedItemsKey, activeBoostersKey]);
   
   const loadOwnedItems = async () => {
     try {
-      const saved = await AsyncStorage.getItem('owned_shop_items');
+      const saved = await AsyncStorage.getItem(ownedItemsKey);
       if (saved) {
         setOwnedItems(JSON.parse(saved));
       }
@@ -526,26 +550,69 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
   
   const loadActiveBoosters = async () => {
     try {
-      const saved = await AsyncStorage.getItem('active_boosters');
+      const saved = await AsyncStorage.getItem(activeBoostersKey);
       if (saved) {
         const boosters = JSON.parse(saved);
         // Filter expired boosters
         const now = Date.now();
         const active = boosters.filter(b => b.expiresAt > now || b.uses > 0);
         setActiveBoosters(active);
-        await AsyncStorage.setItem('active_boosters', JSON.stringify(active));
+        await AsyncStorage.setItem(activeBoostersKey, JSON.stringify(active));
       }
     } catch (error) {
       console.log('Error loading boosters:', error);
     }
   };
+
+  const loadEquippedItems = async () => {
+    try {
+      const saved = await AsyncStorage.getItem(equippedItemsKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setEquippedItems({
+          avatar: parsed.avatar || null,
+          frame: parsed.frame || null,
+          theme: parsed.theme || null,
+        });
+      }
+    } catch (error) {
+      console.log('Error loading equipped items:', error);
+    }
+  };
   
   const saveOwnedItems = async (items) => {
     try {
-      await AsyncStorage.setItem('owned_shop_items', JSON.stringify(items));
+      await AsyncStorage.setItem(ownedItemsKey, JSON.stringify(items));
     } catch (error) {
       console.log('Error saving owned items:', error);
     }
+  };
+
+  const saveEquippedItems = async (items) => {
+    try {
+      await AsyncStorage.setItem(equippedItemsKey, JSON.stringify(items));
+    } catch (error) {
+      console.log('Error saving equipped items:', error);
+    }
+  };
+
+  const handleEquipItem = async (item) => {
+    if (!['avatar', 'frame', 'theme'].includes(item.type)) {
+      return;
+    }
+
+    const updated = {
+      ...equippedItems,
+      [item.type]: item.id,
+    };
+    setEquippedItems(updated);
+    await saveEquippedItems(updated);
+
+    if (onPurchaseItem) {
+      onPurchaseItem({ ...item, action: 'equip' });
+    }
+
+    Alert.alert('تم التفعيل', `تم تفعيل "${item.name}" بنجاح.`);
   };
   
   const handlePurchase = (item) => {
@@ -564,6 +631,16 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
     const newOwnedItems = [...ownedItems, selectedItem.id];
     setOwnedItems(newOwnedItems);
     await saveOwnedItems(newOwnedItems);
+
+    // Auto-equip personalizable items
+    if (['avatar', 'frame', 'theme'].includes(selectedItem.type)) {
+      const updatedEquip = {
+        ...equippedItems,
+        [selectedItem.type]: selectedItem.id,
+      };
+      setEquippedItems(updatedEquip);
+      await saveEquippedItems(updatedEquip);
+    }
     
     // Handle boosters
     if (selectedItem.type === 'booster') {
@@ -575,7 +652,7 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
       };
       const newBoosters = [...activeBoosters, booster];
       setActiveBoosters(newBoosters);
-      await AsyncStorage.setItem('active_boosters', JSON.stringify(newBoosters));
+      await AsyncStorage.setItem(activeBoostersKey, JSON.stringify(newBoosters));
     }
     
     // Handle VIP
@@ -590,7 +667,7 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
     
     // Callback
     if (onPurchaseItem) {
-      onPurchaseItem(selectedItem);
+      onPurchaseItem({ ...selectedItem, action: 'purchase' });
     }
     
     setShowPurchaseModal(false);
@@ -707,7 +784,9 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
                 key={item.id}
                 item={item}
                 owned={ownedItems.includes(item.id)}
+                equipped={equippedItems[item.type] === item.id}
                 onPurchase={handlePurchase}
+                onEquip={handleEquipItem}
                 userDiamonds={userDiamonds}
               />
             ))}

@@ -1138,6 +1138,306 @@ const RiddlesGame = ({ mode, onComplete, onClose }) => {
   );
 };
 
+const ReactionTapGame = ({ onComplete, onClose }) => {
+  const GAME_SECONDS = 30;
+  const [timeLeft, setTimeLeft] = useState(GAME_SECONDS);
+  const [score, setScore] = useState(0);
+  const [target, setTarget] = useState({ x: 120, y: 220, id: 0 });
+  const [spawnAt, setSpawnAt] = useState(Date.now());
+  const [finished, setFinished] = useState(false);
+
+  useEffect(() => {
+    if (finished) return;
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setFinished(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [finished]);
+
+  const spawnTarget = useCallback(() => {
+    const pad = 56;
+    const maxX = Math.max(pad, width - pad - 24);
+    const maxY = Math.max(190, height - 300);
+    setTarget({
+      x: Math.floor(Math.random() * (maxX - pad + 1)) + pad,
+      y: Math.floor(Math.random() * (maxY - 190 + 1)) + 190,
+      id: Date.now(),
+    });
+    setSpawnAt(Date.now());
+  }, []);
+
+  useEffect(() => {
+    spawnTarget();
+  }, [spawnTarget]);
+
+  const tapTarget = () => {
+    const reactionMs = Date.now() - spawnAt;
+    const gain = Math.max(6, 42 - Math.floor(reactionMs / 80));
+    setScore((prev) => prev + gain);
+    spawnTarget();
+  };
+
+  if (finished) {
+    return (
+      <View style={styles.gameContainer}>
+        <View style={styles.resultScreen}>
+          <Ionicons name="flash" size={72} color="#f59e0b" />
+          <Text style={styles.finalScore}>{score}</Text>
+          <Text style={styles.finalLabel}>نقطة سرعة</Text>
+          <Text style={styles.finalSub}>لعبة جديدة: اختبر رد الفعل الحقيقي</Text>
+          <TouchableOpacity style={styles.exitBtn} onPress={() => onComplete(score, 'win')}>
+            <Text style={styles.exitText}>تحصيل النقاط</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.exitBtn, { marginTop: 10, backgroundColor: '#334155' }]} onPress={onClose}>
+            <Text style={styles.exitText}>إغلاق</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.gameContainer}>
+      <View style={styles.gameHeader}>
+        <TouchableOpacity onPress={onClose} style={styles.headerBtn}>
+          <Ionicons name="arrow-back" size={24} color="#FFF" />
+        </TouchableOpacity>
+        <Text style={styles.gameTitle}>Reaction Tap</Text>
+        <View style={styles.headerBtn}>
+          <Text style={styles.scoreText}>{score}</Text>
+        </View>
+      </View>
+
+      <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
+        <View style={{ height: 7, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 6 }}>
+          <View style={{ width: `${(timeLeft / GAME_SECONDS) * 100}%`, height: '100%', backgroundColor: '#22c55e', borderRadius: 6 }} />
+        </View>
+        <Text style={{ color: 'rgba(255,255,255,0.7)', marginTop: 6, textAlign: 'center' }}>
+          اضغط الهدف بسرعة قبل انتهاء الوقت
+        </Text>
+      </View>
+
+      <View style={{ flex: 1 }}>
+        <TouchableOpacity
+          key={target.id}
+          onPress={tapTarget}
+          activeOpacity={0.85}
+          style={{
+            position: 'absolute',
+            left: target.x,
+            top: target.y,
+            width: 68,
+            height: 68,
+            borderRadius: 34,
+            backgroundColor: '#f43f5e',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderWidth: 3,
+            borderColor: 'rgba(255,255,255,0.6)',
+          }}
+        >
+          <Ionicons name="radio-button-on" size={30} color="#fff" />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+const SequenceSprintGame = ({ onComplete, onClose }) => {
+  const TOTAL_ROUNDS = 8;
+  const [round, setRound] = useState(1);
+  const [score, setScore] = useState(0);
+  const [sequence, setSequence] = useState([]);
+  const [options, setOptions] = useState([]);
+  const [showSequence, setShowSequence] = useState(true);
+  const [finished, setFinished] = useState(false);
+
+  const buildRound = useCallback(() => {
+    const start = Math.floor(Math.random() * 15) + 2;
+    const step = Math.floor(Math.random() * 4) + 2;
+    const seq = [start, start + step, start + step * 2];
+    const correct = start + step * 3;
+    const distractors = shuffleArray([correct - step, correct + step, correct + step * 2]).slice(0, 3);
+    const mixed = shuffleArray([correct, ...distractors]).slice(0, 4);
+    setSequence(seq);
+    setOptions(mixed);
+    setShowSequence(true);
+    setTimeout(() => setShowSequence(false), 1600);
+  }, []);
+
+  useEffect(() => {
+    buildRound();
+  }, [buildRound]);
+
+  const handleAnswer = (value) => {
+    const correct = sequence[2] + (sequence[1] - sequence[0]);
+    if (value === correct) {
+      setScore((prev) => prev + 18);
+    }
+    if (round >= TOTAL_ROUNDS) {
+      setFinished(true);
+      return;
+    }
+    setRound((prev) => prev + 1);
+    buildRound();
+  };
+
+  if (finished) {
+    return (
+      <View style={styles.gameContainer}>
+        <View style={styles.resultScreen}>
+          <Ionicons name="analytics" size={72} color="#22c55e" />
+          <Text style={styles.finalScore}>{score}</Text>
+          <Text style={styles.finalLabel}>نقطة</Text>
+          <Text style={styles.finalSub}>لعبة جديدة: سلاسل رقمية متسارعة</Text>
+          <TouchableOpacity style={styles.exitBtn} onPress={() => onComplete(score, 'win')}>
+            <Text style={styles.exitText}>تحصيل النقاط</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.exitBtn, { marginTop: 10, backgroundColor: '#334155' }]} onPress={onClose}>
+            <Text style={styles.exitText}>إغلاق</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.gameContainer}>
+      <View style={styles.gameHeader}>
+        <TouchableOpacity onPress={onClose} style={styles.headerBtn}>
+          <Ionicons name="arrow-back" size={24} color="#FFF" />
+        </TouchableOpacity>
+        <Text style={styles.gameTitle}>Sequence Sprint</Text>
+        <View style={styles.headerBtn}>
+          <Text style={styles.scoreText}>{score}</Text>
+        </View>
+      </View>
+      <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
+        <Text style={{ color: '#94a3b8', textAlign: 'center', marginBottom: 12 }}>
+          الجولة {round}/{TOTAL_ROUNDS}
+        </Text>
+        <View style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 20 }}>
+          <Text style={{ color: '#fff', textAlign: 'center', fontSize: 26, fontWeight: '700' }}>
+            {showSequence ? sequence.join('  •  ') : 'اختر الرقم التالي'}
+          </Text>
+        </View>
+      </View>
+      <View style={{ padding: 16, gap: 10 }}>
+        {options.map((opt, idx) => (
+          <TouchableOpacity
+            key={`${opt}-${idx}`}
+            style={{ backgroundColor: 'rgba(59,130,246,0.15)', borderRadius: 12, padding: 14, alignItems: 'center' }}
+            onPress={() => handleAnswer(opt)}
+            disabled={showSequence}
+          >
+            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 18 }}>{opt}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+};
+
+const OddOneOutGame = ({ onComplete, onClose }) => {
+  const ICON_POOL = ['planet', 'rocket', 'star', 'leaf', 'football', 'diamond'];
+  const [round, setRound] = useState(1);
+  const [score, setScore] = useState(0);
+  const [grid, setGrid] = useState([]);
+  const [oddIndex, setOddIndex] = useState(0);
+  const [finished, setFinished] = useState(false);
+  const TOTAL_ROUNDS = 8;
+
+  const buildGrid = useCallback(() => {
+    const base = ICON_POOL[Math.floor(Math.random() * ICON_POOL.length)];
+    let odd = ICON_POOL[Math.floor(Math.random() * ICON_POOL.length)];
+    while (odd === base) {
+      odd = ICON_POOL[Math.floor(Math.random() * ICON_POOL.length)];
+    }
+    const idx = Math.floor(Math.random() * 9);
+    setOddIndex(idx);
+    setGrid(Array.from({ length: 9 }, (_, i) => (i === idx ? odd : base)));
+  }, []);
+
+  useEffect(() => {
+    buildGrid();
+  }, [buildGrid]);
+
+  const pickCell = (idx) => {
+    if (idx === oddIndex) {
+      setScore((prev) => prev + 16);
+    }
+    if (round >= TOTAL_ROUNDS) {
+      setFinished(true);
+      return;
+    }
+    setRound((prev) => prev + 1);
+    buildGrid();
+  };
+
+  if (finished) {
+    return (
+      <View style={styles.gameContainer}>
+        <View style={styles.resultScreen}>
+          <Ionicons name="eye" size={72} color="#06b6d4" />
+          <Text style={styles.finalScore}>{score}</Text>
+          <Text style={styles.finalLabel}>نقطة ملاحظة</Text>
+          <Text style={styles.finalSub}>لعبة جديدة: اكتشف المختلف بسرعة</Text>
+          <TouchableOpacity style={styles.exitBtn} onPress={() => onComplete(score, 'win')}>
+            <Text style={styles.exitText}>تحصيل النقاط</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.exitBtn, { marginTop: 10, backgroundColor: '#334155' }]} onPress={onClose}>
+            <Text style={styles.exitText}>إغلاق</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.gameContainer}>
+      <View style={styles.gameHeader}>
+        <TouchableOpacity onPress={onClose} style={styles.headerBtn}>
+          <Ionicons name="arrow-back" size={24} color="#FFF" />
+        </TouchableOpacity>
+        <Text style={styles.gameTitle}>Odd One Out</Text>
+        <View style={styles.headerBtn}>
+          <Text style={styles.scoreText}>{score}</Text>
+        </View>
+      </View>
+
+      <Text style={{ color: '#cbd5e1', textAlign: 'center', marginTop: 14 }}>
+        الجولة {round}/{TOTAL_ROUNDS} — اختر الرمز المختلف
+      </Text>
+      <View style={{ padding: 14, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+        {grid.map((iconName, idx) => (
+          <TouchableOpacity
+            key={`${iconName}-${idx}`}
+            style={{
+              width: '31%',
+              aspectRatio: 1,
+              marginBottom: 10,
+              borderRadius: 14,
+              backgroundColor: 'rgba(255,255,255,0.06)',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onPress={() => pickCell(idx)}
+          >
+            <Ionicons name={resolveIconName(iconName, 'ellipse')} size={30} color="#f8fafc" />
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+};
+
 // ==================== MAIN GAMES SCREEN ====================
 const GamesScreen = ({
   user,
@@ -1174,7 +1474,7 @@ const GamesScreen = ({
   const adRewardedRef = useRef(false);
   const userId = user?.id || user?.user_id;
 
-  // كتالوج الألعاب الجديد (12 لعبة: فردي + أونلاين)
+  // كتالوج الألعاب: 12 أساسية + ألعاب جديدة مستقلة
   const games = useMemo(() => ([
     {
       id: 'aiquest',
@@ -1514,6 +1814,57 @@ const GamesScreen = ({
       badge: '',
       trend: '',
     },
+    {
+      id: 'reactiontap',
+      name: 'Reaction Tap',
+      icon: 'flash',
+      secondaryIcon: 'timer-outline',
+      colors: ['rgba(239,68,68,0.46)', 'rgba(249,115,22,0.34)'],
+      orbGradient: ['#ef4444', '#f97316'],
+      accent: '#ef4444',
+      description: 'إصابة أهداف متحركة بسرعة فائقة خلال 30 ثانية.',
+      maxPoints: 24,
+      online: false,
+      onlineCost: 0,
+      backendGameId: 'reactiontap',
+      category: 'سرعة',
+      badge: 'New',
+      trend: 'Hot',
+    },
+    {
+      id: 'sequencesprint',
+      name: 'Sequence Sprint',
+      icon: 'analytics',
+      secondaryIcon: 'sparkles-outline',
+      colors: ['rgba(16,185,129,0.46)', 'rgba(6,182,212,0.34)'],
+      orbGradient: ['#10b981', '#06b6d4'],
+      accent: '#10b981',
+      description: 'حل سلاسل رقمية منطقية بجولات قصيرة وسريعة.',
+      maxPoints: 26,
+      online: false,
+      onlineCost: 0,
+      backendGameId: 'sequencesprint',
+      category: 'منطق',
+      badge: 'Fresh',
+      trend: '',
+    },
+    {
+      id: 'oddoneout',
+      name: 'Odd One Out',
+      icon: 'eye',
+      secondaryIcon: 'grid-outline',
+      colors: ['rgba(59,130,246,0.46)', 'rgba(124,58,237,0.34)'],
+      orbGradient: ['#3b82f6', '#8b5cf6'],
+      accent: '#3b82f6',
+      description: 'اكتشف الرمز المختلف ضمن شبكة بصرية متغيرة.',
+      maxPoints: 25,
+      online: false,
+      onlineCost: 0,
+      backendGameId: 'oddoneout',
+      category: 'ملاحظة',
+      badge: 'Vision',
+      trend: '',
+    },
   ]), []);
 
   const GAME_COVER_MAP = useMemo(() => ({
@@ -1530,6 +1881,9 @@ const GamesScreen = ({
     colorswitch: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/79182119b4edb90ee55759d8b825745a99a765ec39d10e36ff547c01b5c07d08.png',
     riddles: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/bcdacd75d090c4626f5432d13b9b6c4c4560cc34282e9424de1cbc6732f06abf.png',
     millionaire: 'https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png',
+    reactiontap: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/023917c49fab8b87593072b51baa9584ecaec8bddecc94d124c69166ba378dad.png',
+    sequencesprint: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/3db2e3f1eb9a0f47dec7b567bf019a25c2c537936ae0045036c460a5f41d9901.png',
+    oddoneout: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/81b25ff7dff1c22531ebee6eb6d1b1c78ed8dbcf4fd47ded3f3e8b36b7e331c5.png',
   }), []);
 
   const visibleGames = useMemo(() => {
@@ -1564,7 +1918,13 @@ const GamesScreen = ({
   }, [games, visibleGames]);
   const resolveBackendGameId = useCallback((gameId) => {
     const game = getGameById(gameId);
-    return game?.backendGameId || gameId;
+    const backendId = game?.backendGameId || gameId;
+    const fallbackMap = {
+      reactiontap: 'colorswitch',
+      sequencesprint: 'mathrace',
+      oddoneout: 'memory',
+    };
+    return fallbackMap[backendId] || backendId;
   }, [getGameById]);
 
   useEffect(() => {
@@ -2033,6 +2393,12 @@ const GamesScreen = ({
         return <WordRaceGame {...gameProps} mode="master" />;
       case 'colorswitch':
         return <ColorSwitchGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
+      case 'reactiontap':
+        return <ReactionTapGame onComplete={handleGameComplete} onClose={closeGame} />;
+      case 'sequencesprint':
+        return <SequenceSprintGame onComplete={handleGameComplete} onClose={closeGame} />;
+      case 'oddoneout':
+        return <OddOneOutGame onComplete={handleGameComplete} onClose={closeGame} />;
       case 'millionaire':
         return <MillionaireScreen onComplete={handleGameComplete} onClose={closeGame} />;
       default:
@@ -2070,7 +2436,7 @@ const GamesScreen = ({
           </TouchableOpacity>
           <View style={styles.headerTitleContainer}>
             <Text style={styles.mainTitle}>الألعاب</Text>
-            <Text style={styles.mainSub}>{`${games.length} تجربة متطورة • فردي + أونلاين`}</Text>
+            <Text style={styles.mainSub}>{`${visibleGames.length} تجربة متطورة • فردي + أونلاين`}</Text>
           </View>
           <View style={{ width: 44 }} />
         </View>
