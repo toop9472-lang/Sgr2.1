@@ -46,6 +46,28 @@ const resolveIconName = (iconName, fallback = 'ellipse-outline') => (
 const FREE_PLAYS_PER_GAME = 2;
 const AD_UNLOCK_SESSIONS = 3;
 const ONLINE_GLOBAL_CHAT_INVITE_COST = 5;
+const EXTERNAL_GAME_URLS = {
+  aiquest: 'https://mikkun.github.io/evade-and-destroy/',
+  chess: 'https://hextris.io/',
+  tictactoe: 'https://susam.net/invaders.html',
+  tactix: 'https://rblopes.github.io/phaser-3-snake-game/',
+  memory: 'https://chanmeng666.github.io/html-brick-game/',
+  snake: 'https://rblopes.github.io/phaser-3-snake-game/',
+  brickbreaker: 'https://chanmeng666.github.io/html-brick-game/',
+  puzzle: 'https://phaserjs.github.io/editor-example-volcano/',
+  trivia: 'http://voithos.io/elemental-one',
+  mathrace: 'http://hexgl.bkcore.com',
+  wordrace: 'http://gamegur-us.github.io/circushtml5',
+  colorswitch: 'https://hextris.io/',
+  riddles: 'https://susam.net/invaders.html',
+  millionaire: 'https://mikkun.github.io/evade-and-destroy/',
+  brickstormx: 'https://chanmeng666.github.io/html-brick-game/',
+  puzzlemaster: 'https://phaserjs.github.io/editor-example-volcano/',
+  triviaplus: 'http://voithos.io/elemental-one',
+  wordmaster: 'http://gamegur-us.github.io/circushtml5',
+  reactiontap: 'https://mikkun.github.io/evade-and-destroy/',
+  sequencesprint: 'https://hextris.io/',
+};
 const IMPORTED_PRO_GAME_IDS = [
   'aiquest',
   'chess',
@@ -391,7 +413,7 @@ const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
       <View style={styles.importedWebWrap}>
         <WebView
           originWhitelist={['*']}
-          source={{ html: buildImportedGameHtml(game) }}
+          source={game?.externalUrl ? { uri: game.externalUrl } : { html: buildImportedGameHtml(game) }}
           javaScriptEnabled
           domStorageEnabled
           onMessage={(event) => {
@@ -2217,6 +2239,7 @@ const GamesScreen = ({
       .filter(Boolean)
       .map((game) => ({
         ...game,
+        externalUrl: EXTERNAL_GAME_URLS[game.id] || null,
         coverImage: GAME_COVER_MAP[game.id] || GAME_COVER_MAP[game.backendGameId],
       }));
   }, [GAME_COVER_MAP, games]);
