@@ -55,16 +55,16 @@ const EXTERNAL_GAME_URLS = {
   snake: 'https://rblopes.github.io/phaser-3-snake-game/',
   brickbreaker: 'https://chanmeng666.github.io/html-brick-game/',
   puzzle: 'https://phaserjs.github.io/editor-example-volcano/',
-  trivia: 'http://voithos.io/elemental-one',
-  mathrace: 'http://hexgl.bkcore.com',
-  wordrace: 'http://gamegur-us.github.io/circushtml5',
+  trivia: 'https://hextris.io/',
+  mathrace: 'https://play2048.co/',
+  wordrace: 'https://hextris.io/',
   colorswitch: 'https://hextris.io/',
   riddles: 'https://susam.net/invaders.html',
   millionaire: 'https://mikkun.github.io/evade-and-destroy/',
   brickstormx: 'https://chanmeng666.github.io/html-brick-game/',
   puzzlemaster: 'https://phaserjs.github.io/editor-example-volcano/',
-  triviaplus: 'http://voithos.io/elemental-one',
-  wordmaster: 'http://gamegur-us.github.io/circushtml5',
+  triviaplus: 'https://play2048.co/',
+  wordmaster: 'https://hextris.io/',
   reactiontap: 'https://mikkun.github.io/evade-and-destroy/',
   sequencesprint: 'https://hextris.io/',
 };
@@ -381,11 +381,23 @@ const buildImportedGameHtml = (game) => {
 </html>`;
 };
 
+const getOriginSafe = (url) => {
+  try {
+    return new URL(url).origin;
+  } catch (_) {
+    return null;
+  }
+};
+
 const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
   const [finished, setFinished] = useState(false);
+  const [useExternalSource, setUseExternalSource] = useState(Boolean(game?.externalUrl));
+  const [webLoading, setWebLoading] = useState(true);
   const completedRef = useRef(false);
+  const fallbackNotifiedRef = useRef(false);
+  const externalOrigin = useMemo(() => getOriginSafe(game?.externalUrl || ''), [game?.externalUrl]);
 
   const claimPoints = useCallback(() => {
     if (completedRef.current) return;
@@ -393,6 +405,57 @@ const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
     const calculated = Math.max(8, Math.min(36, Math.floor(score / 18)));
     onComplete(calculated, mode === 'online' ? 'draw' : 'win');
   }, [mode, onComplete, score]);
+
+  useEffect(() => {
+    completedRef.current = false;
+    fallbackNotifiedRef.current = false;
+    setScore(0);
+    setLives(3);
+    setFinished(false);
+    setWebLoading(true);
+    setUseExternalSource(Boolean(game?.externalUrl));
+  }, [game?.id, game?.externalUrl]);
+
+  const fallbackToInternal = useCallback(() => {
+    if (!useExternalSource) return;
+    setUseExternalSource(false);
+    setWebLoading(false);
+    if (fallbackNotifiedRef.current) return;
+    fallbackNotifiedRef.current = true;
+    Alert.alert(
+      'تشغيل داخلي',
+      'تم إبقاء اللعبة داخل التطبيق وتحويلها لمحرك داخلي لضمان العمل بدون فتح أي صفحة خارجية.',
+    );
+  }, [useExternalSource]);
+
+  const allowNavigation = useCallback((request) => {
+    if (!useExternalSource || !externalOrigin) return true;
+    const url = request?.url || '';
+    if (
+      url.startsWith('about:blank')
+      || url.startsWith('data:')
+      || url.startsWith('javascript:')
+    ) return true;
+    try {
+      return new URL(url).origin === externalOrigin;
+    } catch (_) {
+      return false;
+    }
+  }, [externalOrigin, useExternalSource]);
+
+  const webGuardScript = `(() => {
+    window.open = () => null;
+    document.addEventListener('click', function(e) {
+      var node = e.target;
+      while (node && node.tagName !== 'A') node = node.parentElement;
+      if (!node || !node.getAttribute) return;
+      var href = node.getAttribute('href') || '';
+      if (href && href !== '#' && !href.startsWith('javascript:')) {
+        e.preventDefault();
+      }
+    }, true);
+    true;
+  })();`;
 
   return (
     <View style={styles.importedGameContainer}>
@@ -402,7 +465,9 @@ const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={styles.importedGameTitle}>{game?.name || 'Arcade'}</Text>
-          <Text style={styles.importedGameSub}>Imported HD Action Engine</Text>
+          <Text style={styles.importedGameSub}>
+            {useExternalSource ? 'مستورد داخل التطبيق' : 'محرك داخلي داخل التطبيق'}
+          </Text>
         </View>
         <View style={styles.importedStatPill}>
           <Ionicons name="heart" size={14} color="#f43f5e" />
@@ -412,10 +477,33 @@ const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
 
       <View style={styles.importedWebWrap}>
         <WebView
-          originWhitelist={['*']}
-          source={game?.externalUrl ? { uri: game.externalUrl } : { html: buildImportedGameHtml(game) }}
+          originWhitelist={['https://*', 'http://*', 'about:blank', 'data:*']}
+          source={useExternalSource && game?.externalUrl ? { uri: game.externalUrl } : { html: buildImportedGameHtml(game) }}
           javaScriptEnabled
           domStorageEnabled
+          injectedJavaScript={useExternalSource ? webGuardScript : undefined}
+          setSupportMultipleWindows={false}
+          javaScriptCanOpenWindowsAutomatically={false}
+          allowsBackForwardNavigationGestures={false}
+          mixedContentMode="never"
+          onLoadStart={() => setWebLoading(true)}
+          onLoadEnd={() => setWebLoading(false)}
+          onShouldStartLoadWithRequest={(request) => {
+            const allowed = allowNavigation(request);
+            if (!allowed) fallbackToInternal();
+            return allowed;
+          }}
+          onNavigationStateChange={(navState) => {
+            if (!useExternalSource || !externalOrigin || !navState?.url) return;
+            try {
+              const navOrigin = new URL(navState.url).origin;
+              if (navOrigin !== externalOrigin) fallbackToInternal();
+            } catch (_) {
+              fallbackToInternal();
+            }
+          }}
+          onError={() => fallbackToInternal()}
+          onHttpError={() => fallbackToInternal()}
           onMessage={(event) => {
             try {
               const data = JSON.parse(event.nativeEvent.data || '{}');
@@ -426,6 +514,12 @@ const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
           }}
           style={styles.importedWebView}
         />
+        {webLoading && (
+          <View style={styles.importedWebLoading}>
+            <ActivityIndicator size="small" color="#60a5fa" />
+            <Text style={styles.importedWebLoadingText}>جاري تحميل اللعبة داخل التطبيق...</Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.importedFooter}>
@@ -433,6 +527,12 @@ const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
           <Ionicons name="flash" size={16} color="#fbbf24" />
           <Text style={styles.importedScoreText}>Score {score}</Text>
         </View>
+        {useExternalSource ? (
+          <TouchableOpacity style={styles.importedSwitchBtn} onPress={() => setUseExternalSource(false)}>
+            <Ionicons name="shield-checkmark" size={14} color="#93c5fd" />
+            <Text style={styles.importedSwitchText}>وضع داخلي</Text>
+          </TouchableOpacity>
+        ) : null}
         <TouchableOpacity
           style={[styles.importedClaimBtn, finished && styles.importedClaimBtnReady]}
           onPress={claimPoints}
@@ -3739,6 +3839,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0b1020',
   },
+  importedWebLoading: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(10,10,15,0.55)',
+    gap: 8,
+  },
+  importedWebLoadingText: {
+    color: 'rgba(255,255,255,0.82)',
+    fontSize: 12,
+    fontWeight: '600',
+  },
   importedFooter: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -3759,6 +3871,23 @@ const styles = StyleSheet.create({
   importedScoreText: {
     color: '#fde68a',
     fontSize: 13,
+    fontWeight: '700',
+  },
+  importedSwitchBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(59,130,246,0.14)',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(147,197,253,0.4)',
+  },
+  importedSwitchText: {
+    color: '#bfdbfe',
+    fontSize: 12,
     fontWeight: '700',
   },
   importedClaimBtn: {
