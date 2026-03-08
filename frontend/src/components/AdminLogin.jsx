@@ -42,7 +42,7 @@ const AdminLogin = ({ onAdminLogin }) => {
       localStorage.setItem('admin_data', JSON.stringify(data.user));
 
       toast({
-        title: '✅ مرحباً بك',
+        title: 'مرحباً بك',
         description: `أهلاً ${data.user.name}!`
       });
 
@@ -53,7 +53,7 @@ const AdminLogin = ({ onAdminLogin }) => {
     } catch (error) {
       console.error('Admin login error:', error);
       toast({
-        title: '❌ خطأ',
+        title: 'خطأ',
         description: error.message,
         variant: 'destructive'
       });
@@ -67,7 +67,7 @@ const AdminLogin = ({ onAdminLogin }) => {
       <Card className="w-full max-w-md shadow-2xl border-0 bg-gray-800/90 backdrop-blur">
         <CardHeader className="text-center pb-6 pt-8">
           <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center shadow-lg">
-            <span className="text-3xl">🔐</span>
+            <span className="text-xl font-bold text-white">ADM</span>
           </div>
           <CardTitle className="text-2xl font-bold text-white">
             لوحة التحكم

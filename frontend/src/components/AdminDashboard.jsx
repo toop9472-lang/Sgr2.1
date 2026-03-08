@@ -74,7 +74,7 @@ const AdminDashboard = ({ admin, onLogout }) => {
     } catch (error) {
       console.error('Failed to load dashboard:', error);
       toast({
-        title: '❌ خطأ',
+        title: 'خطأ',
         description: 'فشل تحميل البيانات',
         variant: 'destructive'
       });
@@ -104,10 +104,10 @@ const AdminDashboard = ({ admin, onLogout }) => {
     try {
       const headers = getAuthHeaders();
       await axios.put(`${API}/admin/users/${userId}/ban`, null, { headers });
-      toast({ title: '✅ تم', description: 'تم حظر المستخدم' });
+      toast({ title: 'تم', description: 'تم حظر المستخدم' });
       loadUsers(usersPage, userSearch);
     } catch (error) {
-      toast({ title: '❌ خطأ', description: 'فشل حظر المستخدم', variant: 'destructive' });
+      toast({ title: 'خطأ', description: 'فشل حظر المستخدم', variant: 'destructive' });
     }
   };
 
@@ -115,23 +115,23 @@ const AdminDashboard = ({ admin, onLogout }) => {
     try {
       const headers = getAuthHeaders();
       await axios.put(`${API}/admin/users/${userId}/unban`, null, { headers });
-      toast({ title: '✅ تم', description: 'تم رفع الحظر' });
+      toast({ title: 'تم', description: 'تم رفع الحظر' });
       loadUsers(usersPage, userSearch);
     } catch (error) {
-      toast({ title: '❌ خطأ', description: 'فشل رفع الحظر', variant: 'destructive' });
+      toast({ title: 'خطأ', description: 'فشل رفع الحظر', variant: 'destructive' });
     }
   };
 
   const handleDeleteUser = async (userId, userName) => {
-    if (!window.confirm(`⚠️ تحذير: سيتم حذف المستخدم "${userName}" وجميع بياناته نهائياً. هل أنت متأكد؟`)) return;
+    if (!window.confirm(`تحذير: سيتم حذف المستخدم "${userName}" وجميع بياناته نهائياً. هل أنت متأكد؟`)) return;
     
     try {
       const headers = getAuthHeaders();
       await axios.delete(`${API}/admin/users/${userId}`, { headers });
-      toast({ title: '✅ تم', description: 'تم حذف المستخدم' });
+      toast({ title: 'تم', description: 'تم حذف المستخدم' });
       loadUsers(usersPage, userSearch);
     } catch (error) {
-      toast({ title: '❌ خطأ', description: 'فشل حذف المستخدم', variant: 'destructive' });
+      toast({ title: 'خطأ', description: 'فشل حذف المستخدم', variant: 'destructive' });
     }
   };
 
@@ -141,7 +141,7 @@ const AdminDashboard = ({ admin, onLogout }) => {
       await axios.put(`${API}/admin/dashboard/withdrawals/${withdrawalId}/approve`, {}, { headers });
       
       toast({
-        title: '✅ تمت الموافقة',
+        title: 'تمت الموافقة',
         description: 'تمت الموافقة على طلب السحب',
       });
       
@@ -149,7 +149,7 @@ const AdminDashboard = ({ admin, onLogout }) => {
     } catch (error) {
       console.error('Approve error:', error);
       toast({
-        title: '❌ خطأ',
+        title: 'خطأ',
         description: 'فشلت الموافقة',
         variant: 'destructive'
       });
@@ -165,7 +165,7 @@ const AdminDashboard = ({ admin, onLogout }) => {
       await axios.put(`${API}/admin/dashboard/withdrawals/${withdrawalId}/reject`, { reason }, { headers });
       
       toast({
-        title: '✅ تم الرفض',
+        title: 'تم الرفض',
         description: 'تم رفض الطلب وإرجاع النقاط',
       });
       
@@ -173,7 +173,7 @@ const AdminDashboard = ({ admin, onLogout }) => {
     } catch (error) {
       console.error('Reject error:', error);
       toast({
-        title: '❌ خطأ',
+        title: 'خطأ',
         description: 'فشل الرفض',
         variant: 'destructive'
       });
@@ -186,7 +186,7 @@ const AdminDashboard = ({ admin, onLogout }) => {
       await axios.put(`${API}/admin/dashboard/ads/${adId}/approve`, {}, { headers });
       
       toast({
-        title: '✅ تمت الموافقة',
+        title: 'تمت الموافقة',
         description: 'تم تفعيل الإعلان',
       });
       
@@ -194,7 +194,7 @@ const AdminDashboard = ({ admin, onLogout }) => {
     } catch (error) {
       console.error('Approve ad error:', error);
       toast({
-        title: '❌ خطأ',
+        title: 'خطأ',
         description: 'فشلت الموافقة',
         variant: 'destructive'
       });
@@ -210,7 +210,7 @@ const AdminDashboard = ({ admin, onLogout }) => {
       await axios.put(`${API}/admin/dashboard/ads/${adId}/reject`, { reason }, { headers });
       
       toast({
-        title: '✅ تم الرفض',
+        title: 'تم الرفض',
         description: 'تم رفض الإعلان',
       });
       
@@ -218,7 +218,7 @@ const AdminDashboard = ({ admin, onLogout }) => {
     } catch (error) {
       console.error('Reject ad error:', error);
       toast({
-        title: '❌ خطأ',
+        title: 'خطأ',
         description: 'فشل الرفض',
         variant: 'destructive'
       });
@@ -383,7 +383,7 @@ const AdminDashboard = ({ admin, onLogout }) => {
               <FileText className="w-3 h-3" /> طلبات التطوير
             </TabsTrigger>
             <TabsTrigger value="rewards" className="flex-1 min-w-[100px] text-xs py-2 text-gray-300 data-[state=active]:bg-white/10 data-[state=active]:text-white">
-              🎁 المكافآت
+              المكافآت
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex-1 min-w-[100px] text-xs py-2 text-gray-300 data-[state=active]:bg-white/10 data-[state=active]:text-white">
               الإعدادات
@@ -631,13 +631,13 @@ const RewardsSettingsContent = ({ getAuthHeaders }) => {
     daily_limit: 50,
     min_withdrawal: 500,
     daily_challenges: [
-      { title: 'المشاهد النشط', target: 5, reward: 25, icon: '👁️', desc: 'شاهد 5 إعلانات', enabled: true },
-      { title: 'جامع النقاط', target: 50, reward: 30, icon: '⭐', desc: 'اكسب 50 نقطة', enabled: true },
-      { title: 'المثابر', target: 10, reward: 50, icon: '🔥', desc: 'شاهد 10 إعلانات متتالية', enabled: true },
+      { title: 'المشاهد النشط', target: 5, reward: 25, icon: 'عين', desc: 'شاهد 5 إعلانات', enabled: true },
+      { title: 'جامع النقاط', target: 50, reward: 30, icon: 'نجمة', desc: 'اكسب 50 نقطة', enabled: true },
+      { title: 'المثابر', target: 10, reward: 50, icon: 'نار', desc: 'شاهد 10 إعلانات متتالية', enabled: true },
     ],
     tips: [
-      { icon: '💡', text: 'شاهد 10 إعلانات = 50 نقطة!', enabled: true },
-      { icon: '🎯', text: 'كل 500 نقطة = 1 دولار', enabled: true },
+      { icon: 'فكرة', text: 'شاهد 10 إعلانات = 50 نقطة!', enabled: true },
+      { icon: 'هدف', text: 'كل 500 نقطة = 1 دولار', enabled: true },
       { icon: '⚡', text: 'الإعلانات الجديدة تعطي نقاط أكثر', enabled: true },
     ]
   });
@@ -667,9 +667,9 @@ const RewardsSettingsContent = ({ getAuthHeaders }) => {
     try {
       const headers = getAuthHeaders();
       await axios.put(`${API}/admin/settings/rewards`, settings, { headers });
-      toast({ title: '✅ تم الحفظ', description: 'تم حفظ إعدادات المكافآت بنجاح' });
+      toast({ title: 'تم الحفظ', description: 'تم حفظ إعدادات المكافآت بنجاح' });
     } catch (error) {
-      toast({ title: '❌ خطأ', description: 'فشل حفظ الإعدادات', variant: 'destructive' });
+      toast({ title: 'خطأ', description: 'فشل حفظ الإعدادات', variant: 'destructive' });
     } finally {
       setIsSaving(false);
     }
@@ -697,7 +697,7 @@ const RewardsSettingsContent = ({ getAuthHeaders }) => {
       <Card className="bg-[#111118] border-white/10">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2 text-white">
-            ⚙️ إعدادات النقاط الأساسية
+            إعدادات النقاط الأساسية
           </CardTitle>
           <CardDescription className="text-gray-400">تحكم في قيم النقاط والمكافآت</CardDescription>
         </CardHeader>
@@ -755,7 +755,7 @@ const RewardsSettingsContent = ({ getAuthHeaders }) => {
       {/* التحديات اليومية */}
       <Card className="bg-[#111118] border-white/10">
         <CardHeader>
-          <CardTitle className="text-lg text-white">🎯 التحديات اليومية</CardTitle>
+          <CardTitle className="text-lg text-white">التحديات اليومية</CardTitle>
           <CardDescription className="text-gray-400">تظهر للمستخدمين في الصفحة الرئيسية</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -809,7 +809,7 @@ const RewardsSettingsContent = ({ getAuthHeaders }) => {
       {/* النصائح */}
       <Card className="bg-[#111118] border-white/10">
         <CardHeader>
-          <CardTitle className="text-lg text-white">💡 نصائح الصفحة الرئيسية</CardTitle>
+          <CardTitle className="text-lg text-white">نصائح الصفحة الرئيسية</CardTitle>
           <CardDescription className="text-gray-400">تظهر بشكل متحرك للمستخدمين</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -840,7 +840,7 @@ const RewardsSettingsContent = ({ getAuthHeaders }) => {
         disabled={isSaving}
         className="w-full bg-indigo-600 hover:bg-indigo-700"
       >
-        {isSaving ? '⏳ جاري الحفظ...' : '💾 حفظ الإعدادات'}
+        {isSaving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
       </Button>
     </div>
   );
