@@ -26,6 +26,17 @@ const EXTRA_FALLBACK_APIS = [
 ].map(normalizeApiBaseUrl).filter(Boolean);
 const API_BASE_CANDIDATES = Array.from(new Set([API_URL, ...envCandidates, ...EXTRA_FALLBACK_APIS]));
 let activeApiBase = API_BASE_CANDIDATES[0] || API_URL;
+const isHtmlContentType = (contentType = '') => contentType.toLowerCase().includes('text/html');
+const isApiEndpoint = (endpoint = '') => typeof endpoint === 'string' && endpoint.startsWith('/api/');
+const buildServiceUnavailableResponse = (message = 'تعذر الوصول لخدمة تسجيل الدخول. تحقق من الخادم.') => (
+  new Response(
+    JSON.stringify({ detail: message }),
+    {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' },
+    },
+  )
+);
 
 // Connection check timeout - increased for better reliability
 const CONNECTION_TIMEOUT = 20000; // 20 seconds
@@ -91,7 +102,8 @@ const checkConnection = async () => {
             },
           });
 
-          if (response.ok) {
+          const contentType = response.headers?.get?.('content-type') || '';
+          if (response.ok && !isHtmlContentType(contentType)) {
             connected = true;
             activeApiBase = baseUrl;
             break;
@@ -220,6 +232,7 @@ export const api = {
       let response = null;
       let lastNetworkError = null;
       let lastNotFoundResponse = null;
+      let lastHtmlApiResponse = null;
 
       for (const baseUrl of baseCandidates) {
         // Log the request in development only
@@ -229,6 +242,13 @@ export const api = {
           // If this base returns endpoint-not-found, try next base before failing auth/login flows.
           if ([404, 405].includes(candidateResponse.status)) {
             lastNotFoundResponse = candidateResponse;
+            continue;
+          }
+          const candidateContentType = candidateResponse.headers?.get?.('content-type') || '';
+          // Some fallback domains return SPA HTML with 200 for API paths.
+          // Treat as invalid API target and continue probing other bases.
+          if (isApiEndpoint(endpoint) && candidateResponse.ok && isHtmlContentType(candidateContentType)) {
+            lastHtmlApiResponse = candidateResponse;
             continue;
           }
           response = candidateResponse;
@@ -249,6 +269,9 @@ export const api = {
       }
 
       if (!response) {
+        if (lastHtmlApiResponse) {
+          throw new Error('NO_CONNECTION');
+        }
         if (lastNotFoundResponse) return lastNotFoundResponse;
         throw lastNetworkError || new Error('NO_CONNECTION');
       }
@@ -322,11 +345,18 @@ export const api = {
     const clonedResponse = response.clone();
     
     if (response.ok) {
+      const contentType = response.headers?.get?.('content-type') || '';
+      if (isHtmlContentType(contentType)) {
+        return buildServiceUnavailableResponse();
+      }
       try {
         const data = await clonedResponse.json();
+        if (!data?.token) {
+          return buildServiceUnavailableResponse();
+        }
         this.setTokens(data.token, data.refresh_token);
       } catch (e) {
-        console.log('Token setting skipped');
+        return buildServiceUnavailableResponse();
       }
     }
     
@@ -343,11 +373,20 @@ export const api = {
     const clonedResponse = response.clone();
     
     if (response.ok) {
+      const contentType = response.headers?.get?.('content-type') || '';
+      if (isHtmlContentType(contentType)) {
+        return buildServiceUnavailableResponse('تعذر الوصول لخدمة التسجيل. تحقق من الخادم.');
+      }
       try {
         const data = await clonedResponse.json();
-        this.setTokens(data.token, data.refresh_token);
+        if (!data || typeof data !== 'object') {
+          return buildServiceUnavailableResponse('تعذر الوصول لخدمة التسجيل. تحقق من الخادم.');
+        }
+        if (data.token) {
+          this.setTokens(data.token, data.refresh_token);
+        }
       } catch (e) {
-        console.log('Token setting skipped');
+        return buildServiceUnavailableResponse('تعذر الوصول لخدمة التسجيل. تحقق من الخادم.');
       }
     }
     

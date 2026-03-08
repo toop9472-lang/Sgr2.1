@@ -61,7 +61,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.saqr.rewards",
-      "buildNumber": "83",
+      "buildNumber": "84",
       "usesAppleSignIn": true,
       "config": {
         "usesNonExemptEncryption": false
@@ -154,7 +154,7 @@
         "backgroundColor": "#0a0a0f"
       },
       "package": "com.saqr.rewards",
-      "versionCode": 83,
+      "versionCode": 84,
       "softwareKeyboardLayoutMode": "resize",
       "intentFilters": [
         {
