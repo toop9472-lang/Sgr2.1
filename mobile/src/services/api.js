@@ -21,6 +21,7 @@ const envCandidates = [
 
 const API_URL = envCandidates[0] || DEFAULT_API_URL;
 const EXTRA_FALLBACK_APIS = [
+  'https://app-store-revival.preview.emergentagent.com/backend',
   'https://quality-restore-1.preview.emergentagent.com',
 ].map(normalizeApiBaseUrl).filter(Boolean);
 const API_BASE_CANDIDATES = Array.from(new Set([API_URL, ...envCandidates, ...EXTRA_FALLBACK_APIS]));
@@ -218,12 +219,19 @@ export const api = {
       const baseCandidates = Array.from(new Set([this.baseUrl, activeApiBase, ...API_BASE_CANDIDATES].filter(Boolean)));
       let response = null;
       let lastNetworkError = null;
+      let lastNotFoundResponse = null;
 
       for (const baseUrl of baseCandidates) {
         // Log the request in development only
         debugLog(`API Request: ${baseUrl}${endpoint}`);
         try {
-          response = await doRequest(baseUrl);
+          const candidateResponse = await doRequest(baseUrl);
+          // If this base returns endpoint-not-found, try next base before failing auth/login flows.
+          if ([404, 405].includes(candidateResponse.status)) {
+            lastNotFoundResponse = candidateResponse;
+            continue;
+          }
+          response = candidateResponse;
           activeApiBase = baseUrl;
           this.baseUrl = baseUrl;
           this.BASE_URL = baseUrl;
@@ -241,6 +249,7 @@ export const api = {
       }
 
       if (!response) {
+        if (lastNotFoundResponse) return lastNotFoundResponse;
         throw lastNetworkError || new Error('NO_CONNECTION');
       }
       

@@ -34,31 +34,57 @@ const ioniconGlyphMap = Ionicons?.glyphMap || {};
 const resolveIconName = (iconName, fallback = 'ellipse-outline') => (
   ioniconGlyphMap[iconName] ? iconName : fallback
 );
-const SOLO_ROUND_DIAMOND_COST = 1;
+const SOLO_ROUND_DIAMOND_COST = 20;
 const AD_WATCH_DURATION_SECONDS = 30;
 const GEMS_SECONDS_PER_UNIT = 60;
 const ONLINE_GLOBAL_CHAT_INVITE_COST = 5;
+const toThumbCover = (targetUrl) => (
+  targetUrl ? `https://image.thum.io/get/width/600/crop/600/noanimate/${targetUrl}` : null
+);
 const EXTERNAL_GAME_URLS = {
-  aiquest: 'https://mikkun.github.io/evade-and-destroy/',
+  aiquest: 'https://shoot.nothans.com/',
   chess: 'https://www.chess.com/play/computer',
-  tictactoe: 'https://susam.net/invaders.html',
-  tactix: 'https://play2048.co/',
+  tictactoe: 'https://enclavegames.github.io/Enclave-Phaser-Template/',
+  tactix: 'https://orb.enclavegames.com/',
   memory: 'https://hextris.io/',
-  snake: 'https://rblopes.github.io/phaser-3-snake-game/',
-  brickbreaker: 'https://chanmeng666.github.io/html-brick-game/',
-  puzzle: 'https://phaserjs.github.io/editor-example-volcano/',
+  snake: 'https://p4th4k.github.io/NotYourAverageSnake/frontend/index.html',
+  brickbreaker: 'https://games50.github.io/WebGl-Demo/',
+  // Keep this one internal for balanced, completable mobile stages.
+  puzzle: null,
   trivia: 'https://scottrippey.github.io/xquestjs/',
-  mathrace: 'https://fk652.github.io/Galactic-Defender/',
+  mathrace: 'https://www.balanc3dgame.com/',
   wordrace: 'https://ale4ero.github.io/Inter-Galactic/',
-  colorswitch: 'https://hunghvu.github.io/8-bit-armageddon/',
-  riddles: 'https://sentrychris.github.io/undeadbytes/',
+  colorswitch: 'https://j8r.github.io/Orball/',
+  riddles: 'https://fk652.github.io/Galactic-Defender/',
   millionaire: 'https://lorgan3.github.io/sorcerers/',
-  brickstormx: 'https://jignasp.github.io/Alien-Attacker/',
-  puzzlemaster: 'https://szvitek.github.io/phaser-demo/',
-  triviaplus: 'https://2048game.com/',
+  brickstormx: 'https://erichlof.github.io/AntiGravity-Pool/AntiGravityPool.html',
+  puzzlemaster: 'https://www.balanc3dgame.com/',
+  triviaplus: 'https://enclavegames.github.io/Enclave-Phaser-Template/',
   wordmaster: 'https://flappybird.io/',
-  reactiontap: 'https://www.google.com/logos/2010/pacman10-i.html',
-  sequencesprint: 'https://www.sudokuonline.io/',
+  reactiontap: 'https://pacman.live/',
+  sequencesprint: 'https://j8r.github.io/Orball/',
+};
+const GAME_COVER_IMAGES = {
+  aiquest: toThumbCover('https://shoot.nothans.com/'),
+  chess: toThumbCover('https://www.chess.com/play/computer'),
+  tictactoe: toThumbCover('https://enclavegames.github.io/Enclave-Phaser-Template/'),
+  tactix: toThumbCover('https://orb.enclavegames.com/'),
+  memory: toThumbCover('https://hextris.io/'),
+  snake: toThumbCover('https://p4th4k.github.io/NotYourAverageSnake/frontend/index.html'),
+  brickbreaker: toThumbCover('https://games50.github.io/WebGl-Demo/'),
+  puzzle: toThumbCover('https://phaserjs.github.io/editor-example-volcano/'),
+  trivia: toThumbCover('https://scottrippey.github.io/xquestjs/'),
+  mathrace: toThumbCover('https://www.balanc3dgame.com/'),
+  wordrace: toThumbCover('https://ale4ero.github.io/Inter-Galactic/'),
+  colorswitch: toThumbCover('https://j8r.github.io/Orball/'),
+  riddles: toThumbCover('https://fk652.github.io/Galactic-Defender/'),
+  millionaire: toThumbCover('https://lorgan3.github.io/sorcerers/'),
+  brickstormx: toThumbCover('https://erichlof.github.io/AntiGravity-Pool/AntiGravityPool.html'),
+  puzzlemaster: toThumbCover('https://play2048.co/'),
+  triviaplus: toThumbCover('https://2048game.com/'),
+  wordmaster: toThumbCover('https://flappybird.io/'),
+  reactiontap: toThumbCover('https://pacman.live/'),
+  sequencesprint: toThumbCover('https://www.sudokuonline.io/'),
 };
 const IMPORTED_PRO_GAME_IDS = [
   'aiquest',
@@ -86,6 +112,12 @@ const adCarryStorageKey = (userId) => `saqr_games_ad_carry_seconds_${userId || '
 
 // ==================== PREMIUM GAME CARD COMPONENT ====================
 const GameCard = ({ game, onPress, pulseAnim, gameCost }) => {
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  useEffect(() => {
+    setImageLoadFailed(false);
+  }, [game?.id, game?.coverImage]);
+  const shouldShowCover = Boolean(game?.coverImage) && !imageLoadFailed;
+
   return (
     <Animated.View style={[styles.gameCardWrapper, { transform: [{ scale: pulseAnim }] }]}>
       <TouchableOpacity style={styles.gameCard} onPress={onPress} activeOpacity={0.9}>
@@ -119,8 +151,13 @@ const GameCard = ({ game, onPress, pulseAnim, gameCost }) => {
             <LinearGradient colors={game.colors} style={styles.gameArtGlow} />
             <View style={[styles.gameArtOrb, { borderColor: `${game.accent}66` }]}>
               <LinearGradient colors={game.orbGradient} style={styles.gameArtOrbGradient}>
-                {game.coverImage ? (
-                  <Image source={{ uri: game.coverImage }} style={styles.gameArtImage} resizeMode="cover" />
+                {shouldShowCover ? (
+                  <Image
+                    source={{ uri: game.coverImage }}
+                    style={styles.gameArtImage}
+                    resizeMode="cover"
+                    onError={() => setImageLoadFailed(true)}
+                  />
                 ) : (
                   <Ionicons name={resolveIconName(game.icon, 'game-controller-outline')} size={34} color="#fff" />
                 )}
@@ -184,10 +221,12 @@ const IMPORTED_GAME_PRESETS = {
   reactiontap: { accent: '#ef4444', secondary: '#f97316', obstacleSize: 13, speed: 2.95, spawnRate: 36 },
   sequencesprint: { accent: '#22c55e', secondary: '#06b6d4', obstacleSize: 16, speed: 2.65, spawnRate: 39 },
 };
+const getInitialLivesForGame = (gameId) => (gameId === 'puzzle' ? 6 : 3);
 
 const buildImportedGameHtml = (game) => {
   const preset = IMPORTED_GAME_PRESETS[game?.id] || IMPORTED_GAME_PRESETS.default;
   const gameName = (game?.name || 'Imported Action Game').replace(/'/g, '');
+  const initialLives = getInitialLivesForGame(game?.id);
   return `<!doctype html>
 <html>
 <head>
@@ -210,7 +249,7 @@ const buildImportedGameHtml = (game) => {
   const canvas = document.getElementById('c');
   const ctx = canvas.getContext('2d');
   const state = {
-    w: 0, h: 0, time: 0, score: 0, lives: 3, ended: false,
+    w: 0, h: 0, time: 0, score: 0, lives: ${initialLives}, ended: false,
     playerX: 0, playerY: 0, playerR: 18, obstacles: [], particles: []
   };
 
@@ -383,7 +422,7 @@ const getOriginSafe = (url) => {
 
 const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
   const [score, setScore] = useState(0);
-  const [lives, setLives] = useState(3);
+  const [lives, setLives] = useState(getInitialLivesForGame(game?.id));
   const [finished, setFinished] = useState(false);
   const [useExternalSource, setUseExternalSource] = useState(Boolean(game?.externalUrl));
   const [webLoading, setWebLoading] = useState(true);
@@ -404,7 +443,7 @@ const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
     fallbackNotifiedRef.current = false;
     blockedNavNotifiedRef.current = false;
     setScore(0);
-    setLives(3);
+    setLives(getInitialLivesForGame(game?.id));
     setFinished(false);
     setWebLoading(true);
     setUseExternalSource(Boolean(game?.externalUrl));
@@ -2339,8 +2378,7 @@ const GamesScreen = ({
       .map((game) => ({
         ...game,
         externalUrl: EXTERNAL_GAME_URLS[game.id] || null,
-        // Keep old icon design style for a consistent in-app identity.
-        coverImage: null,
+        coverImage: GAME_COVER_IMAGES[game.id] || toThumbCover(EXTERNAL_GAME_URLS[game.id]),
       }));
   }, [games]);
 
@@ -3537,21 +3575,21 @@ const styles = StyleSheet.create({
     color: '#e2e8f0',
   },
   gameArtContainer: {
-    height: 88,
+    height: 98,
     alignItems: 'center',
     justifyContent: 'center',
   },
   gameArtGlow: {
     position: 'absolute',
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 94,
+    height: 94,
+    borderRadius: 18,
     opacity: 0.85,
   },
   gameArtOrb: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 86,
+    height: 86,
+    borderRadius: 16,
     borderWidth: 1.5,
     overflow: 'hidden',
   },

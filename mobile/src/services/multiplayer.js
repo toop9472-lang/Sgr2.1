@@ -1,8 +1,19 @@
 // Multiplayer Game Service - خدمة اللعب الجماعي
 import api from './api';
 
-const API_BASE = api.baseUrl || 'https://saqrpointscom.store';
 const toWsBase = (url) => url.replace('https://', 'wss://').replace('http://', 'ws://').replace(/\/+$/, '');
+const getSocketBaseCandidates = () => {
+  const candidates = [
+    api.baseUrl,
+    api.BASE_URL,
+    'https://app-store-revival.preview.emergentagent.com/backend',
+    'https://saqrpointscom.store',
+  ]
+    .filter(Boolean)
+    .map((u) => u.replace(/\/+$/, ''));
+
+  return Array.from(new Set(candidates));
+};
 
 class MultiplayerService {
   constructor() {
@@ -26,11 +37,13 @@ class MultiplayerService {
       this.playerId = playerId;
       this.manuallyDisconnected = false;
 
-      const wsBase = toWsBase(API_BASE);
-      const socketCandidates = [
-        `${wsBase}/ws/game/${playerId}`,
-        `${wsBase}/api/ws/game/${playerId}`,
-      ];
+      const socketCandidates = getSocketBaseCandidates().flatMap((baseUrl) => {
+        const wsBase = toWsBase(baseUrl);
+        return [
+          `${wsBase}/ws/game/${playerId}`,
+          `${wsBase}/api/ws/game/${playerId}`,
+        ];
+      });
       let candidateIndex = 0;
       let settled = false;
 
