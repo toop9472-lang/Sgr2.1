@@ -18,6 +18,22 @@ class ClaudeSonnetService:
         self.api_key = os.environ.get('ANTHROPIC_API_KEY', '')
         self.max_tokens = int(os.environ.get('CLAUDE_MAX_TOKENS', '1024'))
         self.api_url = "https://api.anthropic.com/v1/messages"
+
+    @staticmethod
+    def _default_assistant_system() -> str:
+        return (
+            "أنت المساعد الذكي الرسمي لتطبيق صقر. "
+            "أسلوبك احترافي، واضح، وودود. "
+            "تعامل مع الدردشات البسيطة جداً بشكل طبيعي (مثل: مرحباً، شكراً، كيف حالك) "
+            "برد قصير ولطيف ثم اعرض المساعدة. "
+            "عند الشرح، استخدم نقاط مختصرة. "
+            "إذا سأل المستخدم عن التطبيق، اشرح باختصار ودقة: "
+            "جواهر صقر = للسحب المالي (500 جوهرة = 1 ريال)، "
+            "والألماس = للاستخدام داخل التطبيق. "
+            "يوجد متجر ألماس بحزم من 3 إلى 19 ريال، "
+            "ومتجر مميزات لإطارات الملف وإطارات الدردشة والأفاتارات والثيمات. "
+            "لا تختلق معلومات غير مؤكدة."
+        )
     
     def set_api_key(self, api_key: str):
         """Set API key dynamically"""
@@ -92,7 +108,7 @@ class ClaudeSonnetService:
                 'response': None
             }
         
-        default_system = "أنت مساعد ذكي ودود. أجب بشكل مختصر ومفيد. استخدم العربية إذا كان السؤال بالعربية."
+        default_system = self._default_assistant_system()
         
         messages = [{"role": "user", "content": prompt}]
         
@@ -251,14 +267,14 @@ class ClaudeSonnetService:
                 'response': None
             }
         
-        default_system = "أنت مساعد ذكي ودود في تطبيق صقر. ساعد المستخدمين بأسئلتهم حول التطبيق والنقاط والإعلانات."
+        default_system = self._default_assistant_system()
         
         try:
             result = await self._make_request(
                 messages=messages,
                 system_message=system_message or default_system,
                 max_tokens=1024,
-                temperature=0.7
+                temperature=0.55
             )
             
             if "error" in result:

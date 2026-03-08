@@ -121,6 +121,13 @@ const DIAMOND_PACKAGES = [
   { id: 'platinum', name: 'الحزمة البلاتينية', diamonds: 1000, bonus: 200, price: 19, image: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/a50037c315fcbd1d811fced1e2e9b7183b7d8255812d7a6faf8d1d451883de1c.png' },
 ];
 
+const DIAMOND_PACK_META = {
+  starter: { badge: 'الدخول السريع', badgeColor: '#64748b' },
+  silver: { badge: 'شائع', badgeColor: '#0ea5e9' },
+  gold: { badge: 'الأكثر مبيعاً', badgeColor: '#f59e0b' },
+  platinum: { badge: 'أفضل قيمة', badgeColor: '#22c55e' },
+};
+
 const RARITY = {
   common: { label: 'عادي', color: '#64748b' },
   rare: { label: 'نادر', color: '#3b82f6' },
@@ -356,6 +363,13 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
           </TouchableOpacity>
         </View>
 
+        <View style={styles.heroInfoCard}>
+          <Ionicons name="pricetag" size={16} color="#93c5fd" />
+          <Text style={styles.heroInfoText}>
+            متجران متكاملان: ألماس للشحن الفوري + مميزات احترافية قابلة للتفعيل.
+          </Text>
+        </View>
+
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -409,6 +423,13 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
                   </View>
                   <Text style={styles.cardName} numberOfLines={1}>{item.name}</Text>
                   <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
+                  <Text style={styles.itemPreviewText}>
+                    {item.slot === 'profile_frame' ? 'يظهر على صورة الملف'
+                      : item.slot === 'chat_frame' ? 'يظهر داخل الدردشة'
+                      : item.slot === 'avatar' ? 'صورة حساب جديدة'
+                      : item.slot === 'theme' ? 'يظهر كثيم للتطبيق'
+                      : 'باقة عناصر متعددة'}
+                  </Text>
                   <View style={styles.cardFooter}>
                     {!isOwned ? (
                       <View style={[styles.priceTag, !canAfford && styles.priceTagDisabled]}>
@@ -472,10 +493,22 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
                   <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.packOverlay}>
                     <View style={styles.packInfoTop}>
                       <Text style={styles.packName}>{pack.name}</Text>
-                      {pack.bonus > 0 ? <Text style={styles.packBonus}>+{pack.bonus}</Text> : null}
+                      <View style={styles.packTopBadges}>
+                        {DIAMOND_PACK_META[pack.id]?.badge ? (
+                          <Text style={[styles.packMetaBadge, { backgroundColor: `${DIAMOND_PACK_META[pack.id].badgeColor}E6` }]}>
+                            {DIAMOND_PACK_META[pack.id].badge}
+                          </Text>
+                        ) : null}
+                        {pack.bonus > 0 ? <Text style={styles.packBonus}>+{pack.bonus}</Text> : null}
+                      </View>
                     </View>
                     <View style={styles.packInfoBottom}>
-                      <Text style={styles.packDiamonds}>{pack.diamonds + (pack.bonus || 0)} ألماسة</Text>
+                      <View>
+                        <Text style={styles.packDiamonds}>{pack.diamonds + (pack.bonus || 0)} ألماسة</Text>
+                        <Text style={styles.packValueText}>
+                          {((pack.diamonds + (pack.bonus || 0)) / Math.max(1, Number(pack.price || 1))).toFixed(1)} ألماسة/ريال
+                        </Text>
+                      </View>
                       <Text style={styles.packPrice}>{pack.price} ر.س</Text>
                     </View>
                   </LinearGradient>
@@ -528,6 +561,25 @@ const styles = StyleSheet.create({
   balanceText: { color: '#60a5fa', fontWeight: '700', fontSize: 14 },
   categoriesContainer: { maxHeight: 50, marginBottom: 10 },
   categoriesContent: { paddingHorizontal: 16, gap: 8 },
+  heroInfoCard: {
+    marginHorizontal: 16,
+    marginBottom: 10,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: 'rgba(30,64,175,0.25)',
+    borderWidth: 1,
+    borderColor: 'rgba(147,197,253,0.32)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  heroInfoText: {
+    color: '#bfdbfe',
+    fontSize: 12,
+    fontWeight: '600',
+    flex: 1,
+  },
   categoryTab: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -570,6 +622,7 @@ const styles = StyleSheet.create({
   },
   cardName: { color: '#fff', fontSize: 13, fontWeight: '700', marginBottom: 3 },
   cardDesc: { color: '#94a3b8', fontSize: 11, minHeight: 30 },
+  itemPreviewText: { color: '#64748b', fontSize: 10, marginTop: 2 },
   cardFooter: { marginTop: 8, flexDirection: 'row', justifyContent: 'flex-end' },
   priceTag: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   priceTagDisabled: { opacity: 0.5 },
@@ -632,7 +685,16 @@ const styles = StyleSheet.create({
   packImage: { width: '100%', height: '100%' },
   packOverlay: { ...StyleSheet.absoluteFillObject, padding: 10, justifyContent: 'space-between' },
   packInfoTop: { flexDirection: 'row', justifyContent: 'space-between' },
+  packTopBadges: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   packName: { color: '#fff', fontSize: 14, fontWeight: '800' },
+  packMetaBadge: {
+    color: '#fff',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    fontSize: 10,
+    fontWeight: '800',
+  },
   packBonus: {
     color: '#fff',
     backgroundColor: 'rgba(16,185,129,0.9)',
@@ -644,6 +706,7 @@ const styles = StyleSheet.create({
   },
   packInfoBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   packDiamonds: { color: '#dbeafe', fontSize: 13, fontWeight: '700' },
+  packValueText: { color: '#93c5fd', fontSize: 10, marginTop: 2 },
   packPrice: {
     color: '#fff',
     backgroundColor: 'rgba(37,99,235,0.95)',

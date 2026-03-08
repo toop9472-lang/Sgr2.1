@@ -52,6 +52,7 @@ const ProfileScreen = ({
   const { recordAppShared } = useAchievements();
   
   const userGems = economy?.saqr_gems ?? user?.saqr_gems ?? 0;
+  const userIdentifier = user?.id || user?.user_id || 'N/A';
   const watchedAds = user?.ads_watched || 0;
   const referralCode = user?.referral_code || 'SAQR' + (user?.id?.slice(-6) || '123456').toUpperCase();
   const referrals = user?.referrals_count || 0;
@@ -191,6 +192,11 @@ const ProfileScreen = ({
   const copyReferralCode = async () => {
     await Clipboard.setStringAsync(referralCode);
     Alert.alert('تم النسخ', `تم نسخ كود الإحالة: ${referralCode}`);
+  };
+
+  const copyUserIdentifier = async () => {
+    await Clipboard.setStringAsync(String(userIdentifier));
+    Alert.alert('تم النسخ', `تم نسخ معرّف الحساب: ${userIdentifier}`);
   };
 
   const handleSupport = () => {
@@ -352,6 +358,11 @@ const ProfileScreen = ({
           </TouchableOpacity>
           <Text style={styles.name}>{user?.name || 'مستخدم'}</Text>
           <Text style={styles.email}>{user?.email || ''}</Text>
+          <TouchableOpacity style={styles.userIdChip} onPress={copyUserIdentifier} activeOpacity={0.7}>
+            <Ionicons name="id-card-outline" size={14} color="#93c5fd" />
+            <Text style={styles.userIdLabel}>ID: {userIdentifier}</Text>
+            <Ionicons name="copy-outline" size={14} color="#93c5fd" />
+          </TouchableOpacity>
           {user?.isGuest && (
             <View style={styles.guestBadge}>
               <Ionicons name="person-outline" size={12} color="#fbbf24" />
@@ -648,6 +659,23 @@ const styles = StyleSheet.create({
   avatarText: { color: '#FFF', fontSize: 32, fontWeight: 'bold' },
   name: { color: '#FFF', fontSize: 20, fontWeight: 'bold' },
   email: { color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 4 },
+  userIdChip: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    backgroundColor: 'rgba(59,130,246,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(147,197,253,0.35)',
+  },
+  userIdLabel: {
+    color: '#93c5fd',
+    fontSize: 12,
+    fontWeight: '700',
+  },
   guestBadge: { 
     backgroundColor: 'rgba(251,191,36,0.15)', 
     paddingHorizontal: 12, 

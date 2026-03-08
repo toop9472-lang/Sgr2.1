@@ -440,7 +440,7 @@ export const api = {
       headers,
       body: JSON.stringify({
         messages: normalizedMessages,
-        system_message: systemMessage || 'أنت مساعد ذكي في تطبيق صقر. ساعد المستخدم باللغة العربية.',
+        system_message: systemMessage || 'أنت مساعد صقر الذكي. كن احترافياً وواضحاً، وقدّم ردوداً قصيرة. تعامل مع المحادثات البسيطة مثل التحية والشكر بأسلوب طبيعي، ثم اقترح المساعدة المناسبة.',
       }),
     });
 
@@ -451,7 +451,7 @@ export const api = {
         headers,
         body: JSON.stringify({
           message: lastUserMessage,
-          system_message: systemMessage || 'أنت مساعد ذكي في تطبيق صقر. ساعد المستخدم باللغة العربية.',
+          system_message: systemMessage || 'أنت مساعد صقر الذكي. كن احترافياً وواضحاً، وقدّم ردوداً قصيرة. تعامل مع المحادثات البسيطة مثل التحية والشكر بأسلوب طبيعي، ثم اقترح المساعدة المناسبة.',
         }),
       });
     }
