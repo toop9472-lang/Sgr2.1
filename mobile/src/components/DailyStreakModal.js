@@ -13,12 +13,12 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const STREAK_REWARDS = [
-  { day: 1, reward: 5, type: 'points', icon: 'star' },
-  { day: 2, reward: 10, type: 'points', icon: 'star' },
+  { day: 1, reward: 5, type: 'gems', icon: 'sparkles' },
+  { day: 2, reward: 10, type: 'gems', icon: 'sparkles' },
   { day: 3, reward: 5, type: 'diamonds', icon: 'diamond' },
-  { day: 4, reward: 15, type: 'points', icon: 'star' },
+  { day: 4, reward: 15, type: 'gems', icon: 'sparkles' },
   { day: 5, reward: 10, type: 'diamonds', icon: 'diamond' },
-  { day: 6, reward: 25, type: 'points', icon: 'star' },
+  { day: 6, reward: 25, type: 'gems', icon: 'sparkles' },
   { day: 7, reward: 20, type: 'diamonds', icon: 'gift' },
 ];
 
@@ -84,7 +84,7 @@ const DailyStreakModal = ({ visible, onClose, onClaim, streak = 0, todayClaimed 
                   <Text style={styles.dayNumber}>يوم {day.day}</Text>
                   <Ionicons name={day.icon} size={18} color={day.type === 'diamonds' ? '#60a5fa' : '#fbbf24'} style={styles.dayIcon} />
                   <Text style={styles.dayReward}>
-                    {day.reward} {day.type === 'diamonds' ? 'ماسة' : 'نقطة'}
+                    {day.reward} {day.type === 'diamonds' ? 'ماسة' : 'جوهرة'}
                   </Text>
                   {isCompleted && (
                     <View style={styles.checkmark}>
@@ -101,7 +101,7 @@ const DailyStreakModal = ({ visible, onClose, onClaim, streak = 0, todayClaimed 
             <TouchableOpacity style={styles.claimBtn} onPress={() => onClaim(currentReward)}>
               <LinearGradient colors={['#fbbf24', '#f59e0b']} style={styles.claimGradient}>
                 <Text style={styles.claimText}>
-                  استلم {currentReward.reward} {currentReward.type === 'diamonds' ? 'ماسة' : 'نقطة'}
+                  استلم {currentReward.reward} {currentReward.type === 'diamonds' ? 'ماسة' : 'جوهرة صقر'}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>

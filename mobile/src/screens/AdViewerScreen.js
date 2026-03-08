@@ -59,7 +59,7 @@ const DEMO_ADS = [
   },
 ];
 
-const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) => {
+const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user }) => {
   const [ads, setAds] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -67,8 +67,9 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
   const [watchTime, setWatchTime] = useState(0);
   const [showControls, setShowControls] = useState(false);
   const [showPointsAnimation, setShowPointsAnimation] = useState(false);
-  const [earnedPoints, setEarnedPoints] = useState(0);
-  const [totalEarnedSession, setTotalEarnedSession] = useState(0);
+  const [earnedGems, setEarnedGems] = useState(0);
+  const [earnedDiamonds, setEarnedDiamonds] = useState(0);
+  const [totalEarnedSession, setTotalEarnedSession] = useState({ gems: 0, diamonds: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [videoLoading, setVideoLoading] = useState(true);
   const [isAdMobLoading, setIsAdMobLoading] = useState(false);
@@ -136,11 +137,14 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
     }
   };
 
-  const persistReward = useCallback(async ({ adId, watchDuration, points, adType }) => {
+  const persistReward = useCallback(async ({ adId, watchDuration, adType }) => {
     try {
       if (currentUserId) {
         const rewardResponse = await api.claimAdWatchReward(currentUserId, watchDuration, adType);
-        if (rewardResponse.ok) return true;
+        if (rewardResponse.ok) {
+          const payload = await rewardResponse.json().catch(() => ({}));
+          return { ok: true, payload };
+        }
       }
     } catch (error) {
       console.log('Claim reward failed, fallback to recordAdView');
@@ -149,11 +153,13 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
     try {
       const token = await storage.getToken();
       if (!token) return false;
-      const fallbackResponse = await api.recordAdView(adId, watchDuration, token, points);
-      return fallbackResponse.ok;
+      const fallbackResponse = await api.recordAdView(adId, watchDuration, token, 1);
+      if (!fallbackResponse.ok) return { ok: false };
+      const payload = await fallbackResponse.json().catch(() => ({}));
+      return { ok: true, payload };
     } catch (error) {
       console.log('Fallback reward save failed:', error);
-      return false;
+      return { ok: false };
     }
   }, [currentUserId]);
 
@@ -179,29 +185,36 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
         return;
       }
 
-      const points = Number(result.amount) > 0 ? Number(result.amount) : 5;
-      setEarnedPoints(points);
-      setTotalEarnedSession(prev => prev + points);
-      setShowPointsAnimation(true);
-      Vibration.vibrate(100);
-      
-      if (onPointsEarned) {
-        onPointsEarned(points);
-      }
-      
-      if (recordAdWatched) {
-        recordAdWatched();
-      }
-      
       const persisted = await persistReward({
         adId: 'admob_rewarded',
         watchDuration: 60,
-        points,
         adType: 'rewarded',
       });
 
-      if (!persisted) {
+      if (!persisted?.ok) {
         Alert.alert('تنبيه', 'تم تسجيل المكافأة محلياً، وسيتم مزامنتها عند تحسن الاتصال.');
+      } else {
+        const gems = Number(
+          persisted?.payload?.saqr_gems_earned
+          ?? persisted?.payload?.gems_earned
+          ?? persisted?.payload?.points_earned
+          ?? 1
+        ) || 0;
+        const diamonds = Number(
+          persisted?.payload?.diamonds_earned
+          ?? 25
+        ) || 0;
+        setEarnedGems(gems);
+        setEarnedDiamonds(diamonds);
+        setTotalEarnedSession(prev => ({ gems: prev.gems + gems, diamonds: prev.diamonds + diamonds }));
+        setShowPointsAnimation(true);
+        Vibration.vibrate(100);
+        if (onRewardsEarned) {
+          onRewardsEarned({ gems, diamonds });
+        }
+        if (recordAdWatched) {
+          recordAdWatched();
+        }
       }
       
       setTimeout(() => setShowPointsAnimation(false), 3000);
@@ -353,32 +366,40 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
   }, [showControls, isPlaying, showComments]);
 
   const handlePointsEarned = useCallback(async (points) => {
-    setEarnedPoints(points);
-    setTotalEarnedSession(prev => prev + points);
-    setShowPointsAnimation(true);
-    Vibration.vibrate(100);
-    
-    setTimeout(() => setShowPointsAnimation(false), 3000);
-    
-    if (onPointsEarned) onPointsEarned(points);
-    
-    // Record ad watched for achievements
-    if (recordAdWatched) {
-      recordAdWatched();
-    }
-    
+    const requestedMinutes = Math.max(1, Number(points) || 1);
     if (currentAd) {
       const persisted = await persistReward({
         adId: currentAd.id,
-        watchDuration: 60,
-        points,
+        watchDuration: requestedMinutes * 60,
         adType: 'video',
       });
-      if (!persisted) {
-        console.log('Failed to record points');
+      if (!persisted?.ok) {
+        console.log('Failed to record ad reward');
+        return;
+      }
+      const gems = Number(
+        persisted?.payload?.saqr_gems_earned
+        ?? persisted?.payload?.gems_earned
+        ?? persisted?.payload?.points_earned
+        ?? requestedMinutes
+      ) || 0;
+      const diamonds = Number(
+        persisted?.payload?.diamonds_earned
+        ?? (requestedMinutes * 25)
+      ) || 0;
+      setEarnedGems(gems);
+      setEarnedDiamonds(diamonds);
+      setTotalEarnedSession(prev => ({ gems: prev.gems + gems, diamonds: prev.diamonds + diamonds }));
+      setShowPointsAnimation(true);
+      Vibration.vibrate(100);
+      setTimeout(() => setShowPointsAnimation(false), 3000);
+
+      if (onRewardsEarned) onRewardsEarned({ gems, diamonds });
+      if (recordAdWatched) {
+        recordAdWatched();
       }
     }
-  }, [currentAd, onPointsEarned, persistReward, recordAdWatched]);
+  }, [currentAd, onRewardsEarned, persistReward, recordAdWatched]);
 
   const navigateAd = (direction) => {
     setShowComments(false);
@@ -490,13 +511,14 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
             <View style={styles.pointsAnimIcon}>
               <Ionicons name="sparkles" size={32} color="#fff" />
             </View>
-            <Text style={styles.pointsAnimTitle}>مبروك! أكملت دقيقة</Text>
+            <Text style={styles.pointsAnimTitle}>مبروك! أكملت دقيقة إعلان</Text>
             <View style={styles.pointsAnimRow}>
               <Ionicons name="sparkles" size={28} color="#fbbf24" />
-              <Text style={styles.pointsAnimValue}>+{earnedPoints}</Text>
-              <Ionicons name="gift" size={28} color="#fbbf24" />
+              <Text style={styles.pointsAnimValue}>+{earnedGems}</Text>
+              <Ionicons name="diamond" size={24} color="#60a5fa" style={{ marginLeft: 8 }} />
+              <Text style={styles.pointsAnimMiniValue}>+{earnedDiamonds}</Text>
             </View>
-            <Text style={styles.pointsAnimSubtext}>نقطة مضافة لرصيدك</Text>
+            <Text style={styles.pointsAnimSubtext}>1 جوهرة صقر + 25 ألماسة</Text>
           </View>
         </View>
       )}
@@ -515,8 +537,11 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
         </TouchableOpacity>
 
         <View style={styles.infoBar}>
-          <Text style={styles.infoText}>{totalEarnedSession}</Text>
-          <Ionicons name="star" size={14} color="#fbbf24" />
+          <Text style={styles.infoText}>{totalEarnedSession.gems}</Text>
+          <Ionicons name="sparkles" size={14} color="#f472b6" />
+          <Text style={styles.infoDivider}>·</Text>
+          <Text style={styles.infoText}>{totalEarnedSession.diamonds}</Text>
+          <Ionicons name="diamond" size={14} color="#60a5fa" />
           <Text style={styles.infoDivider}>·</Text>
           <Text style={styles.infoText}>{currentAd?.duration || 60}s</Text>
           <Text style={styles.infoDivider}>·</Text>
@@ -545,7 +570,7 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onPointsEarned, user }) 
           ) : (
             <>
               <Ionicons name="gift" size={24} color="#fbbf24" />
-              <Text style={[styles.actionCount, { color: '#fbbf24' }]}>+5</Text>
+              <Text style={[styles.actionCount, { color: '#fbbf24' }]}>+25</Text>
             </>
           )}
         </TouchableOpacity>
@@ -838,6 +863,12 @@ const styles = StyleSheet.create({
     fontSize: 48,
     fontWeight: 'bold',
     color: '#fbbf24',
+  },
+  pointsAnimMiniValue: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#60a5fa',
+    marginLeft: 2,
   },
   pointsAnimSubtext: {
     color: 'rgba(255,255,255,0.6)',

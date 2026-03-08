@@ -687,7 +687,7 @@ export const api = {
 
   // ==================== Economy System ====================
   
-  // Get user balance (points & diamonds)
+  // Get user balance (gems & diamonds)
   async getBalance(userId) {
     return this.fetch(`/api/economy/balance/${userId}`);
   },
@@ -796,7 +796,7 @@ export const api = {
 
   // ==================== Ad Watch Rewards ====================
   
-  // Claim ad watch reward (1 diamond per minute)
+  // Claim ad watch reward (1 gem + 25 diamonds per minute)
   async claimAdWatchReward(userId, watchDurationSeconds, adType = 'video') {
     return this.fetch('/api/economy/ad-watch-reward', {
       method: 'POST',

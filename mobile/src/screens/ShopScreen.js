@@ -190,8 +190,8 @@ const SHOP_ITEMS = [
   // Boosters - التعزيزات
   {
     id: 'booster_2x_points',
-    name: 'مضاعف النقاط',
-    description: 'ضاعف نقاطك لمدة ساعة',
+    name: 'مضاعف الجواهر',
+    description: 'ضاعف جواهرك لمدة ساعة',
     category: 'boosters',
     price: 50,
     icon: 'trending-up',
@@ -203,8 +203,8 @@ const SHOP_ITEMS = [
   },
   {
     id: 'booster_3x_points',
-    name: 'ثلاثة أضعاف النقاط',
-    description: 'ثلاثة أضعاف نقاطك لمدة 30 دقيقة',
+    name: 'ثلاثة أضعاف الجواهر',
+    description: 'ثلاثة أضعاف جواهرك لمدة 30 دقيقة',
     category: 'boosters',
     price: 100,
     icon: 'flash',
@@ -258,7 +258,7 @@ const SHOP_ITEMS = [
   {
     id: 'vip_weekly',
     name: 'VIP أسبوعي',
-    description: 'مضاعفة النقاط + إطار ذهبي لمدة أسبوع',
+    description: 'مضاعفة الجواهر + إطار ذهبي لمدة أسبوع',
     category: 'vip',
     price: 200,
     icon: 'star',

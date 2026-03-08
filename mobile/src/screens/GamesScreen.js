@@ -35,7 +35,7 @@ const resolveIconName = (iconName, fallback = 'ellipse-outline') => (
   ioniconGlyphMap[iconName] ? iconName : fallback
 );
 const SOLO_ROUND_DIAMOND_COST = 20;
-const AD_WATCH_DURATION_SECONDS = 30;
+const AD_WATCH_DURATION_SECONDS = 60;
 const GEMS_SECONDS_PER_UNIT = 60;
 const ONLINE_GLOBAL_CHAT_INVITE_COST = 5;
 const normalizeNumber = (value, fallback = 0) => {
@@ -744,7 +744,7 @@ const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
       <View style={styles.importedFooter}>
         <View style={styles.importedScoreBox}>
           <Ionicons name="flash" size={16} color="#fbbf24" />
-          <Text style={styles.importedScoreText}>النقاط {score}</Text>
+          <Text style={styles.importedScoreText}>الجواهر {score}</Text>
         </View>
         {useExternalSource ? (
           <TouchableOpacity style={styles.importedSwitchBtn} onPress={() => setUseExternalSource(false)}>
@@ -756,7 +756,7 @@ const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
           style={[styles.importedClaimBtn, finished && styles.importedClaimBtnReady]}
           onPress={claimPoints}
         >
-          <Text style={styles.importedClaimText}>{finished ? 'تحصيل النقاط' : 'إنهاء الجولة'}</Text>
+          <Text style={styles.importedClaimText}>{finished ? 'تحصيل الجواهر' : 'إنهاء الجولة'}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -1574,7 +1574,7 @@ const TriviaGame = ({ mode, onComplete, onClose }) => {
         <View style={styles.resultScreen}>
           <Ionicons name="ribbon" size={80} color="#fbbf24" />
           <Text style={styles.finalScore}>{score}</Text>
-          <Text style={styles.finalLabel}>نقطة</Text>
+          <Text style={styles.finalLabel}>جوهرة</Text>
           <Text style={styles.finalSub}>أجبت بشكل صحيح على {correctAnswers} من {questions.length} سؤال</Text>
           <TouchableOpacity style={styles.exitBtn} onPress={onClose}>
             <Text style={styles.exitText}>إنهاء</Text>
@@ -1727,7 +1727,7 @@ const RiddlesGame = ({ mode, onComplete, onClose }) => {
         <View style={styles.resultScreen}>
           <Ionicons name="bulb" size={80} color="#fbbf24" />
           <Text style={styles.finalScore}>{score}</Text>
-          <Text style={styles.finalLabel}>نقطة</Text>
+          <Text style={styles.finalLabel}>جوهرة</Text>
           <Text style={styles.finalSub}>حللت {riddles.length} لغز</Text>
           <TouchableOpacity style={styles.exitBtn} onPress={onClose}>
             <Text style={styles.exitText}>إنهاء</Text>
@@ -1862,10 +1862,10 @@ const ReactionTapGame = ({ onComplete, onClose }) => {
         <View style={styles.resultScreen}>
           <Ionicons name="flash" size={72} color="#f59e0b" />
           <Text style={styles.finalScore}>{score}</Text>
-          <Text style={styles.finalLabel}>نقطة سرعة</Text>
+          <Text style={styles.finalLabel}>جواهر سرعة</Text>
           <Text style={styles.finalSub}>لعبة جديدة: اختبر رد الفعل الحقيقي</Text>
           <TouchableOpacity style={styles.exitBtn} onPress={() => onComplete(score, 'win')}>
-            <Text style={styles.exitText}>تحصيل النقاط</Text>
+            <Text style={styles.exitText}>تحصيل الجواهر</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.exitBtn, { marginTop: 10, backgroundColor: '#334155' }]} onPress={onClose}>
             <Text style={styles.exitText}>إغلاق</Text>
@@ -1967,10 +1967,10 @@ const SequenceSprintGame = ({ onComplete, onClose }) => {
         <View style={styles.resultScreen}>
           <Ionicons name="analytics" size={72} color="#22c55e" />
           <Text style={styles.finalScore}>{score}</Text>
-          <Text style={styles.finalLabel}>نقطة</Text>
+          <Text style={styles.finalLabel}>جوهرة</Text>
           <Text style={styles.finalSub}>لعبة جديدة: سلاسل رقمية متسارعة</Text>
           <TouchableOpacity style={styles.exitBtn} onPress={() => onComplete(score, 'win')}>
-            <Text style={styles.exitText}>تحصيل النقاط</Text>
+            <Text style={styles.exitText}>تحصيل الجواهر</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.exitBtn, { marginTop: 10, backgroundColor: '#334155' }]} onPress={onClose}>
             <Text style={styles.exitText}>إغلاق</Text>
@@ -2059,10 +2059,10 @@ const OddOneOutGame = ({ onComplete, onClose }) => {
         <View style={styles.resultScreen}>
           <Ionicons name="eye" size={72} color="#06b6d4" />
           <Text style={styles.finalScore}>{score}</Text>
-          <Text style={styles.finalLabel}>نقطة ملاحظة</Text>
+          <Text style={styles.finalLabel}>جوهرة ملاحظة</Text>
           <Text style={styles.finalSub}>لعبة جديدة: اكتشف المختلف بسرعة</Text>
           <TouchableOpacity style={styles.exitBtn} onPress={() => onComplete(score, 'win')}>
-            <Text style={styles.exitText}>تحصيل النقاط</Text>
+            <Text style={styles.exitText}>تحصيل الجواهر</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.exitBtn, { marginTop: 10, backgroundColor: '#334155' }]} onPress={onClose}>
             <Text style={styles.exitText}>إغلاق</Text>
@@ -2127,9 +2127,9 @@ const GamesScreen = ({
   const [showModeSelector, setShowModeSelector] = useState(null);
   const [showWaiting, setShowWaiting] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
-  const [userStats, setUserStats] = useState({ rank: '-', points: 0, games: 0 });
+  const [userStats, setUserStats] = useState({ rank: '-', gems: 0, games: 0 });
   const [loading, setLoading] = useState(true);
-  const [balance, setBalance] = useState({ saqr_points: 0, diamonds: 300, daily_points_remaining: 70 });
+  const [balance, setBalance] = useState({ saqr_gems: 0, diamonds: 300, daily_points_remaining: 70 });
   const [gameCosts, setGameCosts] = useState({});
   const [onlineOpponent, setOnlineOpponent] = useState(null);
   const [isMyTurn, setIsMyTurn] = useState(false);
@@ -2392,7 +2392,7 @@ const GamesScreen = ({
       colors: ['rgba(34,197,94,0.46)', 'rgba(16,185,129,0.34)'],
       orbGradient: ['#22c55e', '#10b981'],
       accent: '#22c55e',
-      description: 'نمط ثعبان أسرع بمضاعف نقاط عالي.',
+      description: 'نمط ثعبان أسرع بمضاعف جواهر عالي.',
       maxPoints: 25,
       online: false,
       onlineCost: 0,
@@ -2765,6 +2765,9 @@ const GamesScreen = ({
         if (typeof data?.new_diamonds_balance === 'number') {
           setBalance((prev) => ({ ...prev, diamonds: data.new_diamonds_balance }));
         }
+        if (typeof data?.new_gems_balance === 'number') {
+          setBalance((prev) => ({ ...prev, saqr_gems: data.new_gems_balance }));
+        }
         if (!silent) {
           Alert.alert(
             'مكافأة الإعلان',
@@ -2783,7 +2786,7 @@ const GamesScreen = ({
 
     // Fallback economy grant when ad-watch endpoint is unavailable.
     try {
-      const diamondRes = await api.addDiamonds(userId, 1, `${source}_fallback`);
+      const diamondRes = await api.addDiamonds(userId, 25, `${source}_fallback`);
       if (diamondRes.ok) {
         const d = await diamondRes.json().catch(() => ({}));
         if (typeof d?.new_balance === 'number') {
@@ -2799,16 +2802,22 @@ const GamesScreen = ({
       await AsyncStorage.setItem(adCarryStorageKey(userId), String(carrySeconds));
 
       if (gemsToGrant > 0) {
-        await api.addSaqrGems(userId, gemsToGrant, `${source}_fallback_minutes`);
+        const gemsRes = await api.addSaqrGems(userId, gemsToGrant, `${source}_fallback_minutes`);
+        if (gemsRes.ok) {
+          const g = await gemsRes.json().catch(() => ({}));
+          if (typeof g?.new_balance === 'number') {
+            setBalance((prev) => ({ ...prev, saqr_gems: g.new_balance }));
+          }
+        }
       }
 
       if (!silent) {
         Alert.alert(
           'مكافأة الإعلان',
-          `+1 ألماسة${gemsToGrant > 0 ? `\n+${gemsToGrant} جوهرة صقر` : ''}`,
+          `+25 ألماسة${gemsToGrant > 0 ? `\n+${gemsToGrant} جوهرة صقر` : ''}`,
         );
       }
-      return { success: true, diamondsEarned: 1, gemsEarned: gemsToGrant };
+      return { success: true, diamondsEarned: 25, gemsEarned: gemsToGrant };
     } catch (e) {
       if (!silent) Alert.alert('خطأ', 'تعذر منح مكافأة الإعلان، حاول مرة أخرى.');
       return { success: false, error: 'reward_grant_failed' };
@@ -2964,7 +2973,7 @@ const GamesScreen = ({
         // Find user rank
         const userRank = data.leaderboard?.findIndex((l) => l.user_id === userId);
         if (userRank >= 0) {
-          setUserStats({ rank: userRank + 1, points: data.leaderboard[userRank].saqr_points, games: 0 });
+          setUserStats({ rank: userRank + 1, gems: data.leaderboard[userRank].saqr_gems ?? data.leaderboard[userRank].saqr_points ?? 0, games: 0 });
         }
       }
     } catch (e) {
@@ -3289,16 +3298,17 @@ const GamesScreen = ({
       );
       if (response.ok) {
         const data = await response.json();
-        if (onPointsEarned && data.points_awarded > 0) {
-          onPointsEarned(data.points_awarded);
+        const gemsAwarded = Number(data?.gems_awarded ?? data?.points_awarded ?? 0) || 0;
+        if (onPointsEarned && gemsAwarded > 0) {
+          onPointsEarned(gemsAwarded);
         }
         
-        let message = `حصلت على ${data.points_awarded} نقطة صقر`;
+        let message = `حصلت على ${gemsAwarded} جوهرة صقر`;
         if (data.diamonds_awarded > 0) {
           message += ` و ${data.diamonds_awarded} ألماسة`;
         }
         if (!data.can_earn_more) {
-          message += `\n\nوصلت للحد اليومي (${data?.daily_limit || 70} نقطة)`;
+          message += `\n\nوصلت للحد اليومي (${data?.daily_limit || 70} جوهرة)`;
         }
         
         Alert.alert(won ? 'فوز!' : 'نتيجة اللعبة', message);
@@ -3415,18 +3425,18 @@ const GamesScreen = ({
           <View style={{ width: 44 }} />
         </View>
 
-        {/* Daily Points Progress */}
+        {/* Daily Gems Progress */}
         <View style={styles.dailyProgressCard}>
           <View style={styles.dailyProgressHeader}>
             <Ionicons name="calendar-outline" size={18} color="#10b981" />
-            <Text style={styles.dailyProgressTitle}>النقاط اليومية</Text>
+            <Text style={styles.dailyProgressTitle}>الجواهر اليومية</Text>
           </View>
           <View style={styles.dailyProgressBar}>
             <View style={[styles.dailyProgressFill, { width: `${dailyProgressPercent}%` }]} />
           </View>
           <View style={styles.dailyProgressInfo}>
             <Text style={styles.dailyProgressText}>
-              {dailyEarned} / {dailyLimit} نقطة
+              {dailyEarned} / {dailyLimit} جوهرة
             </Text>
             <Text style={styles.dailyProgressRemaining}>
               متبقي: {dailyRemaining}
@@ -3454,14 +3464,14 @@ const GamesScreen = ({
             {/* Divider */}
             <View style={styles.premiumStatDivider} />
 
-            {/* Saqr Points */}
+            {/* Saqr Gems */}
             <View style={styles.premiumStatItem}>
-              <View style={[styles.premiumStatIconBg, { backgroundColor: 'rgba(251, 191, 36, 0.15)' }]}>
-                <Ionicons name="star" size={20} color="#fbbf24" />
+              <View style={[styles.premiumStatIconBg, { backgroundColor: 'rgba(244, 114, 182, 0.15)' }]}>
+                <Ionicons name="sparkles" size={20} color="#f472b6" />
               </View>
               <View style={styles.premiumStatInfo}>
-                <Text style={styles.premiumStatValue}>{(balance.saqr_points || 0).toLocaleString()}</Text>
-                <Text style={styles.premiumStatLabel}>نقاط صقر</Text>
+                <Text style={styles.premiumStatValue}>{(balance.saqr_gems || balance.saqr_points || 0).toLocaleString()}</Text>
+                <Text style={styles.premiumStatLabel}>جواهر صقر</Text>
               </View>
             </View>
 
@@ -3492,7 +3502,7 @@ const GamesScreen = ({
             <View style={styles.dailyProgressInfo}>
               <Ionicons name="flash" size={14} color="#22c55e" />
               <Text style={styles.dailyProgressText}>
-                {dailyRemaining} / {dailyLimit} نقطة يومية متبقية
+                {dailyRemaining} / {dailyLimit} جوهرة يومية متبقية
               </Text>
             </View>
             <View style={styles.dailyProgressBar}>
@@ -3613,7 +3623,7 @@ const GamesScreen = ({
                 </View>
                 <View style={styles.lbPointsNew}>
                   <Ionicons name="star" size={16} color="#fbbf24" />
-                  <Text style={styles.lbPointsTextNew}>{player.points}</Text>
+                  <Text style={styles.lbPointsTextNew}>{player.saqr_gems ?? player.saqr_points ?? player.points}</Text>
                 </View>
               </View>
             ))}

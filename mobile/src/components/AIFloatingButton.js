@@ -2,11 +2,9 @@
 import React, { useEffect, useRef } from 'react';
 import { TouchableOpacity, StyleSheet, Animated, View, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
 
 const AIFloatingButton = ({ onPress }) => {
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     // تاثير نبض مستمر
@@ -25,34 +23,6 @@ const AIFloatingButton = ({ onPress }) => {
       ])
     ).start();
   }, []);
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(rotateAnim, {
-          toValue: 1,
-          duration: 420,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rotateAnim, {
-          toValue: -1,
-          duration: 420,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rotateAnim, {
-          toValue: 0,
-          duration: 380,
-          useNativeDriver: true,
-        }),
-        Animated.delay(1200),
-      ])
-    ).start();
-  }, []);
-
-  const waveRotation = rotateAnim.interpolate({
-    inputRange: [-1, 0, 1],
-    outputRange: ['-12deg', '0deg', '12deg'],
-  });
 
   return (
     <TouchableOpacity 
@@ -78,9 +48,6 @@ const AIFloatingButton = ({ onPress }) => {
         {/* صقر مبهج */}
         <View style={styles.iconContainer}>
           <Image source={require('../../assets/logo_saqr.png')} style={styles.falconLogo} resizeMode="cover" />
-          <Animated.View style={[styles.waveBadge, { transform: [{ rotate: waveRotation }] }]}>
-            <Ionicons name="hand-right" size={9} color="#0f172a" />
-          </Animated.View>
         </View>
         
         {/* نقاط الذكاء الاصطناعي */}
@@ -136,19 +103,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.45)',
-  },
-  waveBadge: {
-    position: 'absolute',
-    right: -2,
-    top: 0,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: '#fde68a',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#fef3c7',
   },
   aiDots: {
     position: 'absolute',

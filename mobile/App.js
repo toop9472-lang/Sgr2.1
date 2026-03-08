@@ -258,6 +258,7 @@ function AppContent() {
                 ...savedUser,
                 ...userData.user,
                 points: userData.user.points || savedUser.points || 0,
+                saqr_gems: userData.user.saqr_gems || savedUser.saqr_gems || 0,
                 diamonds: userData.user.diamonds || savedUser.diamonds || 300,
                 total_earned: userData.user.total_earned || savedUser.total_earned || 0,
               };
@@ -327,23 +328,26 @@ function AppContent() {
     setCurrentPage('home');
   };
 
-  const handlePointsEarned = async (points) => {
+  const handleGemsEarned = async (gems = 0, diamonds = 0) => {
     if (user && !user.isGuest) {
       setUser(prev => ({ 
         ...prev, 
-        points: (prev.points || 0) + points 
+        saqr_gems: (prev.saqr_gems || 0) + gems,
+        diamonds: (prev.diamonds || 0) + diamonds,
       }));
       setBalanceRefresh(prev => prev + 1);
       
       // Update achievements
-      await updateCurrency(points, 0);
+      await updateCurrency(gems, diamonds);
     }
   };
 
   const handleDailyRewardClaimed = (data) => {
     setBalanceRefresh(prev => prev + 1);
-    if (data.reward_type === 'points') {
-      handlePointsEarned(data.amount);
+    if (data.reward_type === 'gems' || data.reward_type === 'points') {
+      handleGemsEarned(data.amount, 0);
+    } else if (data.reward_type === 'diamonds') {
+      handleGemsEarned(0, data.amount);
     }
   };
 
@@ -390,7 +394,7 @@ function AppContent() {
           setShowAdsViewer(false);
           setCurrentPage('profile');
         }}
-        onPointsEarned={handlePointsEarned}
+        onRewardsEarned={({ gems = 0, diamonds = 0 }) => handleGemsEarned(gems, diamonds)}
         user={user}
       />
     );
@@ -467,13 +471,13 @@ function AppContent() {
         {currentPage === 'challenges' && (
           <ChallengesScreen 
             user={user}
-            onPointsEarned={handlePointsEarned}
+            onPointsEarned={(gems) => handleGemsEarned(gems, 0)}
           />
         )}
         {currentPage === 'games' && (
           <GamesScreen 
             user={user}
-            onPointsEarned={handlePointsEarned}
+            onPointsEarned={(gems) => handleGemsEarned(gems, 0)}
             onOpenDiamondShop={() => setShowDiamondShop(true)}
             onOpenAchievements={() => setShowAchievements(true)}
             balanceRefresh={balanceRefresh}

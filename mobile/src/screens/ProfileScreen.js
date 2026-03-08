@@ -403,7 +403,7 @@ const ProfileScreen = ({
             <Text style={styles.referralCode}>{referralCode}</Text>
             <Ionicons name="copy-outline" size={18} color="#60a5fa" />
           </TouchableOpacity>
-          <Text style={styles.referralDesc}>شارك الكود واحصل على 50 نقطة لكل صديق يسجل!</Text>
+          <Text style={styles.referralDesc}>شارك الكود واحصل على 50 جوهرة صقر لكل صديق يسجل!</Text>
         </View>
 
         {/* Menu */}

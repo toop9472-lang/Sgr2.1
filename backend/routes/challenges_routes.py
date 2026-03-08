@@ -1,7 +1,7 @@
 """
 Daily Challenges & Login Rewards System
-- Daily challenges with max 69 points/day
-- 14-day login rewards with 150 total points/month
+- Daily challenges with max 69 gems/day
+- 14-day login rewards with gems + diamonds
 """
 from fastapi import APIRouter, HTTPException, Depends
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -27,11 +27,11 @@ class ChallengeProgress(BaseModel):
     current_progress: int
     target: int
     completed: bool
-    points_earned: int
+    gems_earned: int
 
 class LoginRewardDay(BaseModel):
     day: int
-    points: int
+    gems: int
     claimed: bool
     claim_date: Optional[str] = None
 
@@ -44,14 +44,14 @@ class ClaimLoginRewardRequest(BaseModel):
 
 # ============ CHALLENGE DEFINITIONS ============
 
-# Daily challenges - Total max 69 points/day
+# Daily challenges - Total max 69 gems/day
 DAILY_CHALLENGES = [
     {
         "id": "watch_5_ads",
         "title": "مشاهد نشط",
         "description": "شاهد 5 إعلانات",
         "target": 5,
-        "points": 15,
+        "gems": 15,
         "icon": "play-circle",
         "type": "watch_ads"
     },
@@ -60,7 +60,7 @@ DAILY_CHALLENGES = [
         "title": "مشاهد متفاني",
         "description": "شاهد 10 إعلانات",
         "target": 10,
-        "points": 25,
+        "gems": 25,
         "icon": "film",
         "type": "watch_ads"
     },
@@ -69,7 +69,7 @@ DAILY_CHALLENGES = [
         "title": "الحضور اليومي",
         "description": "سجل دخولك اليوم",
         "target": 1,
-        "points": 10,
+        "gems": 10,
         "icon": "log-in",
         "type": "login"
     },
@@ -78,7 +78,7 @@ DAILY_CHALLENGES = [
         "title": "البداية",
         "description": "شاهد إعلانك الأول اليوم",
         "target": 1,
-        "points": 5,
+        "gems": 5,
         "icon": "rocket",
         "type": "watch_ads"
     },
@@ -87,32 +87,32 @@ DAILY_CHALLENGES = [
         "title": "المثابر",
         "description": "ابقَ متصلاً لمدة ساعة واحدة",
         "target": 60,  # 60 minutes
-        "points": 14,
+        "gems": 14,
         "icon": "timer",
         "type": "online_time"
     }
 ]
-# Total: 15 + 25 + 10 + 5 + 14 = 69 points max
+# Total: 15 + 25 + 10 + 5 + 14 = 69 gems max
 
-# 14-day login rewards - Total: 160 points + 200 diamonds
-# Distribution: Points and diamonds mixed to keep users engaged
+# 14-day login rewards - Total: 160 gems + 200 diamonds
+# Distribution: Gems and diamonds mixed to keep users engaged
 LOGIN_REWARDS = [
-    {"day": 1, "points": 30, "diamonds": 20},   # يوم 1: 30 نقطة + 20 ألماسة
-    {"day": 2, "points": 10, "diamonds": 10},   # يوم 2: 10 نقطة + 10 ألماسة
-    {"day": 3, "points": 15, "diamonds": 0},    # يوم 3: 15 نقطة
-    {"day": 4, "points": 0, "diamonds": 25},    # يوم 4: 25 ألماسة
-    {"day": 5, "points": 10, "diamonds": 10},   # يوم 5: 10 نقطة + 10 ألماسة
-    {"day": 6, "points": 15, "diamonds": 0},    # يوم 6: 15 نقطة
-    {"day": 7, "points": 20, "diamonds": 35},   # يوم 7: 20 نقطة + 35 ألماسة (مكافأة الأسبوع)
-    {"day": 8, "points": 10, "diamonds": 10},   # يوم 8: 10 نقطة + 10 ألماسة
-    {"day": 9, "points": 10, "diamonds": 0},    # يوم 9: 10 نقطة
-    {"day": 10, "points": 0, "diamonds": 20},   # يوم 10: 20 ألماسة
-    {"day": 11, "points": 10, "diamonds": 10},  # يوم 11: 10 نقطة + 10 ألماسة
-    {"day": 12, "points": 10, "diamonds": 0},   # يوم 12: 10 نقطة
-    {"day": 13, "points": 10, "diamonds": 10},  # يوم 13: 10 نقطة + 10 ألماسة
-    {"day": 14, "points": 10, "diamonds": 50},  # يوم 14: 10 نقطة + 50 ألماسة (مكافأة النهاية)
+    {"day": 1, "gems": 30, "diamonds": 20},   # يوم 1: 30 جوهرة + 20 ألماسة
+    {"day": 2, "gems": 10, "diamonds": 10},   # يوم 2: 10 جوهرة + 10 ألماسة
+    {"day": 3, "gems": 15, "diamonds": 0},    # يوم 3: 15 جوهرة
+    {"day": 4, "gems": 0, "diamonds": 25},    # يوم 4: 25 ألماسة
+    {"day": 5, "gems": 10, "diamonds": 10},   # يوم 5: 10 جوهرة + 10 ألماسة
+    {"day": 6, "gems": 15, "diamonds": 0},    # يوم 6: 15 جوهرة
+    {"day": 7, "gems": 20, "diamonds": 35},   # يوم 7: 20 جوهرة + 35 ألماسة (مكافأة الأسبوع)
+    {"day": 8, "gems": 10, "diamonds": 10},   # يوم 8: 10 جوهرة + 10 ألماسة
+    {"day": 9, "gems": 10, "diamonds": 0},    # يوم 9: 10 جوهرة
+    {"day": 10, "gems": 0, "diamonds": 20},   # يوم 10: 20 ألماسة
+    {"day": 11, "gems": 10, "diamonds": 10},  # يوم 11: 10 جوهرة + 10 ألماسة
+    {"day": 12, "gems": 10, "diamonds": 0},   # يوم 12: 10 جوهرة
+    {"day": 13, "gems": 10, "diamonds": 10},  # يوم 13: 10 جوهرة + 10 ألماسة
+    {"day": 14, "gems": 10, "diamonds": 50},  # يوم 14: 10 جوهرة + 50 ألماسة (مكافأة النهاية)
 ]
-# Total Points: 30+10+15+0+10+15+20+10+10+0+10+10+10+10 = 160 points
+# Total Gems: 30+10+15+0+10+15+20+10+10+0+10+10+10+10 = 160 gems
 # Total Diamonds: 20+10+0+25+10+0+35+10+0+20+10+0+10+50 = 200 diamonds
 
 
@@ -276,7 +276,7 @@ async def get_daily_challenges(user_id: str = Depends(get_current_user_id)):
         is_claimed = challenge['id'] in claimed_ids
         
         if is_claimed:
-            total_earned_today += challenge['points']
+            total_earned_today += challenge['gems']
         
         challenge_data = {
             'id': challenge['id'],
@@ -285,7 +285,9 @@ async def get_daily_challenges(user_id: str = Depends(get_current_user_id)):
             'icon': challenge['icon'],
             'target': challenge['target'],
             'current': progress,
-            'points': challenge['points'],
+            'gems': challenge['gems'],
+            # توافق خلفي
+            'points': challenge['gems'],
             'completed': is_completed,
             'claimed': is_claimed,
             'can_claim': is_completed and not is_claimed
@@ -310,6 +312,7 @@ async def get_daily_challenges(user_id: str = Depends(get_current_user_id)):
     
     return {
         'challenges': challenges,
+        'max_daily_gems': 69,
         'max_daily_points': 69,
         'earned_today': total_earned_today,
         'date': today_str
@@ -356,28 +359,36 @@ async def claim_daily_challenge(
         'id': str(uuid.uuid4()),
         'user_id': user_id,
         'challenge_id': request.challenge_id,
-        'points': challenge['points'],
+        'gems': challenge['gems'],
+        'points': challenge['gems'],
         'date': today_str,
         'timestamp': datetime.now(timezone.utc)
     })
     
-    # Add points to user
+    # Add gems to user (with backward compatibility fields)
     await db.users.update_one(
         {'$or': [{'id': user_id}, {'user_id': user_id}]},
-        {'$inc': {'points': challenge['points'], 'total_earned': challenge['points']}}
+        {'$inc': {
+            'saqr_gems': challenge['gems'],
+            'points': challenge['gems'],
+            'saqr_points': challenge['gems'],
+            'total_earned': challenge['gems'],
+        }}
     )
     
     # Get updated user points
     user = await db.users.find_one(
         {'$or': [{'id': user_id}, {'user_id': user_id}]},
-        {'_id': 0, 'points': 1}
+        {'_id': 0, 'saqr_gems': 1, 'points': 1}
     )
     
     return {
         'success': True,
-        'points_earned': challenge['points'],
-        'total_points': user.get('points', 0),
-        'message': f'حصلت على {challenge["points"]} نقطة!'
+        'gems_earned': challenge['gems'],
+        'points_earned': challenge['gems'],
+        'total_gems': user.get('saqr_gems', user.get('points', 0)),
+        'total_points': user.get('saqr_gems', user.get('points', 0)),
+        'message': f'حصلت على {challenge["gems"]} جوهرة صقر!'
     }
 
 
@@ -403,7 +414,8 @@ async def get_login_rewards(user_id: str = Depends(get_current_user_id)):
             'user_id': user_id,
             'month': month_str,
             'claimed_days': [],
-            'total_claimed_points': 0,
+            'total_claimed_gems': 0,
+            'total_claimed_points': 0,  # توافق خلفي
             'total_claimed_diamonds': 0,
             'created_at': datetime.now(timezone.utc)
         }
@@ -425,7 +437,8 @@ async def get_login_rewards(user_id: str = Depends(get_current_user_id)):
         
         rewards.append({
             'day': day,
-            'points': reward.get('points', 0),
+            'gems': reward.get('gems', reward.get('points', 0)),
+            'points': reward.get('gems', reward.get('points', 0)),  # توافق خلفي
             'diamonds': reward.get('diamonds', 0),
             'claimed': is_claimed,
             'can_claim': can_claim,
@@ -434,9 +447,11 @@ async def get_login_rewards(user_id: str = Depends(get_current_user_id)):
     
     return {
         'rewards': rewards,
+        'total_gems': 160,
         'total_points': 160,
         'total_diamonds': 200,
-        'claimed_points': user_rewards.get('total_claimed_points', user_rewards.get('total_claimed', 0)),
+        'claimed_gems': user_rewards.get('total_claimed_gems', user_rewards.get('total_claimed_points', user_rewards.get('total_claimed', 0))),
+        'claimed_points': user_rewards.get('total_claimed_gems', user_rewards.get('total_claimed_points', user_rewards.get('total_claimed', 0))),
         'claimed_diamonds': user_rewards.get('total_claimed_diamonds', 0),
         'login_days': login_count,
         'month': month_str
@@ -469,7 +484,8 @@ async def claim_login_reward(
             'user_id': user_id,
             'month': month_str,
             'claimed_days': [],
-            'total_claimed_points': 0,
+            'total_claimed_gems': 0,
+            'total_claimed_points': 0,  # توافق خلفي
             'total_claimed_diamonds': 0,
             'created_at': datetime.now(timezone.utc)
         }
@@ -488,7 +504,7 @@ async def claim_login_reward(
     if login_count < request.day:
         raise HTTPException(status_code=400, detail=f'تحتاج {request.day} أيام تسجيل دخول')
     
-    points_to_add = reward.get('points', 0)
+    gems_to_add = reward.get('gems', reward.get('points', 0))
     diamonds_to_add = reward.get('diamonds', 0)
     
     # Update rewards record
@@ -497,18 +513,21 @@ async def claim_login_reward(
         {
             '$push': {'claimed_days': request.day},
             '$inc': {
-                'total_claimed_points': points_to_add,
+                'total_claimed_gems': gems_to_add,
+                'total_claimed_points': gems_to_add,
                 'total_claimed_diamonds': diamonds_to_add
             },
             '$set': {'updated_at': datetime.now(timezone.utc)}
         }
     )
     
-    # Add points and diamonds to user
+    # Add gems and diamonds to user
     update_query = {}
-    if points_to_add > 0:
-        update_query['points'] = points_to_add
-        update_query['total_earned'] = points_to_add
+    if gems_to_add > 0:
+        update_query['saqr_gems'] = gems_to_add
+        update_query['points'] = gems_to_add
+        update_query['saqr_points'] = gems_to_add
+        update_query['total_earned'] = gems_to_add
     if diamonds_to_add > 0:
         update_query['diamonds'] = diamonds_to_add
     
@@ -521,21 +540,23 @@ async def claim_login_reward(
     # Get updated user data
     user = await db.users.find_one(
         {'$or': [{'id': user_id}, {'user_id': user_id}]},
-        {'_id': 0, 'points': 1, 'diamonds': 1}
+        {'_id': 0, 'saqr_gems': 1, 'points': 1, 'diamonds': 1}
     )
     
     message_parts = []
-    if points_to_add > 0:
-        message_parts.append(f'{points_to_add} نقطة')
+    if gems_to_add > 0:
+        message_parts.append(f'{gems_to_add} جوهرة صقر')
     if diamonds_to_add > 0:
         message_parts.append(f'{diamonds_to_add} ألماسة')
     
     return {
         'success': True,
         'day': request.day,
-        'points_earned': points_to_add,
+        'gems_earned': gems_to_add,
+        'points_earned': gems_to_add,
         'diamonds_earned': diamonds_to_add,
-        'total_points': user.get('points', 0),
+        'total_gems': user.get('saqr_gems', user.get('points', 0)),
+        'total_points': user.get('saqr_gems', user.get('points', 0)),
         'total_diamonds': user.get('diamonds', 0),
         'message': f'حصلت على {" و ".join(message_parts)}!'
     }
@@ -548,22 +569,22 @@ async def get_challenges_stats(user_id: str = Depends(get_current_user_id)):
     today_start = get_today_start()
     month_start = get_current_month_start()
     
-    # Today's challenge points
+    # Today's challenge gems
     today_claims = await db.challenge_claims.aggregate([
         {'$match': {'user_id': user_id, 'date': today_start.strftime('%Y-%m-%d')}},
-        {'$group': {'_id': None, 'total': {'$sum': '$points'}}}
+        {'$group': {'_id': None, 'total': {'$sum': {'$ifNull': ['$gems', '$points']}}}}
     ]).to_list(1)
     
-    # This month's login reward points
+    # This month's login reward gems
     login_rewards = await db.login_rewards.find_one({
         'user_id': user_id,
         'month': month_start.strftime('%Y-%m')
     })
     
-    # All time challenge points
+    # All time challenge gems
     all_time = await db.challenge_claims.aggregate([
         {'$match': {'user_id': user_id}},
-        {'$group': {'_id': None, 'total': {'$sum': '$points'}}}
+        {'$group': {'_id': None, 'total': {'$sum': {'$ifNull': ['$gems', '$points']}}}}
     ]).to_list(1)
     
     # User streak
@@ -578,14 +599,18 @@ async def get_challenges_stats(user_id: str = Depends(get_current_user_id)):
             'max_points': 69
         },
         'this_month': {
-            'login_reward_points': login_rewards.get('total_claimed_points', login_rewards.get('total_claimed', 0)) if login_rewards else 0,
+            'login_reward_gems': login_rewards.get('total_claimed_gems', login_rewards.get('total_claimed_points', login_rewards.get('total_claimed', 0))) if login_rewards else 0,
+            'login_reward_points': login_rewards.get('total_claimed_gems', login_rewards.get('total_claimed_points', login_rewards.get('total_claimed', 0))) if login_rewards else 0,
             'login_reward_diamonds': login_rewards.get('total_claimed_diamonds', 0) if login_rewards else 0,
+            'max_gems': 160,
             'max_points': 160,
             'max_diamonds': 200
         },
         'all_time': {
+            'challenge_gems': all_time[0]['total'] if all_time else 0,
             'challenge_points': all_time[0]['total'] if all_time else 0
         },
         'streak_days': user.get('streak_days', 0) if user else 0,
-        'current_points': user.get('points', 0) if user else 0
+        'current_gems': user.get('saqr_gems', user.get('points', 0)) if user else 0,
+        'current_points': user.get('saqr_gems', user.get('points', 0)) if user else 0
     }

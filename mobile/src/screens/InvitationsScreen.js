@@ -277,7 +277,7 @@ const CreateInvitationModal = ({ visible, onClose, onCreate }) => {
                       <Ionicons name={type.icon} size={24} color={type.color} />
                     </View>
                     <Text style={styles.typeName}>{type.name}</Text>
-                    <Text style={styles.typeReward}>+{type.reward} نقطة</Text>
+                    <Text style={styles.typeReward}>+{type.reward} جوهرة</Text>
                   </TouchableOpacity>
                 ))}
               </View>

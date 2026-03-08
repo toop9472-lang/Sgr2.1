@@ -5,8 +5,8 @@ import * as Clipboard from 'expo-clipboard';
 import { Share, Alert } from 'react-native';
 
 const REFERRAL_REWARDS = {
-  REFERRER_POINTS: 100,  // نقاط للداعي
-  REFEREE_POINTS: 50,    // نقاط للمدعو
+  REFERRER_POINTS: 100,  // جواهر للداعي (توافق خلفي بالاسم)
+  REFEREE_POINTS: 50,    // جواهر للمدعو (توافق خلفي بالاسم)
   REFERRER_DIAMONDS: 10, // ماس للداعي
   REFEREE_DIAMONDS: 5,   // ماس للمدعو
 };
@@ -47,7 +47,7 @@ class ReferralService {
   // مشاركة رابط الإحالة
   async shareReferralLink(userId, userName = 'صديقك') {
     const link = this.generateReferralLink(userId);
-    const message = `${userName} يدعوك لتجربة تطبيق صقر!\n\nاربح نقاط وماس من الإعلانات والألعاب.\nسجل الآن واحصل على ${REFERRAL_REWARDS.REFEREE_POINTS} نقطة مجاناً!\n\n${link}`;
+    const message = `${userName} يدعوك لتجربة تطبيق صقر!\n\nاربح جواهر صقر وألماس من الإعلانات والألعاب.\nسجل الآن واحصل على ${REFERRAL_REWARDS.REFEREE_POINTS} جوهرة مجاناً!\n\n${link}`;
     
     try {
       const result = await Share.share({
@@ -89,7 +89,7 @@ class ReferralService {
         return {
           success: true,
           rewards: data.rewards,
-          message: `تم تطبيق كود الإحالة! حصلت على ${REFERRAL_REWARDS.REFEREE_POINTS} نقطة و ${REFERRAL_REWARDS.REFEREE_DIAMONDS} ماسات`,
+          message: `تم تطبيق كود الإحالة! حصلت على ${REFERRAL_REWARDS.REFEREE_POINTS} جوهرة صقر و ${REFERRAL_REWARDS.REFEREE_DIAMONDS} ماسات`,
         };
       }
       

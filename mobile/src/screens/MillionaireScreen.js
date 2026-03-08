@@ -220,7 +220,7 @@ const MillionaireScreen = ({ onClose, onComplete }) => {
   const takeTheMoney = () => {
     Alert.alert(
       'تأكيد الانسحاب',
-      `هل تريد الانسحاب بـ ${currentPrize.prize.toLocaleString()} نقطة؟`,
+      `هل تريد الانسحاب بـ ${currentPrize.prize.toLocaleString()} جوهرة؟`,
       [
         { text: 'لا، استمر', style: 'cancel' },
         { 
@@ -288,7 +288,7 @@ const MillionaireScreen = ({ onClose, onComplete }) => {
             <Text style={styles.resultTitle}>مبروك!</Text>
             <Text style={styles.resultSubtitle}>ربحت المليون!</Text>
             <Text style={styles.resultPrize}>1,000,000</Text>
-            <Text style={styles.resultPoints}>+ 100 نقطة + 50 ماسة</Text>
+            <Text style={styles.resultPoints}>+ 100 جوهرة + 50 ماسة</Text>
             
             <TouchableOpacity style={styles.closeResultBtn} onPress={onClose}>
               <Text style={styles.closeResultText}>إغلاق</Text>
@@ -348,7 +348,7 @@ const MillionaireScreen = ({ onClose, onComplete }) => {
           {currentPrize.guaranteed && (
             <View style={styles.guaranteedBadge}>
               <Ionicons name="shield-checkmark" size={14} color="#22c55e" />
-              <Text style={styles.guaranteedText}>نقطة أمان</Text>
+              <Text style={styles.guaranteedText}>مرحلة أمان</Text>
             </View>
           )}
         </View>

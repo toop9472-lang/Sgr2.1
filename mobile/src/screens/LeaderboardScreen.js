@@ -99,7 +99,7 @@ const LeaderboardScreen = ({ userId, onClose }) => {
         
         <View style={styles.userInfo}>
           <Text style={[styles.userName, isTopThree && styles.topThreeName]}>{item.name}</Text>
-          <Text style={styles.userPoints}>{item.points.toLocaleString()} نقطة</Text>
+          <Text style={styles.userPoints}>{(item.saqr_gems ?? item.points ?? 0).toLocaleString()} جوهرة</Text>
         </View>
 
         {isTopThree && (
@@ -120,7 +120,7 @@ const LeaderboardScreen = ({ userId, onClose }) => {
           <View style={[styles.podiumItem, styles.podiumSecond]}>
             <Text style={styles.podiumAvatar}>{leaderboard[1]?.avatar || 'U'}</Text>
             <Text style={styles.podiumName}>{leaderboard[1]?.name}</Text>
-            <Text style={styles.podiumPoints}>{leaderboard[1]?.points.toLocaleString()}</Text>
+            <Text style={styles.podiumPoints}>{(leaderboard[1]?.saqr_gems ?? leaderboard[1]?.points ?? 0).toLocaleString()}</Text>
             <LinearGradient colors={['#9ca3af', '#6b7280']} style={styles.podiumBase}>
               <Text style={styles.podiumRank}>2</Text>
             </LinearGradient>
@@ -131,7 +131,7 @@ const LeaderboardScreen = ({ userId, onClose }) => {
             <Ionicons name="trophy" size={18} color="#fbbf24" style={styles.crownTop} />
             <Text style={styles.podiumAvatarFirst}>{leaderboard[0]?.avatar || 'U'}</Text>
             <Text style={styles.podiumNameFirst}>{leaderboard[0]?.name}</Text>
-            <Text style={styles.podiumPointsFirst}>{leaderboard[0]?.points.toLocaleString()}</Text>
+            <Text style={styles.podiumPointsFirst}>{(leaderboard[0]?.saqr_gems ?? leaderboard[0]?.points ?? 0).toLocaleString()}</Text>
             <LinearGradient colors={['#fbbf24', '#f59e0b']} style={[styles.podiumBase, styles.podiumBaseFirst]}>
               <Text style={styles.podiumRankFirst}>1</Text>
             </LinearGradient>
@@ -141,7 +141,7 @@ const LeaderboardScreen = ({ userId, onClose }) => {
           <View style={[styles.podiumItem, styles.podiumThird]}>
             <Text style={styles.podiumAvatar}>{leaderboard[2]?.avatar || 'U'}</Text>
             <Text style={styles.podiumName}>{leaderboard[2]?.name}</Text>
-            <Text style={styles.podiumPoints}>{leaderboard[2]?.points.toLocaleString()}</Text>
+            <Text style={styles.podiumPoints}>{(leaderboard[2]?.saqr_gems ?? leaderboard[2]?.points ?? 0).toLocaleString()}</Text>
             <LinearGradient colors={['#cd7f32', '#b45309']} style={styles.podiumBase}>
               <Text style={styles.podiumRank}>3</Text>
             </LinearGradient>
@@ -204,7 +204,7 @@ const LeaderboardScreen = ({ userId, onClose }) => {
             <LinearGradient colors={['rgba(59,130,246,0.3)', 'rgba(59,130,246,0.1)']} style={styles.userRankGradient}>
               <Text style={styles.userRankLabel}>ترتيبك</Text>
               <Text style={styles.userRankNumber}>#{userRank.rank}</Text>
-              <Text style={styles.userRankPoints}>{userRank.points.toLocaleString()} نقطة</Text>
+              <Text style={styles.userRankPoints}>{(userRank.saqr_gems ?? userRank.points ?? 0).toLocaleString()} جوهرة</Text>
             </LinearGradient>
           </View>
         )}

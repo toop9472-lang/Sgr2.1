@@ -90,14 +90,13 @@ const HomeScreen = ({
     exchangeBadge: isArabic ? '500 جوهرة = 1 ريال' : '500 gems = 1 SAR',
     fortunesDesc: isArabic ? 'عجلة الحظ اليومية • صناديق الكنز • مكافآت مضاعفة' : 'Daily wheel • Treasure chests • Boosted rewards',
     watchAndEarn: isArabic ? 'شاهد واربح' : 'Watch & Earn',
-    watchAndEarnSubtitle: isArabic ? 'شاهد إعلانات قصيرة واحصل على جواهر صقر!' : 'Watch short ads and earn Saqr gems!',
+    watchAndEarnSubtitle: isArabic ? 'كل 60 ثانية إعلان = 1 جوهرة صقر + 25 ألماسة' : 'Each 60s ad = 1 Saqr gem + 25 diamonds',
     balanceTitle: isArabic ? 'رصيدك الحالي' : 'Your current balance',
     exchangeChip: isArabic ? '500 جوهرة = 1 ر.س' : '500 gems = 1 SAR',
     gemsLabel: isArabic ? 'جواهر صقر' : 'Saqr Gems',
     diamondLabel: isArabic ? 'ماسة' : 'Diamond',
-    pointsLabel: isArabic ? 'نقطة' : 'Point',
     dailyChallenge: isArabic ? 'التحدي اليومي' : 'Daily Challenge',
-    dailyChallengeSub: isArabic ? 'نقاط إضافية!' : 'Extra points!',
+    dailyChallengeSub: isArabic ? 'جواهر إضافية يومياً' : 'Daily bonus gems',
     games: isArabic ? 'الألعاب' : 'Games',
     gamesSub: isArabic ? 'العب واربح!' : 'Play and win!',
     chat: isArabic ? 'الدردشة' : 'Chat',
@@ -110,7 +109,6 @@ const HomeScreen = ({
 
   // بيانات المستخدم
   const userName = useMemo(() => user?.name || copy.defaultPlayer, [copy.defaultPlayer, user?.name]);
-  const userPoints = useMemo(() => user?.saqr_points || user?.points || 0, [user?.saqr_points, user?.points]);
   const userDiamonds = useMemo(() => user?.diamonds || 0, [user?.diamonds]);
   const userGems = useMemo(() => user?.saqr_gems || 0, [user?.saqr_gems]);
 
@@ -155,6 +153,36 @@ const HomeScreen = ({
           </View>
         </View>
 
+        {/* رصيدك - أعلى الصفحة لهيكل أكثر تناسقاً */}
+        <View style={styles.balanceCard}>
+          <LinearGradient colors={['#171a2a', '#141d36', '#111827']} style={styles.balanceGradient}>
+            <View style={styles.balanceTopRow}>
+              <Text style={styles.balanceTitle}>{copy.balanceTitle}</Text>
+              <View style={styles.exchangeChip}>
+                <Ionicons name="swap-horizontal" size={12} color="#22c55e" />
+                <Text style={styles.exchangeChipText}>{copy.exchangeChip}</Text>
+              </View>
+            </View>
+            <View style={styles.balanceRow}>
+              <View style={styles.balanceItem}>
+                <View style={[styles.balanceIcon, { backgroundColor: 'rgba(244,114,182,0.2)' }]}>
+                  <Ionicons name="sparkles" size={20} color="#f472b6" />
+                </View>
+                <Text style={styles.balanceValue}>{userGems}</Text>
+                <Text style={styles.balanceLabel}>{copy.gemsLabel}</Text>
+              </View>
+              <View style={styles.balanceDivider} />
+              <View style={styles.balanceItem}>
+                <View style={[styles.balanceIcon, { backgroundColor: 'rgba(96,165,250,0.2)' }]}>
+                  <Ionicons name="diamond" size={20} color="#60a5fa" />
+                </View>
+                <Text style={styles.balanceValue}>{userDiamonds}</Text>
+                <Text style={styles.balanceLabel}>{copy.diamondLabel}</Text>
+              </View>
+            </View>
+          </LinearGradient>
+        </View>
+
         {/* ثروات صقر - القسم الرئيسي */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -195,44 +223,6 @@ const HomeScreen = ({
             icon="play"
             onPress={onNavigateToAds}
           />
-        </View>
-
-        {/* رصيدك */}
-        <View style={styles.balanceCard}>
-          <LinearGradient colors={['#171a2a', '#141d36', '#111827']} style={styles.balanceGradient}>
-            <View style={styles.balanceTopRow}>
-              <Text style={styles.balanceTitle}>{copy.balanceTitle}</Text>
-              <View style={styles.exchangeChip}>
-                <Ionicons name="swap-horizontal" size={12} color="#22c55e" />
-                <Text style={styles.exchangeChipText}>{copy.exchangeChip}</Text>
-              </View>
-            </View>
-            <View style={styles.balanceRow}>
-              <View style={styles.balanceItem}>
-                <View style={[styles.balanceIcon, { backgroundColor: 'rgba(244,114,182,0.2)' }]}>
-                  <Ionicons name="sparkles" size={20} color="#f472b6" />
-                </View>
-                <Text style={styles.balanceValue}>{userGems}</Text>
-                <Text style={styles.balanceLabel}>{copy.gemsLabel}</Text>
-              </View>
-              <View style={styles.balanceDivider} />
-              <View style={styles.balanceItem}>
-                <View style={[styles.balanceIcon, { backgroundColor: 'rgba(96,165,250,0.2)' }]}>
-                  <Ionicons name="diamond" size={20} color="#60a5fa" />
-                </View>
-                <Text style={styles.balanceValue}>{userDiamonds}</Text>
-                <Text style={styles.balanceLabel}>{copy.diamondLabel}</Text>
-              </View>
-              <View style={styles.balanceDivider} />
-              <View style={styles.balanceItem}>
-                <View style={[styles.balanceIcon, { backgroundColor: 'rgba(251,191,36,0.2)' }]}>
-                  <Ionicons name="star" size={20} color="#fbbf24" />
-                </View>
-                <Text style={styles.balanceValue}>{userPoints}</Text>
-                <Text style={styles.balanceLabel}>{copy.pointsLabel}</Text>
-              </View>
-            </View>
-          </LinearGradient>
         </View>
 
         {/* البطاقات الثنائية */}

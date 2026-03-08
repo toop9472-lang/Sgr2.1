@@ -73,7 +73,7 @@ const AchievementCard = ({ achievement, isUnlocked, progress, language = 'ar', o
       {/* Reward Badge */}
       <View style={styles.rewardBadge}>
         <View style={styles.rewardItem}>
-          <Ionicons name="star" size={14} color="#fbbf24" />
+          <Ionicons name="sparkles" size={14} color="#f472b6" />
           <Text style={styles.rewardText}>+{achievement.reward.points}</Text>
         </View>
         <View style={styles.rewardItem}>
@@ -149,10 +149,10 @@ const AchievementDetailModal = ({ achievement, isUnlocked, progress, language, o
               </Text>
               <View style={styles.modalRewardItems}>
                 <View style={styles.modalRewardItem}>
-                  <Ionicons name="star" size={24} color="#fbbf24" />
+                  <Ionicons name="sparkles" size={24} color="#f472b6" />
                   <Text style={styles.modalRewardValue}>+{achievement.reward.points}</Text>
                   <Text style={styles.modalRewardType}>
-                    {language === 'ar' ? 'نقطة' : 'Points'}
+                    {language === 'ar' ? 'جوهرة صقر' : 'Saqr Gems'}
                   </Text>
                 </View>
                 <View style={styles.modalRewardItem}>
@@ -201,7 +201,7 @@ export const AchievementNotification = ({ achievement, language = 'ar', onClose 
             </Text>
             <Text style={styles.notificationName}>{name}</Text>
             <View style={styles.notificationReward}>
-              <Ionicons name="star" size={16} color="#fbbf24" />
+              <Ionicons name="sparkles" size={16} color="#f472b6" />
               <Text style={styles.notificationRewardText}>+{achievement.reward.points}</Text>
               <Ionicons name="diamond" size={16} color="#60a5fa" style={{ marginLeft: 10 }} />
               <Text style={styles.notificationRewardText}>+{achievement.reward.diamonds}</Text>

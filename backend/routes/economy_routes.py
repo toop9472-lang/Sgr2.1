@@ -27,8 +27,8 @@ INITIAL_DIAMONDS = 300
 # جواهر صقر المجانية عند التسجيل (للاستبدال بالمال)
 INITIAL_SAQR_GEMS = 0
 
-# الحد اليومي للنقاط من الألعاب
-DAILY_POINTS_LIMIT = 70  # الحد اليومي من الألعاب فقط
+# الحد اليومي للجواهر من الألعاب
+DAILY_GEMS_LIMIT = 70  # الحد اليومي من الألعاب فقط
 
 # قيمة جواهر صقر بالريال السعودي (500 جوهرة = 1 ريال)
 GEMS_PER_RIYAL = 500
@@ -65,7 +65,7 @@ WINNER_DIAMOND_BONUS = {
     "riddles": 12,
 }
 
-# مكافآت المتصدرين (نقاط صقر)
+# مكافآت المتصدرين (جواهر صقر)
 LEADERBOARD_REWARDS = {
     1: 3000,  # المركز الأول
     2: 1900,  # المركز الثاني
@@ -74,11 +74,11 @@ LEADERBOARD_REWARDS = {
 
 # مكافآت الدخول اليومي
 DAILY_LOGIN_REWARDS = [
-    {"day": 1, "type": "points", "amount": 10, "label": "اليوم 1"},
-    {"day": 2, "type": "points", "amount": 15, "label": "اليوم 2"},
+    {"day": 1, "type": "gems", "amount": 10, "label": "اليوم 1"},
+    {"day": 2, "type": "gems", "amount": 15, "label": "اليوم 2"},
     {"day": 3, "type": "diamonds", "amount": 5, "label": "اليوم 3"},
-    {"day": 4, "type": "points", "amount": 20, "label": "اليوم 4"},
-    {"day": 5, "type": "points", "amount": 25, "label": "اليوم 5"},
+    {"day": 4, "type": "gems", "amount": 20, "label": "اليوم 4"},
+    {"day": 5, "type": "gems", "amount": 25, "label": "اليوم 5"},
     {"day": 6, "type": "diamonds", "amount": 10, "label": "اليوم 6"},
     {"day": 7, "type": "diamonds", "amount": 25, "label": "اليوم 7"},
 ]
@@ -117,7 +117,7 @@ class ClaimDailyRewardRequest(BaseModel):
 
 @router.get("/balance/{user_id}")
 async def get_user_balance(user_id: str):
-    """الحصول على رصيد المستخدم من النقاط والألماسات وجواهر صقر"""
+    """الحصول على رصيد المستخدم من الألماسات وجواهر صقر"""
     user = await db.users.find_one(
         {"$or": [{"id": user_id}, {"user_id": user_id}]},
         {"_id": 0, "saqr_points": 1, "diamonds": 1, "saqr_gems": 1, "points": 1}
@@ -126,7 +126,7 @@ async def get_user_balance(user_id: str):
     if not user:
         raise HTTPException(status_code=404, detail="المستخدم غير موجود")
     
-    # الحصول على النقاط المكتسبة اليوم
+    # الحصول على الجواهر المكتسبة اليوم
     today = datetime.now(timezone.utc).date().isoformat()
     daily_record = await db.daily_game_points.find_one({
         "user_id": user_id,
@@ -136,16 +136,17 @@ async def get_user_balance(user_id: str):
     daily_earned = daily_record.get("points", 0) if daily_record else 0
     saqr_points = user.get("saqr_points", user.get("points", 0))
     diamonds = user.get("diamonds", INITIAL_DIAMONDS)
-    saqr_gems = user.get("saqr_gems", INITIAL_SAQR_GEMS)
+    saqr_gems = user.get("saqr_gems", max(INITIAL_SAQR_GEMS, saqr_points))
     
     return {
-        "saqr_points": saqr_points,
+        # توافق خلفي: saqr_points يحاكي saqr_gems لتجنب عرض نقاط منفصلة في الواجهات القديمة.
+        "saqr_points": saqr_gems,
         "diamonds": diamonds,
         "saqr_gems": saqr_gems,
         "saqr_gems_value_sar": saqr_gems / GEMS_PER_RIYAL,
         "daily_points_earned": daily_earned,
-        "daily_points_remaining": max(0, DAILY_POINTS_LIMIT - daily_earned),
-        "daily_limit": DAILY_POINTS_LIMIT,
+        "daily_points_remaining": max(0, DAILY_GEMS_LIMIT - daily_earned),
+        "daily_limit": DAILY_GEMS_LIMIT,
         "gems_per_dollar": GEMS_PER_RIYAL,
         "chat_message_cost": CHAT_MESSAGE_COST
     }
@@ -264,39 +265,39 @@ async def record_game_result(request: GameResultRequest):
     })
     daily_earned = daily_record.get("points", 0) if daily_record else 0
     
-    points_to_award = 0
+    gems_to_award = 0
     diamonds_to_award = 0
     
     if request.won:
-        # نقاط الفوز (مع مراعاة الحد اليومي)
-        if daily_earned < DAILY_POINTS_LIMIT:
+        # جواهر الفوز (مع مراعاة الحد اليومي)
+        if daily_earned < DAILY_GEMS_LIMIT:
             base_points = 25 if request.is_online else 15
-            points_to_award = min(base_points, DAILY_POINTS_LIMIT - daily_earned)
+            gems_to_award = min(base_points, DAILY_GEMS_LIMIT - daily_earned)
         
         # ألماسات الفوز (للألعاب أونلاين فقط)
         if request.is_online:
             bonus = WINNER_DIAMOND_BONUS.get(request.game_id, 10)
             diamonds_to_award = request.opponent_diamonds + bonus
     else:
-        # نقاط المشاركة
-        if daily_earned < DAILY_POINTS_LIMIT:
-            points_to_award = min(5, DAILY_POINTS_LIMIT - daily_earned)
+        # جواهر المشاركة
+        if daily_earned < DAILY_GEMS_LIMIT:
+            gems_to_award = min(5, DAILY_GEMS_LIMIT - daily_earned)
     
-    # تحديث سجل النقاط اليومية
-    if points_to_award > 0:
+    # تحديث سجل الجواهر اليومية
+    if gems_to_award > 0:
         await db.daily_game_points.update_one(
             {"user_id": request.user_id, "date": today},
             {
-                "$inc": {"points": points_to_award},
+                "$inc": {"points": gems_to_award},
                 "$setOnInsert": {"created_at": datetime.now(timezone.utc).isoformat()}
             },
             upsert=True
         )
         
-        # إضافة النقاط للمستخدم
+        # إضافة الجواهر للمستخدم (مع إبقاء points/saqr_points للتوافق الخلفي)
         await db.users.update_one(
             {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]},
-            {"$inc": {"saqr_points": points_to_award, "points": points_to_award}}
+            {"$inc": {"saqr_gems": gems_to_award, "saqr_points": gems_to_award, "points": gems_to_award}}
         )
     
     # إضافة الألماسات
@@ -319,12 +320,13 @@ async def record_game_result(request: GameResultRequest):
     
     return {
         "success": True,
-        "points_awarded": points_to_award,
+        "gems_awarded": gems_to_award,
+        "points_awarded": gems_to_award,
         "diamonds_awarded": diamonds_to_award,
-        "daily_points_earned": daily_earned + points_to_award,
-        "daily_limit": DAILY_POINTS_LIMIT,
-        "can_earn_more": (daily_earned + points_to_award) < DAILY_POINTS_LIMIT,
-        "message": f"حصلت على {points_to_award} نقطة" + (f" و {diamonds_to_award} ألماسة" if diamonds_to_award > 0 else "")
+        "daily_points_earned": daily_earned + gems_to_award,
+        "daily_limit": DAILY_GEMS_LIMIT,
+        "can_earn_more": (daily_earned + gems_to_award) < DAILY_GEMS_LIMIT,
+        "message": f"حصلت على {gems_to_award} جوهرة صقر" + (f" و {diamonds_to_award} ألماسة" if diamonds_to_award > 0 else "")
     }
 
 @router.get("/daily-login-status/{user_id}")
@@ -415,13 +417,16 @@ async def claim_daily_reward(request: ClaimDailyRewardRequest):
     )
     
     # منح المكافأة
-    update_field = "diamonds" if reward["type"] == "diamonds" else "saqr_points"
+    is_diamonds_reward = reward["type"] == "diamonds"
     await db.users.update_one(
         {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]},
         {
             "$inc": {
-                update_field: reward["amount"],
-                "points": reward["amount"] if reward["type"] == "points" else 0
+                "diamonds": reward["amount"] if is_diamonds_reward else 0,
+                "saqr_gems": reward["amount"] if not is_diamonds_reward else 0,
+                # توافق خلفي
+                "saqr_points": reward["amount"] if not is_diamonds_reward else 0,
+                "points": reward["amount"] if not is_diamonds_reward else 0,
             }
         }
     )
@@ -431,7 +436,7 @@ async def claim_daily_reward(request: ClaimDailyRewardRequest):
         "reward_type": reward["type"],
         "amount": reward["amount"],
         "streak": streak,
-        "message": f"حصلت على {reward['amount']} " + ("ألماسة" if reward["type"] == "diamonds" else "نقطة صقر"),
+        "message": f"حصلت على {reward['amount']} " + ("ألماسة" if is_diamonds_reward else "جوهرة صقر"),
         "next_reward": DAILY_LOGIN_REWARDS[streak % len(DAILY_LOGIN_REWARDS)]
     }
 
@@ -445,11 +450,13 @@ async def get_leaderboard():
                 "_id": 0,
                 "user_id": {"$ifNull": ["$id", "$user_id"]},
                 "name": 1,
-                "saqr_points": {"$ifNull": ["$saqr_points", "$points"]},
+                "saqr_gems": {"$ifNull": ["$saqr_gems", {"$ifNull": ["$saqr_points", "$points"]}]},
+                # توافق خلفي مع الواجهات القديمة
+                "saqr_points": {"$ifNull": ["$saqr_gems", {"$ifNull": ["$saqr_points", "$points"]}]},
                 "avatar": 1
             }
         },
-        {"$sort": {"saqr_points": -1}},
+        {"$sort": {"saqr_gems": -1}},
         {"$limit": 20}
     ]
     
@@ -498,6 +505,7 @@ async def initialize_user_economy(user_id: str):
             "$set": {
                 "diamonds": INITIAL_DIAMONDS,
                 "saqr_points": user.get("points", 0),
+                "saqr_gems": user.get("saqr_gems", user.get("saqr_points", user.get("points", 0))),
                 "economy_initialized": True,
                 "diamond_transactions": []
             }
@@ -641,7 +649,7 @@ class AdWatchRewardRequest(BaseModel):
 @router.post("/ad-watch-reward")
 async def claim_ad_watch_reward(request: AdWatchRewardRequest):
     """مكافأة مشاهدة الإعلان - جواهر صقر للاستبدال بالمال + ألماسات للاستخدام"""
-    watch_seconds = max(0, int(request.watch_duration_seconds or 0))
+    watch_seconds = max(0, min(600, int(request.watch_duration_seconds or 0)))
     
     # التحقق من وجود المستخدم
     user = await db.users.find_one(
@@ -650,6 +658,24 @@ async def claim_ad_watch_reward(request: AdWatchRewardRequest):
     
     if not user:
         raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+
+    # حماية أساسية ضد الغش: منع المطالبات المتتالية بزمن غير منطقي.
+    now_dt = datetime.now(timezone.utc)
+    last_claim_raw = user.get("ad_last_claim_at")
+    if last_claim_raw:
+        try:
+            last_claim_dt = datetime.fromisoformat(str(last_claim_raw).replace("Z", "+00:00"))
+            if last_claim_dt.tzinfo is None:
+                last_claim_dt = last_claim_dt.replace(tzinfo=timezone.utc)
+            if (now_dt - last_claim_dt).total_seconds() < 45:
+                raise HTTPException(
+                    status_code=429,
+                    detail={"error": "ad_cooldown", "message": "يرجى الانتظار قليلاً قبل المطالبة بمكافأة إعلان جديد."},
+                )
+        except HTTPException:
+            raise
+        except Exception:
+            pass
 
     # 1 جوهرة صقر لكل 60 ثانية مشاهدة (بشكل تراكمي)
     carry_seconds = int(user.get("ad_watch_carry_seconds", 0) or 0)
@@ -660,8 +686,8 @@ async def claim_ad_watch_reward(request: AdWatchRewardRequest):
         gems_earned = total_seconds // 60
     new_carry_seconds = total_seconds % 60
 
-    # كل إعلان مكتمل يعطي ألماسة واحدة على الأقل
-    diamonds_earned = max(1, watch_seconds // 60)
+    # كل دقيقة مشاهدة مكتملة = 25 ألماسة (تراكمي مثل الجواهر)
+    diamonds_earned = max(0, (total_seconds // 60) * 25)
 
     current_gems = user.get("saqr_gems", 0)
     new_gems = current_gems + gems_earned
@@ -677,6 +703,7 @@ async def claim_ad_watch_reward(request: AdWatchRewardRequest):
                 "saqr_gems": new_gems,
                 "diamonds": new_diamonds,
                 "ad_watch_carry_seconds": new_carry_seconds,
+                "ad_last_claim_at": now_dt.isoformat(),
             },
             "$inc": {
                 "total_ads_watched": 1,
@@ -689,13 +716,13 @@ async def claim_ad_watch_reward(request: AdWatchRewardRequest):
                     "amount": gems_earned,
                     "duration_seconds": request.watch_duration_seconds,
                     "ad_type": request.ad_type,
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": now_dt.isoformat(),
                     "balance_after": new_gems
                 },
                 "diamond_transactions": {
                     "type": "ad_watch_bonus",
                     "amount": diamonds_earned,
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": now_dt.isoformat(),
                     "balance_after": new_diamonds
                 }
             }
@@ -709,7 +736,7 @@ async def claim_ad_watch_reward(request: AdWatchRewardRequest):
         "diamonds_earned": diamonds_earned,
         "duration_seconds": request.watch_duration_seconds,
         "ad_type": request.ad_type,
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": now_dt.isoformat()
     })
     
     return {

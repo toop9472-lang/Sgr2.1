@@ -19,11 +19,10 @@ const CurrencyOrb = ({ colors, icon, iconColor }) => (
 
 const BalanceHeader = ({ userId, onDiamondPress, onGemsPress, refreshTrigger }) => {
   const [balance, setBalance] = useState({
-    saqr_points: 0,
     diamonds: 0,
     saqr_gems: 0,
     daily_points_earned: 0,
-    daily_points_remaining: 150,
+    daily_points_remaining: 70,
   });
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -107,16 +106,6 @@ const BalanceHeader = ({ userId, onDiamondPress, onGemsPress, refreshTrigger }) 
           </LinearGradient>
         </TouchableOpacity>
 
-        {/* نقاط صقر */}
-        <View style={styles.pointsItem}>
-          <LinearGradient
-            colors={['rgba(251,191,36,0.15)', 'rgba(245,158,11,0.1)']}
-            style={styles.pointsGradient}
-          >
-            <CurrencyOrb colors={['rgba(251,191,36,0.45)', 'rgba(245,158,11,0.3)']} icon="star" iconColor="#fffbeb" />
-            <Text style={styles.pointsValue}>{formatNumber(balance.saqr_points)}</Text>
-          </LinearGradient>
-        </View>
       </View>
     </Animated.View>
   );
@@ -180,26 +169,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#10b981',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  pointsItem: {
-    flex: 1,
-    maxWidth: 100,
-  },
-  pointsGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(251,191,36,0.15)',
-  },
-  pointsValue: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#fbbf24',
   },
 });
 

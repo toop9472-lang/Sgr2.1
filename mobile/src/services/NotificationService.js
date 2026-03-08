@@ -149,10 +149,10 @@ export const sendAchievementNotification = async (achievement, language = 'ar') 
   };
   
   const bodies = {
-    ar: `تهانينا! لقد حصلت على "${name}" واربحت ${achievement.reward.points} نقطة و ${achievement.reward.diamonds} ماسة`,
-    en: `Congratulations! You earned "${name}" and won ${achievement.reward.points} points and ${achievement.reward.diamonds} diamonds`,
-    fr: `Félicitations! Vous avez gagné "${name}" et remporté ${achievement.reward.points} points et ${achievement.reward.diamonds} diamants`,
-    tr: `Tebrikler! "${name}" kazandınız ve ${achievement.reward.points} puan ile ${achievement.reward.diamonds} elmas aldınız`,
+    ar: `تهانينا! لقد حصلت على "${name}" وربحت ${achievement.reward.points} جوهرة صقر و ${achievement.reward.diamonds} ماسة`,
+    en: `Congratulations! You earned "${name}" and won ${achievement.reward.points} Saqr gems and ${achievement.reward.diamonds} diamonds`,
+    fr: `Félicitations! Vous avez gagné "${name}" et remporté ${achievement.reward.points} gemmes Saqr et ${achievement.reward.diamonds} diamants`,
+    tr: `Tebrikler! "${name}" kazandınız ve ${achievement.reward.points} Saqr mücevheri ile ${achievement.reward.diamonds} elmas aldınız`,
   };
   
   return scheduleLocalNotification({
@@ -205,10 +205,10 @@ export const scheduleDailyRewardReminder = async (hour = 10, minute = 0, languag
   };
   
   const bodies = {
-    ar: 'افتح صقر واحصل على نقاط وألماسات مجانية كل يوم',
-    en: 'Open Saqr and get free points and diamonds every day',
-    fr: 'Ouvrez Saqr et obtenez des points et diamants gratuits chaque jour',
-    tr: 'Saqr\'ı açın ve her gün ücretsiz puan ve elmas kazanın',
+    ar: 'افتح صقر واحصل على جواهر صقر وألماسات مجانية كل يوم',
+    en: 'Open Saqr and get free Saqr gems and diamonds every day',
+    fr: 'Ouvrez Saqr et obtenez des gemmes Saqr et diamants gratuits chaque jour',
+    tr: 'Saqr\'ı açın ve her gün ücretsiz Saqr mücevheri ve elmas kazanın',
   };
   
   // Schedule for tomorrow

@@ -49,7 +49,7 @@ class RewardedAdView(BaseModel):
     ad_id: Optional[str] = None
     completed: bool = False
     watch_duration: int = 0  # seconds
-    points_earned: Optional[int] = None  # Points to award
+    points_earned: Optional[int] = None  # backward-compat input
 
 
 class RewardedAdResponse(BaseModel):
@@ -60,7 +60,7 @@ class RewardedAdResponse(BaseModel):
     advertiser: Optional[str] = None
     website_url: Optional[str] = None
     duration: int = 30  # seconds
-    reward_points: int = 5
+    reward_points: int = 5  # backward compatibility field
     network_config: Optional[dict] = None  # For external ad networks
 
 
@@ -304,8 +304,10 @@ async def complete_rewarded_ad(
     if not can_watch:
         return {'success': False, 'message': 'وصلت للحد اليومي', 'remaining': 0}
     
-    # Calculate points: 1 point per completed ad view
-    reward_points = view.points_earned if view.points_earned else 1
+    # 1 minute مشاهدة = 1 جوهرة + 25 ألماسة (توافق خلفي مع نقاط)
+    full_minutes = max(0, int(view.watch_duration // 60))
+    gems_earned = max(1, full_minutes) if view.watch_duration >= 60 else 0
+    diamonds_earned = gems_earned * 25
     
     # Record the view
     view_doc = {
@@ -315,18 +317,23 @@ async def complete_rewarded_ad(
         'ad_id': view.ad_id,
         'completed': True,
         'watch_duration': view.watch_duration,
-        'points_earned': reward_points,
+        'points_earned': gems_earned,
+        'gems_earned': gems_earned,
+        'diamonds_earned': diamonds_earned,
         'timestamp': datetime.now(timezone.utc)
     }
     await db.rewarded_ad_views.insert_one(view_doc)
     
-    # Grant points to user
+    # Grant gems/diamonds to user
     await db.users.update_one(
         {'$or': [{'id': user_id}, {'user_id': user_id}]},
         {
             '$inc': {
-                'points': reward_points,
-                'total_earned': reward_points,
+                'saqr_gems': gems_earned,
+                'points': gems_earned,  # backward-compat
+                'saqr_points': gems_earned,
+                'diamonds': diamonds_earned,
+                'total_earned': gems_earned,
                 'ads_watched': 1
             }
         }
@@ -342,16 +349,20 @@ async def complete_rewarded_ad(
     # Get updated user data
     user = await db.users.find_one(
         {'$or': [{'id': user_id}, {'user_id': user_id}]},
-        {'_id': 0, 'points': 1, 'ads_watched': 1}
+        {'_id': 0, 'saqr_gems': 1, 'diamonds': 1, 'ads_watched': 1}
     )
     
     return {
         'success': True,
-        'points_earned': reward_points,
-        'total_points': user.get('points', 0),
+        'gems_earned': gems_earned,
+        'diamonds_earned': diamonds_earned,
+        'points_earned': gems_earned,
+        'total_gems': user.get('saqr_gems', 0),
+        'total_diamonds': user.get('diamonds', 0),
+        'total_points': user.get('saqr_gems', 0),
         'ads_watched': user.get('ads_watched', 0),
         'remaining_today': remaining - 1,
-        'message': f'حصلت على {reward_points} نقطة!'
+        'message': f'حصلت على {gems_earned} جوهرة صقر و {diamonds_earned} ألماسة!'
     }
 
 
@@ -372,7 +383,11 @@ async def get_user_rewarded_stats(user_id: str = Depends(get_current_user_id)):
     
     today_points = await db.rewarded_ad_views.aggregate([
         {'$match': {'user_id': user_id, 'completed': True, 'timestamp': {'$gte': today_start}}},
-        {'$group': {'_id': None, 'total': {'$sum': '$points_earned'}}}
+        {'$group': {'_id': None, 'total': {'$sum': {'$ifNull': ['$gems_earned', '$points_earned']}}}}
+    ]).to_list(1)
+    today_diamonds = await db.rewarded_ad_views.aggregate([
+        {'$match': {'user_id': user_id, 'completed': True, 'timestamp': {'$gte': today_start}}},
+        {'$group': {'_id': None, 'total': {'$sum': {'$ifNull': ['$diamonds_earned', 0]}}}}
     ]).to_list(1)
     
     # All time stats
@@ -383,7 +398,11 @@ async def get_user_rewarded_stats(user_id: str = Depends(get_current_user_id)):
     
     total_points = await db.rewarded_ad_views.aggregate([
         {'$match': {'user_id': user_id, 'completed': True}},
-        {'$group': {'_id': None, 'total': {'$sum': '$points_earned'}}}
+        {'$group': {'_id': None, 'total': {'$sum': {'$ifNull': ['$gems_earned', '$points_earned']}}}}
+    ]).to_list(1)
+    total_diamonds = await db.rewarded_ad_views.aggregate([
+        {'$match': {'user_id': user_id, 'completed': True}},
+        {'$group': {'_id': None, 'total': {'$sum': {'$ifNull': ['$diamonds_earned', 0]}}}}
     ]).to_list(1)
     
     daily_limit = settings.get('daily_rewarded_limit', 50)
@@ -391,15 +410,19 @@ async def get_user_rewarded_stats(user_id: str = Depends(get_current_user_id)):
     return {
         'today': {
             'views': today_views,
+            'gems': today_points[0]['total'] if today_points else 0,
+            'diamonds': today_diamonds[0]['total'] if today_diamonds else 0,
             'points': today_points[0]['total'] if today_points else 0,
             'remaining': max(0, daily_limit - today_views),
             'limit': daily_limit
         },
         'all_time': {
             'views': total_views,
+            'gems': total_points[0]['total'] if total_points else 0,
+            'diamonds': total_diamonds[0]['total'] if total_diamonds else 0,
             'points': total_points[0]['total'] if total_points else 0
         },
-        'reward_per_ad': settings.get('points_per_rewarded_ad', 5),
+        'reward_per_ad': "1 gem + 25 diamonds per 60s",
         'cooldown_seconds': settings.get('cooldown_seconds', 30)
     }
 
@@ -441,7 +464,7 @@ async def start_ad_session(
     
     return {
         'session_id': session_id,
-        'expected_reward': settings.get('points_per_rewarded_ad', 5),
+        'expected_reward': {'gems': 1, 'diamonds': 25, 'duration_seconds': 60},
         'remaining_today': remaining
     }
 
@@ -468,11 +491,19 @@ async def sync_pending_reward(
         return {'success': False, 'message': 'تم استلام المكافأة مسبقاً'}
     
     # Grant reward
-    reward = 1  # نقطة واحدة للإعلان المعلق
+    reward_gems = 1
+    reward_diamonds = 25
     
     await db.users.update_one(
         {'$or': [{'id': user_id}, {'user_id': user_id}]},
-        {'$inc': {'points': reward, 'total_earned': reward, 'ads_watched': 1}}
+        {'$inc': {
+            'saqr_gems': reward_gems,
+            'saqr_points': reward_gems,
+            'points': reward_gems,
+            'diamonds': reward_diamonds,
+            'total_earned': reward_gems,
+            'ads_watched': 1
+        }}
     )
     
     await db.ad_sessions.update_one(
@@ -480,7 +511,7 @@ async def sync_pending_reward(
         {'$set': {'status': 'completed', 'synced_at': datetime.now(timezone.utc)}}
     )
     
-    return {'success': True, 'reward': reward}
+    return {'success': True, 'gems_earned': reward_gems, 'diamonds_earned': reward_diamonds}
 
 
 @router.get('/leaderboard')
@@ -488,14 +519,14 @@ async def get_rewarded_leaderboard():
     """Get top earners from rewarded ads"""
     db = get_db()
     
-    # Get top 10 users by rewarded points this week
+    # Get top 10 users by rewarded gems this week
     week_start = datetime.now(timezone.utc) - timedelta(days=7)
     
     pipeline = [
         {'$match': {'completed': True, 'timestamp': {'$gte': week_start}}},
         {'$group': {
             '_id': '$user_id',
-            'total_points': {'$sum': '$points_earned'},
+            'total_points': {'$sum': {'$ifNull': ['$gems_earned', '$points_earned']}},
             'total_views': {'$sum': 1}
         }},
         {'$sort': {'total_points': -1}},

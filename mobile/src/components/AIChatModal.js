@@ -145,7 +145,7 @@ const AIChatModal = ({ visible, onClose }) => {
     }
     
     if (q.includes('ألعاب') || q.includes('games') || q.includes('لعب')) {
-      return 'الألعاب المتوفرة:\n\n• شطرنج - استراتيجية\n• إكس أو - سريعة\n• أسئلة ثقافية - 50 سؤال\n• رياضيات سريعة\n• ألغاز متنوعة\n• الثعبان، 2048، تتريس\n• AI Quest - تحدي الذكاء\n\nالعب واكسب الألماس والنقاط!';
+      return 'الألعاب المتوفرة:\n\n• شطرنج - استراتيجية\n• إكس أو - سريعة\n• أسئلة ثقافية - 50 سؤال\n• رياضيات سريعة\n• ألغاز متنوعة\n• الثعبان، 2048، تتريس\n• AI Quest - تحدي الذكاء\n\nالعب واكسب الألماس وجواهر صقر!';
     }
     
     if (q.includes('ألماس') || q.includes('diamond')) {
@@ -167,9 +167,6 @@ const AIChatModal = ({ visible, onClose }) => {
             <View style={styles.titleContainer}>
               <View style={styles.aiIconBg}>
                 <Image source={require('../../assets/logo_saqr.png')} style={styles.aiFalconIcon} resizeMode="cover" />
-                <View style={styles.aiWaveBadge}>
-                  <Ionicons name="hand-right" size={8} color="#0f172a" />
-                </View>
               </View>
               <Text style={styles.title}>المساعد الذكي</Text>
             </View>
@@ -282,19 +279,6 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 6,
-  },
-  aiWaveBadge: {
-    position: 'absolute',
-    right: -3,
-    top: -2,
-    width: 13,
-    height: 13,
-    borderRadius: 7,
-    backgroundColor: '#fde68a',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#fef3c7',
   },
   title: { color: '#FFF', fontSize: 18, fontWeight: 'bold' },
 

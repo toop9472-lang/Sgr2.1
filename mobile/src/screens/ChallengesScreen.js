@@ -1,5 +1,5 @@
 // Challenges & Rewards Screen
-// Daily Challenges (69 points max) + 14-day Login Rewards (150 points/month)
+// Daily Challenges (69 gems max) + 14-day Login Rewards
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
@@ -86,7 +86,7 @@ const ChallengesScreen = ({ user, onPointsEarned }) => {
       if (rewardsRes.ok) {
         const data = await rewardsRes.json();
         setLoginRewards(data.rewards || []);
-        setStats(prev => ({ ...prev, loginDays: data.login_days, claimedRewardPoints: data.claimed_points }));
+        setStats(prev => ({ ...prev, loginDays: data.login_days, claimedRewardGems: data.claimed_gems ?? data.claimed_points }));
       }
 
       if (statsRes.ok) {
@@ -123,7 +123,7 @@ const ChallengesScreen = ({ user, onPointsEarned }) => {
       if (response.ok) {
         const data = await response.json();
         Alert.alert('مبروك!', data.message);
-        if (onPointsEarned) onPointsEarned(data.points_earned);
+        if (onPointsEarned) onPointsEarned(data.gems_earned ?? data.points_earned ?? 0);
         fetchData();
       } else {
         const error = await response.json();
@@ -149,7 +149,7 @@ const ChallengesScreen = ({ user, onPointsEarned }) => {
       if (response.ok) {
         const data = await response.json();
         Alert.alert('مبروك!', data.message);
-        if (onPointsEarned) onPointsEarned(data.points_earned);
+        if (onPointsEarned) onPointsEarned(data.gems_earned ?? data.points_earned ?? 0);
         fetchData();
       } else {
         const error = await response.json();
@@ -183,8 +183,8 @@ const ChallengesScreen = ({ user, onPointsEarned }) => {
     );
   }
 
-  const todayPoints = stats?.today?.challenge_points || 0;
-  const monthRewardPoints = stats?.this_month?.login_reward_points || 0;
+  const todayPoints = (stats?.today?.challenge_gems ?? stats?.today?.challenge_points) || 0;
+  const monthRewardPoints = (stats?.this_month?.login_reward_gems ?? stats?.this_month?.login_reward_points) || 0;
 
   return (
     <ScrollView
@@ -207,7 +207,7 @@ const ChallengesScreen = ({ user, onPointsEarned }) => {
           </View>
           <View>
             <Text style={styles.headerTitle}>التحديات والمكافآت</Text>
-            <Text style={styles.headerSubtitle}>اكسب نقاط إضافية يومياً</Text>
+            <Text style={styles.headerSubtitle}>اكسب جواهر إضافية يومياً</Text>
           </View>
         </View>
 
@@ -216,11 +216,11 @@ const ChallengesScreen = ({ user, onPointsEarned }) => {
           <View style={styles.statBox}>
             <Ionicons name="today-outline" size={20} color="#22c55e" />
             <Text style={styles.statValue}>{todayPoints}/69</Text>
-            <Text style={styles.statLabel}>نقاط اليوم</Text>
+            <Text style={styles.statLabel}>جواهر اليوم</Text>
           </View>
           <View style={styles.statBox}>
             <Ionicons name="calendar-outline" size={20} color="#60a5fa" />
-            <Text style={styles.statValue}>{monthRewardPoints}/150</Text>
+            <Text style={styles.statValue}>{monthRewardPoints}/160</Text>
             <Text style={styles.statLabel}>مكافآت الشهر</Text>
           </View>
           <View style={styles.statBox}>
@@ -238,7 +238,7 @@ const ChallengesScreen = ({ user, onPointsEarned }) => {
             </View>
             <View>
               <Text style={styles.sectionTitle}>التحديات اليومية</Text>
-              <Text style={styles.sectionSubtitle}>الحد الأقصى: 69 نقطة يومياً</Text>
+              <Text style={styles.sectionSubtitle}>الحد الأقصى: 69 جوهرة يومياً</Text>
             </View>
           </View>
 
@@ -262,7 +262,7 @@ const ChallengesScreen = ({ user, onPointsEarned }) => {
                   </View>
                   <View style={styles.challengePoints}>
                     <Ionicons name="star" size={14} color="#fbbf24" />
-                    <Text style={styles.challengePointsText}>{challenge.points}</Text>
+                    <Text style={styles.challengePointsText}>{challenge.gems ?? challenge.points}</Text>
                   </View>
                 </View>
 
@@ -322,7 +322,7 @@ const ChallengesScreen = ({ user, onPointsEarned }) => {
             </View>
             <View>
               <Text style={styles.sectionTitle}>مكافآت تسجيل الدخول</Text>
-              <Text style={styles.sectionSubtitle}>14 يوم = 150 نقطة شهرياً</Text>
+              <Text style={styles.sectionSubtitle}>14 يوم = 160 جوهرة شهرياً</Text>
             </View>
           </View>
 
@@ -374,7 +374,7 @@ const ChallengesScreen = ({ user, onPointsEarned }) => {
                           reward.claimed && styles.rewardPointsClaimed,
                           !reward.unlocked && styles.rewardPointsLocked,
                         ]}>
-                          {reward.points}
+                          {reward.gems ?? reward.points}
                         </Text>
                       </View>
                       {reward.can_claim && (

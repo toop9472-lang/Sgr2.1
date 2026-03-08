@@ -117,9 +117,9 @@ const DailyRewardsModal = ({ visible, onClose, userId, onRewardClaimed }) => {
         <Text style={styles.rewardDay}>{reward.label}</Text>
         <View style={[styles.rewardIconContainer, isNext && styles.rewardIconActive]}>
           <Ionicons
-            name={reward.type === 'diamonds' ? 'diamond' : 'star'}
+            name={reward.type === 'diamonds' ? 'diamond' : 'sparkles'}
             size={20}
-            color={reward.type === 'diamonds' ? '#60a5fa' : '#fbbf24'}
+            color={reward.type === 'diamonds' ? '#60a5fa' : '#f472b6'}
           />
         </View>
         <Text style={[styles.rewardAmount, isNext && styles.rewardAmountActive]}>
@@ -194,12 +194,12 @@ const DailyRewardsModal = ({ visible, onClose, userId, onRewardClaimed }) => {
                         colors={
                           rewardStatus.next_reward.type === 'diamonds'
                             ? ['#3b82f6', '#1d4ed8']
-                            : ['#f59e0b', '#d97706']
+                            : ['#ec4899', '#be185d']
                         }
                         style={styles.currentRewardBadge}
                       >
                         <Ionicons
-                          name={rewardStatus.next_reward.type === 'diamonds' ? 'diamond' : 'star'}
+                          name={rewardStatus.next_reward.type === 'diamonds' ? 'diamond' : 'sparkles'}
                           size={24}
                           color="#FFF"
                         />
@@ -207,7 +207,7 @@ const DailyRewardsModal = ({ visible, onClose, userId, onRewardClaimed }) => {
                           +{rewardStatus.next_reward.amount}
                         </Text>
                         <Text style={styles.currentRewardType}>
-                          {rewardStatus.next_reward.type === 'diamonds' ? 'ألماسة' : 'نقطة'}
+                          {rewardStatus.next_reward.type === 'diamonds' ? 'ألماسة' : 'جوهرة صقر'}
                         </Text>
                       </LinearGradient>
                     </Animated.View>
