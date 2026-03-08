@@ -15,6 +15,8 @@ import asyncio
 router = APIRouter(prefix='/auth', tags=['Authentication'])
 
 DEFAULT_PUBLIC_BASE_URL = "https://saqr-ui-sync.emergent.host"
+WELCOME_GEMS_BONUS = 500
+WELCOME_GEMS_FLAG = "welcome_gems_bonus_v1_granted"
 
 def _resolve_public_base_url(request: Request) -> str:
     """Resolve the externally reachable base URL behind proxies."""
@@ -29,6 +31,44 @@ def _resolve_google_redirect_uri(request: Request) -> str:
 
 def _resolve_apple_redirect_uri(request: Request) -> str:
     return os.environ.get('APPLE_REDIRECT_URI') or f"{_resolve_public_base_url(request)}/api/auth/apple/callback"
+
+async def _grant_welcome_gems_once(db, user_id: str) -> bool:
+    """Grant one-time 500 gems to existing accounts only once."""
+    if not user_id:
+        return False
+    now_iso = datetime.utcnow().isoformat()
+    result = await db.users.update_one(
+        {
+            "$and": [
+                {"$or": [{"id": user_id}, {"user_id": user_id}]},
+                {
+                    "$or": [
+                        {WELCOME_GEMS_FLAG: {"$exists": False}},
+                        {WELCOME_GEMS_FLAG: False},
+                    ]
+                },
+            ]
+        },
+        {
+            "$inc": {
+                "saqr_gems": WELCOME_GEMS_BONUS,
+                "saqr_points": WELCOME_GEMS_BONUS,
+                "points": WELCOME_GEMS_BONUS,
+            },
+            "$set": {
+                WELCOME_GEMS_FLAG: True,
+                "updated_at": datetime.utcnow(),
+            },
+            "$push": {
+                "saqr_gems_transactions": {
+                    "type": "welcome_gems_bonus_v1",
+                    "amount": WELCOME_GEMS_BONUS,
+                    "timestamp": now_iso,
+                }
+            },
+        },
+    )
+    return bool(result.modified_count)
 
 def get_db():
     """Get database connection"""
@@ -147,6 +187,8 @@ async def signin(credentials: EmailLogin, request: Request):
             
             # Handle both 'id' and 'user_id' fields for backward compatibility
             user_id = user.get('id') or user.get('user_id')
+            await _grant_welcome_gems_once(db, user_id)
+            user = await db.users.find_one({'$or': [{'id': user_id}, {'user_id': user_id}]}, {'_id': 0})
             access_token, refresh_token = create_token_pair(user_id)
             
             created_at = user.get('created_at')
@@ -158,8 +200,8 @@ async def signin(credentials: EmailLogin, request: Request):
             # Get economy data from user document directly
             # Default values for new users: 300 diamonds, 0 gems
             diamonds = user.get('diamonds', 300)  # 300 initial diamonds for new users
-            saqr_gems = user.get('saqr_gems', 0)
             saqr_points = user.get('saqr_points', user.get('points', 0))
+            saqr_gems = user.get('saqr_gems', saqr_points)
             
             return {
                 'token': access_token,
@@ -237,8 +279,10 @@ async def register_email(data: EmailRegister, request: Request):
         'provider': 'email',
         'provider_id': data.email,
         'avatar': f"https://ui-avatars.com/api/?name={data.name}&background=6366f1&color=fff",
-        'points': 0,
-        'saqr_points': 0,
+        'points': WELCOME_GEMS_BONUS,
+        'saqr_points': WELCOME_GEMS_BONUS,
+        'saqr_gems': WELCOME_GEMS_BONUS,
+        WELCOME_GEMS_FLAG: True,
         'diamonds': 300,  # 300 ألماسة ترحيبية
         'total_earned': 0,
         'watched_ads': [],
@@ -248,6 +292,12 @@ async def register_email(data: EmailRegister, request: Request):
             'id': str(uuid.uuid4()),
             'type': 'welcome_bonus',
             'amount': 300,
+            'created_at': datetime.utcnow().isoformat()
+        }],
+        'saqr_gems_transactions': [{
+            'id': str(uuid.uuid4()),
+            'type': 'welcome_gems_bonus_v1',
+            'amount': WELCOME_GEMS_BONUS,
             'created_at': datetime.utcnow().isoformat()
         }],
         'registration_ip': client_ip,
@@ -281,8 +331,9 @@ async def register_email(data: EmailRegister, request: Request):
             'email': data.email,
             'name': data.name,
             'avatar': user_doc['avatar'],
-            'points': 0,
-            'saqr_points': 0,
+            'points': WELCOME_GEMS_BONUS,
+            'saqr_points': WELCOME_GEMS_BONUS,
+            'saqr_gems': WELCOME_GEMS_BONUS,
             'diamonds': 300,
             'total_earned': 0,
             'joined_date': user_doc['created_at'].isoformat()
@@ -358,10 +409,24 @@ async def login(user_data: UserCreate):
                 }}
             )
             user_id = existing_user['id']
+            await _grant_welcome_gems_once(db, user_id)
         else:
             # Create new user
             new_user = User(**user_data.dict())
             user_dict = new_user.dict()
+            user_dict.update({
+                'points': WELCOME_GEMS_BONUS,
+                'saqr_points': WELCOME_GEMS_BONUS,
+                'saqr_gems': WELCOME_GEMS_BONUS,
+                WELCOME_GEMS_FLAG: True,
+                'diamonds': 300,
+                'saqr_gems_transactions': [{
+                    'id': str(uuid.uuid4()),
+                    'type': 'welcome_gems_bonus_v1',
+                    'amount': WELCOME_GEMS_BONUS,
+                    'created_at': datetime.utcnow().isoformat()
+                }],
+            })
             await db.users.insert_one(user_dict)
             user_id = new_user.id
         
@@ -378,7 +443,9 @@ async def login(user_data: UserCreate):
                 'email': user['email'],
                 'name': user['name'],
                 'avatar': user.get('avatar'),
-                'points': user['points'],
+                'points': user.get('saqr_points', user.get('points', 0)),
+                'saqr_gems': user.get('saqr_gems', user.get('saqr_points', user.get('points', 0))),
+                'diamonds': user.get('diamonds', 300),
                 'total_earned': user['total_earned'],
                 'joined_date': user['created_at'].isoformat()
             }
@@ -396,7 +463,8 @@ async def get_current_user(user_id: str = Depends(get_current_user_id)):
     Get current user profile
     """
     db = get_db()
-    user = await db.users.find_one({'id': user_id})
+    await _grant_welcome_gems_once(db, user_id)
+    user = await db.users.find_one({'$or': [{'id': user_id}, {'user_id': user_id}]})
     
     if not user:
         raise HTTPException(
@@ -410,7 +478,9 @@ async def get_current_user(user_id: str = Depends(get_current_user_id)):
             'email': user['email'],
             'name': user['name'],
             'avatar': user.get('avatar'),
-            'points': user['points'],
+            'points': user.get('saqr_points', user.get('points', 0)),
+            'saqr_gems': user.get('saqr_gems', user.get('saqr_points', user.get('points', 0))),
+            'diamonds': user.get('diamonds', 300),
             'total_earned': user['total_earned'],
             'watched_ads': user.get('watched_ads', []),
             'joined_date': user['created_at'].isoformat()
@@ -816,6 +886,7 @@ async def apple_sign_in_callback(request: Request):
                     'updated_at': datetime.utcnow()
                 }}
             )
+            await _grant_welcome_gems_once(db, user_id)
         else:
             # Create new user
             user_id = f"user_{uuid.uuid4().hex[:12]}"
@@ -825,10 +896,19 @@ async def apple_sign_in_callback(request: Request):
                 'name': name,
                 'provider': 'apple',
                 'provider_id': apple_user['id'],
-                'points': 0,
+                'points': WELCOME_GEMS_BONUS,
+                'saqr_points': WELCOME_GEMS_BONUS,
+                'saqr_gems': WELCOME_GEMS_BONUS,
+                WELCOME_GEMS_FLAG: True,
                 'diamonds': 100,
                 'total_earned': 0,
                 'is_guest': False,
+                'saqr_gems_transactions': [{
+                    'id': str(uuid.uuid4()),
+                    'type': 'welcome_gems_bonus_v1',
+                    'amount': WELCOME_GEMS_BONUS,
+                    'created_at': datetime.utcnow().isoformat()
+                }],
                 'created_at': datetime.utcnow(),
                 'updated_at': datetime.utcnow()
             }
@@ -884,7 +964,8 @@ async def get_session(session_id: str):
             'email': user.get('email', ''),
             'name': user.get('name', 'مستخدم'),
             'avatar': user.get('avatar'),
-            'points': user.get('points', 0),
+            'points': user.get('saqr_points', user.get('points', 0)),
+            'saqr_gems': user.get('saqr_gems', user.get('saqr_points', user.get('points', 0))),
             'diamonds': user.get('diamonds', 0),
             'total_earned': user.get('total_earned', 0),
             'joined_date': user.get('created_at', datetime.utcnow()).isoformat()
@@ -934,6 +1015,7 @@ async def apple_native_sign_in(data: AppleNativeLogin):
                 {'id': user_id},
                 {'$set': update_data}
             )
+            await _grant_welcome_gems_once(db, user_id)
         else:
             # Create new user
             user_id = f"user_{uuid.uuid4().hex[:12]}"
@@ -943,10 +1025,19 @@ async def apple_native_sign_in(data: AppleNativeLogin):
                 'name': data.name or 'مستخدم Apple',
                 'provider': 'apple',
                 'provider_id': data.user_id,
-                'points': 0,
+                'points': WELCOME_GEMS_BONUS,
+                'saqr_points': WELCOME_GEMS_BONUS,
+                'saqr_gems': WELCOME_GEMS_BONUS,
+                WELCOME_GEMS_FLAG: True,
                 'diamonds': 100,  # Welcome bonus
                 'total_earned': 0,
                 'is_guest': False,
+                'saqr_gems_transactions': [{
+                    'id': str(uuid.uuid4()),
+                    'type': 'welcome_gems_bonus_v1',
+                    'amount': WELCOME_GEMS_BONUS,
+                    'created_at': datetime.utcnow().isoformat()
+                }],
                 'created_at': datetime.utcnow(),
                 'updated_at': datetime.utcnow()
             }
@@ -966,7 +1057,8 @@ async def apple_native_sign_in(data: AppleNativeLogin):
                 'email': user.get('email', ''),
                 'name': user.get('name', 'مستخدم'),
                 'avatar': user.get('avatar'),
-                'points': user.get('points', 0),
+                'points': user.get('saqr_points', user.get('points', 0)),
+                'saqr_gems': user.get('saqr_gems', user.get('saqr_points', user.get('points', 0))),
                 'diamonds': user.get('diamonds', 0),
                 'total_earned': user.get('total_earned', 0),
                 'joined_date': user.get('created_at', datetime.utcnow()).isoformat()
@@ -1101,6 +1193,7 @@ async def google_sign_in_callback(request: Request, code: str = None, state: str
                     'updated_at': datetime.utcnow()
                 }}
             )
+            await _grant_welcome_gems_once(db, user_id)
         else:
             user_id = f"user_{uuid.uuid4().hex[:12]}"
             new_user = {
@@ -1110,10 +1203,19 @@ async def google_sign_in_callback(request: Request, code: str = None, state: str
                 'avatar': google_user.get('picture'),
                 'provider': 'google',
                 'provider_id': google_user.get('id'),
-                'points': 0,
+                'points': WELCOME_GEMS_BONUS,
+                'saqr_points': WELCOME_GEMS_BONUS,
+                'saqr_gems': WELCOME_GEMS_BONUS,
+                WELCOME_GEMS_FLAG: True,
                 'diamonds': 100,
                 'total_earned': 0,
                 'is_guest': False,
+                'saqr_gems_transactions': [{
+                    'id': str(uuid.uuid4()),
+                    'type': 'welcome_gems_bonus_v1',
+                    'amount': WELCOME_GEMS_BONUS,
+                    'created_at': datetime.utcnow().isoformat()
+                }],
                 'created_at': datetime.utcnow(),
                 'updated_at': datetime.utcnow()
             }

@@ -1,162 +1,118 @@
-# بيانات التطبيق لـ App Store Connect
+# App Store Connect Metadata (Games-first)
 
-## معلومات التطبيق الأساسية
+## 1) Promotional Text (170 chars max)
 
-### الاسم
-- **العربي:** صقر للمكافآت
-- **الإنجليزي:** Saqr Rewards
-
-### العنوان الفرعي (Subtitle)
-- **العربي:** اربح نقاط من مشاهدة الإعلانات
-- **الإنجليزي:** Earn Points Watching Ads
-
----
-
-## وصف التطبيق
-
-### الوصف العربي (للنسخ)
+### Arabic
 ```
-🦅 صقر للمكافآت - اربح نقاط حقيقية من مشاهدة الإعلانات!
-
-هل تريد كسب مكافآت من وقت فراغك؟ تطبيق صقر يتيح لك ربح النقاط بمشاهدة إعلانات قصيرة وممتعة.
-
-✨ المميزات الرئيسية:
-
-• 💰 اربح نقطة واحدة لكل دقيقة مشاهدة
-• 🎯 إعلانات متنوعة وممتعة
-• 💳 اسحب أرباحك عبر PayPal أو STC Pay أو تحويل بنكي
-• 🔒 نظام آمن ومحمي ضد الغش
-• 🌙 واجهة أنيقة بتصميم عصري
-• 📱 تجربة سلسة تشبه TikTok
-
-📊 كيف يعمل؟
-1. سجّل حسابك مجاناً
-2. شاهد الإعلانات واكسب النقاط
-3. اسحب أرباحك عند الوصول للحد الأدنى
-
-🎁 500 نقطة = 1 دولار أمريكي
-
-ابدأ الآن واربح من وقت فراغك!
-
-للدعم: support@saqr-rewards.com
+تطبيق صقر هو مركز ألعاب موبايل متكامل: ألعاب فردية وأونلاين، لوائح متصدرين، تحديات يومية، واقتصاد موحّد للجواهر والألماس داخل تجربة لعب احترافية.
 ```
 
-### الوصف الإنجليزي (للنسخ)
+### English
 ```
-🦅 Saqr Rewards - Earn Real Points by Watching Ads!
-
-Want to make money in your spare time? Saqr app lets you earn points by watching short, engaging ads.
-
-✨ Key Features:
-
-• 💰 Earn 1 point for every minute watched
-• 🎯 Diverse and engaging advertisements
-• 💳 Withdraw via PayPal, STC Pay, or bank transfer
-• 🔒 Secure anti-cheat system
-• 🌙 Elegant modern design
-• 📱 Smooth TikTok-like experience
-
-📊 How It Works:
-1. Create your free account
-2. Watch ads and earn points
-3. Withdraw when you reach the minimum
-
-🎁 500 points = $1 USD
-
-Start now and earn from your free time!
-
-Support: support@saqr-rewards.com
+Saqr is a mobile gaming hub with solo and online games, daily challenges, real leaderboards, and a unified in-game economy for a polished game-first experience.
 ```
 
 ---
 
-## الكلمات المفتاحية (Keywords)
+## 2) Description (Primary value = Games)
 
-### للسوق العربي
+### Arabic
 ```
-مكافآت,ربح,نقاط,اعلانات,فلوس,كسب,هدايا,سحب,محفظة,صقر
+صقر هو تطبيق ألعاب موبايل شامل يضع تجربة اللعب أولاً.
+
+استمتع بمجموعة ألعاب فردية وأونلاين داخل التطبيق، مع تحديات يومية، لوائح متصدرين حقيقية، ونظام اقتصادي موحّد:
+- جواهر صقر: رصيد الإنجاز داخل النظام.
+- الألماس: عملة الاستخدام داخل الميزات والأنماط.
+
+ماذا ستجد في صقر؟
+- ألعاب متنوعة تعمل داخل التطبيق بسلاسة.
+- تنافس مستمر عبر الترتيب اليومي ولوحات الشرف.
+- واجهة احترافية متوافقة مع الهاتف والآيباد.
+- نظام حساب آمن (بريد، Apple، Google).
+- دعم فني مباشر من صفحة الدعم الرسمية.
+
+ميزة الإعلانات داخل صقر هي ميزة ثانوية اختيارية لتحسين التقدم داخل الألعاب، وليست الغرض الأساسي من التطبيق.
+
+ابدأ اللعب الآن وطور مستواك في مجتمع صقر.
 ```
 
-### للسوق الإنجليزي
+### English
 ```
-rewards,earn,points,ads,money,cashback,gift,withdraw,wallet,saqr
+Saqr is a full mobile gaming app built around a game-first experience.
+
+Play a curated set of solo and online games directly inside the app, with daily challenges, real leaderboards, and a unified in-game economy:
+- Saqr Gems: progression rewards.
+- Diamonds: in-app gameplay currency.
+
+What you get in Saqr:
+- Mobile-friendly games that run smoothly in-app.
+- Competitive progression with rankings and challenge loops.
+- Professional UI for iPhone and iPad.
+- Secure account system (Email, Apple, Google).
+- Direct support through the official support page.
+
+Ads are a secondary optional feature to support progression, not the app's primary purpose.
 ```
 
 ---
 
-## معلومات إضافية
+## 3) How does it work? (Review-friendly)
 
-### التصنيف (Category)
-- **Primary:** Lifestyle
-- **Secondary:** Entertainment
-
-### التصنيف العمري (Age Rating)
-- **4+** (لا يوجد محتوى غير مناسب)
-
-### رابط سياسة الخصوصية
+### Arabic
 ```
-https://quality-restore-1.preview.emergentagent.com/privacy
+1) أنشئ حسابك أو سجّل الدخول.
+2) اختر لعبة وابدأ اللعب مباشرة داخل التطبيق.
+3) اربح جواهر صقر عبر اللعب والإنجازات.
+4) استخدم الألماس داخل أنماط اللعب والميزات.
+5) تابع ترتيبك في لوحة المتصدرين اليومية.
 ```
 
-### رابط الدعم
+### English
 ```
-https://quality-restore-1.preview.emergentagent.com
-```
-
-### البريد الإلكتروني للدعم
-```
-support@saqr-rewards.com
+1) Sign up or sign in.
+2) Select a game and play in-app.
+3) Earn Saqr Gems through gameplay and achievements.
+4) Use Diamonds for gameplay features.
+5) Track your rank on the leaderboard.
 ```
 
 ---
 
-## صور الشاشات المطلوبة
+## 4) Keywords (<=100 chars suggested)
 
-### iPhone (6.7")
-الأبعاد: 1290 x 2796 pixels
-
-### iPhone (6.5")
-الأبعاد: 1284 x 2778 pixels
-
-### iPhone (5.5")
-الأبعاد: 1242 x 2208 pixels
-
-### iPad Pro (12.9")
-الأبعاد: 2048 x 2732 pixels
-
----
-
-## نصوص صور الشاشات
-
-### الصورة 1 - الشاشة الرئيسية
-- **العربي:** اربح نقاط من مشاهدة الإعلانات
-- **الإنجليزي:** Earn Points Watching Ads
-
-### الصورة 2 - مشاهدة الإعلان
-- **العربي:** شاهد واكسب في دقائق
-- **الإنجليزي:** Watch & Earn in Minutes
-
-### الصورة 3 - النقاط
-- **العربي:** تتبع أرباحك بسهولة
-- **الإنجليزي:** Track Your Earnings Easily
-
-### الصورة 4 - السحب
-- **العربي:** اسحب أرباحك متى شئت
-- **الإنجليزي:** Withdraw Anytime
-
-### الصورة 5 - المكافآت
-- **العربي:** 500 نقطة = 1 دولار
-- **الإنجليزي:** 500 Points = $1
-
----
-
-## ملاحظات المراجعة (Review Notes)
-
+### Arabic (copy as comma-separated)
 ```
-بيانات الاختبار:
-- البريد: testuser@test.com
-- كلمة المرور: testpassword
+العاب,العاب اونلاين,تحديات,متصدرين,جواهر,الماس,موبايل,تنافس,صقر
+```
 
-التطبيق يعرض إعلانات فيديو للمستخدمين ويكافئهم بنقاط.
-النقاط يمكن تحويلها لأموال حقيقية.
+### English
+```
+games,online games,mobile games,leaderboard,challenges,arcade,multiplayer,saqr
+```
+
+---
+
+## 5) Support URL
+```
+https://saqr-ui-sync.emergent.host/support
+```
+
+## 6) Marketing URL
+```
+https://saqr-ui-sync.emergent.host
+```
+
+## 7) Version (example for next upload)
+```
+6.1
+```
+
+## 8) Copyright
+```
+© 2026 Saqr Games. All rights reserved.
+```
+
+## 9) Routing App Coverage File
+```
+Optional for this app type. Leave empty unless Apple Maps routing entitlement is used.
 ```
