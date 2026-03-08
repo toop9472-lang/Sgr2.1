@@ -385,14 +385,14 @@ function MainApp() {
         isAdmin ? (
           <Navigate to="/admin/dashboard" />
         ) : (
-          <div className="dark">
+          <div className="dark admin-shell">
             <AdminLogin onAdminLogin={handleAdminLogin} />
           </div>
         )
       } />
       <Route path="/admin/dashboard" element={
         isAdmin ? (
-          <div className="dark">
+          <div className="dark admin-shell">
             <AdminDashboard admin={adminData} onLogout={handleAdminLogout} />
           </div>
         ) : (

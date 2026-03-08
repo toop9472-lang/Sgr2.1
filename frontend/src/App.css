@@ -83,3 +83,21 @@ html {
 .animate-bounce-in {
     animation: bounce-in 0.5s ease-out;
 }
+
+/* Admin UI contrast hardening (texts must stay readable) */
+.admin-shell {
+    color: #e5e7eb;
+}
+
+.admin-shell .text-gray-500 {
+    color: #9ca3af !important;
+}
+
+.admin-shell .text-gray-400,
+.admin-shell .text-muted-foreground {
+    color: #cbd5e1 !important;
+}
+
+.admin-shell .text-gray-300 {
+    color: #e5e7eb !important;
+}
