@@ -862,7 +862,7 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
   if (!visible) return null;
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
+    <Modal visible={visible} animationType="slide" transparent presentationStyle="overFullScreen" statusBarTranslucent>
       <View style={styles.overlay}>
         <View style={styles.container}>
           <LinearGradient
@@ -1002,7 +1002,7 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
 
         {/* Lucky Wheel Modal */}
         {showWheel && (
-          <Modal visible={showWheel} animationType="fade" transparent>
+          <Modal visible={showWheel} animationType="fade" transparent presentationStyle="overFullScreen" statusBarTranslucent>
             <View style={styles.wheelOverlay}>
               <View style={styles.wheelContainer}>
                 <LinearGradient
@@ -1043,13 +1043,17 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.85)',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 16,
   },
   container: {
     backgroundColor: '#0a0a0f',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    maxHeight: '92%',
+    borderRadius: 24,
+    width: '96%',
+    maxWidth: 460,
+    maxHeight: '94%',
     overflow: 'hidden',
   },
   gradient: {

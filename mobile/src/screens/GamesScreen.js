@@ -42,50 +42,191 @@ const toThumbCover = (targetUrl) => (
   targetUrl ? `https://image.thum.io/get/width/600/crop/600/noanimate/${targetUrl}` : null
 );
 const EXTERNAL_GAME_URLS = {
-  aiquest: 'https://shoot.nothans.com/',
-  chess: 'https://www.chess.com/play/computer',
-  tictactoe: 'https://enclavegames.github.io/Enclave-Phaser-Template/',
-  tactix: 'https://orb.enclavegames.com/',
-  memory: 'https://hextris.io/',
-  snake: 'https://p4th4k.github.io/NotYourAverageSnake/frontend/index.html',
-  brickbreaker: 'https://games50.github.io/WebGl-Demo/',
-  // Keep this one internal for balanced, completable mobile stages.
-  puzzle: null,
-  trivia: 'https://scottrippey.github.io/xquestjs/',
-  mathrace: 'https://www.balanc3dgame.com/',
-  wordrace: 'https://ale4ero.github.io/Inter-Galactic/',
-  colorswitch: 'https://j8r.github.io/Orball/',
-  riddles: 'https://fk652.github.io/Galactic-Defender/',
-  millionaire: 'https://lorgan3.github.io/sorcerers/',
-  brickstormx: 'https://erichlof.github.io/AntiGravity-Pool/AntiGravityPool.html',
-  puzzlemaster: 'https://www.balanc3dgame.com/',
-  triviaplus: 'https://enclavegames.github.io/Enclave-Phaser-Template/',
-  wordmaster: 'https://flappybird.io/',
-  reactiontap: 'https://pacman.live/',
-  sequencesprint: 'https://j8r.github.io/Orball/',
+  aiquest: 'https://kbhgames.com/game/zombotron-re-boot',
+  chess: 'https://hedchick.itch.io/slimefall',
+  tictactoe: 'https://muneersbehat.itch.io/trapadventurecolorbrothers',
+  tactix: 'https://shoot.nothans.com/',
+  memory: 'https://www.balanc3dgame.com/',
+  snake: 'https://pacman.live/',
+  brickbreaker: 'https://www.4j.com/Nelly-game',
+  puzzle: 'https://fmproject.itch.io/poly-cat-balls',
+  trivia: 'https://kirlosev.itch.io/marblox',
+  mathrace: 'https://paperclip36.itch.io/neonrogue',
+  wordrace: 'https://twobitcode.itch.io/multiplayer-fusion-2',
+  colorswitch: 'https://www.pacogames.com/casual/colour-chase',
+  riddles: 'https://www.golfgl.de/lightblocks/',
+  millionaire: 'https://kodachigames.itch.io/wicked-climb',
+  brickstormx: 'https://buddyboardgames.com/uno',
+  puzzlemaster: 'https://www.jawaker.com/en/games/basra',
+  triviaplus: 'https://www.jawaker.com/en/games/baloot',
+  wordmaster: 'https://poki.com/en/g/carrom-multiplayer',
+  reactiontap: 'https://8ballpool3d.com/',
+  sequencesprint: 'https://sequentor.com/',
 };
-const GAME_COVER_IMAGES = {
-  aiquest: toThumbCover('https://shoot.nothans.com/'),
-  chess: toThumbCover('https://www.chess.com/play/computer'),
-  tictactoe: toThumbCover('https://enclavegames.github.io/Enclave-Phaser-Template/'),
-  tactix: toThumbCover('https://orb.enclavegames.com/'),
-  memory: toThumbCover('https://hextris.io/'),
-  snake: toThumbCover('https://p4th4k.github.io/NotYourAverageSnake/frontend/index.html'),
-  brickbreaker: toThumbCover('https://games50.github.io/WebGl-Demo/'),
-  puzzle: toThumbCover('https://phaserjs.github.io/editor-example-volcano/'),
-  trivia: toThumbCover('https://scottrippey.github.io/xquestjs/'),
-  mathrace: toThumbCover('https://www.balanc3dgame.com/'),
-  wordrace: toThumbCover('https://ale4ero.github.io/Inter-Galactic/'),
-  colorswitch: toThumbCover('https://j8r.github.io/Orball/'),
-  riddles: toThumbCover('https://fk652.github.io/Galactic-Defender/'),
-  millionaire: toThumbCover('https://lorgan3.github.io/sorcerers/'),
-  brickstormx: toThumbCover('https://erichlof.github.io/AntiGravity-Pool/AntiGravityPool.html'),
-  puzzlemaster: toThumbCover('https://play2048.co/'),
-  triviaplus: toThumbCover('https://2048game.com/'),
-  wordmaster: toThumbCover('https://flappybird.io/'),
-  reactiontap: toThumbCover('https://pacman.live/'),
-  sequencesprint: toThumbCover('https://www.sudokuonline.io/'),
+const GAME_CATALOG_OVERRIDES = {
+  aiquest: {
+    name: 'Zombotron Re-Boot',
+    description: 'تصويب أكشن ومراحل سريعة.',
+    category: 'أكشن',
+    badge: 'NEW',
+    trend: 'رائج',
+    backendGameId: 'puzzle',
+  },
+  chess: {
+    name: 'Slimefall',
+    description: 'نجاة سريعة وتحديات دقيقة.',
+    category: 'منصات',
+    badge: 'NEW',
+    backendGameId: 'trivia',
+  },
+  tictactoe: {
+    name: 'Trap Adventure: Color Brothers',
+    description: 'منصات صعبة مع ألغاز ألوان.',
+    category: 'ألغاز',
+    badge: 'NEW',
+    backendGameId: 'brickbreaker',
+  },
+  tactix: {
+    name: 'Shoot.nothans.com',
+    description: 'تصويب مباشر بإيقاع سريع.',
+    category: 'تصويب',
+    badge: 'HOT',
+    backendGameId: 'puzzle',
+  },
+  memory: {
+    name: 'balanc3dgame.com',
+    description: 'تحديات توازن ثلاثية الأبعاد.',
+    category: 'مهارة',
+    badge: '3D',
+    backendGameId: 'tictactoe',
+  },
+  snake: {
+    name: 'pacman.live',
+    description: 'آركيد كلاسيكي بنسخة ويب حديثة.',
+    category: 'آركيد',
+    badge: 'LIVE',
+    backendGameId: 'brickbreaker',
+  },
+  brickbreaker: {
+    name: 'Nelly Jellies',
+    description: 'مغامرة خفيفة وتحديات تفاعلية.',
+    category: 'مغامرة',
+    badge: 'NEW',
+    backendGameId: 'riddles',
+  },
+  puzzle: {
+    name: 'Poly Cat Balls',
+    description: 'حل ألغاز فيزيائية بخطوط ذكية.',
+    category: 'ألغاز',
+    badge: 'CAT',
+    backendGameId: 'puzzle',
+  },
+  trivia: {
+    name: 'Marbleous!',
+    description: 'تحديات كرات وتوجيه ذكي.',
+    category: 'مهارة',
+    badge: 'PRO',
+    backendGameId: 'trivia',
+  },
+  mathrace: {
+    name: 'Neon Swarm - Rogue',
+    description: 'روجلايك نيون سريع ومكثف.',
+    category: 'أكشن',
+    badge: 'ROGUE',
+    backendGameId: 'riddles',
+  },
+  wordrace: {
+    name: 'Colored Fusion - LOCAL MULTIPLAYER - PC / MOBILE',
+    description: 'تجربة دمج ألوان متعددة الأنماط.',
+    category: 'تعاوني',
+    badge: 'COOP',
+    backendGameId: 'tictactoe',
+  },
+  colorswitch: {
+    name: 'Color Chase',
+    description: 'مطاردة ألوان سريعة ورد فعل.',
+    category: 'سرعة',
+    badge: 'FAST',
+    backendGameId: 'riddles',
+  },
+  riddles: {
+    name: 'Falling Lightblocks',
+    description: 'بلوكات ضوئية مع طور لعب ممتد.',
+    category: 'أركيد',
+    badge: 'NEON',
+    backendGameId: 'puzzle',
+  },
+  millionaire: {
+    name: "Ironmouse and Bubi's Wicked Climb",
+    description: 'تسلق صعب وممتع على الموبايل.',
+    category: 'منصات',
+    badge: 'HARD',
+    backendGameId: 'trivia',
+  },
+  brickstormx: {
+    name: 'UNO أونلاين',
+    description: 'أونلاين مباشر (2-4 لاعبين).',
+    category: 'ورق',
+    badge: 'ONLINE',
+    online: true,
+    externalMultiplayerDirect: true,
+    playerRange: '2-4',
+    backendGameId: 'trivia',
+  },
+  puzzlemaster: {
+    name: 'الباصرة أونلاين',
+    description: 'لعبة باصرة أونلاين (2-4 لاعبين).',
+    category: 'ورق',
+    badge: 'ONLINE',
+    online: true,
+    externalMultiplayerDirect: true,
+    playerRange: '2-4',
+    backendGameId: 'riddles',
+  },
+  triviaplus: {
+    name: 'البالوت أونلاين',
+    description: 'بلوت احترافية أونلاين (2-4 لاعبين).',
+    category: 'ورق',
+    badge: 'ONLINE',
+    online: true,
+    externalMultiplayerDirect: true,
+    playerRange: '2-4',
+    backendGameId: 'chess',
+  },
+  wordmaster: {
+    name: 'الكيرم أونلاين',
+    description: 'كيرم أونلاين (2-4 لاعبين).',
+    category: 'لوحية',
+    badge: 'ONLINE',
+    online: true,
+    externalMultiplayerDirect: true,
+    playerRange: '2-4',
+    backendGameId: 'brickbreaker',
+  },
+  reactiontap: {
+    name: 'البلياردو أونلاين',
+    description: 'بلياردو مباشر مع لاعبين حقيقيين.',
+    category: 'رياضة',
+    badge: 'ONLINE',
+    online: true,
+    externalMultiplayerDirect: true,
+    playerRange: '2-4',
+    backendGameId: 'puzzle',
+  },
+  sequencesprint: {
+    name: 'السكونس أونلاين',
+    description: 'Sequence أونلاين مباشر (2-4 لاعبين).',
+    category: 'استراتيجية',
+    badge: 'ONLINE',
+    online: true,
+    externalMultiplayerDirect: true,
+    playerRange: '2-4',
+    backendGameId: 'tictactoe',
+  },
 };
+const GAME_COVER_IMAGES = Object.fromEntries(
+  Object.entries(EXTERNAL_GAME_URLS).map(([id, url]) => [id, toThumbCover(url)]),
+);
 const IMPORTED_PRO_GAME_IDS = [
   'aiquest',
   'chess',
@@ -190,6 +331,12 @@ const GameCard = ({ game, onPress, pulseAnim, gameCost }) => {
                   {game.online ? (gameCost || game.onlineCost || 20) : SOLO_ROUND_DIAMOND_COST}
                 </Text>
               </View>
+              {game.playerRange ? (
+                <View style={styles.metaPill}>
+                  <Ionicons name="people-outline" size={12} color="#86efac" />
+                  <Text style={styles.metaPillText}>{game.playerRange}</Text>
+                </View>
+              ) : null}
             </View>
           </View>
         </LinearGradient>
@@ -427,6 +574,7 @@ const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
   const [useExternalSource, setUseExternalSource] = useState(Boolean(game?.externalUrl));
   const [webLoading, setWebLoading] = useState(true);
   const completedRef = useRef(false);
+  const sessionStartRef = useRef(Date.now());
   const fallbackNotifiedRef = useRef(false);
   const blockedNavNotifiedRef = useRef(false);
   const externalOrigin = useMemo(() => getOriginSafe(game?.externalUrl || ''), [game?.externalUrl]);
@@ -434,12 +582,18 @@ const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
   const claimPoints = useCallback(() => {
     if (completedRef.current) return;
     completedRef.current = true;
-    const calculated = Math.max(8, Math.min(36, Math.floor(score / 18)));
-    onComplete(calculated, mode === 'online' ? 'draw' : 'win');
-  }, [mode, onComplete, score]);
+    const sessionSeconds = Math.max(0, Math.floor((Date.now() - sessionStartRef.current) / 1000));
+    const effectiveScore = Math.max(score, sessionSeconds * 2);
+    const calculated = Math.max(8, Math.min(36, Math.floor(effectiveScore / 18)));
+    // استمرار اللعب يمنح فرصة فوز حقيقية (وليس مشاركة فقط).
+    const sustainedPlay = finished || effectiveScore >= 120 || sessionSeconds >= 75;
+    const resultType = sustainedPlay ? 'win' : (mode === 'online' ? 'draw' : 'draw');
+    onComplete(calculated, resultType);
+  }, [finished, mode, onComplete, score]);
 
   useEffect(() => {
     completedRef.current = false;
+    sessionStartRef.current = Date.now();
     fallbackNotifiedRef.current = false;
     blockedNavNotifiedRef.current = false;
     setScore(0);
@@ -504,7 +658,9 @@ const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
         <View style={{ flex: 1 }}>
           <Text style={styles.importedGameTitle}>{game?.name || 'Arcade'}</Text>
           <Text style={styles.importedGameSub}>
-            {useExternalSource ? 'مستورد داخل التطبيق' : 'محرك داخلي داخل التطبيق'}
+            {game?.externalMultiplayerDirect
+              ? `أونلاين مباشر ${game?.playerRange || ''}`.trim()
+              : (useExternalSource ? 'مستورد داخل التطبيق' : 'محرك داخلي داخل التطبيق')}
           </Text>
         </View>
         <View style={styles.importedStatPill}>
@@ -561,10 +717,23 @@ const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
           style={styles.importedWebView}
         />
         {webLoading && (
-          <View style={styles.importedWebLoading}>
-            <ActivityIndicator size="small" color="#60a5fa" />
-            <Text style={styles.importedWebLoadingText}>جاري تحميل اللعبة داخل التطبيق...</Text>
-          </View>
+          game?.coverImage ? (
+            <ImageBackground
+              source={{ uri: game.coverImage }}
+              style={styles.importedWebLoading}
+              imageStyle={styles.importedWebLoadingImage}
+            >
+              <View style={styles.importedWebLoadingOverlay}>
+                <ActivityIndicator size="small" color="#60a5fa" />
+                <Text style={styles.importedWebLoadingText}>جاري تحميل اللعبة داخل التطبيق...</Text>
+              </View>
+            </ImageBackground>
+          ) : (
+            <View style={styles.importedWebLoading}>
+              <ActivityIndicator size="small" color="#60a5fa" />
+              <Text style={styles.importedWebLoadingText}>جاري تحميل اللعبة داخل التطبيق...</Text>
+            </View>
+          )
         )}
       </View>
 
@@ -2375,11 +2544,16 @@ const GamesScreen = ({
     return IMPORTED_PRO_GAME_IDS
       .map((id) => games.find((game) => game.id === id))
       .filter(Boolean)
-      .map((game) => ({
-        ...game,
-        externalUrl: EXTERNAL_GAME_URLS[game.id] || null,
-        coverImage: GAME_COVER_IMAGES[game.id] || toThumbCover(EXTERNAL_GAME_URLS[game.id]),
-      }));
+      .map((game) => {
+        const override = GAME_CATALOG_OVERRIDES[game.id] || {};
+        const externalUrl = EXTERNAL_GAME_URLS[game.id] || null;
+        return {
+          ...game,
+          ...override,
+          externalUrl,
+          coverImage: GAME_COVER_IMAGES[game.id] || toThumbCover(externalUrl),
+        };
+      });
   }, [games]);
 
   const getGameById = useCallback((gameId) => {
@@ -2400,8 +2574,21 @@ const GamesScreen = ({
     const game = getGameById(gameId);
     const backendId = game?.backendGameId || gameId;
     const fallbackMap = {
-      reactiontap: 'colorswitch',
-      sequencesprint: 'mathrace',
+      aiquest: 'puzzle',
+      chess: 'trivia',
+      tictactoe: 'brickbreaker',
+      tactix: 'puzzle',
+      memory: 'tictactoe',
+      snake: 'brickbreaker',
+      wordrace: 'tictactoe',
+      colorswitch: 'riddles',
+      millionaire: 'trivia',
+      brickstormx: 'trivia',
+      puzzlemaster: 'riddles',
+      triviaplus: 'chess',
+      wordmaster: 'brickbreaker',
+      reactiontap: 'puzzle',
+      sequencesprint: 'tictactoe',
       oddoneout: 'memory',
     };
     return fallbackMap[backendId] || backendId;
@@ -2554,11 +2741,18 @@ const GamesScreen = ({
   const launchGame = useCallback((gameId) => {
     const game = getGameById(gameId);
     if (!game) return;
-    if (game.online) {
+    const isDirectExternalMultiplayer = Boolean(game.externalMultiplayerDirect);
+    if (game.online && !isDirectExternalMultiplayer) {
       setShowModeSelector(gameId);
     } else {
       setActiveGame(gameId);
-      setGameMode('solo');
+      setGameMode(game.online ? 'online' : 'solo');
+      if (isDirectExternalMultiplayer) {
+        Alert.alert(
+          'وضع أونلاين مباشر',
+          `هذه اللعبة تعمل أونلاين مباشرة وتدعم ${game.playerRange || '2-4'} لاعبين داخل اللعبة.`,
+        );
+      }
     }
   }, [getGameById]);
 
@@ -2701,7 +2895,8 @@ const GamesScreen = ({
     const game = getGameById(gameId);
     if (!game) return;
 
-    if (!game.online) {
+    // خصم الجولة لكل لعبة فردية + ألعاب الأونلاين المباشر (2-4 لاعبين).
+    if (!game.online || game.externalMultiplayerDirect) {
       const spendResult = await spendSoloRoundDiamonds(game);
       if (!spendResult?.ok) {
         if (spendResult?.reason === 'insufficient_diamonds') {
@@ -2970,7 +3165,9 @@ const GamesScreen = ({
   };
 
   const handleGameComplete = async (points, result) => {
-    const isOnline = gameMode === 'online';
+    const currentGame = getGameById(activeGame);
+    const isDirectExternalMultiplayer = Boolean(currentGame?.externalMultiplayerDirect);
+    const isOnline = gameMode === 'online' && !isDirectExternalMultiplayer;
     const won = result === 'win';
     
     // إرسال نتيجة اللعبة للخصم إذا كانت أونلاين
@@ -3021,8 +3218,10 @@ const GamesScreen = ({
   };
 
   const closeGame = () => {
+    const currentGame = getGameById(activeGame);
+    const isDirectExternalMultiplayer = Boolean(currentGame?.externalMultiplayerDirect);
     // إذا كانت لعبة أونلاين، أعلم الخصم
-    if (gameMode === 'online') {
+    if (gameMode === 'online' && !isDirectExternalMultiplayer) {
       multiplayerService.endGame({ forfeit: true }, onlineOpponent);
       setOnlineOpponent(null);
       setIsMyTurn(false);
@@ -3072,16 +3271,17 @@ const GamesScreen = ({
 
   // Mode selector modal
   if (showModeSelector) {
+    const selectedModeGame = getGameById(showModeSelector);
     return (
       <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
         {showWaiting ? (
           <WaitingScreen onCancel={cancelOnlineSearch} />
         ) : (
           <ModeSelector
-            gameName={games.find(g => g.id === showModeSelector)?.name}
+            gameName={selectedModeGame?.name}
             onSelectMode={handleModeSelect}
             onClose={() => setShowModeSelector(null)}
-            hasOnline={!!games.find(g => g.id === showModeSelector)?.online}
+            hasOnline={!!selectedModeGame?.online}
             chatInviteCost={ONLINE_GLOBAL_CHAT_INVITE_COST}
           />
         )}
@@ -3201,7 +3401,7 @@ const GamesScreen = ({
         {/* Exchange Rate Info */}
         <View style={styles.exchangeInfo}>
           <Ionicons name="information-circle" size={16} color="#10b981" />
-          <Text style={styles.exchangeText}>500 نقطة صقر = 1 دولار</Text>
+          <Text style={styles.exchangeText}>500 جوهرة صقر = 1 ريال</Text>
         </View>
 
         {/* Ad Challenges Button - ثروات صقر */}
@@ -3925,6 +4125,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(10,10,15,0.55)',
+    gap: 8,
+  },
+  importedWebLoadingImage: {
+    resizeMode: 'cover',
+  },
+  importedWebLoadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(7,10,18,0.62)',
     gap: 8,
   },
   importedWebLoadingText: {
