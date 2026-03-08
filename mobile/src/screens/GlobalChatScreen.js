@@ -422,7 +422,8 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes, onBalanceUpdate
   useEffect(() => {
     const loadChatFrame = async () => {
       try {
-        const savedFrame = await AsyncStorage.getItem('selected_profile_frame');
+        const savedFrame = await AsyncStorage.getItem('selected_chat_frame')
+          || await AsyncStorage.getItem('selected_profile_frame');
         if (!savedFrame) return;
         const parsed = JSON.parse(savedFrame);
         if (Array.isArray(parsed?.colors) && parsed.colors.length > 0) {

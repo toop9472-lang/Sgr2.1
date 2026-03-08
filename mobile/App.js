@@ -659,6 +659,13 @@ function AppContent() {
                 }));
               }
 
+              if (item.type === 'chat_frame') {
+                await AsyncStorage.setItem('selected_chat_frame', JSON.stringify({
+                  id: item.id,
+                  colors: item.colors || null,
+                }));
+              }
+
               if (item.type === 'theme') {
                 await AsyncStorage.setItem('selected_shop_theme', JSON.stringify({
                   id: item.id,

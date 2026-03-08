@@ -45,6 +45,94 @@ DIAMOND_PACKAGES = [
     {"id": "platinum", "name": "الحزمة البلاتينية", "diamonds": 1000, "price": 19, "bonus": 200, "icon": "rocket"},
 ]
 
+# باقات متجر المميزات (تُشترى بالألماس)
+FEATURE_BUNDLES = [
+    {
+        "id": "profile_frame_royal_gold",
+        "name": "إطار ملف ملكي ذهبي",
+        "description": "إطار احترافي ذهبي لصورة الملف الشخصي.",
+        "category": "profile_frames",
+        "slot": "profile_frame",
+        "price_diamonds": 95,
+        "rarity": "rare",
+        "icon": "shield-checkmark",
+        "image": "https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/81b25ff7dff1c22531ebee6eb6d1b1c78ed8dbcf4fd47ded3f3e8b36b7e331c5.png",
+        "colors": ["#fbbf24", "#d97706"],
+    },
+    {
+        "id": "profile_frame_neon_pulse",
+        "name": "إطار ملف نيون نابض",
+        "description": "إطار متوهج عالي الوضوح لواجهة حديثة.",
+        "category": "profile_frames",
+        "slot": "profile_frame",
+        "price_diamonds": 140,
+        "rarity": "epic",
+        "icon": "flash",
+        "image": "https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/b5329ed8b521321c18a1a23f7dfacb283e436fa40a3601f5f0a053e9f07f461b.png",
+        "colors": ["#ec4899", "#8b5cf6"],
+    },
+    {
+        "id": "chat_frame_sapphire_wave",
+        "name": "إطار دردشة ياقوتي",
+        "description": "إطار رسائل فاخر للدردشة العامة والخاصة.",
+        "category": "chat_frames",
+        "slot": "chat_frame",
+        "price_diamonds": 115,
+        "rarity": "rare",
+        "icon": "chatbubbles",
+        "image": "https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/023917c49fab8b87593072b51baa9584ecaec8bddecc94d124c69166ba378dad.png",
+        "colors": ["#0ea5e9", "#1d4ed8"],
+    },
+    {
+        "id": "chat_frame_inferno",
+        "name": "إطار دردشة لهب",
+        "description": "إطار متحرك بطابع ناري قوي للمحادثات.",
+        "category": "chat_frames",
+        "slot": "chat_frame",
+        "price_diamonds": 165,
+        "rarity": "epic",
+        "icon": "flame",
+        "image": "https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/4dc85c2c6db823cb599e231591fae681ea6a3f675e8193fc0460d56837dc4c47.png",
+        "colors": ["#ef4444", "#b91c1c"],
+    },
+    {
+        "id": "avatar_falcon_elite",
+        "name": "أفاتار صقر النخبة",
+        "description": "صورة رمزية فاخرة بدقة عالية.",
+        "category": "avatars",
+        "slot": "avatar",
+        "price_diamonds": 170,
+        "rarity": "epic",
+        "icon": "person-circle",
+        "image": "https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/33a946656c353bd7e90889bb7c01499898ff0a23da35e2e6bcd661d595319a4b.png",
+        "colors": ["#6366f1", "#7c3aed"],
+    },
+    {
+        "id": "theme_aurora_pro",
+        "name": "ثيم أورورا برو",
+        "description": "مظهر احترافي بألوان فخمة ومتدرجة.",
+        "category": "themes",
+        "slot": "theme",
+        "price_diamonds": 145,
+        "rarity": "rare",
+        "icon": "color-palette",
+        "image": "https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/86abd9d66ea83500fffe680b9db5618403214798c4150d5508f861cbeece635e.png",
+        "colors": ["#14b8a6", "#2563eb"],
+    },
+    {
+        "id": "bundle_creator_studio",
+        "name": "باقة صانع المحتوى",
+        "description": "إطار ملف + إطار دردشة + أفاتار حصري.",
+        "category": "bundles",
+        "slot": None,
+        "price_diamonds": 320,
+        "rarity": "legendary",
+        "icon": "sparkles",
+        "image": "https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/f3510c77236365fa4fa98a435bc3fe90061eeff371b68553e5ab0802c561dd42.png",
+        "colors": ["#a855f7", "#db2777"],
+    },
+]
+
 # تكلفة اللعب أونلاين (بالألماسات)
 ONLINE_GAME_COSTS = {
     "chess": 20,
@@ -97,6 +185,14 @@ class UserBalanceResponse(BaseModel):
 class PurchasePackageRequest(BaseModel):
     user_id: str
     package_id: str
+
+class PurchaseFeatureBundleRequest(BaseModel):
+    user_id: str
+    bundle_id: str
+
+class EquipFeatureBundleRequest(BaseModel):
+    user_id: str
+    bundle_id: str
 
 class SpendDiamondsRequest(BaseModel):
     user_id: str
@@ -158,6 +254,155 @@ async def get_diamond_packages():
         "packages": DIAMOND_PACKAGES,
         "currency": "SAR",
         "currency_symbol": "ر.س"
+    }
+
+@router.get("/feature-bundles")
+async def get_feature_bundles():
+    """الحصول على باقات متجر المميزات"""
+    return {
+        "bundles": FEATURE_BUNDLES,
+        "currency": "diamonds",
+    }
+
+@router.get("/my-feature-bundles/{user_id}")
+async def get_my_feature_bundles(user_id: str):
+    """الحصول على المميزات المملوكة والمفعلة للمستخدم"""
+    user = await db.users.find_one(
+        {"$or": [{"id": user_id}, {"user_id": user_id}]},
+        {"_id": 0, "shop_feature_bundles": 1, "active_feature_slots": 1}
+    )
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+
+    owned_ids = user.get("shop_feature_bundles", []) or []
+    active_slots = user.get("active_feature_slots", {}) or {}
+    owned_set = set(owned_ids)
+    owned_bundles = [bundle for bundle in FEATURE_BUNDLES if bundle["id"] in owned_set]
+
+    return {
+        "owned_bundle_ids": owned_ids,
+        "owned_bundles": owned_bundles,
+        "active_feature_slots": active_slots,
+    }
+
+@router.post("/purchase-feature-bundle")
+async def purchase_feature_bundle(request: PurchaseFeatureBundleRequest):
+    """شراء باقة مميزات بالألماس مع خصم ذري وحفظ الملكية"""
+    bundle = next((b for b in FEATURE_BUNDLES if b["id"] == request.bundle_id), None)
+    if not bundle:
+        raise HTTPException(status_code=404, detail="الباقة غير موجودة")
+
+    user_filter = {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]}
+    user = await db.users.find_one(user_filter, {"_id": 0, "diamonds": 1, "shop_feature_bundles": 1})
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+
+    owned_ids = user.get("shop_feature_bundles", []) or []
+    if request.bundle_id in owned_ids:
+        return {
+            "success": True,
+            "already_owned": True,
+            "remaining_diamonds": int(user.get("diamonds", 0) or 0),
+            "owned_bundle_ids": owned_ids,
+            "active_feature_slots": user.get("active_feature_slots", {}) or {},
+            "message": "هذه الباقة مملوكة بالفعل.",
+        }
+
+    price = int(bundle.get("price_diamonds", 0) or 0)
+    slot = bundle.get("slot")
+    spend_filter = {**user_filter, "diamonds": {"$gte": price}, "shop_feature_bundles": {"$ne": request.bundle_id}}
+    spend_ts = datetime.now(timezone.utc).isoformat()
+    update_doc = {
+        "$inc": {"diamonds": -price},
+        "$addToSet": {"shop_feature_bundles": request.bundle_id},
+        "$set": {"updated_at": spend_ts},
+        "$push": {
+            "diamond_transactions": {
+                "id": str(uuid.uuid4()),
+                "type": "feature_bundle_purchase",
+                "bundle_id": request.bundle_id,
+                "bundle_name": bundle.get("name"),
+                "amount": -price,
+                "created_at": spend_ts,
+            },
+            "feature_bundle_transactions": {
+                "id": str(uuid.uuid4()),
+                "type": "purchase",
+                "bundle_id": request.bundle_id,
+                "bundle_name": bundle.get("name"),
+                "price_diamonds": price,
+                "created_at": spend_ts,
+            },
+        },
+    }
+    if slot:
+        update_doc["$set"][f"active_feature_slots.{slot}"] = request.bundle_id
+
+    spend_result = await db.users.update_one(spend_filter, update_doc)
+    if spend_result.modified_count == 0:
+        current_user = await db.users.find_one(user_filter, {"_id": 0, "diamonds": 1, "shop_feature_bundles": 1})
+        if not current_user:
+            raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+        if request.bundle_id in (current_user.get("shop_feature_bundles", []) or []):
+            return {
+                "success": True,
+                "already_owned": True,
+                "remaining_diamonds": int(current_user.get("diamonds", 0) or 0),
+                "owned_bundle_ids": current_user.get("shop_feature_bundles", []) or [],
+                "active_feature_slots": current_user.get("active_feature_slots", {}) or {},
+                "message": "هذه الباقة مملوكة بالفعل.",
+            }
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "insufficient_diamonds",
+                "required": price,
+                "current": int(current_user.get("diamonds", 0) or 0),
+            },
+        )
+
+    updated_user = await db.users.find_one(
+        user_filter,
+        {"_id": 0, "diamonds": 1, "shop_feature_bundles": 1, "active_feature_slots": 1},
+    )
+    return {
+        "success": True,
+        "bundle_id": request.bundle_id,
+        "remaining_diamonds": int((updated_user or {}).get("diamonds", 0) or 0),
+        "owned_bundle_ids": (updated_user or {}).get("shop_feature_bundles", []) or [],
+        "active_feature_slots": (updated_user or {}).get("active_feature_slots", {}) or {},
+        "message": f"تم شراء {bundle.get('name')} بنجاح.",
+    }
+
+@router.post("/equip-feature-bundle")
+async def equip_feature_bundle(request: EquipFeatureBundleRequest):
+    """تفعيل باقة/عنصر مملوك على خانته المناسبة"""
+    bundle = next((b for b in FEATURE_BUNDLES if b["id"] == request.bundle_id), None)
+    if not bundle:
+        raise HTTPException(status_code=404, detail="الباقة غير موجودة")
+    slot = bundle.get("slot")
+    if not slot:
+        raise HTTPException(status_code=400, detail="هذه الباقة لا تدعم التفعيل المباشر")
+
+    user_filter = {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]}
+    user = await db.users.find_one(user_filter, {"_id": 0, "shop_feature_bundles": 1, "active_feature_slots": 1})
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    if request.bundle_id not in (user.get("shop_feature_bundles", []) or []):
+        raise HTTPException(status_code=400, detail="يجب شراء الباقة أولاً")
+
+    await db.users.update_one(
+        user_filter,
+        {"$set": {f"active_feature_slots.{slot}": request.bundle_id, "updated_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    refreshed = await db.users.find_one(user_filter, {"_id": 0, "active_feature_slots": 1})
+
+    return {
+        "success": True,
+        "bundle_id": request.bundle_id,
+        "slot": slot,
+        "active_feature_slots": (refreshed or {}).get("active_feature_slots", {}) or {},
+        "message": f"تم تفعيل {bundle.get('name')}.",
     }
 
 @router.post("/purchase-diamonds")

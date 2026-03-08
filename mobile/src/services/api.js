@@ -707,6 +707,29 @@ export const api = {
     });
   },
 
+  // Feature bundles shop
+  async getFeatureBundles() {
+    return this.fetch('/api/economy/feature-bundles');
+  },
+
+  async getMyFeatureBundles(userId) {
+    return this.fetch(`/api/economy/my-feature-bundles/${userId}`);
+  },
+
+  async purchaseFeatureBundle(userId, bundleId) {
+    return this.fetch('/api/economy/purchase-feature-bundle', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId, bundle_id: bundleId }),
+    });
+  },
+
+  async equipFeatureBundle(userId, bundleId) {
+    return this.fetch('/api/economy/equip-feature-bundle', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId, bundle_id: bundleId }),
+    });
+  },
+
   // Spend diamonds for one round / action
   async spendDiamonds(userId, amount, source = 'game_round', gameId = null) {
     return this.fetch('/api/economy/spend-diamonds', {

@@ -11,7 +11,6 @@ import {
   ActivityIndicator,
   Animated,
   Alert,
-  Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,7 +22,6 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(null);
-  const [processingPayment, setProcessingPayment] = useState(false);
   
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const shimmerAnim = useRef(new Animated.Value(0)).current;
@@ -78,75 +76,14 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
           onPress: async () => {
             setPurchasing(pkg.id);
             try {
-              // الحصول على URL الأصلي
-              const originUrl = typeof window !== 'undefined' 
-                ? window.location.origin 
-                : api.baseUrl;
-              
-              // إنشاء جلسة دفع Stripe
-              const response = await api.fetch('/api/diamond-payments/checkout/create', {
-                method: 'POST',
-                body: JSON.stringify({
-                  user_id: userId,
-                  package_id: pkg.id,
-                  origin_url: originUrl
-                })
-              });
-              
-              if (response.ok) {
-                const data = await response.json();
-                
-                // فتح صفحة الدفع
-                if (data.checkout_url) {
-                  // للويب
-                  if (typeof window !== 'undefined') {
-                    window.location.href = data.checkout_url;
-                  } else {
-                    // للموبايل
-                    const supported = await Linking.canOpenURL(data.checkout_url);
-                    if (supported) {
-                      await Linking.openURL(data.checkout_url);
-                    }
-                  }
-                }
-              } else {
-                const error = await response.json();
-                Alert.alert('خطأ', error.detail || 'حدث خطأ في بدء عملية الدفع');
-              }
-            } catch (error) {
-              console.log('Payment error:', error);
-              Alert.alert('خطأ', 'حدث خطأ في الاتصال');
-            } finally {
-              setPurchasing(null);
-            }
-          }
-        }
-      ]
-    );
-  };
-
-  // وظيفة الشراء المجاني (للاختبار)
-  const handleFreePurchase = async (pkg) => {
-    Alert.alert(
-      'شراء تجريبي',
-      `هل تريد الحصول على ${pkg.diamonds + pkg.bonus} ألماسة مجاناً؟\n(وضع الاختبار)`,
-      [
-        { text: 'إلغاء', style: 'cancel' },
-        {
-          text: 'نعم',
-          onPress: async () => {
-            setPurchasing(pkg.id);
-            try {
               const response = await api.purchaseDiamonds(userId, pkg.id);
               if (response.ok) {
                 const data = await response.json();
                 Alert.alert(
                   'تم الشراء!',
-                  `تم إضافة ${data.diamonds_added} ألماسة لرصيدك`,
+                  `تم إضافة ${data?.diamonds_added || 0} ألماسة لرصيدك`,
                   [{ text: 'رائع!', onPress: () => {
-                    if (onPurchaseComplete) {
-                      onPurchaseComplete(data);
-                    }
+                    if (onPurchaseComplete) onPurchaseComplete(data);
                     onClose();
                   }}]
                 );
@@ -155,6 +92,7 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
                 Alert.alert('خطأ', error.detail || 'حدث خطأ في الشراء');
               }
             } catch (error) {
+              console.log('Payment error:', error);
               Alert.alert('خطأ', 'حدث خطأ في الاتصال');
             } finally {
               setPurchasing(null);
@@ -200,8 +138,7 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
       >
         <TouchableOpacity
           activeOpacity={0.85}
-          onPress={() => handleFreePurchase(pkg)}
-          onLongPress={() => handlePurchase(pkg)}
+          onPress={() => handlePurchase(pkg)}
           disabled={purchasing !== null}
         >
           <LinearGradient
@@ -287,14 +224,6 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
             <Ionicons name="information-circle" size={18} color="#60a5fa" />
             <Text style={styles.infoText}>
               استخدم الألماسات للعب أونلاين وتحدي لاعبين حقيقيين!
-            </Text>
-          </View>
-
-          {/* Test Mode Banner */}
-          <View style={styles.testBanner}>
-            <Ionicons name="flask" size={16} color="#f59e0b" />
-            <Text style={styles.testText}>
-              وضع الاختبار - اضغط للشراء المجاني
             </Text>
           </View>
 
