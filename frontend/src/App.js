@@ -382,10 +382,22 @@ function MainApp() {
     <Routes>
       {/* Admin Routes - accessible without user auth */}
       <Route path="/admin/login" element={
-        isAdmin ? <Navigate to="/admin/dashboard" /> : <AdminLogin onAdminLogin={handleAdminLogin} />
+        isAdmin ? (
+          <Navigate to="/admin/dashboard" />
+        ) : (
+          <div className="dark">
+            <AdminLogin onAdminLogin={handleAdminLogin} />
+          </div>
+        )
       } />
       <Route path="/admin/dashboard" element={
-        isAdmin ? <AdminDashboard admin={adminData} onLogout={handleAdminLogout} /> : <Navigate to="/admin/login" />
+        isAdmin ? (
+          <div className="dark">
+            <AdminDashboard admin={adminData} onLogout={handleAdminLogout} />
+          </div>
+        ) : (
+          <Navigate to="/admin/login" />
+        )
       } />
       
       {/* Payment Routes */}
