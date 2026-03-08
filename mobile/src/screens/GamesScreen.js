@@ -38,6 +38,10 @@ const SOLO_ROUND_DIAMOND_COST = 20;
 const AD_WATCH_DURATION_SECONDS = 30;
 const GEMS_SECONDS_PER_UNIT = 60;
 const ONLINE_GLOBAL_CHAT_INVITE_COST = 5;
+const normalizeNumber = (value, fallback = 0) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
 const toThumbCover = (targetUrl) => (
   targetUrl ? `https://image.thum.io/get/width/900/crop/900/noanimate/${targetUrl}` : null
 );
@@ -2125,7 +2129,7 @@ const GamesScreen = ({
   const [leaderboard, setLeaderboard] = useState([]);
   const [userStats, setUserStats] = useState({ rank: '-', points: 0, games: 0 });
   const [loading, setLoading] = useState(true);
-  const [balance, setBalance] = useState({ saqr_points: 0, diamonds: 300, daily_points_remaining: 150 });
+  const [balance, setBalance] = useState({ saqr_points: 0, diamonds: 300, daily_points_remaining: 70 });
   const [gameCosts, setGameCosts] = useState({});
   const [onlineOpponent, setOnlineOpponent] = useState(null);
   const [isMyTurn, setIsMyTurn] = useState(false);
@@ -2145,6 +2149,7 @@ const GamesScreen = ({
   const glowAnim = useRef(new Animated.Value(0)).current;
   const pendingOnlineGameRef = useRef(null);
   const connectionLostAlertLockRef = useRef(false);
+  const spendRoundLockRef = useRef(false);
   const userId = user?.id || user?.user_id;
 
   // كتالوج الألعاب: 12 أساسية + ألعاب جديدة مستقلة
@@ -2596,52 +2601,123 @@ const GamesScreen = ({
   }, [getGameById]);
 
   const spendSoloRoundDiamonds = useCallback(async (selectedGame) => {
-    if (!selectedGame || !userId) return { ok: false, reason: 'missing_data' };
+    if (!selectedGame) return { ok: false, reason: 'missing_game' };
+    if (!userId) return { ok: false, reason: 'auth_required' };
+    if (spendRoundLockRef.current) return { ok: false, reason: 'busy' };
+
+    spendRoundLockRef.current = true;
     const backendGameId = resolveBackendGameId(selectedGame.id);
-    if ((balance.diamonds || 0) < SOLO_ROUND_DIAMOND_COST) {
-      return { ok: false, reason: 'insufficient_diamonds', required: SOLO_ROUND_DIAMOND_COST };
-    }
+    const syncBalanceFromServer = async () => {
+      try {
+        const response = await api.getBalance(userId);
+        if (!response.ok) return null;
+        const data = await response.json();
+        setBalance((prevBalance) => ({ ...prevBalance, ...data }));
+        return normalizeNumber(data?.diamonds, null);
+      } catch {
+        return null;
+      }
+    };
 
     try {
-      const response = await api.spendDiamonds(
-        userId,
-        SOLO_ROUND_DIAMOND_COST,
-        'solo_round_entry',
-        backendGameId,
-      );
-
-      if (!response.ok) {
-        if ([404, 405].includes(response.status)) {
-          // Fallback for older backends: enforce local round cost to keep gameplay rules consistent.
-          setBalance((prev) => ({
-            ...prev,
-            diamonds: Math.max(0, (prev.diamonds || 0) - SOLO_ROUND_DIAMOND_COST),
-          }));
-          return { ok: true, fallbackLocal: true };
-        }
-        const error = await response.json().catch(() => ({}));
-        const detail = error?.detail || {};
-        if (detail?.error === 'insufficient_diamonds') {
+      let diamondsNow = normalizeNumber(balance.diamonds, 0);
+      if (diamondsNow < SOLO_ROUND_DIAMOND_COST) {
+        const serverDiamonds = await syncBalanceFromServer();
+        diamondsNow = serverDiamonds ?? diamondsNow;
+        if (diamondsNow < SOLO_ROUND_DIAMOND_COST) {
           return {
             ok: false,
             reason: 'insufficient_diamonds',
-            required: detail?.required || SOLO_ROUND_DIAMOND_COST,
-            current: detail?.current ?? balance.diamonds,
+            required: SOLO_ROUND_DIAMOND_COST,
+            current: diamondsNow,
           };
         }
-        return { ok: false, reason: 'api_error' };
       }
 
-      const data = await response.json().catch(() => ({}));
-      if (typeof data?.remaining === 'number') {
-        setBalance((prev) => ({ ...prev, diamonds: data.remaining }));
+      const attemptSpend = async () => {
+        const response = await api.spendDiamonds(
+          userId,
+          SOLO_ROUND_DIAMOND_COST,
+          'solo_round_entry',
+          backendGameId,
+        );
+
+        if (!response.ok) {
+          if ([404, 405].includes(response.status)) {
+            // Fallback for older backends: enforce local round cost to keep gameplay rules consistent.
+            setBalance((prev) => ({
+              ...prev,
+              diamonds: Math.max(0, normalizeNumber(prev.diamonds, 0) - SOLO_ROUND_DIAMOND_COST),
+            }));
+            return { ok: true, fallbackLocal: true };
+          }
+
+          const error = await response.json().catch(() => ({}));
+          const detail = error?.detail || {};
+          if (detail?.error === 'insufficient_diamonds') {
+            return {
+              ok: false,
+              reason: 'insufficient_diamonds',
+              required: detail?.required || SOLO_ROUND_DIAMOND_COST,
+              current: normalizeNumber(detail?.current, diamondsNow),
+            };
+          }
+
+          const detailMessage = typeof detail === 'string'
+            ? detail
+            : (detail?.message || error?.message || null);
+          return {
+            ok: false,
+            reason: 'api_error',
+            status: response.status,
+            message: detailMessage,
+          };
+        }
+
+        const data = await response.json().catch(() => ({}));
+        if (typeof data?.remaining === 'number') {
+          setBalance((prev) => ({ ...prev, diamonds: data.remaining }));
+        } else {
+          await syncBalanceFromServer();
+        }
+        return { ok: true };
+      };
+
+      let spendResult = await attemptSpend();
+      if (!spendResult?.ok && spendResult?.reason === 'api_error') {
+        // Try one server resync + one retry before failing the round.
+        await syncBalanceFromServer();
+        spendResult = await attemptSpend();
       }
 
-      return { ok: true };
+      return spendResult;
     } catch (e) {
+      await syncBalanceFromServer();
       return { ok: false, reason: 'network_error' };
+    } finally {
+      spendRoundLockRef.current = false;
     }
   }, [balance.diamonds, resolveBackendGameId, userId]);
+
+  const presentRoundSpendError = useCallback((spendResult) => {
+    const reason = spendResult?.reason;
+    if (reason === 'auth_required') {
+      Alert.alert('الحساب', 'تعذر تحديد حسابك الحالي. الرجاء تسجيل الدخول مرة أخرى.');
+      return;
+    }
+    if (reason === 'network_error') {
+      Alert.alert('الاتصال', 'تعذر الاتصال بالخادم لخصم تكلفة الجولة. تحقق من الشبكة ثم أعد المحاولة.');
+      return;
+    }
+    if (reason === 'api_error') {
+      Alert.alert('خطأ', spendResult?.message || 'تعذر خصم تكلفة الجولة الآن. حاول مرة أخرى.');
+      return;
+    }
+    if (reason === 'busy') {
+      return;
+    }
+    Alert.alert('خطأ', 'تعذر خصم تكلفة الجولة الآن. حاول مرة أخرى.');
+  }, []);
 
   const grantAdEconomyReward = useCallback(async ({ source = 'games_ad', silent = false } = {}) => {
     if (!userId) return { success: false, error: 'missing_user' };
@@ -2907,17 +2983,20 @@ const GamesScreen = ({
       const spendResult = await spendSoloRoundDiamonds(game);
       if (!spendResult?.ok) {
         if (spendResult?.reason === 'insufficient_diamonds') {
+          if (typeof spendResult?.current === 'number') {
+            setBalance((prev) => ({ ...prev, diamonds: spendResult.current }));
+          }
           setPendingAdGame(gameId);
           setShowAdUnlockModal(true);
         } else {
-          Alert.alert('خطأ', 'تعذر خصم تكلفة الجولة الآن. حاول مرة أخرى.');
+          presentRoundSpendError(spendResult);
         }
         return;
       }
     }
 
     launchGame(gameId);
-  }, [getGameById, launchGame, spendSoloRoundDiamonds]);
+  }, [getGameById, launchGame, presentRoundSpendError, spendSoloRoundDiamonds]);
 
   useEffect(() => {
     if (!queuedGameId) return;
@@ -2936,10 +3015,21 @@ const GamesScreen = ({
     const backendGameId = resolveBackendGameId(selectedGame.id);
 
     const cost = gameCosts[backendGameId] || selectedGame.onlineCost || 20;
-    if (balance.diamonds < cost) {
+    let availableDiamonds = normalizeNumber(balance.diamonds, 0);
+    if (availableDiamonds < cost) {
+      try {
+        const balanceRes = await api.getBalance(userId);
+        if (balanceRes.ok) {
+          const freshBalance = await balanceRes.json();
+          setBalance((prev) => ({ ...prev, ...freshBalance }));
+          availableDiamonds = normalizeNumber(freshBalance?.diamonds, availableDiamonds);
+        }
+      } catch {}
+    }
+    if (availableDiamonds < cost) {
       Alert.alert(
         'رصيد غير كافٍ',
-        `تحتاج ${cost} ألماسة للعب أونلاين. رصيدك الحالي: ${balance.diamonds}`,
+        `تحتاج ${cost} ألماسة للعب أونلاين. رصيدك الحالي: ${availableDiamonds}`,
         [
           { text: 'إلغاء', style: 'cancel' },
           {
@@ -3126,11 +3216,14 @@ const GamesScreen = ({
       const spendResult = await spendSoloRoundDiamonds(selectedGame);
       if (!spendResult?.ok) {
         if (spendResult?.reason === 'insufficient_diamonds') {
+          if (typeof spendResult?.current === 'number') {
+            setBalance((prev) => ({ ...prev, diamonds: spendResult.current }));
+          }
           setPendingAdGame(selectedGame.id);
           setShowModeSelector(null);
           setShowAdUnlockModal(true);
         } else {
-          Alert.alert('خطأ', 'تعذر خصم تكلفة الجولة الآن. حاول مرة أخرى.');
+          presentRoundSpendError(spendResult);
         }
         return;
       }
@@ -3205,7 +3298,7 @@ const GamesScreen = ({
           message += ` و ${data.diamonds_awarded} ألماسة`;
         }
         if (!data.can_earn_more) {
-          message += '\n\nوصلت للحد اليومي (150 نقطة)';
+          message += `\n\nوصلت للحد اليومي (${data?.daily_limit || 70} نقطة)`;
         }
         
         Alert.alert(won ? 'فوز!' : 'نتيجة اللعبة', message);
@@ -3299,6 +3392,11 @@ const GamesScreen = ({
     );
   }
 
+  const dailyLimit = Math.max(1, normalizeNumber(balance?.daily_limit, 70));
+  const dailyRemaining = Math.max(0, normalizeNumber(balance?.daily_points_remaining, 0));
+  const dailyEarned = Math.max(0, dailyLimit - dailyRemaining);
+  const dailyProgressPercent = Math.min(100, (dailyEarned / dailyLimit) * 100);
+
   return (
     <LinearGradient colors={['#0a0a0f', '#111118', '#0a0a0f']} style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -3324,14 +3422,14 @@ const GamesScreen = ({
             <Text style={styles.dailyProgressTitle}>النقاط اليومية</Text>
           </View>
           <View style={styles.dailyProgressBar}>
-            <View style={[styles.dailyProgressFill, { width: `${Math.min(100, ((150 - balance.daily_points_remaining) / 150) * 100)}%` }]} />
+            <View style={[styles.dailyProgressFill, { width: `${dailyProgressPercent}%` }]} />
           </View>
           <View style={styles.dailyProgressInfo}>
             <Text style={styles.dailyProgressText}>
-              {150 - balance.daily_points_remaining} / 150 نقطة
+              {dailyEarned} / {dailyLimit} نقطة
             </Text>
             <Text style={styles.dailyProgressRemaining}>
-              متبقي: {balance.daily_points_remaining}
+              متبقي: {dailyRemaining}
             </Text>
           </View>
         </View>
@@ -3394,14 +3492,14 @@ const GamesScreen = ({
             <View style={styles.dailyProgressInfo}>
               <Ionicons name="flash" size={14} color="#22c55e" />
               <Text style={styles.dailyProgressText}>
-                {balance.daily_points_remaining || 0} / 150 نقطة يومية متبقية
+                {dailyRemaining} / {dailyLimit} نقطة يومية متبقية
               </Text>
             </View>
             <View style={styles.dailyProgressBar}>
               <View 
                 style={[
                   styles.dailyProgressFill, 
-                  { width: `${((150 - (balance.daily_points_remaining || 0)) / 150) * 100}%` }
+                  { width: `${dailyProgressPercent}%` }
                 ]} 
               />
             </View>
