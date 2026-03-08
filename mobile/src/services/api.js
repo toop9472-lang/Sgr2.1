@@ -796,7 +796,7 @@ export const api = {
 
   // ==================== Ad Watch Rewards ====================
   
-  // Claim ad watch reward (1 gem + 25 diamonds per minute)
+  // Claim ad watch reward (1 gem + 6 diamonds per minute)
   async claimAdWatchReward(userId, watchDurationSeconds, adType = 'video') {
     return this.fetch('/api/economy/ad-watch-reward', {
       method: 'POST',

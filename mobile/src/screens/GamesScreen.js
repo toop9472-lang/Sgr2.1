@@ -2786,7 +2786,7 @@ const GamesScreen = ({
 
     // Fallback economy grant when ad-watch endpoint is unavailable.
     try {
-      const diamondRes = await api.addDiamonds(userId, 25, `${source}_fallback`);
+      const diamondRes = await api.addDiamonds(userId, 6, `${source}_fallback`);
       if (diamondRes.ok) {
         const d = await diamondRes.json().catch(() => ({}));
         if (typeof d?.new_balance === 'number') {
@@ -2814,10 +2814,10 @@ const GamesScreen = ({
       if (!silent) {
         Alert.alert(
           'مكافأة الإعلان',
-          `+25 ألماسة${gemsToGrant > 0 ? `\n+${gemsToGrant} جوهرة صقر` : ''}`,
+          `+6 ألماسات${gemsToGrant > 0 ? `\n+${gemsToGrant} جوهرة صقر` : ''}`,
         );
       }
-      return { success: true, diamondsEarned: 25, gemsEarned: gemsToGrant };
+      return { success: true, diamondsEarned: 6, gemsEarned: gemsToGrant };
     } catch (e) {
       if (!silent) Alert.alert('خطأ', 'تعذر منح مكافأة الإعلان، حاول مرة أخرى.');
       return { success: false, error: 'reward_grant_failed' };

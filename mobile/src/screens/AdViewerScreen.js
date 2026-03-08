@@ -202,7 +202,7 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
         ) || 0;
         const diamonds = Number(
           persisted?.payload?.diamonds_earned
-          ?? 25
+          ?? 6
         ) || 0;
         setEarnedGems(gems);
         setEarnedDiamonds(diamonds);
@@ -385,7 +385,7 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
       ) || 0;
       const diamonds = Number(
         persisted?.payload?.diamonds_earned
-        ?? (requestedMinutes * 25)
+        ?? (requestedMinutes * 6)
       ) || 0;
       setEarnedGems(gems);
       setEarnedDiamonds(diamonds);
@@ -518,7 +518,7 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
               <Ionicons name="diamond" size={24} color="#60a5fa" style={{ marginLeft: 8 }} />
               <Text style={styles.pointsAnimMiniValue}>+{earnedDiamonds}</Text>
             </View>
-            <Text style={styles.pointsAnimSubtext}>1 جوهرة صقر + 25 ألماسة</Text>
+            <Text style={styles.pointsAnimSubtext}>1 جوهرة صقر + 6 ألماسات</Text>
           </View>
         </View>
       )}
@@ -570,7 +570,7 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
           ) : (
             <>
               <Ionicons name="gift" size={24} color="#fbbf24" />
-              <Text style={[styles.actionCount, { color: '#fbbf24' }]}>+25</Text>
+              <Text style={[styles.actionCount, { color: '#fbbf24' }]}>+6</Text>
             </>
           )}
         </TouchableOpacity>

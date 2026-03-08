@@ -304,10 +304,10 @@ async def complete_rewarded_ad(
     if not can_watch:
         return {'success': False, 'message': 'وصلت للحد اليومي', 'remaining': 0}
     
-    # 1 minute مشاهدة = 1 جوهرة + 25 ألماسة (توافق خلفي مع نقاط)
+    # 1 minute مشاهدة = 1 جوهرة + 6 ألماسات (توافق خلفي مع نقاط)
     full_minutes = max(0, int(view.watch_duration // 60))
     gems_earned = max(1, full_minutes) if view.watch_duration >= 60 else 0
-    diamonds_earned = gems_earned * 25
+    diamonds_earned = gems_earned * 6
     
     # Record the view
     view_doc = {
@@ -422,7 +422,7 @@ async def get_user_rewarded_stats(user_id: str = Depends(get_current_user_id)):
             'diamonds': total_diamonds[0]['total'] if total_diamonds else 0,
             'points': total_points[0]['total'] if total_points else 0
         },
-        'reward_per_ad': "1 gem + 25 diamonds per 60s",
+        'reward_per_ad': "1 gem + 6 diamonds per 60s",
         'cooldown_seconds': settings.get('cooldown_seconds', 30)
     }
 
@@ -464,7 +464,7 @@ async def start_ad_session(
     
     return {
         'session_id': session_id,
-        'expected_reward': {'gems': 1, 'diamonds': 25, 'duration_seconds': 60},
+        'expected_reward': {'gems': 1, 'diamonds': 6, 'duration_seconds': 60},
         'remaining_today': remaining
     }
 
@@ -492,7 +492,7 @@ async def sync_pending_reward(
     
     # Grant reward
     reward_gems = 1
-    reward_diamonds = 25
+    reward_diamonds = 6
     
     await db.users.update_one(
         {'$or': [{'id': user_id}, {'user_id': user_id}]},

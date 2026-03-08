@@ -686,8 +686,8 @@ async def claim_ad_watch_reward(request: AdWatchRewardRequest):
         gems_earned = total_seconds // 60
     new_carry_seconds = total_seconds % 60
 
-    # كل دقيقة مشاهدة مكتملة = 25 ألماسة (تراكمي مثل الجواهر)
-    diamonds_earned = max(0, (total_seconds // 60) * 25)
+    # كل دقيقة مشاهدة مكتملة = 6 ألماسات (تراكمي مثل الجواهر)
+    diamonds_earned = max(0, (total_seconds // 60) * 6)
 
     current_gems = user.get("saqr_gems", 0)
     new_gems = current_gems + gems_earned
