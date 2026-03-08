@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime, timezone, timedelta
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import ReturnDocument
 import os
 import uuid
 
@@ -34,7 +35,7 @@ GEMS_PER_RIYAL = 500
 
 # تكلفة الرسالة في الدردشة (بالألماسات)
 CHAT_MESSAGE_COST = 5
-SOLO_ROUND_DIAMOND_COST = 1
+SOLO_ROUND_DIAMOND_COST = 20
 
 # باقات شحن الألماسات (SAR)
 DIAMOND_PACKAGES = [
@@ -46,12 +47,12 @@ DIAMOND_PACKAGES = [
 
 # تكلفة اللعب أونلاين (بالألماسات)
 ONLINE_GAME_COSTS = {
-    "chess": 30,
+    "chess": 20,
     "tictactoe": 20,
-    "puzzle": 25,
-    "brickbreaker": 25,
+    "puzzle": 20,
+    "brickbreaker": 20,
     "trivia": 20,
-    "riddles": 25,
+    "riddles": 20,
 }
 
 # مكافآت الفائز (ألماسات)
@@ -932,47 +933,44 @@ class ChatMessage(BaseModel):
 @router.post("/chat/send")
 async def send_chat_message(request: SendChatMessageRequest):
     """إرسال رسالة في الدردشة (تكلفة 5 ألماسات)"""
-    
-    # التحقق من المستخدم ورصيده
-    user = await db.users.find_one(
-        {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]}
-    )
-    
-    if not user:
-        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
-    
-    current_diamonds = user.get("diamonds", 0)
-    
-    # التحقق من الرصيد
-    if current_diamonds < CHAT_MESSAGE_COST:
-        raise HTTPException(
-            status_code=400, 
-            detail={
-                "error": "insufficient_diamonds",
-                "message": "انتهت ألماساتك! تابع الإعلانات واحصل على الألماس",
-                "required": CHAT_MESSAGE_COST,
-                "current": current_diamonds
-            }
-        )
-    
-    # خصم الألماسات
-    new_diamonds = current_diamonds - CHAT_MESSAGE_COST
-    
-    await db.users.update_one(
-        {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]},
+    user_filter = {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]}
+    spend_timestamp = datetime.now(timezone.utc).isoformat()
+
+    # خصم ذرّي (Atomic): ينجح فقط إذا كان الرصيد كافياً لحظة التحديث.
+    updated_user = await db.users.find_one_and_update(
+        {**user_filter, "diamonds": {"$gte": CHAT_MESSAGE_COST}},
         {
-            "$set": {"diamonds": new_diamonds},
+            "$inc": {"diamonds": -CHAT_MESSAGE_COST},
             "$push": {
                 "diamond_transactions": {
                     "type": "chat_message",
                     "amount": -CHAT_MESSAGE_COST,
                     "server_id": request.server_id,
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "balance_after": new_diamonds
+                    "timestamp": spend_timestamp,
                 }
             }
-        }
+        },
+        projection={"_id": 0, "diamonds": 1},
+        return_document=ReturnDocument.AFTER,
     )
+
+    if not updated_user:
+        user = await db.users.find_one(user_filter, {"_id": 0, "diamonds": 1})
+        if not user:
+            raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+
+        current_diamonds = int(user.get("diamonds", 0) or 0)
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "insufficient_diamonds",
+                "message": "انتهت ألماساتك! تابع الإعلانات واحصل على الألماس",
+                "required": CHAT_MESSAGE_COST,
+                "current": current_diamonds,
+            },
+        )
+
+    new_diamonds = int(updated_user.get("diamonds", 0) or 0)
     
     # إنشاء الرسالة
     message_id = str(uuid.uuid4())
@@ -1086,7 +1084,7 @@ async def check_chat_balance(user_id: str):
     if not user:
         raise HTTPException(status_code=404, detail="المستخدم غير موجود")
     
-    diamonds = user.get("diamonds", 0)
+    diamonds = int(user.get("diamonds", 0) or 0)
     can_send = diamonds >= CHAT_MESSAGE_COST
     messages_available = diamonds // CHAT_MESSAGE_COST
     

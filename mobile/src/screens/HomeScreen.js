@@ -14,6 +14,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
@@ -76,10 +77,39 @@ const HomeScreen = ({
   settings, 
   onRefresh 
 }) => {
+  const { language } = useLanguage();
+  const isArabic = language === 'ar';
   const [refreshing, setRefreshing] = useState(false);
+  const copy = useMemo(() => ({
+    defaultPlayer: isArabic ? 'لاعب' : 'Player',
+    welcomePrefix: isArabic ? 'أهلاً' : 'Welcome',
+    welcomeSub: isArabic ? 'مرحباً بك في صقر' : 'Welcome to Saqr',
+    fortunes: isArabic ? 'ثروات صقر' : 'Saqr Fortunes',
+    newLabel: isArabic ? 'جديد' : 'NEW',
+    fortunesSubtitle: isArabic ? 'اربح جواهر صقر للاستبدال بالمال الحقيقي!' : 'Earn Saqr gems and exchange them for real cash!',
+    exchangeBadge: isArabic ? '500 جوهرة = 1 ريال' : '500 gems = 1 SAR',
+    fortunesDesc: isArabic ? 'عجلة الحظ اليومية • صناديق الكنز • مكافآت مضاعفة' : 'Daily wheel • Treasure chests • Boosted rewards',
+    watchAndEarn: isArabic ? 'شاهد واربح' : 'Watch & Earn',
+    watchAndEarnSubtitle: isArabic ? 'شاهد إعلانات قصيرة واحصل على جواهر صقر!' : 'Watch short ads and earn Saqr gems!',
+    balanceTitle: isArabic ? 'رصيدك الحالي' : 'Your current balance',
+    exchangeChip: isArabic ? '500 جوهرة = 1 ر.س' : '500 gems = 1 SAR',
+    gemsLabel: isArabic ? 'جواهر صقر' : 'Saqr Gems',
+    diamondLabel: isArabic ? 'ماسة' : 'Diamond',
+    pointsLabel: isArabic ? 'نقطة' : 'Point',
+    dailyChallenge: isArabic ? 'التحدي اليومي' : 'Daily Challenge',
+    dailyChallengeSub: isArabic ? 'نقاط إضافية!' : 'Extra points!',
+    games: isArabic ? 'الألعاب' : 'Games',
+    gamesSub: isArabic ? 'العب واربح!' : 'Play and win!',
+    chat: isArabic ? 'الدردشة' : 'Chat',
+    chatSub: isArabic ? 'تواصل مع اللاعبين' : 'Connect with players',
+    friends: isArabic ? 'الأصدقاء' : 'Friends',
+    friendsSub: isArabic ? 'أضف أصدقاء جدد' : 'Add new friends',
+    chatCostBadge: isArabic ? '5 ماسات' : '5 diamonds',
+    tip: isArabic ? 'ادعُ أصدقاءك واربح جواهر صقر مضاعفة!' : 'Invite friends and earn boosted Saqr gems!',
+  }), [isArabic]);
 
   // بيانات المستخدم
-  const userName = useMemo(() => user?.name || 'لاعب', [user?.name]);
+  const userName = useMemo(() => user?.name || copy.defaultPlayer, [copy.defaultPlayer, user?.name]);
   const userPoints = useMemo(() => user?.saqr_points || user?.points || 0, [user?.saqr_points, user?.points]);
   const userDiamonds = useMemo(() => user?.diamonds || 0, [user?.diamonds]);
   const userGems = useMemo(() => user?.saqr_gems || 0, [user?.saqr_gems]);
@@ -109,8 +139,8 @@ const HomeScreen = ({
           <View style={styles.headerLeft}>
             <LanguageSwitcher />
             <View>
-              <Text style={styles.greeting}>أهلاً {userName}</Text>
-              <Text style={styles.subGreeting}>مرحباً بك في صقر</Text>
+              <Text style={styles.greeting}>{copy.welcomePrefix} {userName}</Text>
+              <Text style={styles.subGreeting}>{copy.welcomeSub}</Text>
             </View>
           </View>
           <View style={styles.headerRight}>
@@ -129,24 +159,24 @@ const HomeScreen = ({
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="sparkles" size={18} color="#ec4899" />
-            <Text style={styles.sectionTitle}>ثروات صقر</Text>
+            <Text style={styles.sectionTitle}>{copy.fortunes}</Text>
             <View style={styles.newTag}>
-              <Text style={styles.newTagText}>جديد</Text>
+              <Text style={styles.newTagText}>{copy.newLabel}</Text>
             </View>
           </View>
 
           <FeaturedCard
-            title="ثروات صقر"
-            subtitle="اربح جواهر صقر للاستبدال بالمال الحقيقي!"
+            title={copy.fortunes}
+            subtitle={copy.fortunesSubtitle}
             image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png"
             colors={['#ec4899', '#be185d']}
             icon="sparkles"
             onPress={onNavigateToFortunes}
-            badge="500 جوهرة = 1 ريال"
+            badge={copy.exchangeBadge}
           />
 
           <Text style={styles.fortunesDesc}>
-            عجلة الحظ اليومية • صناديق الكنز • مكافآت مضاعفة
+            {copy.fortunesDesc}
           </Text>
         </View>
 
@@ -154,12 +184,12 @@ const HomeScreen = ({
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="play-circle" size={18} color="#f59e0b" />
-            <Text style={styles.sectionTitle}>شاهد واربح</Text>
+            <Text style={styles.sectionTitle}>{copy.watchAndEarn}</Text>
           </View>
 
           <FeaturedCard
-            title="شاهد واربح"
-            subtitle="شاهد إعلانات قصيرة واحصل على جواهر صقر!"
+            title={copy.watchAndEarn}
+            subtitle={copy.watchAndEarnSubtitle}
             image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e14c91a9e40e8d29b6f8d3bf567a4fcb7020c985b1a9d3e96e2035b06f9921e6.png"
             colors={['#f59e0b', '#d97706']}
             icon="play"
@@ -171,10 +201,10 @@ const HomeScreen = ({
         <View style={styles.balanceCard}>
           <LinearGradient colors={['#171a2a', '#141d36', '#111827']} style={styles.balanceGradient}>
             <View style={styles.balanceTopRow}>
-              <Text style={styles.balanceTitle}>رصيدك الحالي</Text>
+              <Text style={styles.balanceTitle}>{copy.balanceTitle}</Text>
               <View style={styles.exchangeChip}>
                 <Ionicons name="swap-horizontal" size={12} color="#22c55e" />
-                <Text style={styles.exchangeChipText}>500 جوهرة = 1 ر.س</Text>
+                <Text style={styles.exchangeChipText}>{copy.exchangeChip}</Text>
               </View>
             </View>
             <View style={styles.balanceRow}>
@@ -183,7 +213,7 @@ const HomeScreen = ({
                   <Ionicons name="sparkles" size={20} color="#f472b6" />
                 </View>
                 <Text style={styles.balanceValue}>{userGems}</Text>
-                <Text style={styles.balanceLabel}>جواهر صقر</Text>
+                <Text style={styles.balanceLabel}>{copy.gemsLabel}</Text>
               </View>
               <View style={styles.balanceDivider} />
               <View style={styles.balanceItem}>
@@ -191,7 +221,7 @@ const HomeScreen = ({
                   <Ionicons name="diamond" size={20} color="#60a5fa" />
                 </View>
                 <Text style={styles.balanceValue}>{userDiamonds}</Text>
-                <Text style={styles.balanceLabel}>ماسة</Text>
+                <Text style={styles.balanceLabel}>{copy.diamondLabel}</Text>
               </View>
               <View style={styles.balanceDivider} />
               <View style={styles.balanceItem}>
@@ -199,7 +229,7 @@ const HomeScreen = ({
                   <Ionicons name="star" size={20} color="#fbbf24" />
                 </View>
                 <Text style={styles.balanceValue}>{userPoints}</Text>
-                <Text style={styles.balanceLabel}>نقطة</Text>
+                <Text style={styles.balanceLabel}>{copy.pointsLabel}</Text>
               </View>
             </View>
           </LinearGradient>
@@ -208,16 +238,16 @@ const HomeScreen = ({
         {/* البطاقات الثنائية */}
         <View style={styles.dualCards}>
           <FeatureCard
-            title="التحدي اليومي"
-            subtitle="نقاط إضافية!"
+            title={copy.dailyChallenge}
+            subtitle={copy.dailyChallengeSub}
             image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/9571396ba276f9f9cf70ce0622c4303850d05054256c99581ef235eec62d9760.png"
             color="#f59e0b"
             icon="flame"
             onPress={onOpenDailyChallenge}
           />
           <FeatureCard
-            title="الألعاب"
-            subtitle="العب واربح!"
+            title={copy.games}
+            subtitle={copy.gamesSub}
             image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e02071f57750c77c0db321a70a51ed7bceb6eeb4df5f78e29d834466fcf3f354.png"
             color="#8b5cf6"
             icon="game-controller"
@@ -228,17 +258,17 @@ const HomeScreen = ({
         {/* بطاقات إضافية */}
         <View style={styles.dualCards}>
           <FeatureCard
-            title="الدردشة"
-            subtitle="تواصل مع اللاعبين"
+            title={copy.chat}
+            subtitle={copy.chatSub}
             image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/bcdacd75d090c4626f5432d13b9b6c4c4560cc34282e9424de1cbc6732f06abf.png"
             color="#3b82f6"
             icon="chatbubbles"
             onPress={onNavigateToChat}
-            badge="5 ماسات"
+            badge={copy.chatCostBadge}
           />
           <FeatureCard
-            title="الأصدقاء"
-            subtitle="أضف أصدقاء جدد"
+            title={copy.friends}
+            subtitle={copy.friendsSub}
             image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/7f2948052c933ae7604200fd2c98d91f4504fce293deb36ce108cba1d36f062a.png"
             color="#22c55e"
             icon="person-add"
@@ -249,7 +279,7 @@ const HomeScreen = ({
         {/* نصيحة */}
         <View style={styles.tipCard}>
           <Ionicons name="bulb-outline" size={18} color="#fbbf24" />
-          <Text style={styles.tipText}>ادعُ أصدقاءك واربح جواهر صقر مضاعفة!</Text>
+          <Text style={styles.tipText}>{copy.tip}</Text>
         </View>
       </View>
     </ScrollView>

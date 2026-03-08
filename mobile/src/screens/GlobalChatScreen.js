@@ -20,12 +20,14 @@ import {
   Modal,
   ScrollView,
   ImageBackground,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import gameSounds from '../utils/gameSounds';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -52,6 +54,11 @@ const SERVERS = [
 ];
 
 const MESSAGE_COST = 5;
+
+const toSafeNumber = (value, fallback = 0) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
 
 // تحويل أكواد الإيموجي إلى صور
 const parseMessageWithEmojis = (text) => {
@@ -174,7 +181,7 @@ const ChatMessageItem = memo(({ message, isOwn, chatFrameColor }) => {
 });
 
 // لوحة إيموجي صقر
-const SaqrEmojiPicker = ({ visible, onSelect, onClose }) => {
+const SaqrEmojiPicker = ({ visible, onSelect, onClose, title }) => {
   const slideAnim = useRef(new Animated.Value(300)).current;
 
   useEffect(() => {
@@ -207,7 +214,7 @@ const SaqrEmojiPicker = ({ visible, onSelect, onClose }) => {
         style={styles.emojiPickerGradient}
       >
         <View style={styles.emojiPickerHeader}>
-          <Text style={styles.emojiPickerTitle}>إيموجي صقر</Text>
+          <Text style={styles.emojiPickerTitle}>{title}</Text>
           <TouchableOpacity onPress={onClose} style={styles.emojiPickerClose}>
             <Ionicons name="close" size={24} color="#FFF" />
           </TouchableOpacity>
@@ -284,7 +291,7 @@ const ServerSelector = ({ servers, selectedServer, onSelect, onlineCount }) => {
 };
 
 // نافذة نقص الألماس الاحترافية
-const InsufficientDiamondsModal = ({ visible, onWatchAds, onClose, currentDiamonds }) => {
+const InsufficientDiamondsModal = ({ visible, onWatchAds, onClose, currentDiamonds, copy }) => {
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
   
   useEffect(() => {
@@ -316,16 +323,16 @@ const InsufficientDiamondsModal = ({ visible, onWatchAds, onClose, currentDiamon
               </LinearGradient>
             </View>
             
-            <Text style={styles.modalTitle}>انتهت ألماساتك!</Text>
+            <Text style={styles.modalTitle}>{copy.noDiamondsTitle}</Text>
             
             <View style={styles.balanceBox}>
               <Ionicons name="diamond-outline" size={20} color="#60a5fa" />
               <Text style={styles.balanceText}>{currentDiamonds}</Text>
-              <Text style={styles.balanceLabel}>رصيدك الحالي</Text>
+              <Text style={styles.balanceLabel}>{copy.currentBalance}</Text>
             </View>
             
             <Text style={styles.modalDesc}>
-              تحتاج {MESSAGE_COST} ألماسات لإرسال رسالة
+              {copy.requiresMessageCost.replace('{cost}', String(MESSAGE_COST))}
             </Text>
 
             <TouchableOpacity style={styles.watchAdsBtn} onPress={onWatchAds} activeOpacity={0.8}>
@@ -336,12 +343,12 @@ const InsufficientDiamondsModal = ({ visible, onWatchAds, onClose, currentDiamon
                 style={styles.watchAdsGradient}
               >
                 <Ionicons name="play-circle" size={24} color="#FFF" />
-                <Text style={styles.watchAdsText}>شاهد إعلانات واحصل على الألماس</Text>
+                <Text style={styles.watchAdsText}>{copy.watchAdsAndEarn}</Text>
               </LinearGradient>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.closeModalBtn} onPress={onClose}>
-              <Text style={styles.closeModalText}>لاحقاً</Text>
+              <Text style={styles.closeModalText}>{copy.later}</Text>
             </TouchableOpacity>
           </LinearGradient>
         </Animated.View>
@@ -352,6 +359,29 @@ const InsufficientDiamondsModal = ({ visible, onWatchAds, onClose, currentDiamon
 
 // المكون الرئيسي
 const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
+  const { language } = useLanguage();
+  const isArabic = language === 'ar';
+  const copy = useMemo(() => ({
+    chatTitle: isArabic ? 'الدردشة العامة' : 'Global Chat',
+    onlineNow: isArabic ? 'متصل الآن' : 'online now',
+    messageCostLabel: isArabic ? 'تكلفة الرسالة' : 'Message cost',
+    loadingMessages: isArabic ? 'جاري تحميل الرسائل...' : 'Loading messages...',
+    noMessages: isArabic ? 'لا توجد رسائل' : 'No messages yet',
+    beFirst: isArabic ? 'كن أول من يبدأ المحادثة!' : 'Be the first to start the chat!',
+    startWithEmoji: isArabic ? 'ابدأ بإرسال إيموجي صقر!' : 'Start with a Saqr emoji!',
+    typeMessagePlaceholder: isArabic ? 'اكتب رسالتك...' : 'Type your message...',
+    lowBalancePrefix: isArabic ? 'رصيدك منخفض! يمكنك إرسال' : 'Low balance! You can send only',
+    lowBalanceSuffix: isArabic ? 'رسالة فقط' : 'messages',
+    noDiamondsTitle: isArabic ? 'انتهت ألماساتك!' : 'You are out of diamonds!',
+    currentBalance: isArabic ? 'رصيدك الحالي' : 'Current balance',
+    requiresMessageCost: isArabic ? 'تحتاج {cost} ألماسات لإرسال رسالة' : 'You need {cost} diamonds to send a message',
+    watchAdsAndEarn: isArabic ? 'شاهد إعلانات واحصل على الألماس' : 'Watch ads and earn diamonds',
+    later: isArabic ? 'لاحقاً' : 'Later',
+    emojiPickerTitle: isArabic ? 'إيموجي صقر' : 'Saqr Emojis',
+    sendError: isArabic ? 'حدث خطأ أثناء إرسال الرسالة' : 'Failed to send message',
+    networkError: isArabic ? 'حدث خطأ في الاتصال' : 'Connection error',
+    loginRequired: isArabic ? 'يجب تسجيل الدخول أولاً' : 'You need to sign in first',
+  }), [isArabic]);
   const [selectedServer, setSelectedServer] = useState(SERVERS[0]);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -362,10 +392,24 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState(0);
   const [chatFrameColor, setChatFrameColor] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
   const flatListRef = useRef(null);
   const pollInterval = useRef(null);
+  const balanceInterval = useRef(null);
   const headerAnim = useRef(new Animated.Value(0)).current;
   const userId = user?.id || user?.user_id;
+  const normalizedDiamonds = useMemo(() => toSafeNumber(diamonds, 0), [diamonds]);
+  const localizedServers = useMemo(() => {
+    const namesByLanguage = {
+      arabic: { ar: 'العربي', en: 'Arabic' },
+      english: { ar: 'الإنجليزي', en: 'English' },
+      global: { ar: 'العالمي', en: 'Global' },
+    };
+    return SERVERS.map((server) => ({
+      ...server,
+      name: namesByLanguage[server.id]?.[isArabic ? 'ar' : 'en'] || server.name,
+    }));
+  }, [isArabic]);
 
   useEffect(() => {
     const loadChatFrame = async () => {
@@ -386,31 +430,132 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
 
   const loadBalance = useCallback(async () => {
     try {
-      // First, try to get diamonds from user object directly
       if (user?.diamonds !== undefined) {
-        setDiamonds(user.diamonds);
+        setDiamonds(toSafeNumber(user.diamonds, 0));
       }
-      
+
       if (!userId) {
         return;
       }
-      
-      const response = await api.getBalance(userId);
-      if (response.ok) {
-        const data = await response.json();
-        setDiamonds(data.diamonds || 0);
+
+      const chatBalanceResponse = await api.fetch(`/api/economy/chat/check-balance/${encodeURIComponent(userId)}`);
+      if (chatBalanceResponse.ok) {
+        const data = await chatBalanceResponse.json();
+        setDiamonds(toSafeNumber(data?.diamonds, 0));
+        return;
+      }
+
+      const fallbackBalanceResponse = await api.getBalance(userId);
+      if (fallbackBalanceResponse.ok) {
+        const data = await fallbackBalanceResponse.json();
+        setDiamonds(toSafeNumber(data?.diamonds, 0));
       }
     } catch (e) {
       if (user?.diamonds !== undefined) {
-        setDiamonds(user.diamonds);
+        setDiamonds(toSafeNumber(user.diamonds, 0));
       }
     }
   }, [user?.diamonds, userId]);
 
+  const checkChatBalance = useCallback(async () => {
+    if (!userId) return null;
+    try {
+      const response = await api.fetch(`/api/economy/chat/check-balance/${encodeURIComponent(userId)}`);
+      if (!response.ok) return null;
+      const data = await response.json();
+      return {
+        diamonds: toSafeNumber(data?.diamonds, 0),
+        canSend: Boolean(data?.can_send),
+      };
+    } catch (e) {
+      return null;
+    }
+  }, [userId]);
+
+  const sendMessage = useCallback(async () => {
+    if (sending || !newMessage.trim()) return;
+
+    if (!userId) {
+      Alert.alert(copy.chatTitle, copy.loginRequired);
+      return;
+    }
+
+    if (normalizedDiamonds < MESSAGE_COST) {
+      const serverBalance = await checkChatBalance();
+      if (serverBalance) {
+        setDiamonds(serverBalance.diamonds);
+        if (!serverBalance.canSend) {
+          gameSounds.wrong();
+          setShowInsufficientModal(true);
+          return;
+        }
+      } else {
+        gameSounds.wrong();
+        setShowInsufficientModal(true);
+        return;
+      }
+    }
+
+    setSending(true);
+    gameSounds.buttonTap();
+
+    try {
+      const response = await api.fetch('/api/economy/chat/send', {
+        method: 'POST',
+        body: JSON.stringify({
+          user_id: userId,
+          server_id: selectedServer.id,
+          message: newMessage.trim(),
+          user_name: user?.name || 'مستخدم',
+          user_avatar: user?.avatar,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setNewMessage('');
+        setDiamonds(toSafeNumber(data?.new_balance, 0));
+        gameSounds.correct();
+
+        if (data.chat_message) {
+          const incomingId = data.chat_message.id || data.chat_message.message_id;
+          setMessages((prev) => {
+            if (incomingId && prev.some((m) => (m.id || m.message_id) === incomingId)) {
+              return prev;
+            }
+            return [...prev, data.chat_message];
+          });
+        }
+
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+      } else {
+        let error = {};
+        try {
+          error = await response.json();
+        } catch {
+          error = {};
+        }
+        if (error.detail?.error === 'insufficient_diamonds') {
+          setDiamonds(toSafeNumber(error?.detail?.current, 0));
+          setShowInsufficientModal(true);
+        } else {
+          Alert.alert(copy.chatTitle, copy.sendError);
+        }
+      }
+    } catch (e) {
+      console.log('Error sending message:', e);
+      Alert.alert(copy.chatTitle, copy.networkError);
+    } finally {
+      setSending(false);
+    }
+  }, [checkChatBalance, copy, newMessage, normalizedDiamonds, selectedServer.id, sending, user?.avatar, user?.name, userId]);
+
   const loadMessages = useCallback(async (showLoading = true) => {
     try {
       if (showLoading) setLoading(true);
-      
+
       const response = await api.fetch(`/api/economy/chat/messages/${selectedServer.id}?limit=100`);
       if (response.ok) {
         const data = await response.json();
@@ -434,85 +579,42 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
     }
   }, [selectedServer.id]);
 
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([loadMessages(false), loadBalance()]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadBalance, loadMessages]);
+
   useEffect(() => {
     Animated.timing(headerAnim, {
       toValue: 1,
       duration: 500,
       useNativeDriver: true,
     }).start();
-    
+
     loadBalance();
     loadMessages();
-    
+
     pollInterval.current = setInterval(() => {
       loadMessages(false);
     }, 5000);
+
+    balanceInterval.current = setInterval(() => {
+      loadBalance();
+    }, 12000);
 
     return () => {
       if (pollInterval.current) {
         clearInterval(pollInterval.current);
       }
+      if (balanceInterval.current) {
+        clearInterval(balanceInterval.current);
+      }
     };
   }, [headerAnim, loadBalance, loadMessages, selectedServer.id]);
-
-  const sendMessage = useCallback(async () => {
-    if (!newMessage.trim()) return;
-    
-    if (diamonds < MESSAGE_COST) {
-      gameSounds.wrong();
-      setShowInsufficientModal(true);
-      return;
-    }
-
-    setSending(true);
-    gameSounds.buttonTap();
-    
-    try {
-      const response = await api.fetch('/api/economy/chat/send', {
-        method: 'POST',
-        body: JSON.stringify({
-          user_id: userId,
-          server_id: selectedServer.id,
-          message: newMessage.trim(),
-          user_name: user?.name || 'مستخدم',
-          user_avatar: user?.avatar,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setNewMessage('');
-        setDiamonds(data.new_balance);
-        gameSounds.correct();
-        
-        if (data.chat_message) {
-          const incomingId = data.chat_message.id || data.chat_message.message_id;
-          setMessages((prev) => {
-            if (incomingId && prev.some((m) => (m.id || m.message_id) === incomingId)) {
-              return prev;
-            }
-            return [...prev, data.chat_message];
-          });
-        }
-        
-        setTimeout(() => {
-          flatListRef.current?.scrollToEnd({ animated: true });
-        }, 100);
-      } else {
-        const error = await response.json();
-        if (error.detail?.error === 'insufficient_diamonds') {
-          setShowInsufficientModal(true);
-        } else {
-          Alert.alert('خطأ', 'حدث خطأ أثناء إرسال الرسالة');
-        }
-      }
-    } catch (e) {
-      console.log('Error sending message:', e);
-      Alert.alert('خطأ', 'حدث خطأ في الاتصال');
-    } finally {
-      setSending(false);
-    }
-  }, [diamonds, newMessage, selectedServer.id, sending, user?.avatar, user?.name, userId]);
 
   const handleServerChange = useCallback((server) => {
     gameSounds.buttonTap();
@@ -562,11 +664,11 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
           <View style={styles.headerCenter}>
             <View style={styles.headerTitleRow}>
               <Ionicons name="chatbubbles" size={22} color="#60a5fa" />
-              <Text style={styles.headerTitle}>الدردشة العامة</Text>
+              <Text style={styles.headerTitle}>{copy.chatTitle}</Text>
             </View>
             <View style={styles.onlineIndicator}>
               <View style={styles.onlinePulse} />
-              <Text style={styles.onlineText}>{onlineUsers} متصل الآن</Text>
+              <Text style={styles.onlineText}>{onlineUsers} {copy.onlineNow}</Text>
             </View>
           </View>
 
@@ -588,13 +690,13 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
             style={styles.costGradient}
           >
             <Ionicons name="information-circle" size={14} color="#f59e0b" />
-            <Text style={styles.costText}>تكلفة الرسالة: {MESSAGE_COST} ألماسات</Text>
+            <Text style={styles.costText}>{copy.messageCostLabel}: {MESSAGE_COST}</Text>
           </LinearGradient>
         </View>
 
         {/* Server Selector */}
         <ServerSelector
-          servers={SERVERS}
+          servers={localizedServers}
           selectedServer={selectedServer}
           onSelect={handleServerChange}
           onlineCount={onlineUsers}
@@ -609,20 +711,20 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#60a5fa" />
-              <Text style={styles.loadingText}>جاري تحميل الرسائل...</Text>
+              <Text style={styles.loadingText}>{copy.loadingMessages}</Text>
             </View>
           ) : messages.length === 0 ? (
             <View style={styles.emptyContainer}>
               <View style={styles.emptyIconContainer}>
                 <Ionicons name="chatbubble-outline" size={60} color="rgba(96,165,250,0.3)" />
               </View>
-              <Text style={styles.emptyText}>لا توجد رسائل</Text>
-              <Text style={styles.emptySubtext}>كن أول من يبدأ المحادثة!</Text>
+              <Text style={styles.emptyText}>{copy.noMessages}</Text>
+              <Text style={styles.emptySubtext}>{copy.beFirst}</Text>
               <TouchableOpacity 
                 style={styles.startChatBtn}
                 onPress={() => setShowEmojiPicker(true)}
               >
-                <Text style={styles.startChatText}>ابدأ بإرسال إيموجي صقر!</Text>
+                <Text style={styles.startChatText}>{copy.startWithEmoji}</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -642,6 +744,14 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
               keyboardShouldPersistTaps="handled"
               updateCellsBatchingPeriod={50}
               onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={handleRefresh}
+                  tintColor="#60a5fa"
+                  colors={['#60a5fa']}
+                />
+              }
             />
           )}
 
@@ -650,16 +760,17 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
             visible={showEmojiPicker}
             onSelect={handleEmojiSelect}
             onClose={() => setShowEmojiPicker(false)}
+            title={copy.emojiPickerTitle}
           />
 
           {/* Input Area */}
           <View style={styles.inputContainer}>
             {/* Balance Warning */}
-            {diamonds < MESSAGE_COST * 3 && diamonds >= MESSAGE_COST && (
+            {normalizedDiamonds < MESSAGE_COST * 3 && normalizedDiamonds >= MESSAGE_COST && (
               <View style={styles.lowBalanceWarning}>
                 <Ionicons name="warning" size={12} color="#f59e0b" />
                 <Text style={styles.lowBalanceText}>
-                  رصيدك منخفض! يمكنك إرسال {Math.floor(diamonds / MESSAGE_COST)} رسالة فقط
+                  {copy.lowBalancePrefix} {Math.floor(normalizedDiamonds / MESSAGE_COST)} {copy.lowBalanceSuffix}
                 </Text>
               </View>
             )}
@@ -677,7 +788,7 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
               
               <TextInput
                 style={styles.textInput}
-                placeholder="اكتب رسالتك..."
+                placeholder={copy.typeMessagePlaceholder}
                 placeholderTextColor="#666"
                 value={newMessage}
                 onChangeText={setNewMessage}
@@ -711,7 +822,8 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
           visible={showInsufficientModal}
           onWatchAds={handleWatchAds}
           onClose={() => setShowInsufficientModal(false)}
-          currentDiamonds={diamonds}
+          currentDiamonds={normalizedDiamonds}
+          copy={copy}
         />
       </View>
     </ImageBackground>
