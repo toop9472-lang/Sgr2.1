@@ -2,7 +2,7 @@
 // Production Server - Emergent Host
 import NetInfo from '@react-native-community/netinfo';
 
-const DEFAULT_API_URL = 'https://saqrpointscom.store';
+const DEFAULT_API_URL = 'https://saqr-ui-sync.emergent.host';
 const normalizeApiBaseUrl = (value) => {
   if (!value || typeof value !== 'string') return null;
   const trimmed = value.trim().replace(/\/+$/, '');
@@ -21,6 +21,7 @@ const envCandidates = [
 
 const API_URL = envCandidates[0] || DEFAULT_API_URL;
 const EXTRA_FALLBACK_APIS = [
+  'https://saqr-ui-sync.emergent.host',
   'https://app-store-revival.preview.emergentagent.com/backend',
   'https://quality-restore-1.preview.emergentagent.com',
 ].map(normalizeApiBaseUrl).filter(Boolean);

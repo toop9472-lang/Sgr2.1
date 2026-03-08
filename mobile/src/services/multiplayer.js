@@ -6,6 +6,7 @@ const getSocketBaseCandidates = () => {
   const candidates = [
     api.baseUrl,
     api.BASE_URL,
+    'https://saqr-ui-sync.emergent.host',
     'https://app-store-revival.preview.emergentagent.com/backend',
     'https://saqrpointscom.store',
   ]
