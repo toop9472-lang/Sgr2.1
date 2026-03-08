@@ -15,47 +15,12 @@ router = APIRouter(prefix='/auth', tags=['OAuth Authentication'])
 # Constants
 SESSION_EXPIRY_DAYS = 7
 EMERGENT_AUTH_URL = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
-WELCOME_GEMS_BONUS = 500
-WELCOME_GEMS_FLAG = "welcome_gems_bonus_v1_granted"
 
 def get_db():
     """Get database connection"""
     mongo_url = os.environ['MONGO_URL']
     client = AsyncIOMotorClient(mongo_url)
     return client[os.environ['DB_NAME']]
-
-async def grant_welcome_gems_once(db, user_id: str) -> bool:
-    if not user_id:
-        return False
-    now_iso = datetime.now(timezone.utc).isoformat()
-    result = await db.users.update_one(
-        {
-            "$and": [
-                {"$or": [{"id": user_id}, {"user_id": user_id}]},
-                {"$or": [{WELCOME_GEMS_FLAG: {"$exists": False}}, {WELCOME_GEMS_FLAG: False}]},
-            ]
-        },
-        {
-            "$inc": {
-                "saqr_gems": WELCOME_GEMS_BONUS,
-                "saqr_points": WELCOME_GEMS_BONUS,
-                "points": WELCOME_GEMS_BONUS,
-            },
-            "$set": {
-                WELCOME_GEMS_FLAG: True,
-                "updated_at": datetime.now(timezone.utc),
-            },
-            "$push": {
-                "saqr_gems_transactions": {
-                    "type": "welcome_gems_bonus_v1",
-                    "amount": WELCOME_GEMS_BONUS,
-                    "timestamp": now_iso,
-                }
-            },
-        },
-    )
-    return bool(result.modified_count)
-
 
 @router.post('/session', response_model=dict)
 async def process_session(request: Request, response: Response):
@@ -106,7 +71,6 @@ async def process_session(request: Request, response: Response):
                     'updated_at': datetime.now(timezone.utc)
                 }}
             )
-            await grant_welcome_gems_once(db, user_id)
         else:
             # Create new user
             user_id = f"user_{uuid.uuid4().hex[:12]}"
@@ -116,10 +80,9 @@ async def process_session(request: Request, response: Response):
                 'name': user_data['name'],
                 'picture': user_data.get('picture'),
                 'provider': 'google',
-                'points': WELCOME_GEMS_BONUS,
-                'saqr_points': WELCOME_GEMS_BONUS,
-                'saqr_gems': WELCOME_GEMS_BONUS,
-                WELCOME_GEMS_FLAG: True,
+                'points': 0,
+                'saqr_points': 0,
+                'saqr_gems': 0,
                 'diamonds': 300,  # 300 ألماسة ترحيبية
                 'total_earned': 0,
                 'watched_ads': [],
@@ -128,12 +91,6 @@ async def process_session(request: Request, response: Response):
                     'id': str(uuid.uuid4()),
                     'type': 'welcome_bonus',
                     'amount': 300,
-                    'created_at': datetime.now(timezone.utc).isoformat()
-                }],
-                'saqr_gems_transactions': [{
-                    'id': str(uuid.uuid4()),
-                    'type': 'welcome_gems_bonus_v1',
-                    'amount': WELCOME_GEMS_BONUS,
                     'created_at': datetime.now(timezone.utc).isoformat()
                 }],
                 'created_at': datetime.now(timezone.utc),
@@ -228,8 +185,6 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail='Invalid session'
         )
-    await grant_welcome_gems_once(db, session.get('user_id'))
-    
     # Check expiry
     expires_at = session['expires_at']
     if isinstance(expires_at, str):
@@ -337,10 +292,9 @@ async def register_user(data: RegisterRequest, response: Response):
         'name': data.name,
         'password_hash': password_hash,
         'provider': 'email',
-        'points': WELCOME_GEMS_BONUS,
-        'saqr_points': WELCOME_GEMS_BONUS,
-        'saqr_gems': WELCOME_GEMS_BONUS,
-        WELCOME_GEMS_FLAG: True,
+        'points': 0,
+        'saqr_points': 0,
+        'saqr_gems': 0,
         'diamonds': 300,  # 300 ألماسة ترحيبية
         'total_earned': 0,
         'watched_ads': [],
@@ -349,12 +303,6 @@ async def register_user(data: RegisterRequest, response: Response):
             'id': str(uuid.uuid4()),
             'type': 'welcome_bonus',
             'amount': 300,
-            'created_at': datetime.now(timezone.utc).isoformat()
-        }],
-        'saqr_gems_transactions': [{
-            'id': str(uuid.uuid4()),
-            'type': 'welcome_gems_bonus_v1',
-            'amount': WELCOME_GEMS_BONUS,
             'created_at': datetime.now(timezone.utc).isoformat()
         }],
         'created_at': datetime.now(timezone.utc),
@@ -391,8 +339,8 @@ async def register_user(data: RegisterRequest, response: Response):
             'user_id': user_id,
             'email': data.email,
             'name': data.name,
-            'points': WELCOME_GEMS_BONUS,
-            'saqr_gems': WELCOME_GEMS_BONUS,
+            'points': 0,
+            'saqr_gems': 0,
             'diamonds': 300,
             'total_earned': 0
         }
@@ -414,9 +362,6 @@ async def login_email(data: LoginRequest, response: Response):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail='البريد الإلكتروني أو كلمة المرور غير صحيحة'
         )
-    await grant_welcome_gems_once(db, user.get('user_id') or user.get('id'))
-    user = await db.users.find_one({'email': data.email}, {'_id': 0})
-    
     # Check password
     if not user.get('password_hash'):
         raise HTTPException(

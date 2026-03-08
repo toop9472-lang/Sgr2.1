@@ -12,46 +12,12 @@ import uuid
 import re
 
 router = APIRouter(prefix='/phone', tags=['Phone Authentication'])
-WELCOME_GEMS_BONUS = 500
-WELCOME_GEMS_FLAG = "welcome_gems_bonus_v1_granted"
 
 def get_db():
     """Get database connection"""
     mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
     client = AsyncIOMotorClient(mongo_url)
     return client[os.environ.get('DB_NAME', 'saqr_db')]
-
-async def grant_welcome_gems_once(db, user_id: str) -> bool:
-    if not user_id:
-        return False
-    now_iso = datetime.utcnow().isoformat()
-    result = await db.users.update_one(
-        {
-            "$and": [
-                {"$or": [{"id": user_id}, {"user_id": user_id}]},
-                {"$or": [{WELCOME_GEMS_FLAG: {"$exists": False}}, {WELCOME_GEMS_FLAG: False}]},
-            ]
-        },
-        {
-            "$inc": {
-                "saqr_gems": WELCOME_GEMS_BONUS,
-                "saqr_points": WELCOME_GEMS_BONUS,
-                "points": WELCOME_GEMS_BONUS,
-            },
-            "$set": {
-                WELCOME_GEMS_FLAG: True,
-                "updated_at": datetime.utcnow(),
-            },
-            "$push": {
-                "saqr_gems_transactions": {
-                    "type": "welcome_gems_bonus_v1",
-                    "amount": WELCOME_GEMS_BONUS,
-                    "timestamp": now_iso,
-                }
-            },
-        },
-    )
-    return bool(result.modified_count)
 
 def validate_saudi_phone(phone: str) -> bool:
     """Validate Saudi phone number"""
@@ -237,18 +203,18 @@ async def register_with_phone(data: RegisterWithPhoneRequest, request: Request):
         'provider': 'phone',
         'provider_id': formatted_phone,
         'avatar': f"https://ui-avatars.com/api/?name={data.name}&background=6366f1&color=fff",
-        'points': WELCOME_GEMS_BONUS,
-        'saqr_points': WELCOME_GEMS_BONUS,
-        'saqr_gems': WELCOME_GEMS_BONUS,
-        WELCOME_GEMS_FLAG: True,
+        'points': 0,
+        'saqr_points': 0,
+        'saqr_gems': 0,
+        'diamonds': 300,
         'total_earned': 0,
         'watched_ads': [],
         'status': 'active',
         'phone_verified': True,
         'registration_ip': client_ip,
-        'saqr_gems_transactions': [{
-            'type': 'welcome_gems_bonus_v1',
-            'amount': WELCOME_GEMS_BONUS,
+        'diamond_transactions': [{
+            'type': 'welcome_bonus',
+            'amount': 300,
             'timestamp': datetime.utcnow().isoformat(),
         }],
         'created_at': datetime.utcnow(),
@@ -269,8 +235,9 @@ async def register_with_phone(data: RegisterWithPhoneRequest, request: Request):
             'phone': formatted_phone,
             'name': data.name,
             'avatar': user_doc['avatar'],
-            'points': WELCOME_GEMS_BONUS,
-            'saqr_gems': WELCOME_GEMS_BONUS,
+            'points': 0,
+            'saqr_gems': 0,
+            'diamonds': 300,
         }
     }
 
@@ -374,10 +341,6 @@ async def verify_login_otp(data: VerifyLoginOTPRequest):
     
     # Get user
     user = await db.users.find_one({'id': session['user_id']}, {'_id': 0, 'password_hash': 0})
-    await grant_welcome_gems_once(db, session['user_id'])
-    user = await db.users.find_one({'$or': [{'id': session['user_id']}, {'user_id': session['user_id']}]}, {'_id': 0, 'password_hash': 0})
-    
-    
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

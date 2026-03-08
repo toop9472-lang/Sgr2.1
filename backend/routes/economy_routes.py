@@ -24,10 +24,8 @@ db = client[os.environ.get('DB_NAME', 'saqr_db')]
 # الألماسات المجانية عند التسجيل (للاستهلاك داخل التطبيق)
 INITIAL_DIAMONDS = 300
 
-# جواهر صقر المجانية عند التسجيل (للاستبدال بالمال)
-INITIAL_SAQR_GEMS = 500
-WELCOME_GEMS_BONUS = 500
-WELCOME_GEMS_FLAG = "welcome_gems_bonus_v1_granted"
+# جواهر صقر عند التسجيل (بدون منحة مجانية تلقائية)
+INITIAL_SAQR_GEMS = 0
 
 # الحد اليومي للجواهر من الألعاب
 DAILY_GEMS_LIMIT = 70  # الحد اليومي من الألعاب فقط
@@ -498,45 +496,11 @@ async def initialize_user_economy(user_id: str):
     if not user:
         raise HTTPException(status_code=404, detail="المستخدم غير موجود")
     
-    welcome_granted = False
-    now_iso = datetime.now(timezone.utc).isoformat()
-    welcome_result = await db.users.update_one(
-        {
-            "$and": [
-                user_filter,
-                {"$or": [{WELCOME_GEMS_FLAG: {"$exists": False}}, {WELCOME_GEMS_FLAG: False}]},
-            ]
-        },
-        {
-            "$inc": {
-                "saqr_gems": WELCOME_GEMS_BONUS,
-                "saqr_points": WELCOME_GEMS_BONUS,
-                "points": WELCOME_GEMS_BONUS,
-            },
-            "$set": {
-                WELCOME_GEMS_FLAG: True,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
-            },
-            "$push": {
-                "saqr_gems_transactions": {
-                    "id": str(uuid.uuid4()),
-                    "type": "welcome_gems_bonus_v1",
-                    "amount": WELCOME_GEMS_BONUS,
-                    "created_at": now_iso,
-                }
-            },
-        },
-    )
-    welcome_granted = bool(welcome_result.modified_count)
-    user = await db.users.find_one(user_filter)
-
     # التحقق من أن المستخدم لم يتم تهيئته من قبل
     if user.get("economy_initialized"):
         return {
             "success": True,
             "message": "المستخدم مهيأ بالفعل",
-            "welcome_gems_granted": welcome_granted,
-            "welcome_gems_amount": WELCOME_GEMS_BONUS if welcome_granted else 0,
         }
     
     # تهيئة الحقول
@@ -548,7 +512,6 @@ async def initialize_user_economy(user_id: str):
                 "saqr_points": user.get("points", 0),
                 "saqr_gems": user.get("saqr_gems", max(INITIAL_SAQR_GEMS, user.get("saqr_points", user.get("points", 0)))),
                 "economy_initialized": True,
-                WELCOME_GEMS_FLAG: user.get(WELCOME_GEMS_FLAG, True),
                 "diamond_transactions": []
             }
         }
@@ -558,8 +521,7 @@ async def initialize_user_economy(user_id: str):
         "success": True,
         "initial_diamonds": INITIAL_DIAMONDS,
         "initial_saqr_gems": INITIAL_SAQR_GEMS,
-        "message": f"تم منحك {INITIAL_DIAMONDS} ألماسة ترحيبية و {INITIAL_SAQR_GEMS} جوهرة صقر!",
-        "welcome_gems_granted": welcome_granted,
+        "message": f"تم منحك {INITIAL_DIAMONDS} ألماسة ترحيبية.",
     }
 
 
