@@ -581,14 +581,33 @@ async def spend_diamonds(request: SpendDiamondsDirectRequest):
     if request.amount <= 0 or request.amount > 500:
         raise HTTPException(status_code=400, detail="قيمة الخصم غير صالحة")
 
-    user = await db.users.find_one(
-        {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]}
-    )
-    if not user:
-        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    user_filter = {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]}
+    spend_filter = {**user_filter, "diamonds": {"$gte": request.amount}}
+    spend_timestamp = datetime.now(timezone.utc).isoformat()
 
-    current_diamonds = user.get("diamonds", 0)
-    if current_diamonds < request.amount:
+    # Atomic spend: only succeeds if current diamonds are enough at update time.
+    spend_result = await db.users.update_one(
+        spend_filter,
+        {
+            "$inc": {"diamonds": -request.amount},
+            "$push": {
+                "diamond_transactions": {
+                    "type": "spend",
+                    "amount": -request.amount,
+                    "source": request.source,
+                    "game_id": request.game_id,
+                    "timestamp": spend_timestamp,
+                }
+            },
+        },
+    )
+
+    if spend_result.matched_count == 0:
+        # Differentiate between missing user and insufficient balance.
+        user = await db.users.find_one(user_filter, {"_id": 0, "diamonds": 1})
+        if not user:
+            raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+        current_diamonds = user.get("diamonds", 0)
         raise HTTPException(
             status_code=400,
             detail={
@@ -598,23 +617,8 @@ async def spend_diamonds(request: SpendDiamondsDirectRequest):
             },
         )
 
-    remaining = current_diamonds - request.amount
-    await db.users.update_one(
-        {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]},
-        {
-            "$set": {"diamonds": remaining},
-            "$push": {
-                "diamond_transactions": {
-                    "type": "spend",
-                    "amount": -request.amount,
-                    "source": request.source,
-                    "game_id": request.game_id,
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "balance_after": remaining,
-                }
-            },
-        },
-    )
+    updated_user = await db.users.find_one(user_filter, {"_id": 0, "diamonds": 1})
+    remaining = (updated_user or {}).get("diamonds", 0)
 
     return {
         "success": True,

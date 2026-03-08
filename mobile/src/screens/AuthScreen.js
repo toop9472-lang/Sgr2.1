@@ -67,17 +67,25 @@ const AuthScreen = ({ onLogin }) => {
     }
   };
 
-  const parseErrorMessage = async (response, fallbackMessage) => {
+  const statusFallbackMessage = (response, fallbackMessage) => {
+    if (response?.status === 404) return 'تعذر الوصول لخدمة تسجيل الدخول. تحقق من إعدادات الخادم.';
+    if (response?.status === 401) return 'بيانات تسجيل الدخول غير صحيحة';
+    if (response?.status === 429) return 'تم تجاوز عدد المحاولات المسموح. حاول لاحقاً';
+    if (response?.status >= 500) return 'الخادم مشغول حالياً. حاول بعد قليل';
+    return fallbackMessage;
+  };
+
+  const parseErrorMessage = async (response, fallbackMessage, parsedData = undefined) => {
+    if (parsedData !== undefined) {
+      if (typeof parsedData === 'string' && parsedData.trim()) return parsedData;
+      return parsedData?.detail || parsedData?.message || statusFallbackMessage(response, fallbackMessage);
+    }
     try {
       const data = await response.json();
       if (typeof data === 'string' && data.trim()) return data;
-      return data?.detail || data?.message || fallbackMessage;
+      return data?.detail || data?.message || statusFallbackMessage(response, fallbackMessage);
     } catch (_) {
-      if (response.status === 404) return 'تعذر الوصول لخدمة تسجيل الدخول. تحقق من إعدادات الخادم.';
-      if (response.status === 401) return 'بيانات تسجيل الدخول غير صحيحة';
-      if (response.status === 429) return 'تم تجاوز عدد المحاولات المسموح. حاول لاحقاً';
-      if (response.status >= 500) return 'الخادم مشغول حالياً. حاول بعد قليل';
-      return fallbackMessage;
+      return statusFallbackMessage(response, fallbackMessage);
     }
   };
   
@@ -450,7 +458,7 @@ const AuthScreen = ({ onLogin }) => {
           }
         } else {
           if (__DEV__) console.log('Registration failed:', data);
-          const message = data.detail || data.message || await parseErrorMessage(response, 'فشل إنشاء الحساب');
+          const message = await parseErrorMessage(response, 'فشل إنشاء الحساب', data);
           Alert.alert('خطأ', message);
         }
       } else {
@@ -465,7 +473,7 @@ const AuthScreen = ({ onLogin }) => {
           onLogin(data.user);
         } else {
           if (__DEV__) console.log('Login failed:', data);
-          const message = data.detail || data.message || await parseErrorMessage(response, 'البريد الإلكتروني أو كلمة المرور غير صحيحة');
+          const message = await parseErrorMessage(response, 'البريد الإلكتروني أو كلمة المرور غير صحيحة', data);
           Alert.alert('خطأ', message);
         }
       }
