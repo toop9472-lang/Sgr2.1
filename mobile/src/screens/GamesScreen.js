@@ -39,7 +39,7 @@ const AD_WATCH_DURATION_SECONDS = 30;
 const GEMS_SECONDS_PER_UNIT = 60;
 const ONLINE_GLOBAL_CHAT_INVITE_COST = 5;
 const toThumbCover = (targetUrl) => (
-  targetUrl ? `https://image.thum.io/get/width/600/crop/600/noanimate/${targetUrl}` : null
+  targetUrl ? `https://image.thum.io/get/width/900/crop/900/noanimate/${targetUrl}` : null
 );
 const EXTERNAL_GAME_URLS = {
   aiquest: 'https://kbhgames.com/game/zombotron-re-boot',
@@ -65,7 +65,7 @@ const EXTERNAL_GAME_URLS = {
 };
 const GAME_CATALOG_OVERRIDES = {
   aiquest: {
-    name: 'Zombotron Re-Boot',
+    name: 'زومبوترون ري-بوت',
     description: 'تصويب أكشن ومراحل سريعة.',
     category: 'أكشن',
     badge: 'NEW',
@@ -73,98 +73,98 @@ const GAME_CATALOG_OVERRIDES = {
     backendGameId: 'puzzle',
   },
   chess: {
-    name: 'Slimefall',
+    name: 'سلايم فول',
     description: 'نجاة سريعة وتحديات دقيقة.',
     category: 'منصات',
     badge: 'NEW',
     backendGameId: 'trivia',
   },
   tictactoe: {
-    name: 'Trap Adventure: Color Brothers',
+    name: 'تراب أدفنتشر: إخوة الألوان',
     description: 'منصات صعبة مع ألغاز ألوان.',
     category: 'ألغاز',
     badge: 'NEW',
     backendGameId: 'brickbreaker',
   },
   tactix: {
-    name: 'Shoot.nothans.com',
+    name: 'شوت نوتانز',
     description: 'تصويب مباشر بإيقاع سريع.',
     category: 'تصويب',
     badge: 'HOT',
     backendGameId: 'puzzle',
   },
   memory: {
-    name: 'balanc3dgame.com',
+    name: 'بالانس ثلاثي الأبعاد',
     description: 'تحديات توازن ثلاثية الأبعاد.',
     category: 'مهارة',
     badge: '3D',
     backendGameId: 'tictactoe',
   },
   snake: {
-    name: 'pacman.live',
+    name: 'باكمان لايف',
     description: 'آركيد كلاسيكي بنسخة ويب حديثة.',
     category: 'آركيد',
     badge: 'LIVE',
     backendGameId: 'brickbreaker',
   },
   brickbreaker: {
-    name: 'Nelly Jellies',
+    name: 'نيلي جيليز',
     description: 'مغامرة خفيفة وتحديات تفاعلية.',
     category: 'مغامرة',
     badge: 'NEW',
     backendGameId: 'riddles',
   },
   puzzle: {
-    name: 'Poly Cat Balls',
+    name: 'بولي كات بولز',
     description: 'حل ألغاز فيزيائية بخطوط ذكية.',
     category: 'ألغاز',
     badge: 'CAT',
     backendGameId: 'puzzle',
   },
   trivia: {
-    name: 'Marbleous!',
+    name: 'ماربلوس',
     description: 'تحديات كرات وتوجيه ذكي.',
     category: 'مهارة',
     badge: 'PRO',
     backendGameId: 'trivia',
   },
   mathrace: {
-    name: 'Neon Swarm - Rogue',
+    name: 'نيون سوارم روج',
     description: 'روجلايك نيون سريع ومكثف.',
     category: 'أكشن',
     badge: 'ROGUE',
     backendGameId: 'riddles',
   },
   wordrace: {
-    name: 'Colored Fusion - LOCAL MULTIPLAYER - PC / MOBILE',
+    name: 'كولورد فيوجن',
     description: 'تجربة دمج ألوان متعددة الأنماط.',
     category: 'تعاوني',
     badge: 'COOP',
     backendGameId: 'tictactoe',
   },
   colorswitch: {
-    name: 'Color Chase',
+    name: 'كولور تشيس',
     description: 'مطاردة ألوان سريعة ورد فعل.',
     category: 'سرعة',
     badge: 'FAST',
     backendGameId: 'riddles',
   },
   riddles: {
-    name: 'Falling Lightblocks',
+    name: 'لايت بلوكس الساقطة',
     description: 'بلوكات ضوئية مع طور لعب ممتد.',
     category: 'أركيد',
     badge: 'NEON',
     backendGameId: 'puzzle',
   },
   millionaire: {
-    name: "Ironmouse and Bubi's Wicked Climb",
+    name: 'صعود آيرونماوس وبوبي',
     description: 'تسلق صعب وممتع على الموبايل.',
     category: 'منصات',
     badge: 'HARD',
     backendGameId: 'trivia',
   },
   brickstormx: {
-    name: 'UNO أونلاين',
+    name: 'أونو أونلاين',
     description: 'أونلاين مباشر (2-4 لاعبين).',
     category: 'ورق',
     badge: 'ONLINE',
@@ -215,7 +215,7 @@ const GAME_CATALOG_OVERRIDES = {
   },
   sequencesprint: {
     name: 'السكونس أونلاين',
-    description: 'Sequence أونلاين مباشر (2-4 لاعبين).',
+    description: 'لعبة سكونس أونلاين مباشر (2-4 لاعبين).',
     category: 'استراتيجية',
     badge: 'ONLINE',
     online: true,
@@ -302,7 +302,7 @@ const GameCard = ({ game, onPress, pulseAnim, gameCost }) => {
                 ) : (
                   <Ionicons name={resolveIconName(game.icon, 'game-controller-outline')} size={34} color="#fff" />
                 )}
-                {game.secondaryIcon ? (
+                {game.secondaryIcon && !shouldShowCover ? (
                   <View style={styles.gameSecondaryIcon}>
                     <Ionicons name={resolveIconName(game.secondaryIcon, 'sparkles-outline')} size={12} color="#fff" />
                   </View>
@@ -2144,6 +2144,7 @@ const GamesScreen = ({
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
   const pendingOnlineGameRef = useRef(null);
+  const connectionLostAlertLockRef = useRef(false);
   const userId = user?.id || user?.user_id;
 
   // كتالوج الألعاب: 12 أساسية + ألعاب جديدة مستقلة
@@ -2790,9 +2791,15 @@ const GamesScreen = ({
     });
 
     const unsubConnectionLost = multiplayerService.on('connectionLost', () => {
+      if (connectionLostAlertLockRef.current) return;
+      connectionLostAlertLockRef.current = true;
       setShowWaiting(false);
       pendingOnlineGameRef.current = null;
-      Alert.alert('انقطع الاتصال', 'تعذر إكمال البحث عن منافس. حاول مرة أخرى.');
+      Alert.alert(
+        'انقطع الاتصال',
+        'تعذر إكمال البحث عن منافس. تحقق من الشبكة وحاول مرة واحدة بعد ثوانٍ.',
+        [{ text: 'حسناً', onPress: () => { connectionLostAlertLockRef.current = false; } }],
+      );
     });
 
     return () => {
@@ -2925,6 +2932,7 @@ const GamesScreen = ({
 
   const startOnlineMatchmaking = useCallback(async (selectedGame) => {
     if (!selectedGame) return false;
+    connectionLostAlertLockRef.current = false;
     const backendGameId = resolveBackendGameId(selectedGame.id);
 
     const cost = gameCosts[backendGameId] || selectedGame.onlineCost || 20;
@@ -3133,6 +3141,7 @@ const GamesScreen = ({
   };
 
   const cancelOnlineSearch = () => {
+    connectionLostAlertLockRef.current = false;
     multiplayerService.cancelSearch();
     setShowWaiting(false);
     setShowModeSelector(null);
@@ -3218,6 +3227,7 @@ const GamesScreen = ({
   };
 
   const closeGame = () => {
+    connectionLostAlertLockRef.current = false;
     const currentGame = getGameById(activeGame);
     const isDirectExternalMultiplayer = Boolean(currentGame?.externalMultiplayerDirect);
     // إذا كانت لعبة أونلاين، أعلم الخصم
@@ -3775,21 +3785,21 @@ const styles = StyleSheet.create({
     color: '#e2e8f0',
   },
   gameArtContainer: {
-    height: 98,
+    height: 108,
     alignItems: 'center',
     justifyContent: 'center',
   },
   gameArtGlow: {
     position: 'absolute',
-    width: 94,
-    height: 94,
-    borderRadius: 18,
+    width: 102,
+    height: 102,
+    borderRadius: 20,
     opacity: 0.85,
   },
   gameArtOrb: {
-    width: 86,
-    height: 86,
-    borderRadius: 16,
+    width: 96,
+    height: 96,
+    borderRadius: 18,
     borderWidth: 1.5,
     overflow: 'hidden',
   },

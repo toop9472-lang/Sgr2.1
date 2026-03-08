@@ -1053,6 +1053,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     width: '96%',
     maxWidth: 460,
+    height: '92%',
     maxHeight: '94%',
     overflow: 'hidden',
   },

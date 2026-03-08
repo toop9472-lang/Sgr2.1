@@ -25,18 +25,30 @@ class MultiplayerService {
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
     this.manuallyDisconnected = false;
+    this.reconnectTimer = null;
+    this.connectPromise = null;
+    this.connectionLostEmitted = false;
   }
 
   // الاتصال بالخادم
   connect(playerId) {
-    return new Promise((resolve, reject) => {
+    if (this.connectPromise) {
+      return this.connectPromise;
+    }
+
+    this.connectPromise = new Promise((resolve, reject) => {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        this.connectPromise = null;
         resolve();
         return;
       }
 
       this.playerId = playerId;
       this.manuallyDisconnected = false;
+      if (this.reconnectTimer) {
+        clearTimeout(this.reconnectTimer);
+        this.reconnectTimer = null;
+      }
 
       const socketCandidates = getSocketBaseCandidates().flatMap((baseUrl) => {
         const wsBase = toWsBase(baseUrl);
@@ -52,6 +64,7 @@ class MultiplayerService {
         if (candidateIndex >= socketCandidates.length) {
           if (!settled) {
             settled = true;
+            this.connectPromise = null;
             reject(new Error('MULTIPLAYER_CONNECTION_FAILED'));
           }
           return;
@@ -65,6 +78,8 @@ class MultiplayerService {
           settled = true;
           console.log('WebSocket connected:', socketUrl);
           this.reconnectAttempts = 0;
+          this.connectionLostEmitted = false;
+          this.connectPromise = null;
           resolve();
         };
 
@@ -91,12 +106,15 @@ class MultiplayerService {
             return;
           }
           console.log('WebSocket closed');
+          this.ws = null;
           this.handleDisconnect();
         };
       };
 
       openNextCandidate();
     });
+
+    return this.connectPromise;
   }
 
   // معالجة الرسائل
@@ -149,17 +167,22 @@ class MultiplayerService {
   // إعادة الاتصال
   handleDisconnect() {
     if (this.manuallyDisconnected) return;
+    if (this.connectionLostEmitted) return;
 
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       console.log(`Reconnecting... attempt ${this.reconnectAttempts}`);
-      
-      setTimeout(() => {
+      if (this.reconnectTimer) {
+        clearTimeout(this.reconnectTimer);
+      }
+      this.reconnectTimer = setTimeout(() => {
         if (this.playerId) {
           this.connect(this.playerId).catch(() => {});
         }
+        this.reconnectTimer = null;
       }, 2000 * this.reconnectAttempts);
     } else {
+      this.connectionLostEmitted = true;
       this.emit('connectionLost', {});
     }
   }
@@ -262,6 +285,13 @@ class MultiplayerService {
   // قطع الاتصال
   disconnect() {
     this.manuallyDisconnected = true;
+    this.connectionLostEmitted = false;
+    this.connectPromise = null;
+    this.reconnectAttempts = 0;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
     if (this.ws) {
       this.ws.close();
       this.ws = null;
