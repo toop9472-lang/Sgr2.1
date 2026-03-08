@@ -17,6 +17,8 @@ const googleDiscovery = {
   revocationEndpoint: 'https://oauth2.googleapis.com/revoke',
 };
 
+const getApiBase = () => (api.baseUrl || api.BASE_URL || 'https://saqr-ui-sync.emergent.host').replace(/\/+$/, '');
+
 /**
  * Sign in with Google using Web Browser OAuth
  * Works on both iOS and Android without native SDK
@@ -30,7 +32,7 @@ export const signInWithGoogle = async () => {
     });
 
     // Request authorization
-    const authUrl = `${api.BASE_URL}/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
+    const authUrl = `${getApiBase()}/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
     
     const result = await WebBrowser.openAuthSessionAsync(
       authUrl,
@@ -49,7 +51,7 @@ export const signInWithGoogle = async () => {
         const sessionId = sessionMatch[1];
         
         // Get user data from session
-        const response = await fetch(`${api.BASE_URL}/api/auth/session/${sessionId}`, {
+        const response = await fetch(`${getApiBase()}/api/auth/session/${sessionId}`, {
           method: 'GET',
           headers: { 'Accept': 'application/json' },
         });
@@ -118,7 +120,7 @@ export const signInWithApple = async () => {
     }
 
     // Send to backend
-    const response = await fetch(`${api.BASE_URL}/api/auth/apple/native`, {
+    const response = await fetch(`${getApiBase()}/api/auth/apple/native`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -164,8 +166,11 @@ export const signInWithApple = async () => {
  */
 export const signInWithAppleWeb = async () => {
   try {
-    const redirectUri = 'saqr://auth/callback';
-    const authUrl = `${api.BASE_URL}/api/auth/apple?redirect_uri=${encodeURIComponent(redirectUri)}`;
+    const redirectUri = AuthSession.makeRedirectUri({
+      scheme: 'saqr',
+      path: 'auth/callback',
+    });
+    const authUrl = `${getApiBase()}/api/auth/apple?redirect_uri=${encodeURIComponent(redirectUri)}`;
     
     const result = await WebBrowser.openAuthSessionAsync(
       authUrl,
@@ -182,7 +187,7 @@ export const signInWithAppleWeb = async () => {
       if (sessionMatch) {
         const sessionId = sessionMatch[1];
         
-        const response = await fetch(`${api.BASE_URL}/api/auth/session/${sessionId}`, {
+        const response = await fetch(`${getApiBase()}/api/auth/session/${sessionId}`, {
           method: 'GET',
           headers: { 'Accept': 'application/json' },
         });

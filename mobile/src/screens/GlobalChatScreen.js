@@ -358,7 +358,7 @@ const InsufficientDiamondsModal = ({ visible, onWatchAds, onClose, currentDiamon
 };
 
 // المكون الرئيسي
-const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
+const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes, onBalanceUpdate }) => {
   const { language } = useLanguage();
   const isArabic = language === 'ar';
   const copy = useMemo(() => ({
@@ -398,6 +398,14 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
   const balanceInterval = useRef(null);
   const headerAnim = useRef(new Animated.Value(0)).current;
   const userId = user?.id || user?.user_id;
+  const applyDiamonds = useCallback((value) => {
+    const normalized = toSafeNumber(value, 0);
+    setDiamonds(normalized);
+    if (onBalanceUpdate) {
+      onBalanceUpdate({ diamonds: normalized });
+    }
+  }, [onBalanceUpdate]);
+
   const normalizedDiamonds = useMemo(() => toSafeNumber(diamonds, 0), [diamonds]);
   const localizedServers = useMemo(() => {
     const namesByLanguage = {
@@ -431,7 +439,7 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
   const loadBalance = useCallback(async () => {
     try {
       if (user?.diamonds !== undefined) {
-        setDiamonds(toSafeNumber(user.diamonds, 0));
+        applyDiamonds(user.diamonds);
       }
 
       if (!userId) {
@@ -441,21 +449,21 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
       const chatBalanceResponse = await api.fetch(`/api/economy/chat/check-balance/${encodeURIComponent(userId)}`);
       if (chatBalanceResponse.ok) {
         const data = await chatBalanceResponse.json();
-        setDiamonds(toSafeNumber(data?.diamonds, 0));
+        applyDiamonds(data?.diamonds);
         return;
       }
 
       const fallbackBalanceResponse = await api.getBalance(userId);
       if (fallbackBalanceResponse.ok) {
         const data = await fallbackBalanceResponse.json();
-        setDiamonds(toSafeNumber(data?.diamonds, 0));
+        applyDiamonds(data?.diamonds);
       }
     } catch (e) {
       if (user?.diamonds !== undefined) {
-        setDiamonds(toSafeNumber(user.diamonds, 0));
+        applyDiamonds(user.diamonds);
       }
     }
-  }, [user?.diamonds, userId]);
+  }, [applyDiamonds, user?.diamonds, userId]);
 
   const checkChatBalance = useCallback(async () => {
     if (!userId) return null;
@@ -483,7 +491,7 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
     if (normalizedDiamonds < MESSAGE_COST) {
       const serverBalance = await checkChatBalance();
       if (serverBalance) {
-        setDiamonds(serverBalance.diamonds);
+        applyDiamonds(serverBalance.diamonds);
         if (!serverBalance.canSend) {
           gameSounds.wrong();
           setShowInsufficientModal(true);
@@ -514,7 +522,7 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
       if (response.ok) {
         const data = await response.json();
         setNewMessage('');
-        setDiamonds(toSafeNumber(data?.new_balance, 0));
+        applyDiamonds(data?.new_balance);
         gameSounds.correct();
 
         if (data.chat_message) {
@@ -538,7 +546,7 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
           error = {};
         }
         if (error.detail?.error === 'insufficient_diamonds') {
-          setDiamonds(toSafeNumber(error?.detail?.current, 0));
+          applyDiamonds(error?.detail?.current);
           setShowInsufficientModal(true);
         } else {
           Alert.alert(copy.chatTitle, copy.sendError);
@@ -550,7 +558,7 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes }) => {
     } finally {
       setSending(false);
     }
-  }, [checkChatBalance, copy, newMessage, normalizedDiamonds, selectedServer.id, sending, user?.avatar, user?.name, userId]);
+  }, [applyDiamonds, checkChatBalance, copy, newMessage, normalizedDiamonds, selectedServer.id, sending, user?.avatar, user?.name, userId]);
 
   const loadMessages = useCallback(async (showLoading = true) => {
     try {

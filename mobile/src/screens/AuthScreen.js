@@ -46,6 +46,10 @@ const AuthScreen = ({ onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
+  const [providersStatus, setProvidersStatus] = useState({
+    google_enabled: true,
+    apple_enabled: Platform.OS === 'ios',
+  });
   const [countdown, setCountdown] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   
@@ -96,6 +100,25 @@ const AuthScreen = ({ onLogin }) => {
       return () => clearTimeout(timer);
     }
   }, [countdown]);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadProviderStatus = async () => {
+      try {
+        const response = await api.getAuthProvidersStatus();
+        if (!mounted || !response?.ok) return;
+        const data = await response.json().catch(() => ({}));
+        setProvidersStatus({
+          google_enabled: data?.google_enabled !== false,
+          apple_enabled: Platform.OS === 'ios' && data?.apple_enabled !== false,
+        });
+      } catch (_) {
+        // Keep defaults to avoid blocking login when status endpoint is unavailable.
+      }
+    };
+    loadProviderStatus();
+    return () => { mounted = false; };
+  }, []);
 
   // Password strength checker
   const checkPasswordStrength = (pass) => {
@@ -582,6 +605,10 @@ const AuthScreen = ({ onLogin }) => {
 
   // Google Sign In using authProviders
   const handleGoogleSignIn = async () => {
+    if (!providersStatus.google_enabled) {
+      Alert.alert('Google', 'تسجيل الدخول بحساب Google غير متاح حالياً.');
+      return;
+    }
     if (isAppleLoading || isGoogleLoading) return;
     setIsGoogleLoading(true);
     try {
@@ -611,6 +638,10 @@ const AuthScreen = ({ onLogin }) => {
 
   // Apple Sign In using authProviders
   const handleAppleSignIn = async () => {
+    if (!providersStatus.apple_enabled) {
+      Alert.alert('Apple', 'تسجيل الدخول بحساب Apple غير متاح حالياً.');
+      return;
+    }
     if (isAppleLoading || isGoogleLoading) return;
     setIsAppleLoading(true);
     try {
@@ -668,17 +699,19 @@ const AuthScreen = ({ onLogin }) => {
             {/* Apple Sign In */}
             {Platform.OS === 'ios' && (
               <TouchableOpacity 
-                style={[styles.appleBtn, (isAppleLoading || isGoogleLoading) && styles.disabledBtn]} 
+                style={[styles.appleBtn, (isAppleLoading || isGoogleLoading || !providersStatus.apple_enabled) && styles.disabledBtn]} 
                 onPress={handleAppleSignIn}
                 activeOpacity={0.8}
-                disabled={isAppleLoading || isGoogleLoading}
+                disabled={isAppleLoading || isGoogleLoading || !providersStatus.apple_enabled}
               >
                 {isAppleLoading ? (
                   <ActivityIndicator size="small" color="#FFF" />
                 ) : (
                   <>
                     <Ionicons name="logo-apple" size={22} color="#FFF" />
-                    <Text style={styles.appleBtnText}>الدخول بحساب Apple</Text>
+                    <Text style={styles.appleBtnText}>
+                      {providersStatus.apple_enabled ? 'الدخول بحساب Apple' : 'Apple غير متاح حالياً'}
+                    </Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -686,17 +719,19 @@ const AuthScreen = ({ onLogin }) => {
 
             {/* Google Sign In */}
             <TouchableOpacity 
-              style={[styles.googleBtn, (isAppleLoading || isGoogleLoading) && styles.disabledBtn]} 
+              style={[styles.googleBtn, (isAppleLoading || isGoogleLoading || !providersStatus.google_enabled) && styles.disabledBtn]} 
               onPress={handleGoogleSignIn}
               activeOpacity={0.8}
-              disabled={isAppleLoading || isGoogleLoading}
+              disabled={isAppleLoading || isGoogleLoading || !providersStatus.google_enabled}
             >
               {isGoogleLoading ? (
                 <ActivityIndicator size="small" color="#FFF" />
               ) : (
                 <>
                   <Ionicons name="logo-google" size={20} color="#FFF" />
-                  <Text style={styles.googleBtnText}>الدخول بحساب Google</Text>
+                  <Text style={styles.googleBtnText}>
+                    {providersStatus.google_enabled ? 'الدخول بحساب Google' : 'Google غير متاح حالياً'}
+                  </Text>
                 </>
               )}
             </TouchableOpacity>

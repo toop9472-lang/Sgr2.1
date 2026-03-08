@@ -22,8 +22,6 @@ const envCandidates = [
 const API_URL = envCandidates[0] || DEFAULT_API_URL;
 const EXTRA_FALLBACK_APIS = [
   'https://saqr-ui-sync.emergent.host',
-  'https://app-store-revival.preview.emergentagent.com/backend',
-  'https://quality-restore-1.preview.emergentagent.com',
 ].map(normalizeApiBaseUrl).filter(Boolean);
 const API_BASE_CANDIDATES = Array.from(new Set([API_URL, ...envCandidates, ...EXTRA_FALLBACK_APIS]));
 let activeApiBase = API_BASE_CANDIDATES[0] || API_URL;
@@ -336,6 +334,10 @@ export const api = {
   },
 
   // Auth
+  async getAuthProvidersStatus() {
+    return this.fetch('/api/auth/providers-status');
+  },
+
   async login(email, password) {
     const response = await this.fetchWithFallback(['/api/auth/signin', '/api/auth/login'], {
       method: 'POST',

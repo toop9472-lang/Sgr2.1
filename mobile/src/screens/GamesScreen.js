@@ -45,6 +45,9 @@ const normalizeNumber = (value, fallback = 0) => {
 const toThumbCover = (targetUrl) => (
   targetUrl ? `https://image.thum.io/get/width/900/crop/900/noanimate/${targetUrl}` : null
 );
+const toAICover = (prompt, seed) => (
+  `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${seed}&nologo=true&enhance=true`
+);
 const EXTERNAL_GAME_URLS = {
   aiquest: 'https://kbhgames.com/game/zombotron-re-boot',
   chess: 'https://hedchick.itch.io/slimefall',
@@ -66,6 +69,28 @@ const EXTERNAL_GAME_URLS = {
   wordmaster: 'https://poki.com/en/g/carrom-multiplayer',
   reactiontap: 'https://8ballpool3d.com/',
   sequencesprint: 'https://sequentor.com/',
+};
+const AI_GAME_COVER_PROMPTS = {
+  aiquest: 'futuristic zombie robot action game cover art, neon cinematic, mobile game key art',
+  chess: 'cute slime platform game art, colorful fantasy world, dynamic mobile game cover',
+  tictactoe: 'trap adventure platformer with color brothers, vibrant 2d game poster',
+  tactix: 'top down arcade shooter, cyber arena, intense colorful game art',
+  memory: '3d balance challenge game, floating geometry world, glossy colorful style',
+  snake: 'modern pac world maze chase game art, neon arcade style',
+  brickbreaker: 'jelly creatures adventure world, cheerful cartoon game artwork',
+  puzzle: 'poly cat balls puzzle game, adorable cats, polished mobile key art',
+  trivia: 'marble puzzle challenge game, glossy marbles and tracks, vibrant lighting',
+  mathrace: 'neon swarm rogue game poster, sci fi roguelike action, high contrast',
+  wordrace: 'color fusion multiplayer game art, abstract gradients and energy shapes',
+  colorswitch: 'color chase speed runner game cover, vivid tracks, fast motion',
+  riddles: 'falling light blocks arcade puzzle, glowing cubes, modern minimal style',
+  millionaire: 'wicked climb mountain challenge with two heroes, stylized cartoon art',
+  brickstormx: 'online uno style card game table, premium vibrant illustration',
+  puzzlemaster: 'online basra card game, arabic table game atmosphere, polished art',
+  triviaplus: 'online baloot card game cover, premium saudi card table illustration',
+  wordmaster: 'carrom multiplayer board game, realistic glossy coins, modern style',
+  reactiontap: 'billiards online mobile game cover, cinematic pool table and neon lights',
+  sequencesprint: 'sequence strategy board game art, colorful cards and chips on table',
 };
 const GAME_CATALOG_OVERRIDES = {
   aiquest: {
@@ -229,7 +254,10 @@ const GAME_CATALOG_OVERRIDES = {
   },
 };
 const GAME_COVER_IMAGES = Object.fromEntries(
-  Object.entries(EXTERNAL_GAME_URLS).map(([id, url]) => [id, toThumbCover(url)]),
+  Object.keys(EXTERNAL_GAME_URLS).map((id, index) => [
+    id,
+    toAICover(AI_GAME_COVER_PROMPTS[id] || `professional mobile game cover art for ${id}`, 700 + index),
+  ]),
 );
 const IMPORTED_PRO_GAME_IDS = [
   'aiquest',
@@ -258,10 +286,12 @@ const adCarryStorageKey = (userId) => `saqr_games_ad_carry_seconds_${userId || '
 // ==================== PREMIUM GAME CARD COMPONENT ====================
 const GameCard = ({ game, onPress, pulseAnim, gameCost }) => {
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  const [coverUri, setCoverUri] = useState(game?.coverImage || null);
   useEffect(() => {
     setImageLoadFailed(false);
+    setCoverUri(game?.coverImage || null);
   }, [game?.id, game?.coverImage]);
-  const shouldShowCover = Boolean(game?.coverImage) && !imageLoadFailed;
+  const shouldShowCover = Boolean(coverUri) && !imageLoadFailed;
 
   return (
     <Animated.View style={[styles.gameCardWrapper, { transform: [{ scale: pulseAnim }] }]}>
@@ -293,26 +323,34 @@ const GameCard = ({ game, onPress, pulseAnim, gameCost }) => {
           </View>
 
           <View style={styles.gameArtContainer}>
-            <LinearGradient colors={game.colors} style={styles.gameArtGlow} />
-            <View style={[styles.gameArtOrb, { borderColor: `${game.accent}66` }]}>
-              <LinearGradient colors={game.orbGradient} style={styles.gameArtOrbGradient}>
-                {shouldShowCover ? (
-                  <Image
-                    source={{ uri: game.coverImage }}
-                    style={styles.gameArtImage}
-                    resizeMode="cover"
-                    onError={() => setImageLoadFailed(true)}
-                  />
-                ) : (
-                  <Ionicons name={resolveIconName(game.icon, 'game-controller-outline')} size={34} color="#fff" />
-                )}
-                {game.secondaryIcon && !shouldShowCover ? (
+            {shouldShowCover ? (
+              <ImageBackground
+                source={{ uri: coverUri }}
+                style={styles.gameArtCover}
+                imageStyle={styles.gameArtCoverImage}
+                onError={() => {
+                  if (game?.fallbackCoverImage && coverUri !== game.fallbackCoverImage) {
+                    setCoverUri(game.fallbackCoverImage);
+                    return;
+                  }
+                  setImageLoadFailed(true);
+                }}
+              >
+                <LinearGradient
+                  colors={['rgba(10,12,20,0.08)', 'rgba(10,12,20,0.54)']}
+                  style={styles.gameArtCoverOverlay}
+                />
+              </ImageBackground>
+            ) : (
+              <LinearGradient colors={game.orbGradient} style={styles.gameArtFallback}>
+                <Ionicons name={resolveIconName(game.icon, 'game-controller-outline')} size={34} color="#fff" />
+                {game.secondaryIcon ? (
                   <View style={styles.gameSecondaryIcon}>
                     <Ionicons name={resolveIconName(game.secondaryIcon, 'sparkles-outline')} size={12} color="#fff" />
                   </View>
                 ) : null}
               </LinearGradient>
-            </View>
+            )}
           </View>
 
           <View style={styles.gameCardFooter}>
@@ -2116,6 +2154,7 @@ const GamesScreen = ({
   onPointsEarned,
   onOpenDiamondShop,
   onOpenAchievements,
+  onBalanceUpdate,
   balanceRefresh,
   language,
   queuedGameId,
@@ -2129,7 +2168,11 @@ const GamesScreen = ({
   const [leaderboard, setLeaderboard] = useState([]);
   const [userStats, setUserStats] = useState({ rank: '-', gems: 0, games: 0 });
   const [loading, setLoading] = useState(true);
-  const [balance, setBalance] = useState({ saqr_gems: 0, diamonds: 300, daily_points_remaining: 70 });
+  const [balance, setBalance] = useState({
+    saqr_gems: normalizeNumber(user?.saqr_gems, 0),
+    diamonds: normalizeNumber(user?.diamonds, 300),
+    daily_points_remaining: 70,
+  });
   const [gameCosts, setGameCosts] = useState({});
   const [onlineOpponent, setOnlineOpponent] = useState(null);
   const [isMyTurn, setIsMyTurn] = useState(false);
@@ -2151,6 +2194,7 @@ const GamesScreen = ({
   const connectionLostAlertLockRef = useRef(false);
   const spendRoundLockRef = useRef(false);
   const userId = user?.id || user?.user_id;
+  const isGuestUser = Boolean(user?.isGuest || user?.is_guest || (typeof userId === 'string' && userId.startsWith('guest_')));
 
   // كتالوج الألعاب: 12 أساسية + ألعاب جديدة مستقلة
   const games = useMemo(() => ([
@@ -2553,14 +2597,34 @@ const GamesScreen = ({
       .map((game) => {
         const override = GAME_CATALOG_OVERRIDES[game.id] || {};
         const externalUrl = EXTERNAL_GAME_URLS[game.id] || null;
+        const fallbackCoverImage = toThumbCover(externalUrl);
         return {
           ...game,
           ...override,
           externalUrl,
-          coverImage: GAME_COVER_IMAGES[game.id] || toThumbCover(externalUrl),
+          coverImage: GAME_COVER_IMAGES[game.id] || fallbackCoverImage,
+          fallbackCoverImage,
         };
       });
   }, [games]);
+
+  useEffect(() => {
+    if (!user) return;
+    setBalance((prev) => ({
+      ...prev,
+      diamonds: normalizeNumber(user?.diamonds, prev?.diamonds ?? 300),
+      saqr_gems: normalizeNumber(user?.saqr_gems ?? user?.saqr_points, prev?.saqr_gems ?? 0),
+    }));
+  }, [user?.diamonds, user?.saqr_gems, user?.saqr_points]);
+
+  useEffect(() => {
+    if (!onBalanceUpdate) return;
+    onBalanceUpdate({
+      diamonds: normalizeNumber(balance?.diamonds, 0),
+      saqr_gems: normalizeNumber(balance?.saqr_gems ?? balance?.saqr_points, 0),
+      saqr_points: normalizeNumber(balance?.saqr_gems ?? balance?.saqr_points, 0),
+    });
+  }, [balance?.diamonds, balance?.saqr_gems, balance?.saqr_points, onBalanceUpdate]);
 
   const getGameById = useCallback((gameId) => {
     const directVisible = visibleGames.find((g) => g.id === gameId);
@@ -2604,6 +2668,23 @@ const GamesScreen = ({
     if (!selectedGame) return { ok: false, reason: 'missing_game' };
     if (!userId) return { ok: false, reason: 'auth_required' };
     if (spendRoundLockRef.current) return { ok: false, reason: 'busy' };
+
+    if (isGuestUser) {
+      const localDiamonds = normalizeNumber(balance?.diamonds, 0);
+      if (localDiamonds < SOLO_ROUND_DIAMOND_COST) {
+        return {
+          ok: false,
+          reason: 'insufficient_diamonds',
+          required: SOLO_ROUND_DIAMOND_COST,
+          current: localDiamonds,
+        };
+      }
+      setBalance((prev) => ({
+        ...prev,
+        diamonds: Math.max(0, normalizeNumber(prev?.diamonds, 0) - SOLO_ROUND_DIAMOND_COST),
+      }));
+      return { ok: true, guestLocal: true };
+    }
 
     spendRoundLockRef.current = true;
     const backendGameId = resolveBackendGameId(selectedGame.id);
@@ -2697,7 +2778,7 @@ const GamesScreen = ({
     } finally {
       spendRoundLockRef.current = false;
     }
-  }, [balance.diamonds, resolveBackendGameId, userId]);
+  }, [balance?.diamonds, isGuestUser, resolveBackendGameId, userId]);
 
   const presentRoundSpendError = useCallback((spendResult) => {
     const reason = spendResult?.reason;
@@ -2756,6 +2837,18 @@ const GamesScreen = ({
     if (!adCompleted) {
       if (!silent) Alert.alert('تنبيه', 'يجب إكمال الإعلان للحصول على المكافأة.');
       return { success: false, error: 'ad_not_completed' };
+    }
+
+    if (isGuestUser) {
+      setBalance((prev) => ({
+        ...prev,
+        diamonds: normalizeNumber(prev?.diamonds, 0) + 6,
+        saqr_gems: normalizeNumber(prev?.saqr_gems, 0) + 1,
+      }));
+      if (!silent) {
+        Alert.alert('مكافأة الإعلان', '+6 ألماسات\n+1 جوهرة صقر');
+      }
+      return { success: true, diamondsEarned: 6, gemsEarned: 1 };
     }
 
     try {
@@ -2822,7 +2915,7 @@ const GamesScreen = ({
       if (!silent) Alert.alert('خطأ', 'تعذر منح مكافأة الإعلان، حاول مرة أخرى.');
       return { success: false, error: 'reward_grant_failed' };
     }
-  }, [userId]);
+  }, [isGuestUser, userId]);
 
   const launchGame = useCallback((gameId) => {
     const game = getGameById(gameId);
@@ -2921,6 +3014,14 @@ const GamesScreen = ({
   const fetchBalance = async () => {
     if (!userId) {
       if (__DEV__) console.log('GamesScreen: No user ID for balance');
+      return;
+    }
+    if (isGuestUser) {
+      setBalance((prevBalance) => ({
+        ...prevBalance,
+        diamonds: normalizeNumber(user?.diamonds, prevBalance?.diamonds ?? 300),
+        saqr_gems: normalizeNumber(user?.saqr_gems, prevBalance?.saqr_gems ?? 0),
+      }));
       return;
     }
     try {
@@ -3893,26 +3994,29 @@ const styles = StyleSheet.create({
     color: '#e2e8f0',
   },
   gameArtContainer: {
-    height: 108,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  gameArtGlow: {
-    position: 'absolute',
-    width: 102,
-    height: 102,
-    borderRadius: 20,
-    opacity: 0.85,
-  },
-  gameArtOrb: {
-    width: 96,
-    height: 96,
-    borderRadius: 18,
-    borderWidth: 1.5,
+    height: 118,
+    borderRadius: 16,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
   },
-  gameArtOrbGradient: {
-    flex: 1,
+  gameArtCover: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'flex-end',
+  },
+  gameArtCoverImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 16,
+  },
+  gameArtCoverOverlay: {
+    height: '100%',
+    width: '100%',
+  },
+  gameArtFallback: {
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },

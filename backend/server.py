@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, Request
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, HTMLResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -78,6 +78,116 @@ app = FastAPI()
 async def app_ads_txt():
     """Google AdMob app-ads.txt verification file"""
     return "google.com, pub-5132559433385403, DIRECT, f08c47fec0942fa0"
+
+@app.get("/support", response_class=HTMLResponse)
+async def support_page():
+    """Public support page for App Store metadata."""
+    return """
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>دعم صقر | Saqr Support</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, sans-serif; background: #0b1020; color: #e2e8f0; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 42px; }
+    .card { background: #121a31; border: 1px solid #223055; border-radius: 16px; padding: 18px; margin-bottom: 14px; }
+    h1 { margin: 0 0 6px; font-size: 24px; }
+    p { margin: 6px 0; line-height: 1.65; }
+    .muted { color: #94a3b8; font-size: 13px; }
+    .row { display: grid; gap: 10px; margin-top: 12px; }
+    label { font-size: 13px; color: #cbd5e1; }
+    input, textarea {
+      width: 100%; border-radius: 10px; border: 1px solid #334a7d; background: #0f172a;
+      color: #f8fafc; padding: 12px; font-size: 14px; outline: none;
+    }
+    textarea { min-height: 120px; resize: vertical; }
+    button {
+      border: 0; border-radius: 10px; padding: 11px 16px; cursor: pointer;
+      background: linear-gradient(90deg, #3b82f6, #2563eb); color: #fff; font-weight: 700;
+    }
+    .ok { color: #22c55e; font-size: 13px; margin-top: 8px; }
+    .err { color: #ef4444; font-size: 13px; margin-top: 8px; }
+    a { color: #60a5fa; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>الدعم الفني - تطبيق صقر</h1>
+      <p>إذا واجهت أي مشكلة في الحساب، الألعاب، أو المدفوعات، يمكنك التواصل معنا مباشرة عبر النموذج التالي.</p>
+      <p class="muted">If you need support, please submit the form below and our team will review your request.</p>
+      <p>البريد: <a href="mailto:sky-321@hotmail.com">sky-321@hotmail.com</a></p>
+    </div>
+
+    <div class="card">
+      <form id="support-form">
+        <div class="row">
+          <label for="name">الاسم</label>
+          <input id="name" name="name" required maxlength="80" />
+        </div>
+        <div class="row">
+          <label for="email">البريد الإلكتروني</label>
+          <input id="email" name="email" type="email" required maxlength="150" />
+        </div>
+        <div class="row">
+          <label for="subject">الموضوع</label>
+          <input id="subject" name="subject" required maxlength="180" />
+        </div>
+        <div class="row">
+          <label for="message">الرسالة</label>
+          <textarea id="message" name="message" required maxlength="3000"></textarea>
+        </div>
+        <div class="row" style="margin-top:14px;">
+          <button type="submit">إرسال طلب الدعم</button>
+        </div>
+        <div id="status"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('support-form');
+    const statusEl = document.getElementById('status');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusEl.className = 'muted';
+      statusEl.textContent = 'جارٍ الإرسال...';
+
+      const payload = {
+        name: form.name.value.trim(),
+        email: form.email.value.trim(),
+        subject: form.subject.value.trim(),
+        message: form.message.value.trim(),
+      };
+
+      try {
+        const res = await fetch('/api/support/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.success) {
+          statusEl.className = 'ok';
+          statusEl.textContent = data.message || 'تم إرسال طلب الدعم بنجاح.';
+          form.reset();
+        } else {
+          statusEl.className = 'err';
+          statusEl.textContent = data.detail || data.message || 'تعذر إرسال الطلب حالياً.';
+        }
+      } catch (_) {
+        statusEl.className = 'err';
+        statusEl.textContent = 'خطأ اتصال. حاول مرة أخرى.';
+      }
+    });
+  </script>
+</body>
+</html>
+"""
 
 # Security Headers Middleware
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):

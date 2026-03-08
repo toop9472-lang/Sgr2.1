@@ -1,9 +1,10 @@
 // Saqr Mobile App - Main Entry Point
 import { StatusBar } from 'expo-status-bar';
-import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, ActivityIndicator, Text, BackHandler, Alert, Image, I18nManager, LogBox, TouchableOpacity, Appearance } from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { View, StyleSheet, ActivityIndicator, Text, BackHandler, Alert, Image, I18nManager, LogBox, TouchableOpacity, Appearance, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getTrackingPermissionsAsync, requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import colors from './src/styles/colors';
 
 // Ignore specific warnings that don't affect functionality
@@ -237,6 +238,8 @@ function AppContent() {
 
   const initApp = async () => {
     try {
+      await ensureTrackingPermission();
+
       // Load saved user data
       const [savedToken, savedUser] = await Promise.all([
         storage.getToken(),
@@ -304,6 +307,18 @@ function AppContent() {
     }
   };
 
+  const ensureTrackingPermission = async () => {
+    if (Platform.OS !== 'ios') return;
+    try {
+      const current = await getTrackingPermissionsAsync();
+      if (current?.canAskAgain && current?.status === 'undetermined') {
+        await requestTrackingPermissionsAsync();
+      }
+    } catch (e) {
+      console.log('ATT permission check skipped:', e?.message);
+    }
+  };
+
   const loadSettings = async () => {
     try {
       const response = await api.getRewardsSettings();
@@ -316,9 +331,60 @@ function AppContent() {
     }
   };
 
+  const persistUserSnapshot = useCallback((nextUser) => {
+    if (!nextUser) return;
+    storage.setUserData(nextUser).catch(() => {});
+  }, []);
+
+  const updateUserBalanceLocally = useCallback((partial = {}) => {
+    if (!partial || typeof partial !== 'object') return;
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...partial };
+      const unchanged = (
+        prev.diamonds === next.diamonds
+        && prev.saqr_gems === next.saqr_gems
+        && prev.saqr_points === next.saqr_points
+      );
+      if (unchanged) return prev;
+      persistUserSnapshot(next);
+      return next;
+    });
+  }, [persistUserSnapshot]);
+
+  const syncBalanceFromServer = useCallback(async (targetUserId = userId) => {
+    if (!targetUserId) return null;
+    try {
+      const response = await api.getBalance(targetUserId);
+      if (!response.ok) return null;
+      const data = await response.json();
+      const normalizedGems = Number(data?.saqr_gems ?? data?.saqr_points ?? 0) || 0;
+      const normalizedDiamonds = Number(data?.diamonds ?? 0) || 0;
+      updateUserBalanceLocally({
+        diamonds: normalizedDiamonds,
+        saqr_gems: normalizedGems,
+        saqr_points: normalizedGems,
+      });
+      return data;
+    } catch (_) {
+      return null;
+    }
+  }, [updateUserBalanceLocally, userId]);
+
+  const handleBalanceUpdate = useCallback((partial) => {
+    updateUserBalanceLocally(partial);
+  }, [updateUserBalanceLocally]);
+
   const handleLogin = (userData) => {
     setUser(userData);
     setIsAuthenticated(true);
+    persistUserSnapshot(userData);
+    setTimeout(() => {
+      const incomingUserId = userData?.id || userData?.user_id;
+      if (incomingUserId) {
+        syncBalanceFromServer(incomingUserId);
+      }
+    }, 0);
   };
 
   const handleLogout = async () => {
@@ -330,15 +396,24 @@ function AppContent() {
 
   const handleGemsEarned = async (gems = 0, diamonds = 0) => {
     if (user && !user.isGuest) {
-      setUser(prev => ({ 
-        ...prev, 
-        saqr_gems: (prev.saqr_gems || 0) + gems,
-        diamonds: (prev.diamonds || 0) + diamonds,
-      }));
+      setUser(prev => {
+        if (!prev) return prev;
+        const next = {
+          ...prev,
+          saqr_gems: (prev.saqr_gems || 0) + gems,
+          saqr_points: (prev.saqr_points || prev.saqr_gems || 0) + gems,
+          diamonds: (prev.diamonds || 0) + diamonds,
+        };
+        persistUserSnapshot(next);
+        return next;
+      });
       setBalanceRefresh(prev => prev + 1);
       
       // Update achievements
       await updateCurrency(gems, diamonds);
+      setTimeout(() => {
+        syncBalanceFromServer();
+      }, 0);
     }
   };
 
@@ -353,6 +428,9 @@ function AppContent() {
 
   const handleDiamondPurchase = (data) => {
     setBalanceRefresh(prev => prev + 1);
+    setTimeout(() => {
+      syncBalanceFromServer();
+    }, 0);
   };
 
   const handleThemeChange = (nextTheme) => {
@@ -480,6 +558,7 @@ function AppContent() {
             onPointsEarned={(gems) => handleGemsEarned(gems, 0)}
             onOpenDiamondShop={() => setShowDiamondShop(true)}
             onOpenAchievements={() => setShowAchievements(true)}
+            onBalanceUpdate={handleBalanceUpdate}
             balanceRefresh={balanceRefresh}
             language={language}
             queuedGameId={queuedGameId}
@@ -490,6 +569,7 @@ function AppContent() {
         {currentPage === 'chat' && (
           <GlobalChatScreen 
             user={user}
+            onBalanceUpdate={handleBalanceUpdate}
             onClose={() => setCurrentPage('home')}
             onNavigateToFortunes={() => setCurrentPage('fortunes')}
           />
@@ -498,7 +578,10 @@ function AppContent() {
           <SaqrFortunesScreen 
             user={user}
             onClose={() => setCurrentPage('home')}
-            onBalanceUpdate={() => setBalanceRefresh(prev => prev + 1)}
+            onBalanceUpdate={(partial) => {
+              if (partial) handleBalanceUpdate(partial);
+              setBalanceRefresh(prev => prev + 1);
+            }}
           />
         )}
         {currentPage === 'friends' && (
@@ -558,7 +641,7 @@ function AppContent() {
             userDiamonds={user?.diamonds || 0}
             onClose={() => setShowShop(false)}
             onUpdateDiamonds={(newBalance) => {
-              setUser(prev => ({ ...prev, diamonds: newBalance }));
+              updateUserBalanceLocally({ diamonds: newBalance });
               setBalanceRefresh(prev => prev + 1);
             }}
             onPurchaseItem={async (item) => {

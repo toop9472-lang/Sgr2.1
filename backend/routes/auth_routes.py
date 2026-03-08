@@ -14,6 +14,22 @@ import asyncio
 
 router = APIRouter(prefix='/auth', tags=['Authentication'])
 
+DEFAULT_PUBLIC_BASE_URL = "https://saqr-ui-sync.emergent.host"
+
+def _resolve_public_base_url(request: Request) -> str:
+    """Resolve the externally reachable base URL behind proxies."""
+    proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc
+    if not host:
+        return DEFAULT_PUBLIC_BASE_URL
+    return f"{proto}://{host}".rstrip("/")
+
+def _resolve_google_redirect_uri(request: Request) -> str:
+    return os.environ.get('GOOGLE_REDIRECT_URI') or f"{_resolve_public_base_url(request)}/api/auth/google/callback"
+
+def _resolve_apple_redirect_uri(request: Request) -> str:
+    return os.environ.get('APPLE_REDIRECT_URI') or f"{_resolve_public_base_url(request)}/api/auth/apple/callback"
+
 def get_db():
     """Get database connection"""
     mongo_url = os.environ['MONGO_URL']
@@ -539,7 +555,7 @@ async def forgot_password(data: ForgotPasswordRequest):
     )
     
     # Build reset URL
-    frontend_url = "https://quality-restore-1.preview.emergentagent.com"
+    frontend_url = os.environ.get("PUBLIC_APP_URL", DEFAULT_PUBLIC_BASE_URL).rstrip("/")
     reset_url = f"{frontend_url}/forgot-password?token={reset_token}"
     
     # Send email with reset link
@@ -694,7 +710,7 @@ class AppleTokenRequest(BaseModel):
     id_token: str = None
 
 @router.get('/apple')
-async def apple_sign_in_redirect(redirect_uri: str = 'saqr://auth/callback'):
+async def apple_sign_in_redirect(request: Request, redirect_uri: str = 'saqr://auth/callback'):
     """
     Redirect to Apple Sign In page
     """
@@ -711,10 +727,11 @@ async def apple_sign_in_redirect(redirect_uri: str = 'saqr://auth/callback'):
     }
     
     # Apple authorization URL
+    callback_uri = _resolve_apple_redirect_uri(request)
     apple_auth_url = (
         f"https://appleid.apple.com/auth/authorize"
         f"?client_id={client_id}"
-        f"&redirect_uri={os.environ.get('APPLE_REDIRECT_URI', 'https://saqr-ui-sync.emergent.host/api/auth/apple/callback')}"
+        f"&redirect_uri={callback_uri}"
         f"&response_type=code%20id_token"
         f"&scope=name%20email"
         f"&response_mode=form_post"
@@ -967,7 +984,7 @@ async def apple_native_sign_in(data: AppleNativeLogin):
 # ==================== Google Sign In ====================
 
 @router.get('/google')
-async def google_sign_in_redirect(redirect_uri: str = 'saqr://auth/callback'):
+async def google_sign_in_redirect(request: Request, redirect_uri: str = 'saqr://auth/callback'):
     """
     Redirect to Google Sign In page
     """
@@ -990,10 +1007,11 @@ async def google_sign_in_redirect(redirect_uri: str = 'saqr://auth/callback'):
     }
     
     # Google authorization URL
+    callback_uri = _resolve_google_redirect_uri(request)
     google_auth_url = (
         f"https://accounts.google.com/o/oauth2/v2/auth"
         f"?client_id={client_id}"
-        f"&redirect_uri={os.environ.get('GOOGLE_REDIRECT_URI', 'https://quality-restore-1.preview.emergentagent.com/api/auth/google/callback')}"
+        f"&redirect_uri={callback_uri}"
         f"&response_type=code"
         f"&scope=email%20profile"
         f"&access_type=offline"
@@ -1004,7 +1022,7 @@ async def google_sign_in_redirect(redirect_uri: str = 'saqr://auth/callback'):
 
 
 @router.get('/google/callback')
-async def google_sign_in_callback(code: str = None, state: str = None, error: str = None):
+async def google_sign_in_callback(request: Request, code: str = None, state: str = None, error: str = None):
     """
     Handle Google Sign In callback
     """
@@ -1034,6 +1052,7 @@ async def google_sign_in_callback(code: str = None, state: str = None, error: st
         if not client_id or not client_secret:
             return RedirectResponse(url=f"{redirect_uri}?error=google_not_configured")
         
+        callback_uri = _resolve_google_redirect_uri(request)
         async with httpx.AsyncClient() as client:
             token_response = await client.post(
                 'https://oauth2.googleapis.com/token',
@@ -1042,7 +1061,7 @@ async def google_sign_in_callback(code: str = None, state: str = None, error: st
                     'client_secret': client_secret,
                     'code': code,
                     'grant_type': 'authorization_code',
-                    'redirect_uri': os.environ.get('GOOGLE_REDIRECT_URI', 'https://quality-restore-1.preview.emergentagent.com/api/auth/google/callback')
+                    'redirect_uri': callback_uri
                 }
             )
             
@@ -1117,3 +1136,17 @@ async def google_sign_in_callback(code: str = None, state: str = None, error: st
     except Exception as e:
         print(f"Google Sign In Error: {e}")
         return RedirectResponse(url=f"saqr://auth/callback?error=auth_failed")
+
+
+@router.get('/providers-status', response_model=dict)
+async def oauth_providers_status():
+    """Expose OAuth provider availability for mobile UI guards."""
+    google_client_id = os.environ.get('GOOGLE_CLIENT_ID', '').strip()
+    google_client_secret = os.environ.get('GOOGLE_CLIENT_SECRET', '').strip()
+    apple_client_id = os.environ.get('APPLE_CLIENT_ID', '').strip()
+
+    return {
+        "google_enabled": bool(google_client_id and google_client_secret),
+        "apple_enabled": bool(apple_client_id),
+        "email_enabled": True,
+    }
