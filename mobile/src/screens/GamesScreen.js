@@ -2202,6 +2202,7 @@ const GamesScreen = ({
   const glowAnim = useRef(new Animated.Value(0)).current;
   const pendingOnlineGameRef = useRef(null);
   const connectionLostAlertLockRef = useRef(false);
+  const onlineMatchmakingActiveRef = useRef(false);
   const spendRoundLockRef = useRef(false);
   const userId = user?.id || user?.user_id;
   const isGuestUser = Boolean(user?.isGuest || user?.is_guest || (typeof userId === 'string' && userId.startsWith('guest_')));
@@ -2926,6 +2927,7 @@ const GamesScreen = ({
   useEffect(() => {
     const unsubMatchFound = multiplayerService.on('matchFound', (data) => {
       console.log('Match found!', data);
+      onlineMatchmakingActiveRef.current = false;
       setShowWaiting(false);
       setMatchData(data);
       setOnlineOpponent(data.players.find((p) => p !== userId));
@@ -2956,8 +2958,10 @@ const GamesScreen = ({
     });
 
     const unsubConnectionLost = multiplayerService.on('connectionLost', () => {
+      if (!onlineMatchmakingActiveRef.current) return;
       if (connectionLostAlertLockRef.current) return;
       connectionLostAlertLockRef.current = true;
+      onlineMatchmakingActiveRef.current = false;
       setShowWaiting(false);
       pendingOnlineGameRef.current = null;
       Alert.alert(
@@ -2982,12 +2986,8 @@ const GamesScreen = ({
     fetchGameCosts();
     startAnimations();
 
-    // Connect to multiplayer service
-    if (userId) {
-      multiplayerService.connect(userId).catch(e => console.log('WS connect error:', e));
-    }
-
     return () => {
+      onlineMatchmakingActiveRef.current = false;
       multiplayerService.disconnect();
     };
   }, [userId]);
@@ -3150,6 +3150,7 @@ const GamesScreen = ({
         return false;
       }
 
+      onlineMatchmakingActiveRef.current = true;
       setShowWaiting(true);
       pendingOnlineGameRef.current = selectedGame.id;
       fetchBalance();
@@ -3167,6 +3168,7 @@ const GamesScreen = ({
       } else {
         Alert.alert('خطأ', 'حدث خطأ في الاتصال');
       }
+      onlineMatchmakingActiveRef.current = false;
       return false;
     }
   }, [balance.diamonds, gameCosts, onOpenDiamondShop, resolveBackendGameId, userId]);
@@ -3339,6 +3341,7 @@ const GamesScreen = ({
 
   const cancelOnlineSearch = () => {
     connectionLostAlertLockRef.current = false;
+    onlineMatchmakingActiveRef.current = false;
     multiplayerService.cancelSearch();
     setShowWaiting(false);
     setShowModeSelector(null);
@@ -3420,6 +3423,7 @@ const GamesScreen = ({
 
   const closeGame = () => {
     connectionLostAlertLockRef.current = false;
+    onlineMatchmakingActiveRef.current = false;
     const currentGame = getGameById(activeGame);
     const isDirectExternalMultiplayer = Boolean(currentGame?.externalMultiplayerDirect);
     // إذا كانت لعبة أونلاين، أعلم الخصم
