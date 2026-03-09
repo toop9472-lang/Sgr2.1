@@ -594,6 +594,7 @@ async def delete_account(data: DeleteAccountRequest, user_id: str = Depends(get_
 
     canonical_user_id = user.get('id') or user.get('user_id') or user_id
     aliases = list({canonical_user_id, user.get('id'), user.get('user_id')} - {None})
+    user_email = user.get('email')
 
     # Remove core account and session data
     await db.users.delete_many({'$or': [{'id': {'$in': aliases}}, {'user_id': {'$in': aliases}}]})
@@ -603,16 +604,33 @@ async def delete_account(data: DeleteAccountRequest, user_id: str = Depends(get_
     cleanup_targets = [
         ('withdrawals', [{'user_id': {'$in': aliases}}]),
         ('withdrawal_requests', [{'user_id': {'$in': aliases}}]),
+        ('purchases', [{'user_id': {'$in': aliases}}]),
+        ('subscriptions', [{'user_id': {'$in': aliases}}]),
         ('watched_ads', [{'user_id': {'$in': aliases}}]),
+        ('ad_watch_events', [{'user_id': {'$in': aliases}}]),
+        ('diamond_transactions', [{'user_id': {'$in': aliases}}]),
+        ('economy_logs', [{'user_id': {'$in': aliases}}]),
         ('support_tickets', [{'user_id': {'$in': aliases}}]),
+        ('support_messages', [{'user_id': {'$in': aliases}}]),
         ('chat_messages', [{'user_id': {'$in': aliases}}]),
+        ('global_chat_messages', [{'user_id': {'$in': aliases}}]),
+        ('private_chat_threads', [{'participant_ids': {'$in': aliases}}]),
         ('private_messages', [{'sender_id': {'$in': aliases}}, {'receiver_id': {'$in': aliases}}]),
         ('game_sessions', [{'user_id': {'$in': aliases}}]),
+        ('game_results', [{'user_id': {'$in': aliases}}]),
+        ('leaderboard_scores', [{'user_id': {'$in': aliases}}]),
         ('invitations', [{'from_user_id': {'$in': aliases}}, {'to_user_id': {'$in': aliases}}]),
         ('comments', [{'user_id': {'$in': aliases}}]),
         ('likes', [{'user_id': {'$in': aliases}}]),
         ('referrals', [{'user_id': {'$in': aliases}}, {'referred_user_id': {'$in': aliases}}]),
+        ('oauth_temp_sessions', [{'payload.user_id': {'$in': aliases}}]),
     ]
+    if user_email:
+        cleanup_targets.extend([
+            ('password_resets', [{'email': user_email}]),
+            ('support_tickets', [{'email': user_email}]),
+            ('users', [{'email': user_email}]),  # legacy duplicates safety
+        ])
     for collection_name, queries in cleanup_targets:
         for query in queries:
             try:
