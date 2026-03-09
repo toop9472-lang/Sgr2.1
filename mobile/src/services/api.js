@@ -709,11 +709,28 @@ export const api = {
     return this.fetch('/api/economy/packages');
   },
 
+  // Apple/Google IAP catalog (server side products)
+  async getIapDiamondPackages() {
+    return this.fetch('/api/iap/diamond-packages');
+  },
+
   // Purchase diamonds
   async purchaseDiamonds(userId, packageId) {
     return this.fetch('/api/economy/purchase-diamonds', {
       method: 'POST',
       body: JSON.stringify({ user_id: userId, package_id: packageId }),
+    });
+  },
+
+  // Purchase through IAP pipeline (used on iOS flow)
+  async purchaseIapProduct(productId, receiptData = null) {
+    return this.fetch('/api/iap/purchase', {
+      method: 'POST',
+      body: JSON.stringify({
+        product_id: productId,
+        payment_method: 'apple_iap',
+        receipt_data: receiptData,
+      }),
     });
   },
 

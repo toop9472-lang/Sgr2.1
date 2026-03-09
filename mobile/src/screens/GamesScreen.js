@@ -35,10 +35,10 @@ const ioniconGlyphMap = Ionicons?.glyphMap || {};
 const resolveIconName = (iconName, fallback = 'ellipse-outline') => (
   ioniconGlyphMap[iconName] ? iconName : fallback
 );
-const SOLO_ROUND_DIAMOND_COST = 20;
+const SOLO_ROUND_DIAMOND_COST = 0;
 const AD_WATCH_DURATION_SECONDS = 60;
 const GEMS_SECONDS_PER_UNIT = 60;
-const ONLINE_GLOBAL_CHAT_INVITE_COST = 5;
+const ONLINE_GLOBAL_CHAT_INVITE_COST = 0;
 const normalizeNumber = (value, fallback = 0) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -260,6 +260,7 @@ const GAME_COVER_IMAGES = Object.fromEntries(
     toAICover(AI_GAME_COVER_PROMPTS[id] || `professional mobile game cover art for ${id}`, 700 + index),
   ]),
 );
+GAME_COVER_IMAGES.puzzle = 'https://saqr-ui-sync.emergent.host/volcano-fizer.svg';
 const IMPORTED_PRO_GAME_IDS = [
   'aiquest',
   'chess',
@@ -371,7 +372,12 @@ const GameCard = ({ game, onPress, pulseAnim, gameCost }) => {
               <View style={styles.metaPill}>
                 <Ionicons name="diamond" size={12} color="#60a5fa" />
                 <Text style={styles.metaPillText}>
-                  {game.online ? (gameCost || game.onlineCost || 20) : SOLO_ROUND_DIAMOND_COST}
+                  {(() => {
+                    const displayedCost = game.online
+                      ? (gameCost ?? game.onlineCost ?? 0)
+                      : SOLO_ROUND_DIAMOND_COST;
+                    return displayedCost > 0 ? displayedCost : 'مجاني';
+                  })()}
                 </Text>
               </View>
               {game.playerRange ? (
@@ -611,7 +617,7 @@ const getOriginSafe = (url) => {
 };
 
 const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
-  const canUseExternalSource = Platform.OS !== 'ios';
+  const canUseExternalSource = Boolean(game?.externalUrl);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(getInitialLivesForGame(game?.id));
   const [finished, setFinished] = useState(false);
@@ -784,7 +790,7 @@ const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
       <View style={styles.importedFooter}>
         <View style={styles.importedScoreBox}>
           <Ionicons name="flash" size={16} color="#fbbf24" />
-          <Text style={styles.importedScoreText}>الجواهر {score}</Text>
+          <Text style={styles.importedScoreText}>النقاط {score}</Text>
         </View>
         {useExternalSource ? (
           <TouchableOpacity style={styles.importedSwitchBtn} onPress={() => setUseExternalSource(false)}>
@@ -796,7 +802,7 @@ const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
           style={[styles.importedClaimBtn, finished && styles.importedClaimBtnReady]}
           onPress={claimPoints}
         >
-          <Text style={styles.importedClaimText}>{finished ? 'تحصيل الجواهر' : 'إنهاء الجولة'}</Text>
+          <Text style={styles.importedClaimText}>{finished ? 'تحصيل المكافأة' : 'إنهاء الجولة'}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -831,7 +837,9 @@ const ModeSelector = ({ onSelectMode, onClose, gameName, hasOnline, chatInviteCo
             <LinearGradient colors={['#8b5cf6', '#6366f1']} style={styles.modeGradient}>
               <Ionicons name="chatbubbles-outline" size={40} color="#FFF" />
               <Text style={styles.modeOptionTitle}>دعوة من الشات العام</Text>
-              <Text style={styles.modeOptionDesc}>خصم {chatInviteCost} ألماسات ونشر دعوة أونلاين</Text>
+              <Text style={styles.modeOptionDesc}>
+                {chatInviteCost > 0 ? `خصم ${chatInviteCost} ألماسات ونشر دعوة أونلاين` : 'نشر دعوة أونلاين مجاناً'}
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -905,7 +913,7 @@ const AdContinueModal = ({ visible, gameName, onWatchAd, onClose, loading = fals
             <Text style={styles.adModalTitle}>تابع اللعب بدون إزعاج</Text>
             <Text style={styles.adModalSub}>
               لمواصلة لعب {gameName || 'اللعبة'} تحتاج ألماس. شاهد إعلانًا لتحصل على ألماس مباشر،
-              ويتم احتساب جوهرة صقر لكل دقيقة مشاهدة تراكمية (500 جوهرة = 1 ريال).
+              والمكافأة تُضاف كألماس فقط ضمن رصيد اللعب.
             </Text>
             <TouchableOpacity
               style={styles.adModalPrimaryBtn}
@@ -2599,7 +2607,7 @@ const GamesScreen = ({
       .map((game) => {
         const override = GAME_CATALOG_OVERRIDES[game.id] || {};
         const externalUrl = EXTERNAL_GAME_URLS[game.id] || null;
-        const fallbackCoverImage = Platform.OS === 'ios' ? null : toThumbCover(externalUrl);
+        const fallbackCoverImage = toThumbCover(externalUrl);
         return {
           ...game,
           ...override,
@@ -2668,6 +2676,7 @@ const GamesScreen = ({
 
   const spendSoloRoundDiamonds = useCallback(async (selectedGame) => {
     if (!selectedGame) return { ok: false, reason: 'missing_game' };
+    if (SOLO_ROUND_DIAMOND_COST <= 0) return { ok: true, free_round: true };
     if (!userId) return { ok: false, reason: 'auth_required' };
     if (spendRoundLockRef.current) return { ok: false, reason: 'busy' };
 
@@ -2845,12 +2854,11 @@ const GamesScreen = ({
       setBalance((prev) => ({
         ...prev,
         diamonds: normalizeNumber(prev?.diamonds, 0) + 6,
-        saqr_gems: normalizeNumber(prev?.saqr_gems, 0) + 1,
       }));
       if (!silent) {
-        Alert.alert('مكافأة الإعلان', '+6 ألماسات\n+1 جوهرة صقر');
+        Alert.alert('مكافأة الإعلان', '+6 ألماسات');
       }
-      return { success: true, diamondsEarned: 6, gemsEarned: 1 };
+      return { success: true, diamondsEarned: 6, gemsEarned: 0 };
     }
 
     try {
@@ -2860,19 +2868,16 @@ const GamesScreen = ({
         if (typeof data?.new_diamonds_balance === 'number') {
           setBalance((prev) => ({ ...prev, diamonds: data.new_diamonds_balance }));
         }
-        if (typeof data?.new_gems_balance === 'number') {
-          setBalance((prev) => ({ ...prev, saqr_gems: data.new_gems_balance }));
-        }
         if (!silent) {
           Alert.alert(
             'مكافأة الإعلان',
-            `+${data?.diamonds_earned || 0} ألماسة\n+${data?.saqr_gems_earned || 0} جوهرة صقر`,
+            `+${data?.diamonds_earned || 0} ألماسة`,
           );
         }
         return {
           success: true,
           diamondsEarned: data?.diamonds_earned || 0,
-          gemsEarned: data?.saqr_gems_earned || 0,
+          gemsEarned: 0,
         };
       }
     } catch (_) {
@@ -2889,30 +2894,10 @@ const GamesScreen = ({
         }
       }
 
-      const carryRaw = await AsyncStorage.getItem(adCarryStorageKey(userId));
-      const previousCarry = Number.parseInt(carryRaw || '0', 10) || 0;
-      const combined = previousCarry + AD_WATCH_DURATION_SECONDS;
-      const gemsToGrant = Math.floor(combined / GEMS_SECONDS_PER_UNIT);
-      const carrySeconds = combined % GEMS_SECONDS_PER_UNIT;
-      await AsyncStorage.setItem(adCarryStorageKey(userId), String(carrySeconds));
-
-      if (gemsToGrant > 0) {
-        const gemsRes = await api.addSaqrGems(userId, gemsToGrant, `${source}_fallback_minutes`);
-        if (gemsRes.ok) {
-          const g = await gemsRes.json().catch(() => ({}));
-          if (typeof g?.new_balance === 'number') {
-            setBalance((prev) => ({ ...prev, saqr_gems: g.new_balance }));
-          }
-        }
-      }
-
       if (!silent) {
-        Alert.alert(
-          'مكافأة الإعلان',
-          `+6 ألماسات${gemsToGrant > 0 ? `\n+${gemsToGrant} جوهرة صقر` : ''}`,
-        );
+        Alert.alert('مكافأة الإعلان', '+6 ألماسات');
       }
-      return { success: true, diamondsEarned: 6, gemsEarned: gemsToGrant };
+      return { success: true, diamondsEarned: 6, gemsEarned: 0 };
     } catch (e) {
       if (!silent) Alert.alert('خطأ', 'تعذر منح مكافأة الإعلان، حاول مرة أخرى.');
       return { success: false, error: 'reward_grant_failed' };
@@ -3126,7 +3111,7 @@ const GamesScreen = ({
     connectionLostAlertLockRef.current = false;
     const backendGameId = resolveBackendGameId(selectedGame.id);
 
-    const cost = gameCosts[backendGameId] || selectedGame.onlineCost || 20;
+    const cost = gameCosts[backendGameId] ?? selectedGame.onlineCost ?? 0;
     let availableDiamonds = normalizeNumber(balance.diamonds, 0);
     if (availableDiamonds < cost) {
       try {
@@ -3207,7 +3192,9 @@ const GamesScreen = ({
         if (detail?.error === 'insufficient_diamonds') {
           Alert.alert(
             'ألماسات غير كافية',
-            `دعوة الشات العام تحتاج ${ONLINE_GLOBAL_CHAT_INVITE_COST} ألماسات.`,
+            ONLINE_GLOBAL_CHAT_INVITE_COST > 0
+              ? `دعوة الشات العام تحتاج ${ONLINE_GLOBAL_CHAT_INVITE_COST} ألماسات.`
+              : 'دعوة الشات العام مجانية حالياً.',
             [
               { text: 'إلغاء', style: 'cancel' },
               {
@@ -3230,7 +3217,12 @@ const GamesScreen = ({
       if (typeof data?.new_balance === 'number') {
         setBalance((prev) => ({ ...prev, diamonds: data.new_balance }));
       }
-      Alert.alert('تم نشر الدعوة', `تم نشر الدعوة في الشات العام مقابل ${ONLINE_GLOBAL_CHAT_INVITE_COST} ألماسات.`);
+      Alert.alert(
+        'تم نشر الدعوة',
+        ONLINE_GLOBAL_CHAT_INVITE_COST > 0
+          ? `تم نشر الدعوة في الشات العام مقابل ${ONLINE_GLOBAL_CHAT_INVITE_COST} ألماسات.`
+          : 'تم نشر الدعوة في الشات العام مجاناً.',
+      );
       return true;
     } catch (e) {
       Alert.alert('خطأ', 'فشل إرسال الدعوة إلى الشات العام.');
@@ -3391,7 +3383,7 @@ const GamesScreen = ({
     
     try {
       const backendGameId = resolveBackendGameId(activeGame);
-      const opponentCost = gameCosts[backendGameId] || 20;
+      const opponentCost = gameCosts[backendGameId] ?? 0;
       const response = await api.recordGameResult(
         userId,
         backendGameId,
@@ -3401,17 +3393,11 @@ const GamesScreen = ({
       );
       if (response.ok) {
         const data = await response.json();
-        const gemsAwarded = Number(data?.gems_awarded ?? data?.points_awarded ?? 0) || 0;
-        if (onPointsEarned && gemsAwarded > 0) {
-          onPointsEarned(gemsAwarded);
-        }
+        const diamondsAwarded = Number(data?.diamonds_awarded ?? data?.points_awarded ?? 0) || 0;
         
-        let message = `حصلت على ${gemsAwarded} جوهرة صقر`;
-        if (data.diamonds_awarded > 0) {
-          message += ` و ${data.diamonds_awarded} ألماسة`;
-        }
+        let message = `حصلت على ${diamondsAwarded} ألماسة`;
         if (!data.can_earn_more) {
-          message += `\n\nوصلت للحد اليومي (${data?.daily_limit || 70} جوهرة)`;
+          message += `\n\nوصلت للحد اليومي (${data?.daily_limit || 70} ألماسة)`;
         }
         
         Alert.alert(won ? 'فوز!' : 'نتيجة اللعبة', message);
@@ -3528,18 +3514,18 @@ const GamesScreen = ({
           <View style={{ width: 44 }} />
         </View>
 
-        {/* Daily Gems Progress */}
+        {/* Daily Diamonds Progress */}
         <View style={styles.dailyProgressCard}>
           <View style={styles.dailyProgressHeader}>
             <Ionicons name="calendar-outline" size={18} color="#10b981" />
-            <Text style={styles.dailyProgressTitle}>الجواهر اليومية</Text>
+            <Text style={styles.dailyProgressTitle}>مكافآت الألماس اليومية</Text>
           </View>
           <View style={styles.dailyProgressBar}>
             <View style={[styles.dailyProgressFill, { width: `${dailyProgressPercent}%` }]} />
           </View>
           <View style={styles.dailyProgressInfo}>
             <Text style={styles.dailyProgressText}>
-              {dailyEarned} / {dailyLimit} جوهرة
+              {dailyEarned} / {dailyLimit} ألماسة
             </Text>
             <Text style={styles.dailyProgressRemaining}>
               متبقي: {dailyRemaining}
@@ -3605,7 +3591,7 @@ const GamesScreen = ({
             <View style={styles.dailyProgressInfo}>
               <Ionicons name="flash" size={14} color="#22c55e" />
               <Text style={styles.dailyProgressText}>
-                {dailyRemaining} / {dailyLimit} جوهرة يومية متبقية
+                {dailyRemaining} / {dailyLimit} ألماسة يومية متبقية
               </Text>
             </View>
             <View style={styles.dailyProgressBar}>

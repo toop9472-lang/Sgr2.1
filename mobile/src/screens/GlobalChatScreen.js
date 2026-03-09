@@ -53,7 +53,7 @@ const SERVERS = [
   { id: 'global', name: 'العالمي', icon: 'earth', color: '#9333ea', gradient: ['#9333ea', '#7c3aed'], language: 'multi' },
 ];
 
-const MESSAGE_COST = 5;
+const MESSAGE_COST = 0;
 
 const toSafeNumber = (value, fallback = 0) => {
   const parsed = Number(value);
@@ -291,7 +291,7 @@ const ServerSelector = ({ servers, selectedServer, onSelect, onlineCount }) => {
 };
 
 // نافذة نقص الألماس الاحترافية
-const InsufficientDiamondsModal = ({ visible, onWatchAds, onClose, currentDiamonds, copy }) => {
+const InsufficientDiamondsModal = ({ visible, onWatchAds, onClose, currentDiamonds, copy, messageCost }) => {
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
   
   useEffect(() => {
@@ -332,7 +332,7 @@ const InsufficientDiamondsModal = ({ visible, onWatchAds, onClose, currentDiamon
             </View>
             
             <Text style={styles.modalDesc}>
-              {copy.requiresMessageCost.replace('{cost}', String(MESSAGE_COST))}
+              {copy.requiresMessageCost.replace('{cost}', String(messageCost))}
             </Text>
 
             <TouchableOpacity style={styles.watchAdsBtn} onPress={onWatchAds} activeOpacity={0.8}>
@@ -388,6 +388,7 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes, onBalanceUpdate
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [diamonds, setDiamonds] = useState(0);
+  const [messageCost, setMessageCost] = useState(MESSAGE_COST);
   const [showInsufficientModal, setShowInsufficientModal] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState(0);
@@ -451,6 +452,7 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes, onBalanceUpdate
       if (chatBalanceResponse.ok) {
         const data = await chatBalanceResponse.json();
         applyDiamonds(data?.diamonds);
+        setMessageCost(toSafeNumber(data?.message_cost, MESSAGE_COST));
         return;
       }
 
@@ -475,6 +477,7 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes, onBalanceUpdate
       return {
         diamonds: toSafeNumber(data?.diamonds, 0),
         canSend: Boolean(data?.can_send),
+        messageCost: toSafeNumber(data?.message_cost, MESSAGE_COST),
       };
     } catch (e) {
       return null;
@@ -489,10 +492,11 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes, onBalanceUpdate
       return;
     }
 
-    if (normalizedDiamonds < MESSAGE_COST) {
+    if (messageCost > 0 && normalizedDiamonds < messageCost) {
       const serverBalance = await checkChatBalance();
       if (serverBalance) {
         applyDiamonds(serverBalance.diamonds);
+        setMessageCost(serverBalance.messageCost);
         if (!serverBalance.canSend) {
           gameSounds.wrong();
           setShowInsufficientModal(true);
@@ -559,7 +563,7 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes, onBalanceUpdate
     } finally {
       setSending(false);
     }
-  }, [applyDiamonds, checkChatBalance, copy, newMessage, normalizedDiamonds, selectedServer.id, sending, user?.avatar, user?.name, userId]);
+  }, [applyDiamonds, checkChatBalance, copy, messageCost, newMessage, normalizedDiamonds, selectedServer.id, sending, user?.avatar, user?.name, userId]);
 
   const loadMessages = useCallback(async (showLoading = true) => {
     try {
@@ -699,7 +703,9 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes, onBalanceUpdate
             style={styles.costGradient}
           >
             <Ionicons name="information-circle" size={14} color="#f59e0b" />
-            <Text style={styles.costText}>{copy.messageCostLabel}: {MESSAGE_COST}</Text>
+            <Text style={styles.costText}>
+              {copy.messageCostLabel}: {messageCost > 0 ? messageCost : 'مجاني'}
+            </Text>
           </LinearGradient>
         </View>
 
@@ -775,11 +781,11 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes, onBalanceUpdate
           {/* Input Area */}
           <View style={styles.inputContainer}>
             {/* Balance Warning */}
-            {normalizedDiamonds < MESSAGE_COST * 3 && normalizedDiamonds >= MESSAGE_COST && (
+            {messageCost > 0 && normalizedDiamonds < messageCost * 3 && normalizedDiamonds >= messageCost && (
               <View style={styles.lowBalanceWarning}>
                 <Ionicons name="warning" size={12} color="#f59e0b" />
                 <Text style={styles.lowBalanceText}>
-                  {copy.lowBalancePrefix} {Math.floor(normalizedDiamonds / MESSAGE_COST)} {copy.lowBalanceSuffix}
+                  {copy.lowBalancePrefix} {Math.floor(normalizedDiamonds / messageCost)} {copy.lowBalanceSuffix}
                 </Text>
               </View>
             )}
@@ -833,6 +839,7 @@ const GlobalChatScreen = ({ user, onClose, onNavigateToFortunes, onBalanceUpdate
           onClose={() => setShowInsufficientModal(false)}
           currentDiamonds={normalizedDiamonds}
           copy={copy}
+          messageCost={messageCost}
         />
       </View>
     </ImageBackground>

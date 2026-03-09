@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, Request
-from fastapi.responses import PlainTextResponse, HTMLResponse
+from fastapi.responses import PlainTextResponse, HTMLResponse, FileResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -78,6 +78,15 @@ app = FastAPI()
 async def app_ads_txt():
     """Google AdMob app-ads.txt verification file"""
     return "google.com, pub-5132559433385403, DIRECT, f08c47fec0942fa0"
+
+@app.get("/volcano-fizer.svg")
+async def volcano_fizer_svg():
+    """Static key art for the Volcano Fizer game."""
+    return FileResponse(
+        ROOT_DIR / "static" / "volcano-fizer.svg",
+        media_type="image/svg+xml",
+        filename="volcano-fizer.svg",
+    )
 
 @app.get("/support", response_class=HTMLResponse)
 async def support_page():

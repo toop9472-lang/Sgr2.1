@@ -34,8 +34,9 @@ DAILY_GEMS_LIMIT = 70  # الحد اليومي من الألعاب فقط
 GEMS_PER_RIYAL = 500
 
 # تكلفة الرسالة في الدردشة (بالألماسات)
-CHAT_MESSAGE_COST = 5
-SOLO_ROUND_DIAMOND_COST = 20
+# تم تحويل الدردشة العامة إلى مجانية بالكامل.
+CHAT_MESSAGE_COST = 0
+SOLO_ROUND_DIAMOND_COST = 0
 
 # باقات شحن الألماسات (SAR)
 DIAMOND_PACKAGES = [
@@ -135,12 +136,12 @@ FEATURE_BUNDLES = [
 
 # تكلفة اللعب أونلاين (بالألماسات)
 ONLINE_GAME_COSTS = {
-    "chess": 20,
-    "tictactoe": 20,
-    "puzzle": 20,
-    "brickbreaker": 20,
-    "trivia": 20,
-    "riddles": 20,
+    "chess": 0,
+    "tictactoe": 0,
+    "puzzle": 0,
+    "brickbreaker": 0,
+    "trivia": 0,
+    "riddles": 0,
 }
 
 # مكافآت الفائز (ألماسات)
@@ -456,7 +457,14 @@ async def enter_online_game(request: SpendDiamondsRequest):
         # اللعب أوفلاين مجاني
         return {"success": True, "cost": 0, "message": "اللعب أوفلاين مجاني!"}
     
-    cost = ONLINE_GAME_COSTS.get(request.game_id, 20)
+    cost = ONLINE_GAME_COSTS.get(request.game_id, 0)
+    if cost <= 0:
+        return {
+            "success": True,
+            "cost": 0,
+            "remaining": None,
+            "message": "اللعب الأونلاين مجاني حالياً!",
+        }
     
     # التحقق من الرصيد
     user = await db.users.find_one(
@@ -500,7 +508,7 @@ async def enter_online_game(request: SpendDiamondsRequest):
 
 @router.post("/game-result")
 async def record_game_result(request: GameResultRequest):
-    """تسجيل نتيجة اللعبة ومنح المكافآت"""
+    """تسجيل نتيجة اللعبة ومنح مكافآت (ألماسات فقط)"""
     today = datetime.now(timezone.utc).date().isoformat()
     
     # الحصول على النقاط المكتسبة اليوم
@@ -510,39 +518,32 @@ async def record_game_result(request: GameResultRequest):
     })
     daily_earned = daily_record.get("points", 0) if daily_record else 0
     
-    gems_to_award = 0
     diamonds_to_award = 0
     
     if request.won:
-        # جواهر الفوز (مع مراعاة الحد اليومي)
+        # ألماسات الفوز (مع مراعاة الحد اليومي عبر daily_game_points للتوافق)
         if daily_earned < DAILY_GEMS_LIMIT:
-            base_points = 25 if request.is_online else 15
-            gems_to_award = min(base_points, DAILY_GEMS_LIMIT - daily_earned)
+            base_diamonds = 25 if request.is_online else 15
+            diamonds_to_award += min(base_diamonds, DAILY_GEMS_LIMIT - daily_earned)
         
-        # ألماسات الفوز (للألعاب أونلاين فقط)
+        # مكافأة إضافية للفوز أونلاين
         if request.is_online:
             bonus = WINNER_DIAMOND_BONUS.get(request.game_id, 10)
-            diamonds_to_award = request.opponent_diamonds + bonus
+            diamonds_to_award += request.opponent_diamonds + bonus
     else:
-        # جواهر المشاركة
+        # ألماسات مشاركة
         if daily_earned < DAILY_GEMS_LIMIT:
-            gems_to_award = min(5, DAILY_GEMS_LIMIT - daily_earned)
+            diamonds_to_award += min(5, DAILY_GEMS_LIMIT - daily_earned)
     
-    # تحديث سجل الجواهر اليومية
-    if gems_to_award > 0:
+    # تحديث السجل اليومي (للتوافق الخلفي بنفس الحقول القديمة)
+    if diamonds_to_award > 0:
         await db.daily_game_points.update_one(
             {"user_id": request.user_id, "date": today},
             {
-                "$inc": {"points": gems_to_award},
+                "$inc": {"points": diamonds_to_award},
                 "$setOnInsert": {"created_at": datetime.now(timezone.utc).isoformat()}
             },
             upsert=True
-        )
-        
-        # إضافة الجواهر للمستخدم (مع إبقاء points/saqr_points للتوافق الخلفي)
-        await db.users.update_one(
-            {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]},
-            {"$inc": {"saqr_gems": gems_to_award, "saqr_points": gems_to_award, "points": gems_to_award}}
         )
     
     # إضافة الألماسات
@@ -565,13 +566,13 @@ async def record_game_result(request: GameResultRequest):
     
     return {
         "success": True,
-        "gems_awarded": gems_to_award,
-        "points_awarded": gems_to_award,
+        "gems_awarded": 0,
+        "points_awarded": diamonds_to_award,
         "diamonds_awarded": diamonds_to_award,
-        "daily_points_earned": daily_earned + gems_to_award,
+        "daily_points_earned": daily_earned + diamonds_to_award,
         "daily_limit": DAILY_GEMS_LIMIT,
-        "can_earn_more": (daily_earned + gems_to_award) < DAILY_GEMS_LIMIT,
-        "message": f"حصلت على {gems_to_award} جوهرة صقر" + (f" و {diamonds_to_award} ألماسة" if diamonds_to_award > 0 else "")
+        "can_earn_more": (daily_earned + diamonds_to_award) < DAILY_GEMS_LIMIT,
+        "message": f"حصلت على {diamonds_to_award} ألماسة"
     }
 
 @router.get("/daily-login-status/{user_id}")
@@ -1210,45 +1211,51 @@ class ChatMessage(BaseModel):
 
 @router.post("/chat/send")
 async def send_chat_message(request: SendChatMessageRequest):
-    """إرسال رسالة في الدردشة (تكلفة 5 ألماسات)"""
+    """إرسال رسالة في الدردشة (مجاني حالياً)"""
     user_filter = {"$or": [{"id": request.user_id}, {"user_id": request.user_id}]}
     spend_timestamp = datetime.now(timezone.utc).isoformat()
-
-    # خصم ذرّي (Atomic): ينجح فقط إذا كان الرصيد كافياً لحظة التحديث.
-    updated_user = await db.users.find_one_and_update(
-        {**user_filter, "diamonds": {"$gte": CHAT_MESSAGE_COST}},
-        {
-            "$inc": {"diamonds": -CHAT_MESSAGE_COST},
-            "$push": {
-                "diamond_transactions": {
-                    "type": "chat_message",
-                    "amount": -CHAT_MESSAGE_COST,
-                    "server_id": request.server_id,
-                    "timestamp": spend_timestamp,
+    if CHAT_MESSAGE_COST > 0:
+        # خصم ذرّي (Atomic): ينجح فقط إذا كان الرصيد كافياً لحظة التحديث.
+        updated_user = await db.users.find_one_and_update(
+            {**user_filter, "diamonds": {"$gte": CHAT_MESSAGE_COST}},
+            {
+                "$inc": {"diamonds": -CHAT_MESSAGE_COST},
+                "$push": {
+                    "diamond_transactions": {
+                        "type": "chat_message",
+                        "amount": -CHAT_MESSAGE_COST,
+                        "server_id": request.server_id,
+                        "timestamp": spend_timestamp,
+                    }
                 }
-            }
-        },
-        projection={"_id": 0, "diamonds": 1},
-        return_document=ReturnDocument.AFTER,
-    )
+            },
+            projection={"_id": 0, "diamonds": 1},
+            return_document=ReturnDocument.AFTER,
+        )
 
-    if not updated_user:
+        if not updated_user:
+            user = await db.users.find_one(user_filter, {"_id": 0, "diamonds": 1})
+            if not user:
+                raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+
+            current_diamonds = int(user.get("diamonds", 0) or 0)
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "insufficient_diamonds",
+                    "message": "انتهت ألماساتك! تابع الإعلانات واحصل على الألماس",
+                    "required": CHAT_MESSAGE_COST,
+                    "current": current_diamonds,
+                },
+            )
+
+        new_diamonds = int(updated_user.get("diamonds", 0) or 0)
+    else:
+        # الدردشة المجانية: لا يتم خصم رصيد.
         user = await db.users.find_one(user_filter, {"_id": 0, "diamonds": 1})
         if not user:
             raise HTTPException(status_code=404, detail="المستخدم غير موجود")
-
-        current_diamonds = int(user.get("diamonds", 0) or 0)
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "error": "insufficient_diamonds",
-                "message": "انتهت ألماساتك! تابع الإعلانات واحصل على الألماس",
-                "required": CHAT_MESSAGE_COST,
-                "current": current_diamonds,
-            },
-        )
-
-    new_diamonds = int(updated_user.get("diamonds", 0) or 0)
+        new_diamonds = int(user.get("diamonds", 0) or 0)
     
     # إنشاء الرسالة
     message_id = str(uuid.uuid4())
@@ -1363,8 +1370,8 @@ async def check_chat_balance(user_id: str):
         raise HTTPException(status_code=404, detail="المستخدم غير موجود")
     
     diamonds = int(user.get("diamonds", 0) or 0)
-    can_send = diamonds >= CHAT_MESSAGE_COST
-    messages_available = diamonds // CHAT_MESSAGE_COST
+    can_send = True if CHAT_MESSAGE_COST <= 0 else diamonds >= CHAT_MESSAGE_COST
+    messages_available = 999999 if CHAT_MESSAGE_COST <= 0 else diamonds // CHAT_MESSAGE_COST
     
     return {
         "diamonds": diamonds,

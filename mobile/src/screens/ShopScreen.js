@@ -129,6 +129,13 @@ const DIAMOND_PACK_META = {
   platinum: { badge: 'أفضل قيمة', badgeColor: '#22c55e' },
 };
 
+const IOS_IAP_PRODUCT_MAP = {
+  starter: 'diamonds_100',
+  silver: 'diamonds_250',
+  gold: 'diamonds_500',
+  platinum: 'diamonds_1000',
+};
+
 const RARITY = {
   common: { label: 'عادي', color: '#64748b' },
   rare: { label: 'نادر', color: '#3b82f6' },
@@ -259,13 +266,6 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
 
   const confirmPurchase = useCallback(async () => {
     if (!selectedItem || processing) return;
-    if (Platform.OS === 'ios') {
-      Alert.alert(
-        'غير متاح حالياً على iOS',
-        'شراء المميزات على iOS متوقف مؤقتاً لحين اكتمال ربط Apple In-App Purchase.',
-      );
-      return;
-    }
     if (isGuest || !userId) {
       Alert.alert('تسجيل مطلوب', 'يرجى تسجيل الدخول لشراء المميزات بشكل فعلي.');
       return;
@@ -316,13 +316,6 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
       Alert.alert('تسجيل مطلوب', 'يرجى تسجيل الدخول لشراء باقات الألماس.');
       return;
     }
-    if (Platform.OS === 'ios') {
-      Alert.alert(
-        'شراء الألماس على iPhone/iPad',
-        'الشراء على iOS يتم عبر In-App Purchase (StoreKit) فقط وفق متطلبات App Store. سيتم فتحه مباشرة عبر App Store في الإصدار القادم دون أي دفع خارجي.',
-      );
-      return;
-    }
     Alert.alert(
       'تأكيد شراء الألماس',
       `شراء ${pack.diamonds + (pack.bonus || 0)} ألماسة مقابل ${pack.price} ر.س`,
@@ -332,7 +325,9 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
           text: 'شراء',
           onPress: async () => {
             try {
-              const res = await api.purchaseDiamonds(userId, pack.id);
+              const res = Platform.OS === 'ios'
+                ? await api.purchaseIapProduct(IOS_IAP_PRODUCT_MAP[pack.id] || 'diamonds_100')
+                : await api.purchaseDiamonds(userId, pack.id);
               const data = await res.json().catch(() => ({}));
               if (!res.ok) {
                 Alert.alert('فشل الشراء', data?.detail || 'تعذر تنفيذ الشراء.');
@@ -344,7 +339,7 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
               } else {
                 onUpdateDiamonds?.((userDiamonds || 0) + Number(data?.diamonds_added || 0));
               }
-              Alert.alert('تم', `تمت إضافة ${data?.diamonds_added || 0} ألماسة.`);
+              Alert.alert('تم', `تمت إضافة ${data?.diamonds_added || 0} ألماسة بنجاح.`);
             } catch (_) {
               Alert.alert('خطأ', 'حدث خطأ في الاتصال أثناء شراء الألماس.');
             }
@@ -417,13 +412,6 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
                   style={[styles.card, isOwned && styles.cardOwned]}
                   activeOpacity={0.85}
                   onPress={() => {
-                    if (Platform.OS === 'ios' && !isOwned) {
-                      Alert.alert(
-                        'متجر iOS',
-                        'شراء المميزات الرقمية على iOS سيكون عبر Apple In-App Purchase فقط.',
-                      );
-                      return;
-                    }
                     if (isOwned && item.slot) {
                       handleEquip(item);
                     } else if (!isOwned) {
@@ -513,11 +501,12 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
                 <View style={styles.iosIapNotice}>
                   <Ionicons name="logo-apple" size={20} color="#bfdbfe" />
                   <Text style={styles.iosIapNoticeText}>
-                    شراء الألماس على iOS يتم حصراً عبر Apple In-App Purchase (StoreKit).
-                    {'\n'}تم تعطيل أي شراء خارجي لحين اكتمال ربط منتجات App Store.
+                    الشراء هنا يعمل عبر مسار Apple IAP.
+                    {'\n'}اختر الباقة وسيتم تنفيذ عملية الشراء من داخل التطبيق.
                   </Text>
                 </View>
-              ) : diamondPackages.map((pack) => (
+              ) : null}
+              {diamondPackages.map((pack) => (
                 <TouchableOpacity key={pack.id} style={styles.packCard} onPress={() => handleDiamondPurchase(pack)}>
                   <Image source={{ uri: pack.image }} style={styles.packImage} resizeMode="cover" />
                   <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.packOverlay}>

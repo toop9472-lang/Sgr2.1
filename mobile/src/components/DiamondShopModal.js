@@ -18,6 +18,12 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 
 const { width, height } = Dimensions.get('window');
+const IOS_IAP_PRODUCT_MAP = {
+  starter: 'diamonds_100',
+  silver: 'diamonds_250',
+  gold: 'diamonds_500',
+  platinum: 'diamonds_1000',
+};
 
 const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
   const [packages, setPackages] = useState([]);
@@ -67,13 +73,6 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
   };
 
   const handlePurchase = async (pkg) => {
-    if (Platform.OS === 'ios') {
-      Alert.alert(
-        'شراء الألماس على iPhone/iPad',
-        'الشراء على iOS يجب أن يتم عبر In-App Purchase (StoreKit) فقط. سيتم تفعيل شراء App Store داخل التطبيق في الإصدار القادم.',
-      );
-      return;
-    }
     Alert.alert(
       'تأكيد الشراء',
       `هل تريد شراء ${pkg.name}\n${pkg.diamonds + pkg.bonus} ألماسة مقابل ${pkg.price} ر.س؟`,
@@ -84,7 +83,9 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
           onPress: async () => {
             setPurchasing(pkg.id);
             try {
-              const response = await api.purchaseDiamonds(userId, pkg.id);
+              const response = Platform.OS === 'ios'
+                ? await api.purchaseIapProduct(IOS_IAP_PRODUCT_MAP[pkg.id] || 'diamonds_100')
+                : await api.purchaseDiamonds(userId, pkg.id);
               if (response.ok) {
                 const data = await response.json();
                 Alert.alert(
@@ -238,20 +239,20 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
           {/* Packages */}
           {loading ? (
             <ActivityIndicator size="large" color="#60a5fa" style={styles.loader} />
-          ) : Platform.OS === 'ios' ? (
-            <View style={styles.iosNoticeCard}>
-              <Ionicons name="logo-apple" size={20} color="#bfdbfe" />
-              <Text style={styles.iosNoticeText}>
-                تم إيقاف الشراء الخارجي على iOS بالكامل.
-                {'\n'}شراء الألماس سيكون عبر Apple In-App Purchase (StoreKit) فقط.
-              </Text>
-            </View>
           ) : (
             <ScrollView
               style={styles.packagesScroll}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.packagesContainer}
             >
+              {Platform.OS === 'ios' ? (
+                <View style={styles.iosNoticeCard}>
+                  <Ionicons name="logo-apple" size={20} color="#bfdbfe" />
+                  <Text style={styles.iosNoticeText}>
+                    الشراء يعمل عبر Apple IAP من داخل التطبيق.
+                  </Text>
+                </View>
+              ) : null}
               {packages.map((pkg, index) => renderPackage(pkg, index))}
               
               {/* Footer Note */}
