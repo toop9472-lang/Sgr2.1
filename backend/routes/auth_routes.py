@@ -1007,7 +1007,8 @@ async def get_session(session_id: str):
         raise HTTPException(status_code=404, detail='Session not found or expired')
     
     # Clean up session
-    del apple_sessions[session_id]
+    if session_id in apple_sessions:
+        del apple_sessions[session_id]
     
     # Get user data
     user = await db.users.find_one({'$or': [{'id': session_data['user_id']}, {'user_id': session_data['user_id']}]})
