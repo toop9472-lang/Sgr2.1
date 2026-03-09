@@ -11,10 +11,12 @@ from datetime import datetime
 import os
 import uuid
 import asyncio
+from typing import Optional
 
 router = APIRouter(prefix='/auth', tags=['Authentication'])
 
 DEFAULT_PUBLIC_BASE_URL = "https://saqr-ui-sync.emergent.host"
+OAUTH_TEMP_TTL_MINUTES = 20
 
 def _resolve_public_base_url(request: Request) -> str:
     """Resolve the externally reachable base URL behind proxies."""
@@ -35,6 +37,34 @@ def get_db():
     mongo_url = os.environ['MONGO_URL']
     client = AsyncIOMotorClient(mongo_url)
     return client[os.environ['DB_NAME']]
+
+
+async def _save_oauth_temp(key: str, payload: dict):
+    db = get_db()
+    now = datetime.utcnow()
+    await db.oauth_temp_sessions.update_one(
+        {'key': key},
+        {'$set': {
+            'key': key,
+            'payload': payload,
+            'created_at': now,
+            'expires_at': now + __import__('datetime').timedelta(minutes=OAUTH_TEMP_TTL_MINUTES),
+        }},
+        upsert=True
+    )
+
+
+async def _pop_oauth_temp(key: str):
+    db = get_db()
+    doc = await db.oauth_temp_sessions.find_one({'key': key})
+    if not doc:
+        return None
+    expires_at = doc.get('expires_at')
+    if isinstance(expires_at, datetime) and expires_at < datetime.utcnow():
+        await db.oauth_temp_sessions.delete_one({'key': key})
+        return None
+    await db.oauth_temp_sessions.delete_one({'key': key})
+    return doc.get('payload')
 
 class EmailLogin(BaseModel):
     email: EmailStr
@@ -359,7 +389,7 @@ async def login(user_data: UserCreate):
                     'updated_at': datetime.utcnow()
                 }}
             )
-            user_id = existing_user['id']
+            user_id = existing_user.get('id') or existing_user.get('user_id')
         else:
             # Create new user
             new_user = User(**user_data.dict())
@@ -377,12 +407,12 @@ async def login(user_data: UserCreate):
         token = create_access_token(user_id)
         
         # Get user data
-        user = await db.users.find_one({'id': user_id})
+        user = await db.users.find_one({'$or': [{'id': user_id}, {'user_id': user_id}]})
         
         return {
             'token': token,
             'user': {
-                'id': user['id'],
+                'id': user.get('id', user.get('user_id')),
                 'email': user['email'],
                 'name': user['name'],
                 'avatar': user.get('avatar'),
@@ -416,7 +446,7 @@ async def get_current_user(user_id: str = Depends(get_current_user_id)):
     
     return {
         'user': {
-            'id': user['id'],
+            'id': user.get('id', user.get('user_id')),
             'email': user['email'],
             'name': user['name'],
             'avatar': user.get('avatar'),
@@ -433,6 +463,11 @@ async def get_current_user(user_id: str = Depends(get_current_user_id)):
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
+
+
+class DeleteAccountRequest(BaseModel):
+    confirmation_text: str
+    password: Optional[str] = None
 
 
 @router.post('/change-password', response_model=dict)
@@ -508,6 +543,84 @@ async def change_password(data: ChangePasswordRequest, user_id: str = Depends(ge
     )
     
     return {'message': 'تم تغيير كلمة المرور بنجاح'}
+
+
+@router.post('/delete-account', response_model=dict)
+async def delete_account(data: DeleteAccountRequest, user_id: str = Depends(get_current_user_id)):
+    """
+    حذف الحساب نهائياً (امتثال App Store 5.1.1(v))
+    """
+    db = get_db()
+
+    user = await db.users.find_one({
+        '$or': [
+            {'id': user_id},
+            {'user_id': user_id}
+        ]
+    })
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='المستخدم غير موجود'
+        )
+
+    confirmation = (data.confirmation_text or '').strip().lower()
+    if confirmation not in {'delete', 'حذف'}:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='تأكيد الحذف غير صحيح'
+        )
+
+    # Email/password accounts must provide password for destructive action
+    if user.get('password_hash'):
+        if not data.password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='يرجى إدخال كلمة المرور لتأكيد حذف الحساب'
+            )
+        try:
+            if not bcrypt.verify(data.password, user['password_hash']):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail='كلمة المرور غير صحيحة'
+                )
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail='كلمة المرور غير صحيحة'
+            )
+
+    canonical_user_id = user.get('id') or user.get('user_id') or user_id
+    aliases = list({canonical_user_id, user.get('id'), user.get('user_id')} - {None})
+
+    # Remove core account and session data
+    await db.users.delete_many({'$or': [{'id': {'$in': aliases}}, {'user_id': {'$in': aliases}}]})
+    await db.user_sessions.delete_many({'user_id': {'$in': aliases}})
+
+    # Best-effort cleanup for user-linked data
+    cleanup_targets = [
+        ('withdrawals', [{'user_id': {'$in': aliases}}]),
+        ('withdrawal_requests', [{'user_id': {'$in': aliases}}]),
+        ('watched_ads', [{'user_id': {'$in': aliases}}]),
+        ('support_tickets', [{'user_id': {'$in': aliases}}]),
+        ('chat_messages', [{'user_id': {'$in': aliases}}]),
+        ('private_messages', [{'sender_id': {'$in': aliases}}, {'receiver_id': {'$in': aliases}}]),
+        ('game_sessions', [{'user_id': {'$in': aliases}}]),
+        ('invitations', [{'from_user_id': {'$in': aliases}}, {'to_user_id': {'$in': aliases}}]),
+        ('comments', [{'user_id': {'$in': aliases}}]),
+        ('likes', [{'user_id': {'$in': aliases}}]),
+        ('referrals', [{'user_id': {'$in': aliases}}, {'referred_user_id': {'$in': aliases}}]),
+    ]
+    for collection_name, queries in cleanup_targets:
+        for query in queries:
+            try:
+                await db[collection_name].delete_many(query)
+            except Exception:
+                continue
+
+    return {'message': 'تم حذف الحساب نهائياً'}
 
 
 @router.post('/logout')
@@ -737,6 +850,11 @@ async def apple_sign_in_redirect(request: Request, redirect_uri: str = 'saqr://a
         'redirect_uri': redirect_uri,
         'created_at': datetime.utcnow()
     }
+    await _save_oauth_temp(state, {
+        'redirect_uri': redirect_uri,
+        'provider': 'apple',
+        'kind': 'state',
+    })
     
     # Apple authorization URL
     callback_uri = _resolve_apple_redirect_uri(request)
@@ -772,7 +890,7 @@ async def apple_sign_in_callback(request: Request):
             raise HTTPException(status_code=400, detail='Missing authorization code or id_token')
         
         # Get redirect_uri from state
-        session_data = apple_sessions.get(state, {})
+        session_data = await _pop_oauth_temp(state) or apple_sessions.get(state, {})
         redirect_uri = session_data.get('redirect_uri', 'saqr://auth/callback')
         
         # Clean up old sessions
@@ -819,9 +937,9 @@ async def apple_sign_in_callback(request: Request):
         
         if existing_user:
             # Update existing user
-            user_id = existing_user['id']
+            user_id = existing_user.get('id') or existing_user.get('user_id')
             await db.users.update_one(
-                {'id': user_id},
+                {'$or': [{'id': user_id}, {'user_id': user_id}]},
                 {'$set': {
                     'provider': 'apple',
                     'provider_id': apple_user['id'],
@@ -859,6 +977,12 @@ async def apple_sign_in_callback(request: Request):
             'refresh_token': refresh,
             'created_at': datetime.utcnow()
         }
+        await _save_oauth_temp(session_id, {
+            'user_id': user_id,
+            'token': token,
+            'refresh_token': refresh,
+            'kind': 'session',
+        })
         
         # Redirect back to app
         return RedirectResponse(url=f"{redirect_uri}?session_id={session_id}")
@@ -878,7 +1002,7 @@ async def get_session(session_id: str):
     """
     db = get_db()
     
-    session_data = apple_sessions.get(session_id)
+    session_data = await _pop_oauth_temp(session_id) or apple_sessions.get(session_id)
     if not session_data:
         raise HTTPException(status_code=404, detail='Session not found or expired')
     
@@ -886,7 +1010,7 @@ async def get_session(session_id: str):
     del apple_sessions[session_id]
     
     # Get user data
-    user = await db.users.find_one({'id': session_data['user_id']})
+    user = await db.users.find_one({'$or': [{'id': session_data['user_id']}, {'user_id': session_data['user_id']}]})
     if not user:
         raise HTTPException(status_code=404, detail='User not found')
     
@@ -894,7 +1018,7 @@ async def get_session(session_id: str):
         'token': session_data['token'],
         'refresh_token': session_data.get('refresh_token'),
         'user': {
-            'id': user['id'],
+            'id': user.get('id', user.get('user_id')),
             'email': user.get('email', ''),
             'name': user.get('name', 'مستخدم'),
             'avatar': user.get('avatar'),
@@ -935,7 +1059,7 @@ async def apple_native_sign_in(data: AppleNativeLogin):
         
         if existing_user:
             # Update existing user
-            user_id = existing_user['id']
+            user_id = existing_user.get('id') or existing_user.get('user_id')
             update_data = {
                 'provider': 'apple',
                 'provider_id': data.user_id,
@@ -946,7 +1070,7 @@ async def apple_native_sign_in(data: AppleNativeLogin):
                 update_data['name'] = data.name
             
             await db.users.update_one(
-                {'id': user_id},
+                {'$or': [{'id': user_id}, {'user_id': user_id}]},
                 {'$set': update_data}
             )
         else:
@@ -973,13 +1097,13 @@ async def apple_native_sign_in(data: AppleNativeLogin):
         token, refresh = create_token_pair(user_id)
         
         # Get user data
-        user = await db.users.find_one({'id': user_id})
+        user = await db.users.find_one({'$or': [{'id': user_id}, {'user_id': user_id}]})
         
         return {
             'token': token,
             'refresh_token': refresh,
             'user': {
-                'id': user['id'],
+                'id': user.get('id', user.get('user_id')),
                 'email': user.get('email', ''),
                 'name': user.get('name', 'مستخدم'),
                 'avatar': user.get('avatar'),
@@ -1023,6 +1147,11 @@ async def google_sign_in_redirect(request: Request, redirect_uri: str = 'saqr://
         'provider': 'google',
         'created_at': datetime.utcnow()
     }
+    await _save_oauth_temp(state, {
+        'redirect_uri': redirect_uri,
+        'provider': 'google',
+        'kind': 'state',
+    })
     
     # Google authorization URL
     callback_uri = _resolve_google_redirect_uri(request)
@@ -1048,7 +1177,7 @@ async def google_sign_in_callback(request: Request, code: str = None, state: str
         db = get_db()
         
         if error:
-            session_data = apple_sessions.get(state, {})
+            session_data = await _pop_oauth_temp(state) or apple_sessions.get(state, {})
             redirect_uri = session_data.get('redirect_uri', 'saqr://auth/callback')
             return RedirectResponse(url=f"{redirect_uri}?error={error}")
         
@@ -1056,7 +1185,7 @@ async def google_sign_in_callback(request: Request, code: str = None, state: str
             raise HTTPException(status_code=400, detail='Missing authorization code')
         
         # Get redirect_uri from state
-        session_data = apple_sessions.get(state, {})
+        session_data = await _pop_oauth_temp(state) or apple_sessions.get(state, {})
         redirect_uri = session_data.get('redirect_uri', 'saqr://auth/callback')
         
         # Clean up session
@@ -1109,9 +1238,9 @@ async def google_sign_in_callback(request: Request, code: str = None, state: str
         })
         
         if existing_user:
-            user_id = existing_user['id']
+            user_id = existing_user.get('id') or existing_user.get('user_id')
             await db.users.update_one(
-                {'id': user_id},
+                {'$or': [{'id': user_id}, {'user_id': user_id}]},
                 {'$set': {
                     'provider': 'google',
                     'provider_id': google_user.get('id'),
@@ -1150,6 +1279,12 @@ async def google_sign_in_callback(request: Request, code: str = None, state: str
             'refresh_token': refresh,
             'created_at': datetime.utcnow()
         }
+        await _save_oauth_temp(session_id, {
+            'user_id': user_id,
+            'token': token,
+            'refresh_token': refresh,
+            'kind': 'session',
+        })
         
         return RedirectResponse(url=f"{redirect_uri}?session_id={session_id}")
         
@@ -1163,10 +1298,9 @@ async def oauth_providers_status():
     """Expose OAuth provider availability for mobile UI guards."""
     google_client_id = os.environ.get('GOOGLE_CLIENT_ID', '').strip()
     google_client_secret = os.environ.get('GOOGLE_CLIENT_SECRET', '').strip()
-    apple_client_id = os.environ.get('APPLE_CLIENT_ID', '').strip()
-
     return {
         "google_enabled": bool(google_client_id and google_client_secret),
-        "apple_enabled": bool(apple_client_id),
+        # Native Apple Sign In can work without web OAuth client_id.
+        "apple_enabled": True,
         "email_enabled": True,
     }

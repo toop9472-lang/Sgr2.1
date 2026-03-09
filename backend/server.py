@@ -189,6 +189,105 @@ async def support_page():
 </html>
 """
 
+
+@app.get("/privacy", response_class=HTMLResponse)
+async def privacy_page():
+    """Public privacy page for in-app links and App Store metadata."""
+    return """
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>سياسة الخصوصية | صقر</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, sans-serif; background: #0b1020; color: #e2e8f0; line-height: 1.75; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 24px 16px 40px; }
+    .card { background: #121a31; border: 1px solid #223055; border-radius: 16px; padding: 18px; margin-bottom: 14px; }
+    h1,h2 { margin: 0 0 8px; }
+    .muted { color: #94a3b8; font-size: 13px; }
+    a { color: #60a5fa; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>سياسة الخصوصية - تطبيق صقر</h1>
+      <p class="muted">آخر تحديث: 2026-03-09</p>
+      <p>نحترم خصوصيتك. يوضح هذا المستند ما نجمعه من بيانات وكيف نستخدمها داخل التطبيق.</p>
+    </div>
+    <div class="card">
+      <h2>1) البيانات التي نجمعها</h2>
+      <p>بيانات الحساب (الاسم، البريد)، بيانات الاستخدام داخل التطبيق (التقدم، الرصيد، النتائج)، وسجلات الدعم الفني عند إرسال طلب دعم.</p>
+    </div>
+    <div class="card">
+      <h2>2) الغرض من استخدام البيانات</h2>
+      <p>تشغيل الحساب، مزامنة الرصيد، تشغيل الألعاب واللوحات، منع الغش، وتحسين جودة الخدمة.</p>
+    </div>
+    <div class="card">
+      <h2>3) الإعلانات وATT</h2>
+      <p>في iOS نستخدم إذن App Tracking Transparency قبل أي استخدام قد يتعلق بالتتبع الإعلاني. يمكنك إدارة الإذن من داخل التطبيق عبر: حسابي ← إذن تتبع الإعلانات (ATT).</p>
+    </div>
+    <div class="card">
+      <h2>4) حذف الحساب</h2>
+      <p>يمكنك حذف الحساب نهائياً من داخل التطبيق عبر: حسابي ← حذف الحساب نهائياً.</p>
+    </div>
+    <div class="card">
+      <h2>5) التواصل</h2>
+      <p>للاستفسارات: <a href="mailto:sky-321@hotmail.com">sky-321@hotmail.com</a></p>
+    </div>
+  </div>
+</body>
+</html>
+"""
+
+
+@app.get("/terms", response_class=HTMLResponse)
+async def terms_page():
+    """Public terms page for in-app links and App Store metadata."""
+    return """
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>شروط الاستخدام | صقر</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, sans-serif; background: #0b1020; color: #e2e8f0; line-height: 1.75; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 24px 16px 40px; }
+    .card { background: #121a31; border: 1px solid #223055; border-radius: 16px; padding: 18px; margin-bottom: 14px; }
+    h1,h2 { margin: 0 0 8px; }
+    .muted { color: #94a3b8; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>شروط الاستخدام - تطبيق صقر</h1>
+      <p class="muted">آخر تحديث: 2026-03-09</p>
+      <p>باستخدامك للتطبيق فأنت توافق على هذه الشروط.</p>
+    </div>
+    <div class="card">
+      <h2>1) الاستخدام المقبول</h2>
+      <p>يمنع إساءة الاستخدام، الغش، أو أي سلوك يضر بالمجتمع أو الخوادم.</p>
+    </div>
+    <div class="card">
+      <h2>2) الحسابات</h2>
+      <p>المستخدم مسؤول عن بيانات تسجيل الدخول الخاصة به. يحق لنا تقييد الحسابات المخالفة.</p>
+    </div>
+    <div class="card">
+      <h2>3) المشتريات الرقمية</h2>
+      <p>في iOS تتم المشتريات الرقمية عبر In-App Purchase وفق سياسات App Store.</p>
+    </div>
+    <div class="card">
+      <h2>4) الدعم</h2>
+      <p>للدعم الفني استخدم صفحة الدعم داخل التطبيق أو عبر الرابط الرسمي /support.</p>
+    </div>
+  </div>
+</body>
+</html>
+"""
+
 # Security Headers Middleware
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
