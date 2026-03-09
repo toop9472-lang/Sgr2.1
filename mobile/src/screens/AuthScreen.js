@@ -19,6 +19,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
+import { getTrackingPermissionsAsync, requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import { signInWithGoogle, signInWithApple } from '../services/authProviders';
 import api from '../services/api';
 import storage from '../services/storage';
@@ -52,9 +53,11 @@ const AuthScreen = ({ onLogin }) => {
   });
   const [countdown, setCountdown] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
+  const [attStatus, setAttStatus] = useState('unknown');
   
   // OTP input refs
   const otpRefs = useRef([]);
+  const attAutoRequestedRef = useRef(false);
   
   // Handle connection errors - simplified version
   const handleConnectionError = (error) => {
@@ -119,6 +122,62 @@ const AuthScreen = ({ onLogin }) => {
     loadProviderStatus();
     return () => { mounted = false; };
   }, []);
+
+  useEffect(() => {
+    if (Platform.OS !== 'ios' || mode !== 'main') return;
+    let mounted = true;
+    const syncTrackingStatus = async () => {
+      try {
+        const current = await getTrackingPermissionsAsync();
+        if (!mounted) return;
+        setAttStatus(current?.status || 'unknown');
+
+        // Fallback request from login screen so reviewers can reliably locate ATT.
+        if (current?.status === 'undetermined' && !attAutoRequestedRef.current) {
+          attAutoRequestedRef.current = true;
+          const next = await requestTrackingPermissionsAsync();
+          if (!mounted) return;
+          setAttStatus(next?.status || current?.status || 'unknown');
+        }
+      } catch (_) {
+        if (mounted) setAttStatus('unavailable');
+      }
+    };
+    const timer = setTimeout(syncTrackingStatus, 350);
+    return () => {
+      mounted = false;
+      clearTimeout(timer);
+    };
+  }, [mode]);
+
+  const getAttStatusLabel = () => {
+    if (attStatus === 'authorized') return 'مفعل';
+    if (attStatus === 'denied') return 'مرفوض';
+    if (attStatus === 'restricted') return 'مقيد';
+    if (attStatus === 'undetermined') return 'غير محدد';
+    return 'غير متاح';
+  };
+
+  const handleRequestTrackingPermission = async () => {
+    if (Platform.OS !== 'ios') return;
+    try {
+      const current = await getTrackingPermissionsAsync();
+      if (current?.status === 'undetermined') {
+        const next = await requestTrackingPermissionsAsync();
+        setAttStatus(next?.status || current?.status || 'unknown');
+        return;
+      }
+      setAttStatus(current?.status || 'unknown');
+      Alert.alert(
+        'إذن التتبع',
+        current?.status === 'denied'
+          ? 'تم رفض الإذن سابقاً. يمكنك تغييره من إعدادات iOS > Privacy & Security > Tracking.'
+          : `الحالة الحالية: ${getAttStatusLabel()}`,
+      );
+    } catch (_) {
+      Alert.alert('تنبيه', 'تعذر عرض طلب إذن التتبع حالياً.');
+    }
+  };
 
   // Password strength checker
   const checkPasswordStrength = (pass) => {
@@ -763,6 +822,23 @@ const AuthScreen = ({ onLogin }) => {
               <Ionicons name="person-outline" size={20} color="#888" />
               <Text style={styles.guestBtnText}>الدخول كزائر</Text>
             </TouchableOpacity>
+
+            {Platform.OS === 'ios' && (
+              <View style={styles.attCard}>
+                <View style={styles.attHead}>
+                  <Ionicons name="eye-outline" size={18} color="#7dd3fc" />
+                  <Text style={styles.attTitle}>شفافية تتبع التطبيقات (ATT)</Text>
+                </View>
+                <Text style={styles.attSubtitle}>
+                  يظهر طلب الإذن عند أول تشغيل. الحالة الحالية: {getAttStatusLabel()}
+                </Text>
+                <TouchableOpacity style={styles.attBtn} onPress={handleRequestTrackingPermission}>
+                  <Text style={styles.attBtnText}>
+                    {attStatus === 'undetermined' ? 'طلب الإذن الآن' : 'فحص حالة الإذن'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             {/* Terms */}
             <Text style={styles.terms}>
@@ -1669,6 +1745,45 @@ const styles = StyleSheet.create({
   },
   termsLink: {
     color: '#c7d2fe',
+  },
+  attCard: {
+    backgroundColor: 'rgba(14,116,144,0.18)',
+    borderColor: 'rgba(125,211,252,0.35)',
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 14,
+  },
+  attHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
+  },
+  attTitle: {
+    color: '#bae6fd',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  attSubtitle: {
+    color: 'rgba(186,230,253,0.9)',
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  attBtn: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(56,189,248,0.24)',
+    borderWidth: 1,
+    borderColor: 'rgba(125,211,252,0.42)',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  attBtnText: {
+    color: '#e0f2fe',
+    fontSize: 12,
+    fontWeight: '700',
   },
 });
 

@@ -18,8 +18,10 @@ Support URL:
 https://saqr-ui-sync.emergent.host/support
 
 ATT Location:
-- On first launch (iOS), the ATT prompt is requested automatically before ad tracking-related flows.
-- It can also be opened from: Profile -> "Ad Tracking Permission (ATT)".
+- On first launch (iOS), the ATT prompt is requested automatically on the Login screen before ad-tracking related flows.
+- Explicit location in UI: Login screen -> "App Tracking Transparency (ATT)" card -> "Request Permission Now".
+- Additional manual location: Profile -> "Ad Tracking Permission (ATT)".
+- If the device already has a saved ATT decision for this bundle, iOS will not show the system popup again (expected behavior).
 
 Social Login Test:
 - Open app login screen.
@@ -61,8 +63,10 @@ Password: Demo123456
 https://saqr-ui-sync.emergent.host/support
 
 مكان ظهور ATT:
-- عند أول تشغيل على iOS يتم طلب إذن ATT تلقائيًا قبل أي تدفق متعلق بتتبع الإعلانات.
-- ويمكن فتحه يدويًا من: حسابي -> إذن تتبع الإعلانات (ATT).
+- عند أول تشغيل على iOS يتم طلب إذن ATT تلقائيًا من شاشة الدخول قبل أي تدفق متعلق بتتبع الإعلانات.
+- مكان واضح داخل الواجهة: شاشة الدخول -> بطاقة "شفافية تتبع التطبيقات (ATT)" -> زر "طلب الإذن الآن".
+- مكان إضافي يدوي: حسابي -> إذن تتبع الإعلانات (ATT).
+- إذا كان الجهاز لديه قرار ATT محفوظ مسبقًا لهذا التطبيق فلن يظهر Popup النظام مرة أخرى (سلوك iOS طبيعي).
 
 خطوات اختبار تسجيل Apple/Google:
 - افتح شاشة تسجيل الدخول.
