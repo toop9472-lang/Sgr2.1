@@ -514,7 +514,7 @@ const ProfileScreen = ({
 
         {/* App Version - اضغط 7 مرات لفتح لوحة الأدمن */}
         <TouchableOpacity onPress={handleVersionTap} activeOpacity={0.7}>
-          <Text style={styles.versionText}>الإصدار 7.2.8</Text>
+          <Text style={styles.versionText}>الإصدار 7.2.9</Text>
         </TouchableOpacity>
       </View>
 
