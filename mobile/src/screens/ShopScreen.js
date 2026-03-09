@@ -129,13 +129,6 @@ const DIAMOND_PACK_META = {
   platinum: { badge: 'أفضل قيمة', badgeColor: '#22c55e' },
 };
 
-const IOS_IAP_PRODUCT_MAP = {
-  starter: 'diamonds_100',
-  silver: 'diamonds_250',
-  gold: 'diamonds_500',
-  platinum: 'diamonds_1000',
-};
-
 const RARITY = {
   common: { label: 'عادي', color: '#64748b' },
   rare: { label: 'نادر', color: '#3b82f6' },
@@ -316,6 +309,13 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
       Alert.alert('تسجيل مطلوب', 'يرجى تسجيل الدخول لشراء باقات الألماس.');
       return;
     }
+    if (Platform.OS === 'ios') {
+      Alert.alert(
+        'شراء الألماس على iPhone/iPad',
+        'تم تعطيل شراء الألماس مؤقتاً على iOS إلى حين تفعيل Apple In-App Purchase (StoreKit) بالكامل.',
+      );
+      return;
+    }
     Alert.alert(
       'تأكيد شراء الألماس',
       `شراء ${pack.diamonds + (pack.bonus || 0)} ألماسة مقابل ${pack.price} ر.س`,
@@ -325,9 +325,7 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
           text: 'شراء',
           onPress: async () => {
             try {
-              const res = Platform.OS === 'ios'
-                ? await api.purchaseIapProduct(IOS_IAP_PRODUCT_MAP[pack.id] || 'diamonds_100')
-                : await api.purchaseDiamonds(userId, pack.id);
+              const res = await api.purchaseDiamonds(userId, pack.id);
               const data = await res.json().catch(() => ({}));
               if (!res.ok) {
                 Alert.alert('فشل الشراء', data?.detail || 'تعذر تنفيذ الشراء.');
@@ -501,12 +499,11 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
                 <View style={styles.iosIapNotice}>
                   <Ionicons name="logo-apple" size={20} color="#bfdbfe" />
                   <Text style={styles.iosIapNoticeText}>
-                    الشراء هنا يعمل عبر مسار Apple IAP.
-                    {'\n'}اختر الباقة وسيتم تنفيذ عملية الشراء من داخل التطبيق.
+                    شراء الألماس على iOS متوقف مؤقتاً لضمان التوافق الكامل مع سياسة Apple.
+                    {'\n'}سيتم تفعيله فقط عبر In-App Purchase (StoreKit) الحقيقي.
                   </Text>
                 </View>
-              ) : null}
-              {diamondPackages.map((pack) => (
+              ) : diamondPackages.map((pack) => (
                 <TouchableOpacity key={pack.id} style={styles.packCard} onPress={() => handleDiamondPurchase(pack)}>
                   <Image source={{ uri: pack.image }} style={styles.packImage} resizeMode="cover" />
                   <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.packOverlay}>
