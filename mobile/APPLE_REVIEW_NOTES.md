@@ -22,6 +22,7 @@ ATT Location:
 - Explicit location in UI: Login screen -> "App Tracking Transparency (ATT)" card -> "Request Permission Now".
 - Additional manual location: Profile -> "Ad Tracking Permission (ATT)".
 - If the device already has a saved ATT decision for this bundle, iOS will not show the system popup again (expected behavior).
+- Ad SDK initialization on iOS is gated behind ATT check/request flow.
 
 Social Login Test:
 - Open app login screen.
@@ -39,6 +40,7 @@ Purchases / Guideline 3.1.1:
 Third-party consent popup removal:
 - The game source that showed the "KBHGames consent" page has been removed from external loading.
 - That game now runs in internal in-app mode (no third-party consent wall).
+- On iOS, imported web game sessions are forced to internal in-app mode to avoid third-party consent walls.
 
 Notes:
 - The app is a games-first experience (solo and online games).

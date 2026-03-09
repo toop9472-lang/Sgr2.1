@@ -104,7 +104,7 @@ https://saqr-ui-sync.emergent.host
 
 ## 7) Version (example for next upload)
 ```
-7.2.6
+7.2.7
 ```
 
 ## 8) Copyright

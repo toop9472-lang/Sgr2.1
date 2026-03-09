@@ -238,6 +238,14 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
           {/* Packages */}
           {loading ? (
             <ActivityIndicator size="large" color="#60a5fa" style={styles.loader} />
+          ) : Platform.OS === 'ios' ? (
+            <View style={styles.iosNoticeCard}>
+              <Ionicons name="logo-apple" size={20} color="#bfdbfe" />
+              <Text style={styles.iosNoticeText}>
+                تم إيقاف الشراء الخارجي على iOS بالكامل.
+                {'\n'}شراء الألماس سيكون عبر Apple In-App Purchase (StoreKit) فقط.
+              </Text>
+            </View>
           ) : (
             <ScrollView
               style={styles.packagesScroll}
@@ -466,6 +474,24 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 13,
     color: '#10b981',
+  },
+  iosNoticeCard: {
+    marginHorizontal: 20,
+    marginTop: 18,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(147,197,253,0.38)',
+    backgroundColor: 'rgba(30,64,175,0.22)',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  iosNoticeText: {
+    color: '#dbeafe',
+    fontSize: 13,
+    lineHeight: 20,
+    flex: 1,
   },
 });
 

@@ -6,6 +6,7 @@ import mobileAds, {
   AdEventType 
 } from 'react-native-google-mobile-ads';
 import { Platform } from 'react-native';
+import { getTrackingPermissionsAsync, requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 
 // معرفات الإعلانات
 const AD_UNIT_IDS = {
@@ -38,6 +39,18 @@ class AdMobService {
     
     try {
       console.log('Initializing AdMob SDK...');
+
+      // Apple requirement: request ATT before ad SDK initialization on iOS.
+      if (Platform.OS === 'ios') {
+        try {
+          const tracking = await getTrackingPermissionsAsync();
+          if (tracking?.status === 'undetermined') {
+            await requestTrackingPermissionsAsync();
+          }
+        } catch (e) {
+          console.log('ATT check in AdMob init skipped:', e?.message);
+        }
+      }
       
       // إعداد التكوين
       await mobileAds().setRequestConfiguration({

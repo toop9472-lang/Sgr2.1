@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  Platform,
   Modal,
   Alert,
   ActivityIndicator,
@@ -610,10 +611,11 @@ const getOriginSafe = (url) => {
 };
 
 const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
+  const canUseExternalSource = Platform.OS !== 'ios';
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(getInitialLivesForGame(game?.id));
   const [finished, setFinished] = useState(false);
-  const [useExternalSource, setUseExternalSource] = useState(Boolean(game?.externalUrl));
+  const [useExternalSource, setUseExternalSource] = useState(canUseExternalSource && Boolean(game?.externalUrl));
   const [webLoading, setWebLoading] = useState(true);
   const completedRef = useRef(false);
   const sessionStartRef = useRef(Date.now());
@@ -642,8 +644,8 @@ const ImportedArcadeGame = ({ game, mode, onComplete, onClose }) => {
     setLives(getInitialLivesForGame(game?.id));
     setFinished(false);
     setWebLoading(true);
-    setUseExternalSource(Boolean(game?.externalUrl));
-  }, [game?.id, game?.externalUrl]);
+    setUseExternalSource(canUseExternalSource && Boolean(game?.externalUrl));
+  }, [canUseExternalSource, game?.id, game?.externalUrl]);
 
   const fallbackToInternal = useCallback(() => {
     if (!useExternalSource) return;

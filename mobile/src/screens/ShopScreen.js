@@ -495,7 +495,15 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
               </TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
-              {diamondPackages.map((pack) => (
+              {Platform.OS === 'ios' ? (
+                <View style={styles.iosIapNotice}>
+                  <Ionicons name="logo-apple" size={20} color="#bfdbfe" />
+                  <Text style={styles.iosIapNoticeText}>
+                    شراء الألماس على iOS يتم حصراً عبر Apple In-App Purchase (StoreKit).
+                    {'\n'}تم تعطيل أي شراء خارجي لحين اكتمال ربط منتجات App Store.
+                  </Text>
+                </View>
+              ) : diamondPackages.map((pack) => (
                 <TouchableOpacity key={pack.id} style={styles.packCard} onPress={() => handleDiamondPurchase(pack)}>
                   <Image source={{ uri: pack.image }} style={styles.packImage} resizeMode="cover" />
                   <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.packOverlay}>
@@ -722,6 +730,23 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 10,
     fontWeight: '800',
+  },
+  iosIapNotice: {
+    backgroundColor: 'rgba(30,64,175,0.25)',
+    borderWidth: 1,
+    borderColor: 'rgba(147,197,253,0.35)',
+    borderRadius: 12,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginBottom: 12,
+  },
+  iosIapNoticeText: {
+    color: '#dbeafe',
+    fontSize: 12,
+    lineHeight: 18,
+    flex: 1,
   },
 });
 

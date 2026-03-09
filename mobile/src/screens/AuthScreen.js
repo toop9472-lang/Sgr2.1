@@ -48,8 +48,8 @@ const AuthScreen = ({ onLogin }) => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [providersStatus, setProvidersStatus] = useState({
-    google_enabled: true,
-    apple_enabled: Platform.OS === 'ios',
+    google_enabled: false,
+    apple_enabled: false,
   });
   const [countdown, setCountdown] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
