@@ -14,9 +14,11 @@ import {
   Share,
   ActivityIndicator,
   Image,
+  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
+import { getTrackingPermissionsAsync, requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import storage from '../services/storage';
@@ -34,11 +36,15 @@ const ProfileScreen = ({
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [adminTapCount, setAdminTapCount] = useState(0);
   const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
   const [editName, setEditName] = useState(user?.name || '');
   const [editAvatarUrl, setEditAvatarUrl] = useState(user?.avatar || '');
   const [profileAvatar, setProfileAvatar] = useState(user?.avatar || '');
@@ -233,6 +239,24 @@ const ProfileScreen = ({
     }
   };
 
+  const handleTrackingPermission = async () => {
+    if (Platform.OS !== 'ios') {
+      Alert.alert('معلومات', 'إذن التتبع (ATT) متاح على iOS فقط.');
+      return;
+    }
+    try {
+      const current = await getTrackingPermissionsAsync();
+      if (current?.status === 'undetermined') {
+        const next = await requestTrackingPermissionsAsync();
+        Alert.alert('إذن التتبع', `الحالة الحالية: ${next?.status || 'unknown'}`);
+        return;
+      }
+      Alert.alert('إذن التتبع', `الحالة الحالية: ${current?.status || 'unknown'}`);
+    } catch (e) {
+      Alert.alert('تعذر الفحص', 'حدث خطأ أثناء قراءة إذن التتبع.');
+    }
+  };
+
   // معالجة الضغط المتكرر على رقم الإصدار لفتح تسجيل دخول الأدمن
   const handleVersionTap = () => {
     const newCount = adminTapCount + 1;
@@ -310,6 +334,42 @@ const ProfileScreen = ({
     Alert.alert('تم', 'تم تحديث الملف الشخصي بنجاح');
   };
 
+  const handleDeleteAccount = async () => {
+    if (!deleteConfirmText.trim()) {
+      Alert.alert('خطأ', 'اكتب DELETE أو حذف لتأكيد العملية');
+      return;
+    }
+
+    setIsDeletingAccount(true);
+    try {
+      const response = await api.deleteAccount(deleteConfirmText.trim(), deletePassword || null);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        Alert.alert('تعذر حذف الحساب', data?.detail || 'حدث خطأ أثناء حذف الحساب');
+        return;
+      }
+
+      Alert.alert(
+        'تم حذف الحساب',
+        'تم حذف الحساب نهائيًا من النظام.',
+        [{
+          text: 'حسناً',
+          onPress: async () => {
+            setShowDeleteAccount(false);
+            setDeleteConfirmText('');
+            setDeletePassword('');
+            await storage.clearAll();
+            onLogout && onLogout();
+          },
+        }],
+      );
+    } catch (error) {
+      Alert.alert('خطأ اتصال', 'تعذر حذف الحساب حالياً. حاول مرة أخرى.');
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
+
   const menuItems = [
     { id: 'shop', icon: 'cart', label: 'المتجر', action: onOpenShop, color: '#3b82f6' },
     { id: 'achievements', icon: 'trophy', label: 'الإنجازات', action: onOpenAchievements, color: '#fbbf24' },
@@ -322,6 +382,10 @@ const ProfileScreen = ({
     { id: 'share', icon: 'share-social-outline', label: 'شارك التطبيق', action: handleShareApp, color: '#6366f1' },
     { id: 'privacy', icon: 'shield-checkmark-outline', label: 'سياسة الخصوصية', action: handlePrivacy, color: '#14b8a6' },
     { id: 'terms', icon: 'document-text-outline', label: 'شروط الاستخدام', action: handleTerms, color: '#06b6d4' },
+    ...(Platform.OS === 'ios'
+      ? [{ id: 'tracking', icon: 'eye-outline', label: 'إذن تتبع الإعلانات (ATT)', action: handleTrackingPermission, color: '#38bdf8' }]
+      : []),
+    { id: 'delete-account', icon: 'trash-outline', label: 'حذف الحساب نهائياً', action: () => setShowDeleteAccount(true), color: '#ef4444' },
   ];
   
   // إضافة زر الأدمن فقط إذا كان المستخدم مدير (role = admin أو super_admin)
@@ -450,7 +514,7 @@ const ProfileScreen = ({
 
         {/* App Version - اضغط 7 مرات لفتح لوحة الأدمن */}
         <TouchableOpacity onPress={handleVersionTap} activeOpacity={0.7}>
-          <Text style={styles.versionText}>الإصدار 5.8.0</Text>
+          <Text style={styles.versionText}>الإصدار 7.2.6</Text>
         </TouchableOpacity>
       </View>
 
@@ -614,6 +678,69 @@ const ProfileScreen = ({
 
             <TouchableOpacity style={styles.modalButton} onPress={handleSaveProfile}>
               <Text style={styles.modalButtonText}>حفظ التغييرات</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Delete Account Modal */}
+      <Modal visible={showDeleteAccount} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>حذف الحساب نهائياً</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  if (isDeletingAccount) return;
+                  setShowDeleteAccount(false);
+                  setDeleteConfirmText('');
+                  setDeletePassword('');
+                }}
+              >
+                <Ionicons name="close" size={24} color="#FFF" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.dangerBox}>
+              <Ionicons name="warning-outline" size={20} color="#fecaca" />
+              <Text style={styles.dangerText}>
+                سيتم حذف الحساب وجميع بياناته نهائياً. لا يمكن التراجع عن هذه العملية.
+              </Text>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>اكتب DELETE أو حذف للتأكيد</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="DELETE"
+                placeholderTextColor="rgba(255,255,255,0.3)"
+                value={deleteConfirmText}
+                onChangeText={setDeleteConfirmText}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>كلمة المرور (لحسابات البريد فقط)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="أدخل كلمة المرور"
+                placeholderTextColor="rgba(255,255,255,0.3)"
+                secureTextEntry
+                value={deletePassword}
+                onChangeText={setDeletePassword}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.deleteAccountBtn, isDeletingAccount && styles.modalButtonDisabled]}
+              onPress={handleDeleteAccount}
+              disabled={isDeletingAccount}
+            >
+              {isDeletingAccount ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <Text style={styles.deleteAccountBtnText}>تأكيد حذف الحساب</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -882,6 +1009,35 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   adminLoginBtnText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  dangerBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: 'rgba(239,68,68,0.15)',
+    borderColor: 'rgba(248,113,113,0.4)',
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 14,
+  },
+  dangerText: {
+    color: '#fecaca',
+    fontSize: 12,
+    flex: 1,
+    lineHeight: 18,
+  },
+  deleteAccountBtn: {
+    backgroundColor: '#dc2626',
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  deleteAccountBtnText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: 'bold',

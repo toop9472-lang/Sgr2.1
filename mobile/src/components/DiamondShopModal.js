@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Animated,
   Alert,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -66,6 +67,13 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
   };
 
   const handlePurchase = async (pkg) => {
+    if (Platform.OS === 'ios') {
+      Alert.alert(
+        'شراء الألماس على iPhone/iPad',
+        'الشراء على iOS يجب أن يتم عبر In-App Purchase (StoreKit) فقط. سيتم تفعيل شراء App Store داخل التطبيق في الإصدار القادم.',
+      );
+      return;
+    }
     Alert.alert(
       'تأكيد الشراء',
       `هل تريد شراء ${pkg.name}\n${pkg.diamonds + pkg.bonus} ألماسة مقابل ${pkg.price} ر.س؟`,

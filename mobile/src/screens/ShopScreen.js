@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  Platform,
   Modal,
   Alert,
   Image,
@@ -306,6 +307,13 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
   const handleDiamondPurchase = useCallback((pack) => {
     if (isGuest || !userId) {
       Alert.alert('تسجيل مطلوب', 'يرجى تسجيل الدخول لشراء باقات الألماس.');
+      return;
+    }
+    if (Platform.OS === 'ios') {
+      Alert.alert(
+        'شراء الألماس على iPhone/iPad',
+        'الشراء على iOS يتم عبر In-App Purchase (StoreKit) فقط وفق متطلبات App Store. سيتم فتحه مباشرة عبر App Store في الإصدار القادم دون أي دفع خارجي.',
+      );
       return;
     }
     Alert.alert(

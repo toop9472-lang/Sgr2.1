@@ -399,6 +399,16 @@ export const api = {
   async logout() {
     this.clearTokens();
   },
+
+  async deleteAccount(confirmationText, password = null) {
+    return this.fetch('/api/auth/delete-account', {
+      method: 'POST',
+      body: JSON.stringify({
+        confirmation_text: confirmationText,
+        password,
+      }),
+    });
+  },
   
   // Get current user from server
   async getCurrentUser() {
