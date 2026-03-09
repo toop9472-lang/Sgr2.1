@@ -2599,7 +2599,7 @@ const GamesScreen = ({
       .map((game) => {
         const override = GAME_CATALOG_OVERRIDES[game.id] || {};
         const externalUrl = EXTERNAL_GAME_URLS[game.id] || null;
-        const fallbackCoverImage = toThumbCover(externalUrl);
+        const fallbackCoverImage = Platform.OS === 'ios' ? null : toThumbCover(externalUrl);
         return {
           ...game,
           ...override,
