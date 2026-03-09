@@ -259,6 +259,13 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
 
   const confirmPurchase = useCallback(async () => {
     if (!selectedItem || processing) return;
+    if (Platform.OS === 'ios') {
+      Alert.alert(
+        'غير متاح حالياً على iOS',
+        'شراء المميزات على iOS متوقف مؤقتاً لحين اكتمال ربط Apple In-App Purchase.',
+      );
+      return;
+    }
     if (isGuest || !userId) {
       Alert.alert('تسجيل مطلوب', 'يرجى تسجيل الدخول لشراء المميزات بشكل فعلي.');
       return;
@@ -410,6 +417,13 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
                   style={[styles.card, isOwned && styles.cardOwned]}
                   activeOpacity={0.85}
                   onPress={() => {
+                    if (Platform.OS === 'ios' && !isOwned) {
+                      Alert.alert(
+                        'متجر iOS',
+                        'شراء المميزات الرقمية على iOS سيكون عبر Apple In-App Purchase فقط.',
+                      );
+                      return;
+                    }
                     if (isOwned && item.slot) {
                       handleEquip(item);
                     } else if (!isOwned) {
