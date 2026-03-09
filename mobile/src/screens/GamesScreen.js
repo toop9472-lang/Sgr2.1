@@ -49,7 +49,8 @@ const toAICover = (prompt, seed) => (
   `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${seed}&nologo=true&enhance=true`
 );
 const EXTERNAL_GAME_URLS = {
-  aiquest: 'https://kbhgames.com/game/zombotron-re-boot',
+  // Disabled external source for aiquest to avoid third-party consent popups.
+  aiquest: null,
   chess: 'https://hedchick.itch.io/slimefall',
   tictactoe: 'https://muneersbehat.itch.io/trapadventurecolorbrothers',
   tactix: 'https://shoot.nothans.com/',

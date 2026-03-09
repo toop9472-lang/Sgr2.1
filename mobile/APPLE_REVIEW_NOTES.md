@@ -34,6 +34,10 @@ Account Deletion Location:
 Purchases / Guideline 3.1.1:
 - On iOS, digital purchase flow is restricted to Apple In-App Purchase policy path (no external web checkout in app UI).
 
+Third-party consent popup removal:
+- The game source that showed the "KBHGames consent" page has been removed from external loading.
+- That game now runs in internal in-app mode (no third-party consent wall).
+
 Notes:
 - The app is a games-first experience (solo and online games).
 - Ads are optional and secondary to gameplay progression.
@@ -72,6 +76,10 @@ https://saqr-ui-sync.emergent.host/support
 
 المشتريات / Guideline 3.1.1:
 - على iOS تم تقييد الشراء الرقمي لمسار In-App Purchase المتوافق مع Apple (بدون دفع خارجي من داخل التطبيق).
+
+إزالة نافذة موافقة KBHGames:
+- تم إلغاء المصدر الخارجي للعبة التي كانت تعرض نافذة موافقة KBHGames.
+- اللعبة أصبحت تعمل بوضع داخلي داخل التطبيق بدون جدار موافقة خارجي.
 
 ملاحظات:
 - التطبيق موجّه أساسًا للألعاب (فردي + أونلاين).
