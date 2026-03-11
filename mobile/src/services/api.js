@@ -144,10 +144,33 @@ export const api = {
   BASE_URL: activeApiBase,
   
   // Check connection
-  checkConnection,
+  async checkConnection() {
+    const connected = await checkConnection();
+    this.baseUrl = activeApiBase;
+    this.BASE_URL = activeApiBase;
+    return connected;
+  },
   
   // Force refresh connection
   refreshConnection: refreshConnectionStatus,
+
+  // Expose current/fallback API hosts for OAuth/web flows.
+  getBaseCandidates() {
+    return Array.from(new Set([this.baseUrl, activeApiBase, ...API_BASE_CANDIDATES].filter(Boolean)));
+  },
+
+  getActiveBaseUrl() {
+    return activeApiBase || this.baseUrl || API_URL;
+  },
+
+  async resolveApiBase() {
+    try {
+      await this.checkConnection();
+    } catch (_) {
+      // Keep last known reachable base.
+    }
+    return this.getActiveBaseUrl();
+  },
   
   // Set tokens
   setTokens(access, refresh = null) {

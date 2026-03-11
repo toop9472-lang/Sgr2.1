@@ -30,6 +30,7 @@ class AdMobService {
     this.listeners = [];
     this.loadRetryCount = 0;
     this.maxRetries = 3;
+    this.useTestAdUnitsFallback = false;
     this.unsubscribers = [];
   }
 
@@ -78,8 +79,11 @@ class AdMobService {
 
   // الحصول على معرف الإعلان حسب النظام
   getRewardedAdUnitId() {
-    return Platform.OS === 'ios' 
-      ? AD_UNIT_IDS.ios.rewarded 
+    if (__DEV__ || this.useTestAdUnitsFallback) {
+      return TestIds.REWARDED;
+    }
+    return Platform.OS === 'ios'
+      ? AD_UNIT_IDS.ios.rewarded
       : AD_UNIT_IDS.android.rewarded;
   }
 
@@ -132,6 +136,13 @@ class AdMobService {
           this.loadRetryCount++;
           console.log(`إعادة المحاولة ${this.loadRetryCount}/${this.maxRetries}...`);
           setTimeout(() => this.loadRewardedAd(), 3000);
+        } else if (!this.useTestAdUnitsFallback) {
+          // Fallback to test unit to keep watch page functional when production ad serving is blocked.
+          this.useTestAdUnitsFallback = true;
+          this.loadRetryCount = 0;
+          console.log('⚠️ التحويل إلى وحدة اختبار AdMob مؤقتاً لضمان ظهور الإعلان');
+          this.notifyListeners('fallback_test_unit');
+          setTimeout(() => this.loadRewardedAd(), 1500);
         }
       }
     );

@@ -1,5 +1,5 @@
 // Admin WebView Screen - لوحة تحكم الأدمن
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   StatusBar,
   Platform,
+  Alert,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,7 +24,130 @@ const AdminWebViewScreen = ({ onClose }) => {
   const [canGoForward, setCanGoForward] = useState(false);
   const [currentUrl, setCurrentUrl] = useState(ADMIN_URL);
   const [error, setError] = useState(null);
+  const [quickLoading, setQuickLoading] = useState(true);
+  const [quickSaving, setQuickSaving] = useState(false);
+  const [quickSettings, setQuickSettings] = useState({
+    google_enabled: true,
+    apple_enabled: true,
+    maintenance_mode: false,
+    allow_new_registrations: true,
+    admob_enabled: false,
+  });
+  const [oauthPayload, setOauthPayload] = useState(null);
+  const [appPayload, setAppPayload] = useState(null);
+  const [admobPayload, setAdmobPayload] = useState(null);
+  const [quickError, setQuickError] = useState(null);
   const webViewRef = useRef(null);
+
+  const loadQuickSettings = useCallback(async () => {
+    setQuickLoading(true);
+    setQuickError(null);
+    try {
+      const [oauthRes, appRes, admobRes] = await Promise.all([
+        api.fetch('/api/settings/oauth', { method: 'GET' }).catch(() => null),
+        api.fetch('/api/settings/app', { method: 'GET' }).catch(() => null),
+        api.fetch('/api/settings/admob', { method: 'GET' }).catch(() => null),
+      ]);
+
+      if (oauthRes?.status === 403 || appRes?.status === 403 || admobRes?.status === 403) {
+        setQuickError('الإعدادات السريعة تحتاج صلاحية مدير كاملة.');
+        return;
+      }
+
+      const oauthData = oauthRes?.ok ? await oauthRes.json().catch(() => ({})) : {};
+      const appData = appRes?.ok ? await appRes.json().catch(() => ({})) : {};
+      const admobData = admobRes?.ok ? await admobRes.json().catch(() => ({})) : {};
+
+      setOauthPayload(oauthData);
+      setAppPayload(appData);
+      setAdmobPayload(admobData);
+      setQuickSettings({
+        google_enabled: oauthData?.google_enabled !== false,
+        apple_enabled: oauthData?.apple_enabled !== false,
+        maintenance_mode: appData?.maintenance_mode === true,
+        allow_new_registrations: appData?.allow_new_registrations !== false,
+        admob_enabled: admobData?.admob_enabled === true,
+      });
+    } catch (_) {
+      setQuickError('تعذر تحميل الإعدادات السريعة حالياً.');
+    } finally {
+      setQuickLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadQuickSettings();
+  }, [loadQuickSettings]);
+
+  const saveOAuthToggle = async (field, value) => {
+    const payload = {
+      ...(oauthPayload || {}),
+      google_enabled: field === 'google_enabled' ? value : (quickSettings.google_enabled),
+      apple_enabled: field === 'apple_enabled' ? value : (quickSettings.apple_enabled),
+    };
+    const res = await api.fetch('/api/settings/oauth', {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('oauth_save_failed');
+    setOauthPayload(payload);
+  };
+
+  const saveAppToggle = async (field, value) => {
+    if (field === 'maintenance_mode') {
+      const toggleRes = await api.fetch('/api/settings/maintenance/toggle', { method: 'POST' });
+      if (!toggleRes.ok) throw new Error('maintenance_toggle_failed');
+      const next = await toggleRes.json().catch(() => ({}));
+      setQuickSettings((prev) => ({ ...prev, maintenance_mode: next?.maintenance_mode === true }));
+      return;
+    }
+    const payload = {
+      ...(appPayload || {}),
+      [field]: value,
+    };
+    const res = await api.fetch('/api/settings/app', {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('app_save_failed');
+    setAppPayload(payload);
+  };
+
+  const saveAdmobToggle = async (value) => {
+    const payload = {
+      ...(admobPayload || {}),
+      admob_enabled: value,
+    };
+    const res = await api.fetch('/api/settings/admob', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('admob_save_failed');
+    setAdmobPayload(payload);
+  };
+
+  const handleToggleSetting = async (field) => {
+    if (quickSaving) return;
+    const nextValue = !quickSettings[field];
+    setQuickSaving(true);
+    setQuickError(null);
+    setQuickSettings((prev) => ({ ...prev, [field]: nextValue }));
+    try {
+      if (field === 'google_enabled' || field === 'apple_enabled') {
+        await saveOAuthToggle(field, nextValue);
+      } else if (field === 'maintenance_mode' || field === 'allow_new_registrations') {
+        await saveAppToggle(field, nextValue);
+      } else if (field === 'admob_enabled') {
+        await saveAdmobToggle(nextValue);
+      }
+      Alert.alert('تم', 'تم حفظ الإعداد بنجاح');
+    } catch (_) {
+      setQuickSettings((prev) => ({ ...prev, [field]: !nextValue }));
+      Alert.alert('تعذر الحفظ', 'فشل تحديث الإعداد. تحقق من صلاحية الأدمن.');
+    } finally {
+      setQuickSaving(false);
+    }
+  };
 
   const handleNavigationStateChange = (navState) => {
     setCanGoBack(navState.canGoBack);
@@ -94,6 +218,56 @@ const AdminWebViewScreen = ({ onClose }) => {
           <Ionicons name="refresh" size={22} color="#60a5fa" />
         </TouchableOpacity>
       </LinearGradient>
+
+      {/* Quick Admin Controls */}
+      <View style={styles.quickCard}>
+        <View style={styles.quickHeader}>
+          <Text style={styles.quickTitle}>إعدادات مدير سريعة</Text>
+          <TouchableOpacity onPress={loadQuickSettings} style={styles.quickReloadBtn} disabled={quickLoading || quickSaving}>
+            {quickLoading ? (
+              <ActivityIndicator size="small" color="#93c5fd" />
+            ) : (
+              <Ionicons name="refresh" size={16} color="#93c5fd" />
+            )}
+          </TouchableOpacity>
+        </View>
+        {quickError ? (
+          <Text style={styles.quickErrorText}>{quickError}</Text>
+        ) : (
+          <>
+            <TouchableOpacity style={styles.quickRow} onPress={() => handleToggleSetting('google_enabled')} disabled={quickSaving}>
+              <Text style={styles.quickLabel}>تسجيل Google</Text>
+              <Text style={[styles.quickValue, quickSettings.google_enabled ? styles.quickOn : styles.quickOff]}>
+                {quickSettings.google_enabled ? 'مفعّل' : 'متوقف'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.quickRow} onPress={() => handleToggleSetting('apple_enabled')} disabled={quickSaving}>
+              <Text style={styles.quickLabel}>تسجيل Apple</Text>
+              <Text style={[styles.quickValue, quickSettings.apple_enabled ? styles.quickOn : styles.quickOff]}>
+                {quickSettings.apple_enabled ? 'مفعّل' : 'متوقف'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.quickRow} onPress={() => handleToggleSetting('admob_enabled')} disabled={quickSaving}>
+              <Text style={styles.quickLabel}>AdMob المكافآت</Text>
+              <Text style={[styles.quickValue, quickSettings.admob_enabled ? styles.quickOn : styles.quickOff]}>
+                {quickSettings.admob_enabled ? 'مفعّل' : 'متوقف'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.quickRow} onPress={() => handleToggleSetting('maintenance_mode')} disabled={quickSaving}>
+              <Text style={styles.quickLabel}>وضع الصيانة</Text>
+              <Text style={[styles.quickValue, quickSettings.maintenance_mode ? styles.quickWarn : styles.quickOn]}>
+                {quickSettings.maintenance_mode ? 'قيد التشغيل' : 'متوقف'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.quickRow} onPress={() => handleToggleSetting('allow_new_registrations')} disabled={quickSaving}>
+              <Text style={styles.quickLabel}>السماح بالتسجيل الجديد</Text>
+              <Text style={[styles.quickValue, quickSettings.allow_new_registrations ? styles.quickOn : styles.quickOff]}>
+                {quickSettings.allow_new_registrations ? 'نعم' : 'لا'}
+              </Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
 
       {/* Navigation Bar */}
       <View style={styles.navBar}>
@@ -213,6 +387,65 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFF',
   },
+  quickCard: {
+    marginHorizontal: 12,
+    marginTop: 10,
+    marginBottom: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(96,165,250,0.25)',
+    backgroundColor: 'rgba(15,23,42,0.72)',
+    overflow: 'hidden',
+  },
+  quickHeader: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(148,163,184,0.22)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  quickTitle: {
+    color: '#dbeafe',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  quickReloadBtn: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    backgroundColor: 'rgba(59,130,246,0.22)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickErrorText: {
+    color: '#fca5a5',
+    fontSize: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  quickRow: {
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(148,163,184,0.14)',
+  },
+  quickLabel: {
+    color: '#e2e8f0',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  quickValue: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  quickOn: { color: '#22c55e' },
+  quickOff: { color: '#ef4444' },
+  quickWarn: { color: '#f59e0b' },
   navBar: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -751,7 +751,7 @@ const ProfileScreen = ({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0f' },
-  content: { padding: 20, paddingTop: 50, paddingBottom: 100 },
+  content: { padding: 16, paddingTop: 30, paddingBottom: 96 },
 
   profileHeader: { alignItems: 'center', marginBottom: 20 },
   avatar: { 

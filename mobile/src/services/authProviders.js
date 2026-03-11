@@ -18,6 +18,50 @@ const googleDiscovery = {
 };
 
 const getApiBase = () => (api.baseUrl || api.BASE_URL || 'https://saqr-ui-sync.emergent.host').replace(/\/+$/, '');
+const OAUTH_PROBE_ENDPOINTS = ['/api/auth/providers-status', '/api/settings/public/oauth', '/api/health', '/health'];
+
+const withTimeout = async (promise, timeoutMs = 9000) => {
+  let timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error('timeout')), timeoutMs);
+  });
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+};
+
+const resolveOAuthBase = async () => {
+  try {
+    await api.resolveApiBase?.();
+  } catch (_) {
+    // Use known candidates even when connection probing fails.
+  }
+
+  const candidates = Array.from(new Set([
+    api.getActiveBaseUrl?.(),
+    ...(api.getBaseCandidates?.() || []),
+    getApiBase(),
+  ].filter(Boolean)));
+
+  for (const base of candidates) {
+    for (const endpoint of OAUTH_PROBE_ENDPOINTS) {
+      try {
+        const response = await withTimeout(fetch(`${base}${endpoint}`, {
+          method: 'GET',
+          headers: { Accept: 'application/json' },
+        }));
+        if ([404, 405].includes(response.status)) continue;
+        return base.replace(/\/+$/, '');
+      } catch (_) {
+        // Try next endpoint/base.
+      }
+    }
+  }
+
+  return getApiBase();
+};
 
 /**
  * Sign in with Google using Web Browser OAuth
@@ -25,6 +69,7 @@ const getApiBase = () => (api.baseUrl || api.BASE_URL || 'https://saqr-ui-sync.e
  */
 export const signInWithGoogle = async () => {
   try {
+    const oauthBase = await resolveOAuthBase();
     // Use web-based OAuth for better compatibility
     const redirectUri = AuthSession.makeRedirectUri({
       scheme: 'saqr',
@@ -32,7 +77,7 @@ export const signInWithGoogle = async () => {
     });
 
     // Request authorization
-    const authUrl = `${getApiBase()}/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
+    const authUrl = `${oauthBase}/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
     
     const result = await WebBrowser.openAuthSessionAsync(
       authUrl,
@@ -51,7 +96,7 @@ export const signInWithGoogle = async () => {
         const sessionId = sessionMatch[1];
         
         // Get user data from session
-        const response = await fetch(`${getApiBase()}/api/auth/session/${sessionId}`, {
+        const response = await fetch(`${oauthBase}/api/auth/session/${sessionId}`, {
           method: 'GET',
           headers: { 'Accept': 'application/json' },
         });
@@ -93,12 +138,13 @@ export const signInWithGoogle = async () => {
  */
 export const signInWithApple = async () => {
   try {
+    const oauthBase = await resolveOAuthBase();
     // Check if Apple Sign In is available
     const isAvailable = await AppleAuthentication.isAvailableAsync();
     
     if (!isAvailable) {
       // Fallback to web-based Apple Sign In
-      return await signInWithAppleWeb();
+      return await signInWithAppleWeb(oauthBase);
     }
 
     // Request native Apple Sign In
@@ -120,7 +166,7 @@ export const signInWithApple = async () => {
     }
 
     // Send to backend
-    const response = await fetch(`${getApiBase()}/api/auth/apple/native`, {
+    const response = await fetch(`${oauthBase}/api/auth/apple/native`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -164,13 +210,14 @@ export const signInWithApple = async () => {
  * Fallback: Sign in with Apple using Web Browser
  * Used when native Apple Sign In is not available
  */
-export const signInWithAppleWeb = async () => {
+export const signInWithAppleWeb = async (preResolvedBase = null) => {
   try {
+    const oauthBase = preResolvedBase || await resolveOAuthBase();
     const redirectUri = AuthSession.makeRedirectUri({
       scheme: 'saqr',
       path: 'auth/callback',
     });
-    const authUrl = `${getApiBase()}/api/auth/apple?redirect_uri=${encodeURIComponent(redirectUri)}`;
+    const authUrl = `${oauthBase}/api/auth/apple?redirect_uri=${encodeURIComponent(redirectUri)}`;
     
     const result = await WebBrowser.openAuthSessionAsync(
       authUrl,
@@ -187,7 +234,7 @@ export const signInWithAppleWeb = async () => {
       if (sessionMatch) {
         const sessionId = sessionMatch[1];
         
-        const response = await fetch(`${getApiBase()}/api/auth/session/${sessionId}`, {
+        const response = await fetch(`${oauthBase}/api/auth/session/${sessionId}`, {
           method: 'GET',
           headers: { 'Accept': 'application/json' },
         });

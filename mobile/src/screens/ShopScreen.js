@@ -121,6 +121,22 @@ const DIAMOND_PACKAGES = [
   { id: 'gold', name: 'الحزمة الذهبية', diamonds: 500, bonus: 75, price: 12, image: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/f3510c77236365fa4fa98a435bc3fe90061eeff371b68553e5ab0802c561dd42.png' },
   { id: 'platinum', name: 'الحزمة البلاتينية', diamonds: 1000, bonus: 200, price: 19, image: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/a50037c315fcbd1d811fced1e2e9b7183b7d8255812d7a6faf8d1d451883de1c.png' },
 ];
+const LEGACY_TO_IAP_PRODUCT_ID = {
+  starter: 'diamonds_100',
+  silver: 'diamonds_250',
+  gold: 'diamonds_500',
+  platinum: 'diamonds_1000',
+};
+const PACKAGE_IMAGE_BY_ID = {
+  starter: DIAMOND_PACKAGES[0].image,
+  silver: DIAMOND_PACKAGES[1].image,
+  gold: DIAMOND_PACKAGES[2].image,
+  platinum: DIAMOND_PACKAGES[3].image,
+  diamonds_100: DIAMOND_PACKAGES[0].image,
+  diamonds_250: DIAMOND_PACKAGES[1].image,
+  diamonds_500: DIAMOND_PACKAGES[2].image,
+  diamonds_1000: DIAMOND_PACKAGES[3].image,
+};
 
 const DIAMOND_PACK_META = {
   starter: { badge: 'الدخول السريع', badgeColor: '#64748b' },
@@ -140,6 +156,20 @@ const normalizeBundle = (bundle) => ({
   ...bundle,
   price: Number(bundle?.price_diamonds ?? bundle?.price ?? 0) || 0,
 });
+const normalizeDiamondPackage = (pack, idx = 0) => {
+  const normalizedId = pack?.id || pack?.product_id || `pack_${idx}`;
+  const diamonds = Number(pack?.diamonds ?? pack?.amount ?? 0) || 0;
+  const bonus = Number(pack?.bonus ?? pack?.bonus_diamonds ?? 0) || 0;
+  return {
+    id: normalizedId,
+    storeProductId: pack?.product_id || LEGACY_TO_IAP_PRODUCT_ID[normalizedId] || normalizedId,
+    name: pack?.name || pack?.name_ar || pack?.name_en || `باقة ${idx + 1}`,
+    diamonds,
+    bonus,
+    price: Number(pack?.price ?? pack?.price_sar ?? 0) || 0,
+    image: pack?.image || PACKAGE_IMAGE_BY_ID[normalizedId] || DIAMOND_PACKAGES[idx % DIAMOND_PACKAGES.length]?.image,
+  };
+};
 
 const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurchaseItem }) => {
   const userId = user?.id || user?.user_id || null;
@@ -176,6 +206,9 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
         api.getFeatureBundles().catch(() => null),
         api.getDiamondPackages().catch(() => null),
       ]);
+      const iapPacksRes = Platform.OS === 'ios'
+        ? await api.getIapDiamondPackages().catch(() => null)
+        : null;
 
       if (bundlesRes?.ok) {
         const data = await bundlesRes.json();
@@ -185,10 +218,15 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
         }
       }
 
-      if (packsRes?.ok) {
+      if (Platform.OS === 'ios' && iapPacksRes?.ok) {
+        const iapData = await iapPacksRes.json().catch(() => ({}));
+        if (Array.isArray(iapData?.packages) && iapData.packages.length > 0) {
+          setDiamondPackages(iapData.packages.map((pack, idx) => normalizeDiamondPackage(pack, idx)));
+        }
+      } else if (packsRes?.ok) {
         const data = await packsRes.json();
         if (Array.isArray(data?.packages) && data.packages.length > 0) {
-          setDiamondPackages(data.packages);
+          setDiamondPackages(data.packages.map((pack, idx) => normalizeDiamondPackage(pack, idx)));
         }
       }
 
@@ -309,13 +347,8 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
       Alert.alert('تسجيل مطلوب', 'يرجى تسجيل الدخول لشراء باقات الألماس.');
       return;
     }
-    if (Platform.OS === 'ios') {
-      Alert.alert(
-        'شراء الألماس على iPhone/iPad',
-        'تم تعطيل شراء الألماس مؤقتاً على iOS إلى حين تفعيل Apple In-App Purchase (StoreKit) بالكامل.',
-      );
-      return;
-    }
+
+    const targetProductId = pack?.storeProductId || LEGACY_TO_IAP_PRODUCT_ID[pack?.id] || pack?.id;
     Alert.alert(
       'تأكيد شراء الألماس',
       `شراء ${pack.diamonds + (pack.bonus || 0)} ألماسة مقابل ${pack.price} ر.س`,
@@ -325,17 +358,34 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
           text: 'شراء',
           onPress: async () => {
             try {
-              const res = await api.purchaseDiamonds(userId, pack.id);
+              const res = Platform.OS === 'ios'
+                ? await api.purchaseIapProduct(targetProductId)
+                : await api.purchaseDiamonds(userId, pack.id);
               const data = await res.json().catch(() => ({}));
               if (!res.ok) {
                 Alert.alert('فشل الشراء', data?.detail || 'تعذر تنفيذ الشراء.');
                 return;
               }
-              const nextBalance = Number(data?.new_balance);
-              if (Number.isFinite(nextBalance)) {
-                onUpdateDiamonds?.(nextBalance);
+              if (Platform.OS === 'ios') {
+                try {
+                  const balanceRes = await api.getBalance(userId);
+                  if (balanceRes.ok) {
+                    const balanceData = await balanceRes.json().catch(() => ({}));
+                    const nextBalance = Number(balanceData?.diamonds);
+                    if (Number.isFinite(nextBalance)) {
+                      onUpdateDiamonds?.(nextBalance);
+                    }
+                  }
+                } catch (_) {
+                  // Keep optimistic fallback below.
+                }
               } else {
-                onUpdateDiamonds?.((userDiamonds || 0) + Number(data?.diamonds_added || 0));
+                const nextBalance = Number(data?.new_balance);
+                if (Number.isFinite(nextBalance)) {
+                  onUpdateDiamonds?.(nextBalance);
+                } else {
+                  onUpdateDiamonds?.((userDiamonds || 0) + Number(data?.diamonds_added || 0));
+                }
               }
               Alert.alert('تم', `تمت إضافة ${data?.diamonds_added || 0} ألماسة بنجاح.`);
             } catch (_) {
@@ -499,11 +549,11 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
                 <View style={styles.iosIapNotice}>
                   <Ionicons name="logo-apple" size={20} color="#bfdbfe" />
                   <Text style={styles.iosIapNoticeText}>
-                    شراء الألماس على iOS متوقف مؤقتاً لضمان التوافق الكامل مع سياسة Apple.
-                    {'\n'}سيتم تفعيله فقط عبر In-App Purchase (StoreKit) الحقيقي.
+                    يتم تنفيذ الدفع على iOS عبر مسار Apple In-App Purchase.
                   </Text>
                 </View>
-              ) : diamondPackages.map((pack) => (
+              ) : null}
+              {diamondPackages.map((pack) => (
                 <TouchableOpacity key={pack.id} style={styles.packCard} onPress={() => handleDiamondPurchase(pack)}>
                   <Image source={{ uri: pack.image }} style={styles.packImage} resizeMode="cover" />
                   <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.packOverlay}>
@@ -549,7 +599,7 @@ const styles = StyleSheet.create({
   },
   loadingText: { color: '#cbd5e1', marginTop: 10, fontSize: 13 },
   header: {
-    paddingTop: 48,
+    paddingTop: 34,
     paddingHorizontal: 16,
     paddingBottom: 12,
     flexDirection: 'row',

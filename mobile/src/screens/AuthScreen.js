@@ -74,6 +74,15 @@ const AuthScreen = ({ onLogin }) => {
     }
   };
 
+  const finalizeLogin = async (sessionUser, token, refresh = null) => {
+    if (token) {
+      api.setTokens(token, refresh || null);
+      await storage.setToken(token);
+    }
+    await storage.setUserData(sessionUser);
+    onLogin(sessionUser);
+  };
+
   const statusFallbackMessage = (response, fallbackMessage) => {
     if (response?.status === 404) return 'تعذر الوصول لخدمة تسجيل الدخول. تحقق من إعدادات الخادم.';
     if (response?.status === 401) return 'بيانات تسجيل الدخول غير صحيحة';
@@ -108,7 +117,10 @@ const AuthScreen = ({ onLogin }) => {
     let mounted = true;
     const loadProviderStatus = async () => {
       try {
-        const response = await api.getAuthProvidersStatus();
+        let response = await api.getAuthProvidersStatus().catch(() => null);
+        if (!response?.ok) {
+          response = await api.fetch('/api/settings/public/oauth').catch(() => null);
+        }
         if (!mounted || !response?.ok) return;
         const data = await response.json().catch(() => ({}));
         setProvidersStatus({
@@ -223,9 +235,7 @@ const AuthScreen = ({ onLogin }) => {
         is_guest: true,
         isGuest: true,
       };
-      await storage.setUserData(guestUser);
-      await storage.setToken('guest_token');
-      onLogin(guestUser);
+      await finalizeLogin(guestUser, 'guest_token');
     } catch (error) {
       Alert.alert('خطأ', 'حدث خطأ، حاول مرة أخرى');
     } finally {
@@ -345,10 +355,8 @@ const AuthScreen = ({ onLogin }) => {
       const data = await response.json().catch(() => ({}));
       
       if (response.ok && data.success) {
-        await storage.setToken(data.token);
-        await storage.setUserData(data.user);
+        await finalizeLogin(data.user, data.token, data.refresh_token);
         Alert.alert('مرحباً', 'تم إنشاء حسابك بنجاح!');
-        onLogin(data.user);
       } else {
         const message = data.detail || data.message || 'فشل إنشاء الحساب';
         Alert.alert('خطأ', message);
@@ -414,9 +422,7 @@ const AuthScreen = ({ onLogin }) => {
       const data = await response.json().catch(() => ({}));
       
       if (response.ok && data.success) {
-        await storage.setToken(data.token);
-        await storage.setUserData(data.user);
-        onLogin(data.user);
+        await finalizeLogin(data.user, data.token, data.refresh_token);
       } else {
         const message = data.detail || data.message || 'رمز التحقق غير صحيح';
         Alert.alert('خطأ', message);
@@ -528,16 +534,12 @@ const AuthScreen = ({ onLogin }) => {
         
         if (response.ok && (data.token || data.success)) {
           if (data.token) {
-            await storage.setToken(data.token);
-            await storage.setUserData(data.user);
-            onLogin(data.user);
+            await finalizeLogin(data.user, data.token, data.refresh_token);
           } else {
             const loginResponse = await api.login(normalizedEmail, normalizedPassword);
             const loginData = await loginResponse.json().catch(() => ({}));
             if (loginResponse.ok) {
-              await storage.setToken(loginData.token);
-              await storage.setUserData(loginData.user);
-              onLogin(loginData.user);
+              await finalizeLogin(loginData.user, loginData.token, loginData.refresh_token);
             }
           }
         } else {
@@ -552,9 +554,7 @@ const AuthScreen = ({ onLogin }) => {
         if (__DEV__) console.log('Login response:', response.ok, data?.token ? 'has token' : 'no token');
         
         if (response.ok && data.token) {
-          await storage.setToken(data.token);
-          await storage.setUserData(data.user);
-          onLogin(data.user);
+          await finalizeLogin(data.user, data.token, data.refresh_token);
         } else {
           if (__DEV__) console.log('Login failed:', data);
           const message = await parseErrorMessage(response, 'البريد الإلكتروني أو كلمة المرور غير صحيحة', data);
@@ -670,9 +670,7 @@ const AuthScreen = ({ onLogin }) => {
       const result = await signInWithGoogle();
       
       if (result.success) {
-        await storage.setToken(result.token);
-        await storage.setUserData(result.user);
-        onLogin(result.user);
+        await finalizeLogin(result.user, result.token, result.refreshToken);
       } else if (result.cancelled) {
         // User cancelled - do nothing
       }
@@ -699,9 +697,7 @@ const AuthScreen = ({ onLogin }) => {
       const result = await signInWithApple();
       
       if (result.success) {
-        await storage.setToken(result.token);
-        await storage.setUserData(result.user);
-        onLogin(result.user);
+        await finalizeLogin(result.user, result.token, result.refreshToken);
       } else if (result.cancelled) {
         // User cancelled - do nothing
       }
@@ -1372,7 +1368,7 @@ const AuthScreen = ({ onLogin }) => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { flexGrow: 1, justifyContent: 'center', paddingVertical: 34 },
-  content: { paddingHorizontal: 22, width: '100%', maxWidth: 520, alignSelf: 'center' },
+  content: { paddingHorizontal: 18, width: '100%', alignSelf: 'center' },
   
   // Logo with Glow
   logoContainer: {

@@ -18,6 +18,35 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 
 const { width, height } = Dimensions.get('window');
+const LEGACY_TO_IAP_PRODUCT_ID = {
+  starter: 'diamonds_100',
+  silver: 'diamonds_250',
+  gold: 'diamonds_500',
+  platinum: 'diamonds_1000',
+};
+const IMAGE_BY_ID = {
+  starter: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/8d0264089edcfd06522002458fa06c39546c26f3c63eb9ee166111a86c4a1f70.png',
+  silver: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/2331b4dba6a7794ca82e307739d695d26c4b52262ad971bb241272053261e7d0.png',
+  gold: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/f3510c77236365fa4fa98a435bc3fe90061eeff371b68553e5ab0802c561dd42.png',
+  platinum: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/a50037c315fcbd1d811fced1e2e9b7183b7d8255812d7a6faf8d1d451883de1c.png',
+  diamonds_100: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/8d0264089edcfd06522002458fa06c39546c26f3c63eb9ee166111a86c4a1f70.png',
+  diamonds_250: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/2331b4dba6a7794ca82e307739d695d26c4b52262ad971bb241272053261e7d0.png',
+  diamonds_500: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/f3510c77236365fa4fa98a435bc3fe90061eeff371b68553e5ab0802c561dd42.png',
+  diamonds_1000: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/a50037c315fcbd1d811fced1e2e9b7183b7d8255812d7a6faf8d1d451883de1c.png',
+};
+const normalizePackage = (pkg, idx = 0) => {
+  const normalizedId = pkg?.id || pkg?.product_id || `package_${idx}`;
+  return {
+    ...pkg,
+    id: normalizedId,
+    storeProductId: pkg?.product_id || LEGACY_TO_IAP_PRODUCT_ID[normalizedId] || normalizedId,
+    name: pkg?.name || pkg?.name_ar || pkg?.name_en || `باقة ${idx + 1}`,
+    diamonds: Number(pkg?.diamonds ?? pkg?.amount ?? 0) || 0,
+    bonus: Number(pkg?.bonus ?? pkg?.bonus_diamonds ?? 0) || 0,
+    price: Number(pkg?.price ?? pkg?.price_sar ?? 0) || 0,
+    image: pkg?.image || IMAGE_BY_ID[normalizedId] || IMAGE_BY_ID.gold,
+  };
+};
 
 const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
   const [packages, setPackages] = useState([]);
@@ -54,10 +83,12 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
   const fetchPackages = async () => {
     setLoading(true);
     try {
-      const response = await api.getDiamondPackages();
+      const response = Platform.OS === 'ios'
+        ? await api.getIapDiamondPackages()
+        : await api.getDiamondPackages();
       if (response.ok) {
         const data = await response.json();
-        setPackages(data.packages || []);
+        setPackages((data.packages || []).map((pkg, idx) => normalizePackage(pkg, idx)));
       }
     } catch (error) {
       console.log('Packages error:', error);
@@ -67,13 +98,7 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
   };
 
   const handlePurchase = async (pkg) => {
-    if (Platform.OS === 'ios') {
-      Alert.alert(
-        'شراء الألماس على iPhone/iPad',
-        'تم تعطيل شراء الألماس مؤقتاً على iOS إلى حين تفعيل Apple In-App Purchase (StoreKit) بالكامل.',
-      );
-      return;
-    }
+    const targetProductId = pkg?.storeProductId || LEGACY_TO_IAP_PRODUCT_ID[pkg?.id] || pkg?.id;
     Alert.alert(
       'تأكيد الشراء',
       `هل تريد شراء ${pkg.name}\n${pkg.diamonds + pkg.bonus} ألماسة مقابل ${pkg.price} ر.س؟`,
@@ -84,7 +109,9 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
           onPress: async () => {
             setPurchasing(pkg.id);
             try {
-              const response = await api.purchaseDiamonds(userId, pkg.id);
+              const response = Platform.OS === 'ios'
+                ? await api.purchaseIapProduct(targetProductId)
+                : await api.purchaseDiamonds(userId, pkg.id);
               if (response.ok) {
                 const data = await response.json();
                 Alert.alert(
@@ -112,7 +139,15 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
   };
 
   const getPackageColors = (packageId) => {
-    switch (packageId) {
+    const normalized = packageId?.startsWith('diamonds_')
+      ? ({
+        diamonds_100: 'starter',
+        diamonds_250: 'silver',
+        diamonds_500: 'gold',
+        diamonds_1000: 'platinum',
+      }[packageId] || packageId)
+      : packageId;
+    switch (normalized) {
       case 'starter': return ['#64748b', '#475569'];
       case 'silver': return ['#94a3b8', '#64748b'];
       case 'gold': return ['#fbbf24', '#d97706'];
@@ -122,7 +157,15 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
   };
 
   const getPackageIcon = (packageId) => {
-    switch (packageId) {
+    const normalized = packageId?.startsWith('diamonds_')
+      ? ({
+        diamonds_100: 'starter',
+        diamonds_250: 'silver',
+        diamonds_500: 'gold',
+        diamonds_1000: 'platinum',
+      }[packageId] || packageId)
+      : packageId;
+    switch (normalized) {
       case 'starter': return 'diamond-outline';
       case 'silver': return 'diamond';
       case 'gold': return 'trophy';
@@ -134,7 +177,7 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
   const renderPackage = (pkg, index) => {
     const colors = getPackageColors(pkg.id);
     const icon = getPackageIcon(pkg.id);
-    const isPopular = pkg.id === 'gold';
+    const isPopular = pkg.id === 'gold' || pkg.id === 'diamonds_500';
     
     return (
       <Animated.View
@@ -238,19 +281,20 @@ const DiamondShopModal = ({ visible, onClose, userId, onPurchaseComplete }) => {
           {/* Packages */}
           {loading ? (
             <ActivityIndicator size="large" color="#60a5fa" style={styles.loader} />
-          ) : Platform.OS === 'ios' ? (
-            <View style={styles.iosNoticeCard}>
-              <Ionicons name="logo-apple" size={20} color="#bfdbfe" />
-              <Text style={styles.iosNoticeText}>
-                شراء الألماس على iOS متوقف مؤقتاً لضمان التوافق الكامل مع سياسة Apple.
-              </Text>
-            </View>
           ) : (
             <ScrollView
               style={styles.packagesScroll}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.packagesContainer}
             >
+              {Platform.OS === 'ios' ? (
+                <View style={styles.iosNoticeCard}>
+                  <Ionicons name="logo-apple" size={20} color="#bfdbfe" />
+                  <Text style={styles.iosNoticeText}>
+                    سيتم تنفيذ الشراء على iOS عبر Apple In-App Purchase.
+                  </Text>
+                </View>
+              ) : null}
               {packages.map((pkg, index) => renderPackage(pkg, index))}
               
               {/* Footer Note */}

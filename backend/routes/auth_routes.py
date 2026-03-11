@@ -39,6 +39,26 @@ def get_db():
     return client[os.environ['DB_NAME']]
 
 
+async def _get_oauth_settings_doc():
+    db = get_db()
+    return await db.settings.find_one({'type': 'oauth'}, {'_id': 0}) or {}
+
+
+async def _resolve_google_credentials():
+    settings = await _get_oauth_settings_doc()
+    client_id = (os.environ.get('GOOGLE_CLIENT_ID') or settings.get('google_client_id') or '').strip()
+    client_secret = (os.environ.get('GOOGLE_CLIENT_SECRET') or settings.get('google_client_secret') or '').strip()
+    enabled = settings.get('google_enabled', True)
+    return client_id, client_secret, bool(enabled)
+
+
+async def _resolve_apple_client_id(default_value: str = 'com.saqr.rewards'):
+    settings = await _get_oauth_settings_doc()
+    client_id = (os.environ.get('APPLE_CLIENT_ID') or settings.get('apple_client_id') or default_value or '').strip()
+    enabled = settings.get('apple_enabled', True)
+    return client_id, bool(enabled)
+
+
 async def _save_oauth_temp(key: str, payload: dict):
     db = get_db()
     now = datetime.utcnow()
@@ -858,7 +878,9 @@ async def apple_sign_in_redirect(request: Request, redirect_uri: str = 'saqr://a
     Redirect to Apple Sign In page
     """
     # Apple OAuth configuration
-    client_id = os.environ.get('APPLE_CLIENT_ID', 'com.saqr.rewards')
+    client_id, apple_enabled = await _resolve_apple_client_id('com.saqr.rewards')
+    if not apple_enabled:
+        return RedirectResponse(url=f"{redirect_uri}?error=apple_not_configured")
     
     # Generate state for CSRF protection
     state = secrets.token_urlsafe(32)
@@ -1151,9 +1173,9 @@ async def google_sign_in_redirect(request: Request, redirect_uri: str = 'saqr://
     """
     import secrets
     
-    client_id = os.environ.get('GOOGLE_CLIENT_ID', '')
+    client_id, _, google_enabled = await _resolve_google_credentials()
     
-    if not client_id:
+    if not google_enabled or not client_id:
         # Return error if no client ID configured
         return RedirectResponse(url=f"{redirect_uri}?error=google_not_configured")
     
@@ -1212,10 +1234,9 @@ async def google_sign_in_callback(request: Request, code: str = None, state: str
             del apple_sessions[state]
         
         # Exchange code for tokens
-        client_id = os.environ.get('GOOGLE_CLIENT_ID', '')
-        client_secret = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+        client_id, client_secret, google_enabled = await _resolve_google_credentials()
         
-        if not client_id or not client_secret:
+        if not google_enabled or not client_id or not client_secret:
             return RedirectResponse(url=f"{redirect_uri}?error=google_not_configured")
         
         callback_uri = _resolve_google_redirect_uri(request)
@@ -1315,11 +1336,11 @@ async def google_sign_in_callback(request: Request, code: str = None, state: str
 @router.get('/providers-status', response_model=dict)
 async def oauth_providers_status():
     """Expose OAuth provider availability for mobile UI guards."""
-    google_client_id = os.environ.get('GOOGLE_CLIENT_ID', '').strip()
-    google_client_secret = os.environ.get('GOOGLE_CLIENT_SECRET', '').strip()
+    google_client_id, google_client_secret, google_enabled = await _resolve_google_credentials()
+    _, apple_enabled = await _resolve_apple_client_id('com.saqr.rewards')
     return {
-        "google_enabled": bool(google_client_id and google_client_secret),
+        "google_enabled": bool(google_enabled and google_client_id and google_client_secret),
         # Native Apple Sign In can work without web OAuth client_id.
-        "apple_enabled": True,
+        "apple_enabled": bool(apple_enabled),
         "email_enabled": True,
     }

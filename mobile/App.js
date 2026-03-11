@@ -58,6 +58,7 @@ import { AchievementNotification } from './src/screens/AchievementsScreen';
 // Services
 import api from './src/services/api';
 import storage from './src/services/storage';
+import admobService from './src/services/admobService';
 
 // Safe notification import
 let NotificationService = null;
@@ -239,6 +240,8 @@ function AppContent() {
   const initApp = async () => {
     try {
       await ensureTrackingPermission();
+      // Prime AdMob early so consent/ATT and rewarded pipeline are ready before opening watch page.
+      admobService.initialize().catch(() => {});
 
       // Load saved user data
       const [savedToken, savedUser] = await Promise.all([
@@ -379,6 +382,9 @@ function AppContent() {
     setUser(userData);
     setIsAuthenticated(true);
     persistUserSnapshot(userData);
+    storage.getToken().then((token) => {
+      if (token) api.setTokens(token, null);
+    }).catch(() => {});
     setTimeout(() => {
       const incomingUserId = userData?.id || userData?.user_id;
       if (incomingUserId) {

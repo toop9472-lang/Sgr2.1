@@ -12,10 +12,10 @@ import {
   TextInput,
   ScrollView,
   KeyboardAvoidingView,
+  ImageBackground,
   Platform,
   Alert,
 } from 'react-native';
-import { Video } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import storage from '../services/storage';
@@ -36,6 +36,7 @@ const DEMO_ADS = [
     website_url: 'https://www.samsung.com/sa/',
     duration: 60,
     points_per_minute: 1,
+    image_url: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e14c91a9e40e8d29b6f8d3bf567a4fcb7020c985b1a9d3e96e2035b06f9921e6.png',
   },
   {
     id: 'demo2',
@@ -46,6 +47,7 @@ const DEMO_ADS = [
     website_url: 'https://www.amazon.sa/',
     duration: 45,
     points_per_minute: 1,
+    image_url: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e02071f57750c77c0db321a70a51ed7bceb6eeb4df5f78e29d834466fcf3f354.png',
   },
   {
     id: 'demo3',
@@ -56,6 +58,7 @@ const DEMO_ADS = [
     website_url: 'https://example.com',
     duration: 30,
     points_per_minute: 1,
+    image_url: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/9571396ba276f9f9cf70ce0622c4303850d05054256c99581ef235eec62d9760.png',
   },
 ];
 
@@ -104,6 +107,8 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
       } else if (eventType === 'error') {
         setAdMobReady(false);
         setAdMobStatusMessage('لا يوجد إعلان متاح الآن');
+      } else if (eventType === 'fallback_test_unit') {
+        setAdMobStatusMessage('تم تفعيل وحدة اختبار إعلانية مؤقتاً');
       } else if (eventType === 'closed') {
         const ready = admobService.isReady();
         setAdMobReady(ready);
@@ -166,8 +171,13 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
   // Show AdMob Rewarded Ad
   const showAdMobAd = async () => {
     if (!adMobReady) {
-      Alert.alert('انتظر', adMobStatusMessage || 'جاري تحميل الإعلان...');
-      return;
+      setAdMobStatusMessage('جاري إعادة تحميل إعلان المكافأة...');
+      await initAdMob();
+      if (!admobService.isReady()) {
+        Alert.alert('انتظر', adMobStatusMessage || 'جاري تحميل الإعلان...');
+        return;
+      }
+      setAdMobReady(true);
     }
     
     setIsAdMobLoading(true);
@@ -198,7 +208,7 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
           persisted?.payload?.saqr_gems_earned
           ?? persisted?.payload?.gems_earned
           ?? persisted?.payload?.points_earned
-          ?? 1
+          ?? 0
         ) || 0;
         const diamonds = Number(
           persisted?.payload?.diamonds_earned
@@ -237,20 +247,21 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
 
   const loadAds = async () => {
     try {
-      // Try to load ads directly without blocking connection check
-      const response = await api.getAds();
-      if (response.ok) {
-        const data = await response.json();
+      // Lightweight mode for this page to avoid heavy autoplay feeds.
+      const response = await api.getAds().catch(() => null);
+      if (response?.ok) {
+        const data = await response.json().catch(() => ({}));
         const adsList = Array.isArray(data) ? data : (Array.isArray(data?.ads) ? data.ads : []);
         if (adsList.length > 0) {
-          const shuffled = shuffleArray(adsList);
-          setAds(shuffled);
-        } else {
-          setAds(DEMO_ADS);
+          const sanitized = adsList.slice(0, 5).map((item, idx) => ({
+            ...item,
+            image_url: item?.image_url || DEMO_ADS[idx % DEMO_ADS.length]?.image_url,
+          }));
+          setAds(shuffleArray(sanitized));
+          return;
         }
-      } else {
-        setAds(DEMO_ADS);
       }
+      setAds(DEMO_ADS);
     } catch (error) {
       console.log('Loading fallback ads due to:', error.message);
       // Silently use demo ads without bothering user
@@ -323,7 +334,8 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
 
   // Watch timer with points
   useEffect(() => {
-    if (isPlaying && currentAd) {
+    // Keep this screen lightweight: rewards are handled by AdMob rewarded ads.
+    if (false && isPlaying && currentAd) {
       watchTimerRef.current = setInterval(() => {
         setWatchTime((prev) => {
           const newTime = prev + 1;
@@ -381,7 +393,7 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
         persisted?.payload?.saqr_gems_earned
         ?? persisted?.payload?.gems_earned
         ?? persisted?.payload?.points_earned
-        ?? requestedMinutes
+        ?? 0
       ) || 0;
       const diamonds = Number(
         persisted?.payload?.diamonds_earned
@@ -438,14 +450,7 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
   };
 
   const togglePlayPause = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pauseAsync();
-      } else {
-        videoRef.current.playAsync();
-      }
-      setIsPlaying(!isPlaying);
-    }
+    setIsPlaying((prev) => !prev);
   };
 
   const formatTime = (seconds) => {
@@ -481,17 +486,13 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Video */}
-      <Video
-        ref={videoRef}
-        source={{ uri: currentAd.video_url }}
+      {/* Lightweight poster background instead of autoplay video */}
+      <ImageBackground
+        source={{ uri: currentAd.image_url || DEMO_ADS[0].image_url }}
         style={styles.video}
         resizeMode="cover"
-        shouldPlay={isPlaying}
-        isLooping
-        isMuted={isMuted}
         onLoadStart={() => setVideoLoading(true)}
-        onLoad={() => setVideoLoading(false)}
+        onLoadEnd={() => setVideoLoading(false)}
       />
 
       {/* Dark overlay when paused */}
@@ -518,7 +519,7 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
               <Ionicons name="diamond" size={24} color="#60a5fa" style={{ marginLeft: 8 }} />
               <Text style={styles.pointsAnimMiniValue}>+{earnedDiamonds}</Text>
             </View>
-            <Text style={styles.pointsAnimSubtext}>1 جوهرة صقر + 6 ألماسات</Text>
+            <Text style={styles.pointsAnimSubtext}>+6 ألماسات لكل إعلان مكافأة</Text>
           </View>
         </View>
       )}
@@ -885,7 +886,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 50,
+    paddingTop: 34,
     paddingHorizontal: 16,
     paddingBottom: 16,
     zIndex: 30,

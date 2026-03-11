@@ -90,7 +90,7 @@ const HomeScreen = ({
     exchangeBadge: isArabic ? '500 جوهرة = 1 ريال' : '500 gems = 1 SAR',
     fortunesDesc: isArabic ? 'عجلة الحظ اليومية • صناديق الكنز • مكافآت مضاعفة' : 'Daily wheel • Treasure chests • Boosted rewards',
     watchAndEarn: isArabic ? 'شاهد واربح' : 'Watch & Earn',
-    watchAndEarnSubtitle: isArabic ? 'كل 60 ثانية إعلان = 1 جوهرة صقر + 6 ألماسات' : 'Each 60s ad = 1 Saqr gem + 6 diamonds',
+    watchAndEarnSubtitle: isArabic ? 'كل إعلان مكافأة = 6 ألماسات' : 'Each rewarded ad = 6 diamonds',
     balanceTitle: isArabic ? 'رصيدك الحالي' : 'Your current balance',
     exchangeChip: isArabic ? '500 جوهرة = 1 ر.س' : '500 gems = 1 SAR',
     gemsLabel: isArabic ? 'جواهر صقر' : 'Saqr Gems',
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   },
   content: { 
     padding: 16, 
-    paddingTop: 50, 
+    paddingTop: 28, 
     paddingBottom: 120 
   },
 

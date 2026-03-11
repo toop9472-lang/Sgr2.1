@@ -50,26 +50,28 @@ const toAICover = (prompt, seed) => (
   `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${seed}&nologo=true&enhance=true`
 );
 const EXTERNAL_GAME_URLS = {
-  // Disabled external source for aiquest to avoid third-party consent popups.
+  // Keep all gameplay internal for stability and policy compliance.
   aiquest: null,
-  chess: 'https://hedchick.itch.io/slimefall',
-  tictactoe: 'https://muneersbehat.itch.io/trapadventurecolorbrothers',
-  tactix: 'https://shoot.nothans.com/',
-  memory: 'https://www.balanc3dgame.com/',
-  snake: 'https://pacman.live/',
-  brickbreaker: 'https://www.4j.com/Nelly-game',
-  trivia: 'https://kirlosev.itch.io/marblox',
-  mathrace: 'https://paperclip36.itch.io/neonrogue',
-  wordrace: 'https://twobitcode.itch.io/multiplayer-fusion-2',
-  colorswitch: 'https://www.pacogames.com/casual/colour-chase',
-  riddles: 'https://www.golfgl.de/lightblocks/',
-  millionaire: 'https://kodachigames.itch.io/wicked-climb',
-  brickstormx: 'https://buddyboardgames.com/uno',
-  puzzlemaster: 'https://www.jawaker.com/en/games/basra',
-  triviaplus: 'https://www.jawaker.com/en/games/baloot',
-  wordmaster: 'https://poki.com/en/g/carrom-multiplayer',
-  reactiontap: 'https://8ballpool3d.com/',
-  sequencesprint: 'https://sequentor.com/',
+  chess: null,
+  tictactoe: null,
+  tactix: null,
+  memory: null,
+  snake: null,
+  brickbreaker: null,
+  puzzle: null,
+  trivia: null,
+  mathrace: null,
+  wordrace: null,
+  colorswitch: null,
+  riddles: null,
+  millionaire: null,
+  brickstormx: null,
+  puzzlemaster: null,
+  triviaplus: null,
+  wordmaster: null,
+  reactiontap: null,
+  sequencesprint: null,
+  oddoneout: null,
 };
 const AI_GAME_COVER_PROMPTS = {
   aiquest: 'futuristic zombie robot action game cover art, neon cinematic, mobile game key art',
@@ -260,28 +262,33 @@ const GAME_COVER_IMAGES = Object.fromEntries(
     toAICover(AI_GAME_COVER_PROMPTS[id] || `professional mobile game cover art for ${id}`, 700 + index),
   ]),
 );
-GAME_COVER_IMAGES.puzzle = 'https://saqr-ui-sync.emergent.host/volcano-fizer.svg';
-const IMPORTED_PRO_GAME_IDS = [
-  'aiquest',
-  'chess',
-  'tictactoe',
-  'tactix',
-  'memory',
-  'snake',
-  'brickbreaker',
+const INTERNAL_GAME_COVER_IMAGES = {
+  puzzle: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/790aea00464f3094d85b3ec7bcb2afb006df8e90e0f04201191220ec251f21df.png',
+  trivia: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/9571396ba276f9f9cf70ce0622c4303850d05054256c99581ef235eec62d9760.png',
+  mathrace: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/3d8c26e54596dfd6119b3e0dbc132bba3f9a7a4b838f53c5f707a8ee3b76a5e5.png',
+  colorswitch: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/d57d16dad83d4ac03e77928fabc5111a4bd66f58c3ec7ea3def95ff179a63a10.png',
+  riddles: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/80dd5458cd76b663ba0070e59843f6a7aba7a44cb4cf4d0a4e40eca1f3712cab.png',
+  tictactoe: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e02071f57750c77c0db321a70a51ed7bceb6eeb4df5f78e29d834466fcf3f354.png',
+  brickbreaker: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e14c91a9e40e8d29b6f8d3bf567a4fcb7020c985b1a9d3e96e2035b06f9921e6.png',
+  memory: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/3d8c26e54596dfd6119b3e0dbc132bba3f9a7a4b838f53c5f707a8ee3b76a5e5.png',
+  wordrace: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/86abd9d66ea83500fffe680b9db5618403214798c4150d5508f861cbeece635e.png',
+  reactiontap: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/b5329ed8b521321c18a1a23f7dfacb283e436fa40a3601f5f0a053e9f07f461b.png',
+  sequencesprint: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/023917c49fab8b87593072b51baa9584ecaec8bddecc94d124c69166ba378dad.png',
+  oddoneout: 'https://static.prod-images.emergentagent.com/jobs/c02a9dba-c6d7-4025-8581-e3386f2d9f92/images/f3510c77236365fa4fa98a435bc3fe90061eeff371b68553e5ab0802c561dd42.png',
+};
+const STABLE_INTERNAL_GAME_IDS = [
   'puzzle',
   'trivia',
   'mathrace',
-  'wordrace',
   'colorswitch',
   'riddles',
-  'millionaire',
-  'brickstormx',
-  'puzzlemaster',
-  'triviaplus',
-  'wordmaster',
+  'tictactoe',
+  'brickbreaker',
+  'memory',
+  'wordrace',
   'reactiontap',
   'sequencesprint',
+  'oddoneout',
 ];
 const adCarryStorageKey = (userId) => `saqr_games_ad_carry_seconds_${userId || 'guest'}`;
 
@@ -1622,7 +1629,7 @@ const TriviaGame = ({ mode, onComplete, onClose }) => {
         <View style={styles.resultScreen}>
           <Ionicons name="ribbon" size={80} color="#fbbf24" />
           <Text style={styles.finalScore}>{score}</Text>
-          <Text style={styles.finalLabel}>جوهرة</Text>
+          <Text style={styles.finalLabel}>ألماسة</Text>
           <Text style={styles.finalSub}>أجبت بشكل صحيح على {correctAnswers} من {questions.length} سؤال</Text>
           <TouchableOpacity style={styles.exitBtn} onPress={onClose}>
             <Text style={styles.exitText}>إنهاء</Text>
@@ -1775,7 +1782,7 @@ const RiddlesGame = ({ mode, onComplete, onClose }) => {
         <View style={styles.resultScreen}>
           <Ionicons name="bulb" size={80} color="#fbbf24" />
           <Text style={styles.finalScore}>{score}</Text>
-          <Text style={styles.finalLabel}>جوهرة</Text>
+          <Text style={styles.finalLabel}>ألماسة</Text>
           <Text style={styles.finalSub}>حللت {riddles.length} لغز</Text>
           <TouchableOpacity style={styles.exitBtn} onPress={onClose}>
             <Text style={styles.exitText}>إنهاء</Text>
@@ -1913,7 +1920,7 @@ const ReactionTapGame = ({ onComplete, onClose }) => {
           <Text style={styles.finalLabel}>جواهر سرعة</Text>
           <Text style={styles.finalSub}>لعبة جديدة: اختبر رد الفعل الحقيقي</Text>
           <TouchableOpacity style={styles.exitBtn} onPress={() => onComplete(score, 'win')}>
-            <Text style={styles.exitText}>تحصيل الجواهر</Text>
+            <Text style={styles.exitText}>تحصيل المكافأة</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.exitBtn, { marginTop: 10, backgroundColor: '#334155' }]} onPress={onClose}>
             <Text style={styles.exitText}>إغلاق</Text>
@@ -2015,10 +2022,10 @@ const SequenceSprintGame = ({ onComplete, onClose }) => {
         <View style={styles.resultScreen}>
           <Ionicons name="analytics" size={72} color="#22c55e" />
           <Text style={styles.finalScore}>{score}</Text>
-          <Text style={styles.finalLabel}>جوهرة</Text>
+          <Text style={styles.finalLabel}>ألماسة</Text>
           <Text style={styles.finalSub}>لعبة جديدة: سلاسل رقمية متسارعة</Text>
           <TouchableOpacity style={styles.exitBtn} onPress={() => onComplete(score, 'win')}>
-            <Text style={styles.exitText}>تحصيل الجواهر</Text>
+            <Text style={styles.exitText}>تحصيل المكافأة</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.exitBtn, { marginTop: 10, backgroundColor: '#334155' }]} onPress={onClose}>
             <Text style={styles.exitText}>إغلاق</Text>
@@ -2107,10 +2114,10 @@ const OddOneOutGame = ({ onComplete, onClose }) => {
         <View style={styles.resultScreen}>
           <Ionicons name="eye" size={72} color="#06b6d4" />
           <Text style={styles.finalScore}>{score}</Text>
-          <Text style={styles.finalLabel}>جوهرة ملاحظة</Text>
+          <Text style={styles.finalLabel}>ألماسة ملاحظة</Text>
           <Text style={styles.finalSub}>لعبة جديدة: اكتشف المختلف بسرعة</Text>
           <TouchableOpacity style={styles.exitBtn} onPress={() => onComplete(score, 'win')}>
-            <Text style={styles.exitText}>تحصيل الجواهر</Text>
+            <Text style={styles.exitText}>تحصيل المكافأة</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.exitBtn, { marginTop: 10, backgroundColor: '#334155' }]} onPress={onClose}>
             <Text style={styles.exitText}>إغلاق</Text>
@@ -2343,45 +2350,45 @@ const GamesScreen = ({
     },
     {
       id: 'trivia',
-      name: 'إكس كويست',
+      name: 'أسئلة ثقافية',
       icon: 'navigate-outline',
       secondaryIcon: 'flash-outline',
       colors: ['rgba(16,185,129,0.46)', 'rgba(4,120,87,0.34)'],
       orbGradient: ['#10b981', '#047857'],
       accent: '#10b981',
-      description: 'قتال فضائي مطور مع أسلحة ومراحل متنوعة.',
+      description: 'اختبر معلوماتك في أسئلة ثقافية متنوعة ومتدرجة.',
       maxPoints: 26,
       online: false,
       onlineCost: 0,
       category: 'ثقافة',
-      badge: '250+',
+      badge: 'سؤال/جواب',
       trend: '',
     },
     {
       id: 'mathrace',
-      name: 'جالاكتيك ديفندر',
+      name: 'لعبة الحساب',
       icon: 'shield-outline',
       secondaryIcon: 'planet-outline',
       colors: ['rgba(139,92,246,0.45)', 'rgba(109,40,217,0.33)'],
       orbGradient: ['#8b5cf6', '#6d28d9'],
       accent: '#8b5cf6',
-      description: 'دافع عن المجرة في نمط تصويب سريع.',
+      description: 'تحديات حسابية سريعة لرفع التركيز والسرعة الذهنية.',
       maxPoints: 24,
       online: false,
       onlineCost: 0,
       category: 'رياضيات',
-      badge: 'Pro',
+      badge: 'Math',
       trend: '',
     },
     {
       id: 'wordrace',
-      name: 'إنتر جالاكتيك',
+      name: 'سباق الكلمات',
       icon: 'planet-outline',
       secondaryIcon: 'rocket-outline',
       colors: ['rgba(6,182,212,0.45)', 'rgba(8,145,178,0.33)'],
       orbGradient: ['#06b6d4', '#0891b2'],
       accent: '#06b6d4',
-      description: 'رحلة فضائية متدرجة الصعوبة بأسلوب ممتع.',
+      description: 'تحدٍ ذهني سريع يجمع اللغة وسرعة الملاحظة.',
       maxPoints: 24,
       online: false,
       onlineCost: 0,
@@ -2391,18 +2398,18 @@ const GamesScreen = ({
     },
     {
       id: 'colorswitch',
-      name: '8-بت أرمجدون',
+      name: 'لعبة الألوان',
       icon: 'game-controller-outline',
       secondaryIcon: 'grid-outline',
       colors: ['rgba(244,63,94,0.45)', 'rgba(225,29,72,0.35)'],
       orbGradient: ['#f43f5e', '#e11d48'],
       accent: '#f43f5e',
-      description: 'معارك تكتيكية بطابع 8-بت جذاب.',
+      description: 'اختبر تمييز الألوان وسرعة الاستجابة في جولات قصيرة.',
       maxPoints: 19,
       online: false,
       onlineCost: 0,
-      category: 'رد فعل',
-      badge: '',
+      category: 'ألوان',
+      badge: 'ألوان',
       trend: '',
     },
     {
@@ -2601,20 +2608,16 @@ const GamesScreen = ({
   ]), []);
 
   const visibleGames = useMemo(() => {
-    // Professional imported catalog: show exactly 20 curated games.
-    return IMPORTED_PRO_GAME_IDS
+    // Stable internal catalog only (no third-party dependencies).
+    return STABLE_INTERNAL_GAME_IDS
       .map((id) => games.find((game) => game.id === id))
       .filter(Boolean)
       .map((game) => {
-        const override = GAME_CATALOG_OVERRIDES[game.id] || {};
-        const externalUrl = EXTERNAL_GAME_URLS[game.id] || null;
-        const fallbackCoverImage = toThumbCover(externalUrl);
         return {
           ...game,
-          ...override,
-          externalUrl,
-          coverImage: GAME_COVER_IMAGES[game.id] || fallbackCoverImage,
-          fallbackCoverImage,
+          externalUrl: null,
+          coverImage: INTERNAL_GAME_COVER_IMAGES[game.id] || GAME_COVER_IMAGES[game.id] || null,
+          fallbackCoverImage: null,
         };
       });
   }, [games]);
@@ -3464,10 +3467,44 @@ const GamesScreen = ({
 
   // Render active game
   if (activeGame) {
-    const importedGame = getGameById(activeGame) || games.find((g) => g.id === activeGame);
+    const currentGame = getGameById(activeGame) || games.find((g) => g.id === activeGame);
+    const gameId = currentGame?.id;
+
+    if (gameId === 'puzzle') {
+      return <PuzzleGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
+    }
+    if (gameId === 'trivia') {
+      return <TriviaGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
+    }
+    if (gameId === 'riddles') {
+      return <RiddlesGame mode={gameMode} onComplete={handleGameComplete} onClose={closeGame} />;
+    }
+    if (gameId === 'tictactoe') {
+      return (
+        <TicTacToeGame
+          mode={gameMode}
+          onComplete={handleGameComplete}
+          onClose={closeGame}
+          isOnline={gameMode === 'online'}
+          isMyTurn={isMyTurn}
+          title={currentGame?.name || 'Tic Tac Toe'}
+          variant={currentGame?.variant || 'classic'}
+        />
+      );
+    }
+    if (gameId === 'mathrace' || gameId === 'sequencesprint') {
+      return <SequenceSprintGame onComplete={handleGameComplete} onClose={closeGame} />;
+    }
+    if (gameId === 'colorswitch' || gameId === 'oddoneout') {
+      return <OddOneOutGame onComplete={handleGameComplete} onClose={closeGame} />;
+    }
+    if (gameId === 'wordrace' || gameId === 'reactiontap') {
+      return <ReactionTapGame onComplete={handleGameComplete} onClose={closeGame} />;
+    }
+
     return (
       <ImportedArcadeGame
-        game={importedGame}
+        game={currentGame}
         mode={gameMode}
         onComplete={handleGameComplete}
         onClose={closeGame}
@@ -3821,7 +3858,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     alignItems: 'center', 
     paddingHorizontal: 16, 
-    paddingTop: 50, 
+    paddingTop: 34, 
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.08)',
@@ -4413,7 +4450,7 @@ const styles = StyleSheet.create({
   },
   
   // Game Common
-  gameContainer: { flex: 1, backgroundColor: '#0a0a0f', padding: 20, paddingTop: 50 },
+  gameContainer: { flex: 1, backgroundColor: '#0a0a0f', padding: 16, paddingTop: 34 },
   gameHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   headerBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
   gameTitle: { fontSize: 22, fontWeight: '700', color: '#FFF' },
