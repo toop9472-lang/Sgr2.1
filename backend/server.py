@@ -59,6 +59,7 @@ from routes.leaderboards_routes import router as leaderboards_router
 from routes.iap_routes import router as iap_router
 from routes.cache_routes import router as cache_router
 from routes.referrals_routes import router as referrals_router
+from routes.clips_routes import router as clips_router
 from routes import games_routes
 
 
@@ -438,6 +439,7 @@ api_router.include_router(leaderboards_router)
 api_router.include_router(iap_router)
 api_router.include_router(cache_router)
 api_router.include_router(referrals_router)
+api_router.include_router(clips_router)
 
 # Include WebSocket router (at app level, not api_router)
 app.include_router(websocket_router)

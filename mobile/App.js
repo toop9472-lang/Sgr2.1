@@ -30,9 +30,8 @@ import AdViewerScreen from './src/screens/AdViewerScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import SupportScreen from './src/screens/SupportScreen';
 import ChallengesScreen from './src/screens/ChallengesScreen';
-import GamesScreen from './src/screens/GamesScreen';
+import ClipsScreen from './src/screens/ClipsScreen';
 import AchievementsScreen from './src/screens/AchievementsScreen';
-import ShopScreen from './src/screens/ShopScreen';
 import AdminWebViewScreen from './src/screens/AdminWebViewScreen';
 import GlobalChatScreen from './src/screens/GlobalChatScreen';
 import SaqrFortunesScreen from './src/screens/SaqrFortunesScreen';
@@ -45,8 +44,6 @@ import BottomNav from './src/components/BottomNav';
 import AIFloatingButton from './src/components/AIFloatingButton';
 import AIChatModal from './src/components/AIChatModal';
 import DailyRewardsModal from './src/components/DailyRewardsModal';
-import DiamondShopModal from './src/components/DiamondShopModal';
-import BalanceHeader from './src/components/BalanceHeader';
 import DailyStreakModal, { useDailyStreak } from './src/components/DailyStreakModal';
 
 // Contexts
@@ -80,14 +77,11 @@ function AppContent() {
   const [showAdsViewer, setShowAdsViewer] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
   const [showDailyRewards, setShowDailyRewards] = useState(false);
-  const [showDiamondShop, setShowDiamondShop] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
-  const [showShop, setShowShop] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [settings, setSettings] = useState(null);
   const [balanceRefresh, setBalanceRefresh] = useState(0);
   const [selectedFriend, setSelectedFriend] = useState(null);
-  const [queuedGameId, setQueuedGameId] = useState(null);
   const [themeMode, setThemeMode] = useState('dark');
   const [systemColorScheme, setSystemColorScheme] = useState(Appearance.getColorScheme() || 'dark');
   const userId = user?.id || user?.user_id;
@@ -193,11 +187,6 @@ function AppContent() {
         return true;
       }
       
-      if (showShop) {
-        setShowShop(false);
-        return true;
-      }
-      
       if (showAIChat) {
         setShowAIChat(false);
         return true;
@@ -228,7 +217,7 @@ function AppContent() {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
 
     return () => backHandler.remove();
-  }, [showAIChat, showAdsViewer, showAchievements, showShop, showAdminPanel, currentPage, language]);
+  }, [showAIChat, showAdsViewer, showAchievements, showAdminPanel, currentPage, language]);
 
   // Send notification when achievement is unlocked
   useEffect(() => {
@@ -432,13 +421,6 @@ function AppContent() {
     }
   };
 
-  const handleDiamondPurchase = (data) => {
-    setBalanceRefresh(prev => prev + 1);
-    setTimeout(() => {
-      syncBalanceFromServer();
-    }, 0);
-  };
-
   const handleThemeChange = (nextTheme) => {
     setThemeMode(nextTheme || 'dark');
   };
@@ -493,22 +475,12 @@ function AppContent() {
   return (
     <View style={[styles.container, effectiveTheme === 'light' && styles.containerLight]}>
       <LinearGradient colors={appGradient} style={styles.mainArea}>
-        {/* Balance Header - عرض الرصيد في أعلى الصفحة */}
-        {user && !user.isGuest && (
-          <BalanceHeader 
-            userId={userId}
-            onDiamondPress={() => setShowDiamondShop(true)}
-            onGemsPress={() => setCurrentPage('fortunes')}
-            refreshTrigger={balanceRefresh}
-          />
-        )}
-        
         {currentPage === 'home' && (
           <HomeScreen 
             user={user} 
             settings={settings}
             onNavigateToAds={() => setShowAdsViewer(true)}
-            onNavigateToGames={() => setCurrentPage('games')}
+            onNavigateToGames={() => setCurrentPage('clips')}
             onNavigateToChat={() => setCurrentPage('chat')}
             onNavigateToFortunes={() => setCurrentPage('fortunes')}
             onNavigateToFriends={() => setCurrentPage('friends')}
@@ -522,7 +494,6 @@ function AppContent() {
             onLogout={handleLogout}
             onNavigate={setCurrentPage}
             onOpenAchievements={() => setShowAchievements(true)}
-            onOpenShop={() => setShowShop(true)}
             onOpenAdminPanel={() => setShowAdminPanel(true)}
             onUpdateProfile={async (updates) => {
               const updatedUser = { ...(user || {}), ...(updates || {}) };
@@ -558,17 +529,9 @@ function AppContent() {
             onPointsEarned={(gems) => handleGemsEarned(gems, 0)}
           />
         )}
-        {currentPage === 'games' && (
-          <GamesScreen 
+        {currentPage === 'clips' && (
+          <ClipsScreen
             user={user}
-            onPointsEarned={(gems) => handleGemsEarned(gems, 0)}
-            onOpenDiamondShop={() => setShowDiamondShop(true)}
-            onOpenAchievements={() => setShowAchievements(true)}
-            onBalanceUpdate={handleBalanceUpdate}
-            balanceRefresh={balanceRefresh}
-            language={language}
-            queuedGameId={queuedGameId}
-            onQueuedGameHandled={() => setQueuedGameId(null)}
             onClose={() => setCurrentPage('home')}
           />
         )}
@@ -622,8 +585,7 @@ function AppContent() {
                 brick: 'brickbreaker',
               };
               const normalizedGameId = gameIdMap[gameId] || gameId;
-              setQueuedGameId(normalizedGameId);
-              setCurrentPage('games');
+              setCurrentPage('clips');
             }}
           />
         )}
@@ -635,50 +597,6 @@ function AppContent() {
           <AchievementsScreen 
             onClose={() => setShowAchievements(false)}
             language={language}
-          />
-        </View>
-      )}
-
-      {/* Shop Screen */}
-      {showShop && (
-        <View style={StyleSheet.absoluteFill}>
-          <ShopScreen
-            user={user}
-            userDiamonds={user?.diamonds || 0}
-            onClose={() => setShowShop(false)}
-            onUpdateDiamonds={(newBalance) => {
-              updateUserBalanceLocally({ diamonds: newBalance });
-              setBalanceRefresh(prev => prev + 1);
-            }}
-            onPurchaseItem={async (item) => {
-              if (!item || !item.type) return;
-
-              if (item.type === 'avatar' && item.image) {
-                await AsyncStorage.setItem('selected_profile_avatar', item.image);
-                setUser(prev => ({ ...prev, avatar: item.image }));
-              }
-
-              if (item.type === 'frame') {
-                await AsyncStorage.setItem('selected_profile_frame', JSON.stringify({
-                  id: item.id,
-                  colors: item.colors || null,
-                }));
-              }
-
-              if (item.type === 'chat_frame') {
-                await AsyncStorage.setItem('selected_chat_frame', JSON.stringify({
-                  id: item.id,
-                  colors: item.colors || null,
-                }));
-              }
-
-              if (item.type === 'theme') {
-                await AsyncStorage.setItem('selected_shop_theme', JSON.stringify({
-                  id: item.id,
-                  colors: item.colors || null,
-                }));
-              }
-            }}
           />
         </View>
       )}
@@ -714,21 +632,13 @@ function AppContent() {
         onRewardClaimed={handleDailyRewardClaimed}
       />
 
-      {/* Diamond Shop Modal - متجر شحن الألماسات */}
-      <DiamondShopModal
-        visible={showDiamondShop}
-        onClose={() => setShowDiamondShop(false)}
-        userId={userId}
-        onPurchaseComplete={handleDiamondPurchase}
-      />
-
-      {/* Bottom Navigation - إخفاء عند فتح الألعاب أو الدردشة أو الأصدقاء */}
-      {!['games', 'chat', 'fortunes', 'friends', 'messages', 'invitations'].includes(currentPage) && (
+      {/* Bottom Navigation - إخفاء عند فتح المقاطع أو الدردشة أو الأصدقاء */}
+      {!['clips', 'chat', 'fortunes', 'friends', 'messages', 'invitations'].includes(currentPage) && (
         <BottomNav
           currentPage={currentPage}
           onNavigate={setCurrentPage}
           onAdsPress={() => setShowAdsViewer(true)}
-          onGamesPress={() => setCurrentPage('games')}
+          onGamesPress={() => setCurrentPage('clips')}
         />
       )}
 

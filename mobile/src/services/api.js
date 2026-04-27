@@ -1,14 +1,14 @@
 // API Service - Lightweight API handler with enhanced security
 // Production Server - Emergent Host
-import NetInfo from '@react-native-community/netinfo';
+import NetInfo from "@react-native-community/netinfo";
 
-const DEFAULT_API_URL = 'https://saqr-ui-sync.emergent.host';
+const DEFAULT_API_URL = "https://saqr-ui-sync.emergent.host";
 const normalizeApiBaseUrl = (value) => {
-  if (!value || typeof value !== 'string') return null;
-  const trimmed = value.trim().replace(/\/+$/, '');
+  if (!value || typeof value !== "string") return null;
+  const trimmed = value.trim().replace(/\/+$/, "");
   if (!trimmed) return null;
   // In case someone sets ".../api" directly in env vars.
-  return trimmed.endsWith('/api') ? trimmed.slice(0, -4) : trimmed;
+  return trimmed.endsWith("/api") ? trimmed.slice(0, -4) : trimmed;
 };
 
 const envCandidates = [
@@ -17,25 +17,29 @@ const envCandidates = [
   process.env.API_URL,
   process.env.BACKEND_URL,
   process.env.REACT_APP_BACKEND_URL,
-].map(normalizeApiBaseUrl).filter(Boolean);
+]
+  .map(normalizeApiBaseUrl)
+  .filter(Boolean);
 
 const API_URL = envCandidates[0] || DEFAULT_API_URL;
-const EXTRA_FALLBACK_APIS = [
-  'https://saqr-ui-sync.emergent.host',
-].map(normalizeApiBaseUrl).filter(Boolean);
-const API_BASE_CANDIDATES = Array.from(new Set([API_URL, ...envCandidates, ...EXTRA_FALLBACK_APIS]));
-let activeApiBase = API_BASE_CANDIDATES[0] || API_URL;
-const isHtmlContentType = (contentType = '') => contentType.toLowerCase().includes('text/html');
-const isApiEndpoint = (endpoint = '') => typeof endpoint === 'string' && endpoint.startsWith('/api/');
-const buildServiceUnavailableResponse = (message = 'تعذر الوصول لخدمة تسجيل الدخول. تحقق من الخادم.') => (
-  new Response(
-    JSON.stringify({ detail: message }),
-    {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' },
-    },
-  )
+const EXTRA_FALLBACK_APIS = ["https://saqr-ui-sync.emergent.host"]
+  .map(normalizeApiBaseUrl)
+  .filter(Boolean);
+const API_BASE_CANDIDATES = Array.from(
+  new Set([API_URL, ...envCandidates, ...EXTRA_FALLBACK_APIS]),
 );
+let activeApiBase = API_BASE_CANDIDATES[0] || API_URL;
+const isHtmlContentType = (contentType = "") =>
+  contentType.toLowerCase().includes("text/html");
+const isApiEndpoint = (endpoint = "") =>
+  typeof endpoint === "string" && endpoint.startsWith("/api/");
+const buildServiceUnavailableResponse = (
+  message = "تعذر الوصول لخدمة تسجيل الدخول. تحقق من الخادم.",
+) =>
+  new Response(JSON.stringify({ detail: message }), {
+    status: 503,
+    headers: { "Content-Type": "application/json" },
+  });
 
 // Connection check timeout - increased for better reliability
 const CONNECTION_TIMEOUT = 20000; // 20 seconds
@@ -58,7 +62,7 @@ const checkNetworkConnectivity = async () => {
     const netState = await NetInfo.fetch();
     return netState.isConnected && netState.isInternetReachable !== false;
   } catch (error) {
-    debugLog('NetInfo check failed:', error);
+    debugLog("NetInfo check failed:", error);
     return true; // Assume connected if check fails
   }
 };
@@ -68,7 +72,7 @@ const checkConnection = async () => {
   // Check network first
   const hasNetwork = await checkNetworkConnectivity();
   if (!hasNetwork) {
-    debugLog('No network connectivity');
+    debugLog("No network connectivity");
     lastConnectionCheck = Date.now();
     lastConnectionResult = false;
     return false;
@@ -76,32 +80,37 @@ const checkConnection = async () => {
 
   // Use cached result if recent
   const now = Date.now();
-  if (lastConnectionCheck && (now - lastConnectionCheck) < CONNECTION_CACHE_DURATION) {
-    debugLog('Using cached connection result:', lastConnectionResult);
+  if (
+    lastConnectionCheck &&
+    now - lastConnectionCheck < CONNECTION_CACHE_DURATION
+  ) {
+    debugLog("Using cached connection result:", lastConnectionResult);
     return lastConnectionResult;
   }
 
   try {
-    const healthEndpoints = ['/api/health', '/health'];
+    const healthEndpoints = ["/api/health", "/health"];
     let connected = false;
-    const baseCandidates = Array.from(new Set([activeApiBase, ...API_BASE_CANDIDATES].filter(Boolean)));
+    const baseCandidates = Array.from(
+      new Set([activeApiBase, ...API_BASE_CANDIDATES].filter(Boolean)),
+    );
 
     for (const baseUrl of baseCandidates) {
       for (const endpoint of healthEndpoints) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
         try {
-          debugLog('Checking connection to:', `${baseUrl}${endpoint}`);
+          debugLog("Checking connection to:", `${baseUrl}${endpoint}`);
           const response = await fetch(`${baseUrl}${endpoint}`, {
-            method: 'GET',
+            method: "GET",
             signal: controller.signal,
             headers: {
-              Accept: 'application/json',
-              'Cache-Control': 'no-cache',
+              Accept: "application/json",
+              "Cache-Control": "no-cache",
             },
           });
 
-          const contentType = response.headers?.get?.('content-type') || '';
+          const contentType = response.headers?.get?.("content-type") || "";
           if (response.ok && !isHtmlContentType(contentType)) {
             connected = true;
             activeApiBase = baseUrl;
@@ -118,17 +127,17 @@ const checkConnection = async () => {
 
     lastConnectionCheck = now;
     lastConnectionResult = connected;
-    debugLog('Connection check result:', connected);
+    debugLog("Connection check result:", connected);
     return connected;
   } catch (error) {
-    debugLog('Connection check failed:', error.message);
-    
+    debugLog("Connection check failed:", error.message);
+
     // Don't cache failures immediately - allow retry
     if (lastConnectionResult === null) {
       lastConnectionCheck = now;
       lastConnectionResult = false;
     }
-    
+
     return lastConnectionResult ?? false;
   }
 };
@@ -142,7 +151,7 @@ const refreshConnectionStatus = () => {
 export const api = {
   baseUrl: activeApiBase,
   BASE_URL: activeApiBase,
-  
+
   // Check connection
   async checkConnection() {
     const connected = await checkConnection();
@@ -150,13 +159,17 @@ export const api = {
     this.BASE_URL = activeApiBase;
     return connected;
   },
-  
+
   // Force refresh connection
   refreshConnection: refreshConnectionStatus,
 
   // Expose current/fallback API hosts for OAuth/web flows.
   getBaseCandidates() {
-    return Array.from(new Set([this.baseUrl, activeApiBase, ...API_BASE_CANDIDATES].filter(Boolean)));
+    return Array.from(
+      new Set(
+        [this.baseUrl, activeApiBase, ...API_BASE_CANDIDATES].filter(Boolean),
+      ),
+    );
   },
 
   getActiveBaseUrl() {
@@ -171,30 +184,34 @@ export const api = {
     }
     return this.getActiveBaseUrl();
   },
-  
+
   // Set tokens
   setTokens(access, refresh = null) {
     accessToken = access;
     if (refresh) refreshToken = refresh;
   },
-  
+
   // Clear tokens (logout)
   clearTokens() {
     accessToken = null;
     refreshToken = null;
   },
-  
+
   // Refresh access token
   async refreshAccessToken() {
     if (!refreshToken) return null;
-    
+
     try {
-      const baseCandidates = Array.from(new Set([this.baseUrl, activeApiBase, ...API_BASE_CANDIDATES].filter(Boolean)));
+      const baseCandidates = Array.from(
+        new Set(
+          [this.baseUrl, activeApiBase, ...API_BASE_CANDIDATES].filter(Boolean),
+        ),
+      );
       for (const baseUrl of baseCandidates) {
         try {
           const response = await fetch(`${baseUrl}/api/auth/refresh-token`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ refresh_token: refreshToken }),
           });
           if (!response.ok) continue;
@@ -210,35 +227,41 @@ export const api = {
         }
       }
     } catch (error) {
-      console.error('Token refresh failed:', error);
+      console.error("Token refresh failed:", error);
     }
     return null;
   },
-  
+
   // Generic fetch with error handling and auto token refresh
   async fetch(endpoint, options = {}) {
     const buildConnectionError = (error) => {
-      if (error?.name === 'AbortError') return new Error('CONNECTION_TIMEOUT');
-      if (error?.message === 'Network request failed' || error?.message === 'Failed to fetch') {
-        return new Error('NO_CONNECTION');
+      if (error?.name === "AbortError") return new Error("CONNECTION_TIMEOUT");
+      if (
+        error?.message === "Network request failed" ||
+        error?.message === "Failed to fetch"
+      ) {
+        return new Error("NO_CONNECTION");
       }
       return error;
     };
 
     try {
       const headers = {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...options.headers,
       };
-      
+
       // Add access token if available
       if (accessToken && !headers.Authorization) {
         headers.Authorization = `Bearer ${accessToken}`;
       }
-      
+
       const doRequest = async (baseUrl) => {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), CONNECTION_TIMEOUT);
+        const timeoutId = setTimeout(
+          () => controller.abort(),
+          CONNECTION_TIMEOUT,
+        );
         try {
           return await fetch(`${baseUrl}${endpoint}`, {
             ...options,
@@ -250,7 +273,11 @@ export const api = {
         }
       };
 
-      const baseCandidates = Array.from(new Set([this.baseUrl, activeApiBase, ...API_BASE_CANDIDATES].filter(Boolean)));
+      const baseCandidates = Array.from(
+        new Set(
+          [this.baseUrl, activeApiBase, ...API_BASE_CANDIDATES].filter(Boolean),
+        ),
+      );
       let response = null;
       let lastNetworkError = null;
       let lastNotFoundResponse = null;
@@ -266,10 +293,15 @@ export const api = {
             lastNotFoundResponse = candidateResponse;
             continue;
           }
-          const candidateContentType = candidateResponse.headers?.get?.('content-type') || '';
+          const candidateContentType =
+            candidateResponse.headers?.get?.("content-type") || "";
           // Some fallback domains return SPA HTML with 200 for API paths.
           // Treat as invalid API target and continue probing other bases.
-          if (isApiEndpoint(endpoint) && candidateResponse.ok && isHtmlContentType(candidateContentType)) {
+          if (
+            isApiEndpoint(endpoint) &&
+            candidateResponse.ok &&
+            isHtmlContentType(candidateContentType)
+          ) {
             lastHtmlApiResponse = candidateResponse;
             continue;
           }
@@ -280,7 +312,11 @@ export const api = {
           break;
         } catch (initialError) {
           const normalizedError = buildConnectionError(initialError);
-          if (['NO_CONNECTION', 'CONNECTION_TIMEOUT'].includes(normalizedError?.message)) {
+          if (
+            ["NO_CONNECTION", "CONNECTION_TIMEOUT"].includes(
+              normalizedError?.message,
+            )
+          ) {
             lastNetworkError = normalizedError;
             refreshConnectionStatus();
             await new Promise((resolve) => setTimeout(resolve, 250));
@@ -292,15 +328,15 @@ export const api = {
 
       if (!response) {
         if (lastHtmlApiResponse) {
-          throw new Error('NO_CONNECTION');
+          throw new Error("NO_CONNECTION");
         }
         if (lastNotFoundResponse) return lastNotFoundResponse;
-        throw lastNetworkError || new Error('NO_CONNECTION');
+        throw lastNetworkError || new Error("NO_CONNECTION");
       }
-      
+
       // Log response status in development only
       debugLog(`API Response: ${response.status} for ${endpoint}`);
-      
+
       // If token expired, try refresh
       if (response.status === 401 && refreshToken) {
         const newToken = await this.refreshAccessToken();
@@ -312,17 +348,20 @@ export const api = {
           });
         }
       }
-      
+
       return response;
     } catch (error) {
       // Log error for debugging
       console.error(`API Error for ${endpoint}:`, error.message);
 
       const normalizedError = buildConnectionError(error);
-      if (normalizedError?.message === 'CONNECTION_TIMEOUT' || normalizedError?.message === 'NO_CONNECTION') {
+      if (
+        normalizedError?.message === "CONNECTION_TIMEOUT" ||
+        normalizedError?.message === "NO_CONNECTION"
+      ) {
         throw normalizedError;
       }
-      console.error('API Error:', error);
+      console.error("API Error:", error);
       throw error;
     }
   },
@@ -343,7 +382,7 @@ export const api = {
       } catch (error) {
         lastError = error;
         // Continue trying alternative endpoints for connectivity fluctuations.
-        if (['NO_CONNECTION', 'CONNECTION_TIMEOUT'].includes(error?.message)) {
+        if (["NO_CONNECTION", "CONNECTION_TIMEOUT"].includes(error?.message)) {
           continue;
         }
         throw error;
@@ -358,20 +397,23 @@ export const api = {
 
   // Auth
   async getAuthProvidersStatus() {
-    return this.fetch('/api/auth/providers-status');
+    return this.fetch("/api/auth/providers-status");
   },
 
   async login(email, password) {
-    const response = await this.fetchWithFallback(['/api/auth/signin', '/api/auth/login'], {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-    
+    const response = await this.fetchWithFallback(
+      ["/api/auth/signin", "/api/auth/login"],
+      {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      },
+    );
+
     // Clone response to read body without consuming it
     const clonedResponse = response.clone();
-    
+
     if (response.ok) {
-      const contentType = response.headers?.get?.('content-type') || '';
+      const contentType = response.headers?.get?.("content-type") || "";
       if (isHtmlContentType(contentType)) {
         return buildServiceUnavailableResponse();
       }
@@ -385,106 +427,127 @@ export const api = {
         return buildServiceUnavailableResponse();
       }
     }
-    
+
     return response;
   },
 
   async register(email, password, name) {
-    const response = await this.fetchWithFallback(['/api/auth/register', '/api/auth/signup'], {
-      method: 'POST',
-      body: JSON.stringify({ email, password, name }),
-    });
-    
+    const response = await this.fetchWithFallback(
+      ["/api/auth/register", "/api/auth/signup"],
+      {
+        method: "POST",
+        body: JSON.stringify({ email, password, name }),
+      },
+    );
+
     // Clone response to read body without consuming it
     const clonedResponse = response.clone();
-    
+
     if (response.ok) {
-      const contentType = response.headers?.get?.('content-type') || '';
+      const contentType = response.headers?.get?.("content-type") || "";
       if (isHtmlContentType(contentType)) {
-        return buildServiceUnavailableResponse('تعذر الوصول لخدمة التسجيل. تحقق من الخادم.');
+        return buildServiceUnavailableResponse(
+          "تعذر الوصول لخدمة التسجيل. تحقق من الخادم.",
+        );
       }
       try {
         const data = await clonedResponse.json();
-        if (!data || typeof data !== 'object') {
-          return buildServiceUnavailableResponse('تعذر الوصول لخدمة التسجيل. تحقق من الخادم.');
+        if (!data || typeof data !== "object") {
+          return buildServiceUnavailableResponse(
+            "تعذر الوصول لخدمة التسجيل. تحقق من الخادم.",
+          );
         }
         if (data.token) {
           this.setTokens(data.token, data.refresh_token);
         }
       } catch (e) {
-        return buildServiceUnavailableResponse('تعذر الوصول لخدمة التسجيل. تحقق من الخادم.');
+        return buildServiceUnavailableResponse(
+          "تعذر الوصول لخدمة التسجيل. تحقق من الخادم.",
+        );
       }
     }
-    
+
     return response;
   },
-  
+
   async logout() {
     this.clearTokens();
   },
 
   async deleteAccount(confirmationText, password = null) {
-    return this.fetch('/api/auth/delete-account', {
-      method: 'POST',
+    return this.fetch("/api/auth/delete-account", {
+      method: "POST",
       body: JSON.stringify({
         confirmation_text: confirmationText,
         password,
       }),
     });
   },
-  
+
   // Get current user from server
   async getCurrentUser() {
-    return this.fetch('/api/auth/me');
+    return this.fetch("/api/auth/me");
   },
 
   // Ads
   async getAds() {
-    return this.fetch('/api/ads');
+    return this.fetch("/api/ads");
   },
 
   // Settings
   async getRewardsSettings() {
-    return this.fetch('/api/settings/public/rewards');
+    return this.fetch("/api/settings/public/rewards");
   },
 
   // AI Chat (conversation-aware)
-  async sendChatConversation(messages = [], token = null, systemMessage = null) {
+  async sendChatConversation(
+    messages = [],
+    token = null,
+    systemMessage = null,
+  ) {
     const safeMessages = Array.isArray(messages)
       ? messages
           .filter((item) => item?.content && item?.role)
           .map((item) => ({ role: item.role, content: item.content }))
       : [];
 
-    const normalizedMessages = safeMessages.length > 0
-      ? safeMessages
-      : [{ role: 'user', content: 'مرحباً' }];
+    const normalizedMessages =
+      safeMessages.length > 0
+        ? safeMessages
+        : [{ role: "user", content: "مرحباً" }];
 
-    const lastUserMessage = [...normalizedMessages]
-      .reverse()
-      .find((item) => item.role === 'user')?.content || 'مرحباً';
+    const lastUserMessage =
+      [...normalizedMessages].reverse().find((item) => item.role === "user")
+        ?.content || "مرحباً";
 
-    const endpoint = token || accessToken ? '/api/claude-ai/chat' : '/api/claude-ai/chat/guest';
+    const endpoint =
+      token || accessToken
+        ? "/api/claude-ai/chat"
+        : "/api/claude-ai/chat/guest";
     const headers = {};
     if (token) headers.Authorization = `Bearer ${token}`;
 
     const primaryResponse = await this.fetch(endpoint, {
-      method: 'POST',
+      method: "POST",
       headers,
       body: JSON.stringify({
         messages: normalizedMessages,
-        system_message: systemMessage || 'أنت مساعد صقر الذكي. كن احترافياً وواضحاً، وقدّم ردوداً قصيرة. تعامل مع المحادثات البسيطة مثل التحية والشكر بأسلوب طبيعي، ثم اقترح المساعدة المناسبة.',
+        system_message:
+          systemMessage ||
+          "أنت مساعد صقر الذكي. كن احترافياً وواضحاً، وقدّم ردوداً قصيرة. تعامل مع المحادثات البسيطة مثل التحية والشكر بأسلوب طبيعي، ثم اقترح المساعدة المناسبة.",
       }),
     });
 
     // توافق خلفي مع المسار القديم في بعض بيئات الخادم
     if ([404, 405].includes(primaryResponse.status)) {
-      return this.fetch('/api/claude/chat', {
-        method: 'POST',
+      return this.fetch("/api/claude/chat", {
+        method: "POST",
         headers,
         body: JSON.stringify({
           message: lastUserMessage,
-          system_message: systemMessage || 'أنت مساعد صقر الذكي. كن احترافياً وواضحاً، وقدّم ردوداً قصيرة. تعامل مع المحادثات البسيطة مثل التحية والشكر بأسلوب طبيعي، ثم اقترح المساعدة المناسبة.',
+          system_message:
+            systemMessage ||
+            "أنت مساعد صقر الذكي. كن احترافياً وواضحاً، وقدّم ردوداً قصيرة. تعامل مع المحادثات البسيطة مثل التحية والشكر بأسلوب طبيعي، ثم اقترح المساعدة المناسبة.",
         }),
       });
     }
@@ -493,16 +556,20 @@ export const api = {
   },
 
   async sendChatMessage(message, token = null, systemMessage = null) {
-    return this.sendChatConversation([{ role: 'user', content: message }], token, systemMessage);
+    return this.sendChatConversation(
+      [{ role: "user", content: message }],
+      token,
+      systemMessage,
+    );
   },
 
   // Record ad view
   async recordAdView(adId, watchDuration, token, pointsEarned = 0) {
-    return this.fetch('/api/rewarded-ads/complete', {
-      method: 'POST',
+    return this.fetch("/api/rewarded-ads/complete", {
+      method: "POST",
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: JSON.stringify({
-        ad_type: 'video',
+        ad_type: "video",
         ad_id: adId,
         completed: true,
         watch_duration: watchDuration,
@@ -514,28 +581,28 @@ export const api = {
   // Submit advertiser ad
   async submitAdvertiserAd(adData, token = null) {
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    return this.fetch('/api/advertiser/create-ad', {
-      method: 'POST',
+    return this.fetch("/api/advertiser/create-ad", {
+      method: "POST",
       headers,
       body: JSON.stringify(adData),
     });
   },
-  
+
   // Get packages from server
   async getPackages() {
-    return this.fetch('/api/payments/packages');
+    return this.fetch("/api/payments/packages");
   },
 
   // Support tickets
   async getSupportTickets(token) {
-    return this.fetch('/api/support/tickets', {
+    return this.fetch("/api/support/tickets", {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   },
 
   async createSupportTicket(payload, token) {
-    return this.fetch('/api/support/tickets', {
-      method: 'POST',
+    return this.fetch("/api/support/tickets", {
+      method: "POST",
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: JSON.stringify(payload),
     });
@@ -549,7 +616,7 @@ export const api = {
 
   async replySupportTicket(ticketId, message, token) {
     return this.fetch(`/api/support/tickets/${ticketId}/reply`, {
-      method: 'POST',
+      method: "POST",
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: JSON.stringify({ message }),
     });
@@ -557,26 +624,28 @@ export const api = {
 
   async closeSupportTicket(ticketId, token) {
     return this.fetch(`/api/support/tickets/${ticketId}/close`, {
-      method: 'POST',
+      method: "POST",
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   },
 
   // Advertiser
   async getAdvertiserAnalytics(advertiserEmail) {
-    return this.fetch(`/api/analytics/advertiser/${encodeURIComponent(advertiserEmail)}`);
+    return this.fetch(
+      `/api/analytics/advertiser/${encodeURIComponent(advertiserEmail)}`,
+    );
   },
 
   async createAdvertiserAd(payload) {
-    return this.fetch('/api/advertiser/ads', {
-      method: 'POST',
+    return this.fetch("/api/advertiser/ads", {
+      method: "POST",
       body: JSON.stringify(payload),
     });
   },
 
   async createAdvertiserCheckout(packageId, adId, originUrl, advertiserEmail) {
-    return this.fetch('/api/payments/checkout', {
-      method: 'POST',
+    return this.fetch("/api/payments/checkout", {
+      method: "POST",
       body: JSON.stringify({
         package_id: packageId,
         ad_id: adId,
@@ -585,19 +654,19 @@ export const api = {
       }),
     });
   },
-  
+
   // Check password strength
   async checkPasswordStrength(password) {
-    return this.fetch('/api/auth/check-password-strength', {
-      method: 'POST',
+    return this.fetch("/api/auth/check-password-strength", {
+      method: "POST",
       body: JSON.stringify({ password }),
     });
   },
 
   // Change password
   async changePassword(data, token) {
-    return this.fetch('/api/auth/change-password', {
-      method: 'POST',
+    return this.fetch("/api/auth/change-password", {
+      method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(data),
     });
@@ -605,8 +674,8 @@ export const api = {
 
   // Request withdrawal
   async requestWithdrawal(data, token) {
-    return this.fetch('/api/withdrawals/request', {
-      method: 'POST',
+    return this.fetch("/api/withdrawals/request", {
+      method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(data),
     });
@@ -618,99 +687,126 @@ export const api = {
   },
 
   async createComment(adId, content, token) {
-    return this.fetch('/api/comments/', {
-      method: 'POST',
+    return this.fetch("/api/comments/", {
+      method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify({ ad_id: adId, content }),
     });
   },
 
   async likeComment(commentId, token) {
-    return this.fetch('/api/comments/like', {
-      method: 'POST',
+    return this.fetch("/api/comments/like", {
+      method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify({ comment_id: commentId }),
     });
   },
 
+  // ==================== Clips (short videos/reels) ====================
+
+  async getClips(limit = 30) {
+    return this.fetch(`/api/clips/feed?limit=${encodeURIComponent(limit)}`);
+  },
+
+  async createClip(payload) {
+    return this.fetch("/api/clips/create", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async toggleClipLike(clipId, userId) {
+    return this.fetch("/api/clips/like", {
+      method: "POST",
+      body: JSON.stringify({ clip_id: clipId, user_id: userId }),
+    });
+  },
+
+  async addClipComment(clipId, payload) {
+    return this.fetch("/api/clips/comment", {
+      method: "POST",
+      body: JSON.stringify({ clip_id: clipId, ...(payload || {}) }),
+    });
+  },
+
   // ==================== Phone Authentication ====================
-  
+
   // Send OTP for registration
   async sendOTP(phone) {
-    return this.fetch('/api/phone/send-otp', {
-      method: 'POST',
+    return this.fetch("/api/phone/send-otp", {
+      method: "POST",
       body: JSON.stringify({ phone }),
     });
   },
 
   // Verify OTP
   async verifyOTP(phone, otp) {
-    return this.fetch('/api/phone/verify-otp', {
-      method: 'POST',
+    return this.fetch("/api/phone/verify-otp", {
+      method: "POST",
       body: JSON.stringify({ phone, otp }),
     });
   },
 
   // Register with phone
   async registerWithPhone(phone, otp, name, password) {
-    const response = await this.fetch('/api/phone/register', {
-      method: 'POST',
+    const response = await this.fetch("/api/phone/register", {
+      method: "POST",
       body: JSON.stringify({ phone, otp, name, password }),
     });
     const clonedResponse = response.clone();
-    
+
     if (response.ok) {
       try {
         const data = await clonedResponse.json();
         this.setTokens(data.token, data.refresh_token);
       } catch (e) {
-        debugLog('Token setting skipped for registerWithPhone');
+        debugLog("Token setting skipped for registerWithPhone");
       }
     }
-    
+
     return response;
   },
 
   // Login with phone (Step 1 - sends OTP)
   async loginWithPhone(phone, password) {
-    return this.fetch('/api/phone/login', {
-      method: 'POST',
+    return this.fetch("/api/phone/login", {
+      method: "POST",
       body: JSON.stringify({ phone, password }),
     });
   },
 
   // Verify login OTP (Step 2 - complete login)
   async verifyLoginOTP(phone, otp, sessionToken) {
-    const response = await this.fetch('/api/phone/verify-login', {
-      method: 'POST',
+    const response = await this.fetch("/api/phone/verify-login", {
+      method: "POST",
       body: JSON.stringify({ phone, otp, session_token: sessionToken }),
     });
     const clonedResponse = response.clone();
-    
+
     if (response.ok) {
       try {
         const data = await clonedResponse.json();
         this.setTokens(data.token, data.refresh_token);
       } catch (e) {
-        debugLog('Token setting skipped for verifyLoginOTP');
+        debugLog("Token setting skipped for verifyLoginOTP");
       }
     }
-    
+
     return response;
   },
 
   // Forgot password
   async forgotPassword(phone) {
-    return this.fetch('/api/phone/forgot-password', {
-      method: 'POST',
+    return this.fetch("/api/phone/forgot-password", {
+      method: "POST",
       body: JSON.stringify({ phone }),
     });
   },
 
   // Reset password
   async resetPassword(phone, otp, newPassword) {
-    return this.fetch('/api/phone/reset-password', {
-      method: 'POST',
+    return this.fetch("/api/phone/reset-password", {
+      method: "POST",
       body: JSON.stringify({ phone, otp, new_password: newPassword }),
     });
   },
@@ -721,7 +817,7 @@ export const api = {
   },
 
   // ==================== Economy System ====================
-  
+
   // Get user balance (gems & diamonds)
   async getBalance(userId) {
     return this.fetch(`/api/economy/balance/${userId}`);
@@ -729,29 +825,29 @@ export const api = {
 
   // Get diamond packages
   async getDiamondPackages() {
-    return this.fetch('/api/economy/packages');
+    return this.fetch("/api/economy/packages");
   },
 
   // Apple/Google IAP catalog (server side products)
   async getIapDiamondPackages() {
-    return this.fetch('/api/iap/diamond-packages');
+    return this.fetch("/api/iap/diamond-packages");
   },
 
   // Purchase diamonds
   async purchaseDiamonds(userId, packageId) {
-    return this.fetch('/api/economy/purchase-diamonds', {
-      method: 'POST',
+    return this.fetch("/api/economy/purchase-diamonds", {
+      method: "POST",
       body: JSON.stringify({ user_id: userId, package_id: packageId }),
     });
   },
 
   // Purchase through IAP pipeline (used on iOS flow)
   async purchaseIapProduct(productId, receiptData = null) {
-    return this.fetch('/api/iap/purchase', {
-      method: 'POST',
+    return this.fetch("/api/iap/purchase", {
+      method: "POST",
       body: JSON.stringify({
         product_id: productId,
-        payment_method: 'apple_iap',
+        payment_method: "apple_iap",
         receipt_data: receiptData,
       }),
     });
@@ -759,7 +855,7 @@ export const api = {
 
   // Feature bundles shop
   async getFeatureBundles() {
-    return this.fetch('/api/economy/feature-bundles');
+    return this.fetch("/api/economy/feature-bundles");
   },
 
   async getMyFeatureBundles(userId) {
@@ -767,23 +863,23 @@ export const api = {
   },
 
   async purchaseFeatureBundle(userId, bundleId) {
-    return this.fetch('/api/economy/purchase-feature-bundle', {
-      method: 'POST',
+    return this.fetch("/api/economy/purchase-feature-bundle", {
+      method: "POST",
       body: JSON.stringify({ user_id: userId, bundle_id: bundleId }),
     });
   },
 
   async equipFeatureBundle(userId, bundleId) {
-    return this.fetch('/api/economy/equip-feature-bundle', {
-      method: 'POST',
+    return this.fetch("/api/economy/equip-feature-bundle", {
+      method: "POST",
       body: JSON.stringify({ user_id: userId, bundle_id: bundleId }),
     });
   },
 
   // Spend diamonds for one round / action
-  async spendDiamonds(userId, amount, source = 'game_round', gameId = null) {
-    return this.fetch('/api/economy/spend-diamonds', {
-      method: 'POST',
+  async spendDiamonds(userId, amount, source = "game_round", gameId = null) {
+    return this.fetch("/api/economy/spend-diamonds", {
+      method: "POST",
       body: JSON.stringify({
         user_id: userId,
         amount,
@@ -795,16 +891,20 @@ export const api = {
 
   // Enter online game (spend diamonds)
   async enterOnlineGame(userId, gameId, isOnline) {
-    return this.fetch('/api/economy/enter-game', {
-      method: 'POST',
-      body: JSON.stringify({ user_id: userId, game_id: gameId, is_online: isOnline }),
+    return this.fetch("/api/economy/enter-game", {
+      method: "POST",
+      body: JSON.stringify({
+        user_id: userId,
+        game_id: gameId,
+        is_online: isOnline,
+      }),
     });
   },
 
   // Record game result
   async recordGameResult(userId, gameId, isOnline, won, opponentDiamonds = 0) {
-    return this.fetch('/api/economy/game-result', {
-      method: 'POST',
+    return this.fetch("/api/economy/game-result", {
+      method: "POST",
       body: JSON.stringify({
         user_id: userId,
         game_id: gameId,
@@ -822,59 +922,59 @@ export const api = {
 
   // Claim daily reward
   async claimDailyReward(userId) {
-    return this.fetch('/api/economy/claim-daily-reward', {
-      method: 'POST',
+    return this.fetch("/api/economy/claim-daily-reward", {
+      method: "POST",
       body: JSON.stringify({ user_id: userId }),
     });
   },
 
   // Get leaderboard
   async getLeaderboard() {
-    return this.fetch('/api/economy/leaderboard');
+    return this.fetch("/api/economy/leaderboard");
   },
 
   // Get game costs
   async getGameCosts() {
-    return this.fetch('/api/economy/game-costs');
+    return this.fetch("/api/economy/game-costs");
   },
 
   // Initialize user economy (on first login)
   async initializeUserEconomy(userId) {
     return this.fetch(`/api/economy/initialize-user/${userId}`, {
-      method: 'POST',
+      method: "POST",
     });
   },
 
   // Admin login
   async adminLogin(email, password) {
-    return this.fetch('/api/admin/login', {
-      method: 'POST',
+    return this.fetch("/api/admin/login", {
+      method: "POST",
       body: JSON.stringify({ email, password }),
     });
   },
 
   // Add diamonds (for ad rewards)
-  async addDiamonds(userId, amount, source = 'ad_reward') {
+  async addDiamonds(userId, amount, source = "ad_reward") {
     return this.fetch(`/api/economy/add-diamonds`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ user_id: userId, amount, source }),
     });
   },
 
   // Add Saqr Gems (for ad rewards - exchangeable for cash)
-  async addSaqrGems(userId, amount, source = 'ad_reward') {
+  async addSaqrGems(userId, amount, source = "ad_reward") {
     return this.fetch(`/api/economy/add-saqr-gems`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ user_id: userId, amount, source }),
     });
   },
 
   // ==================== Ad Watch Rewards ====================
-  
+
   // Claim ad watch reward (1 gem + 6 diamonds per minute)
-  async claimAdWatchReward(userId, watchDurationSeconds, adType = 'video') {
-    return this.fetch('/api/economy/ad-watch-reward', {
-      method: 'POST',
+  async claimAdWatchReward(userId, watchDurationSeconds, adType = "video") {
+    return this.fetch("/api/economy/ad-watch-reward", {
+      method: "POST",
       body: JSON.stringify({
         user_id: userId,
         watch_duration_seconds: watchDurationSeconds,
@@ -890,8 +990,8 @@ export const api = {
 
   // Claim treasure chest reward
   async claimChestReward(userId, chestType, rewardAmount) {
-    return this.fetch('/api/economy/claim-chest-reward', {
-      method: 'POST',
+    return this.fetch("/api/economy/claim-chest-reward", {
+      method: "POST",
       body: JSON.stringify({
         user_id: userId,
         chest_type: chestType,
