@@ -414,10 +414,8 @@ const ShopScreen = ({ user, userDiamonds = 0, onClose, onUpdateDiamonds, onPurch
             <Ionicons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>متجر المميزات</Text>
-          <TouchableOpacity style={styles.balancePill} onPress={() => setShowDiamondShop(true)}>
-            <Ionicons name="diamond" size={16} color="#60a5fa" />
-            <Text style={styles.balanceText}>{userDiamonds || 0}</Text>
-            <Ionicons name="add-circle" size={16} color="#10b981" />
+          <TouchableOpacity style={styles.headerBtn} onPress={() => setShowDiamondShop(true)}>
+            <Ionicons name="bag-add-outline" size={20} color="#93c5fd" />
           </TouchableOpacity>
         </View>
 
@@ -615,16 +613,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: { color: '#fff', fontSize: 20, fontWeight: '800' },
-  balancePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(59,130,246,0.16)',
-    borderRadius: 18,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-  },
-  balanceText: { color: '#60a5fa', fontWeight: '700', fontSize: 14 },
   categoriesContainer: { maxHeight: 50, marginBottom: 10 },
   categoriesContent: { paddingHorizontal: 16, gap: 8 },
   heroInfoCard: {

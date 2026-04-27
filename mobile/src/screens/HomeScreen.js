@@ -91,10 +91,6 @@ const HomeScreen = ({
     fortunesDesc: isArabic ? 'عجلة الحظ اليومية • صناديق الكنز • مكافآت مضاعفة' : 'Daily wheel • Treasure chests • Boosted rewards',
     watchAndEarn: isArabic ? 'شاهد واربح' : 'Watch & Earn',
     watchAndEarnSubtitle: isArabic ? 'كل إعلان مكافأة = 6 ألماسات' : 'Each rewarded ad = 6 diamonds',
-    balanceTitle: isArabic ? 'رصيدك الحالي' : 'Your current balance',
-    exchangeChip: isArabic ? '500 جوهرة = 1 ر.س' : '500 gems = 1 SAR',
-    gemsLabel: isArabic ? 'جواهر صقر' : 'Saqr Gems',
-    diamondLabel: isArabic ? 'ماسة' : 'Diamond',
     dailyChallenge: isArabic ? 'التحدي اليومي' : 'Daily Challenge',
     dailyChallengeSub: isArabic ? 'جواهر إضافية يومياً' : 'Daily bonus gems',
     games: isArabic ? 'الألعاب' : 'Games',
@@ -109,8 +105,6 @@ const HomeScreen = ({
 
   // بيانات المستخدم
   const userName = useMemo(() => user?.name || copy.defaultPlayer, [copy.defaultPlayer, user?.name]);
-  const userDiamonds = useMemo(() => user?.diamonds || 0, [user?.diamonds]);
-  const userGems = useMemo(() => user?.saqr_gems || 0, [user?.saqr_gems]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -141,46 +135,6 @@ const HomeScreen = ({
               <Text style={styles.subGreeting}>{copy.welcomeSub}</Text>
             </View>
           </View>
-          <View style={styles.headerRight}>
-            <View style={styles.statBadge}>
-              <Ionicons name="sparkles" size={12} color="#f472b6" />
-              <Text style={styles.statText}>{userGems}</Text>
-            </View>
-            <View style={[styles.statBadge, styles.diamondBadge]}>
-              <Ionicons name="diamond" size={12} color="#60a5fa" />
-              <Text style={styles.statText}>{userDiamonds}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* رصيدك - أعلى الصفحة لهيكل أكثر تناسقاً */}
-        <View style={styles.balanceCard}>
-          <LinearGradient colors={['#171a2a', '#141d36', '#111827']} style={styles.balanceGradient}>
-            <View style={styles.balanceTopRow}>
-              <Text style={styles.balanceTitle}>{copy.balanceTitle}</Text>
-              <View style={styles.exchangeChip}>
-                <Ionicons name="swap-horizontal" size={12} color="#22c55e" />
-                <Text style={styles.exchangeChipText}>{copy.exchangeChip}</Text>
-              </View>
-            </View>
-            <View style={styles.balanceRow}>
-              <View style={styles.balanceItem}>
-                <View style={[styles.balanceIcon, { backgroundColor: 'rgba(244,114,182,0.2)' }]}>
-                  <Ionicons name="sparkles" size={20} color="#f472b6" />
-                </View>
-                <Text style={styles.balanceValue}>{userGems}</Text>
-                <Text style={styles.balanceLabel}>{copy.gemsLabel}</Text>
-              </View>
-              <View style={styles.balanceDivider} />
-              <View style={styles.balanceItem}>
-                <View style={[styles.balanceIcon, { backgroundColor: 'rgba(96,165,250,0.2)' }]}>
-                  <Ionicons name="diamond" size={20} color="#60a5fa" />
-                </View>
-                <Text style={styles.balanceValue}>{userDiamonds}</Text>
-                <Text style={styles.balanceLabel}>{copy.diamondLabel}</Text>
-              </View>
-            </View>
-          </LinearGradient>
         </View>
 
         {/* ثروات صقر - القسم الرئيسي */}
@@ -308,27 +262,6 @@ const styles = StyleSheet.create({
     fontSize: 12, 
     color: 'rgba(255,255,255,0.5)' 
   },
-  headerRight: { 
-    flexDirection: 'row', 
-    gap: 6 
-  },
-  statBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(244,114,182,0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 16,
-    gap: 4,
-  },
-  diamondBadge: {
-    backgroundColor: 'rgba(96,165,250,0.15)',
-  },
-  statText: { 
-    color: '#FFF', 
-    fontSize: 13, 
-    fontWeight: '600' 
-  },
 
   // الأقسام
   section: { 
@@ -419,81 +352,6 @@ const styles = StyleSheet.create({
   playBtn: {
     padding: 12,
     borderRadius: 14,
-  },
-
-  // الرصيد
-  balanceCard: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 16,
-  },
-  balanceGradient: {
-    paddingHorizontal: 14,
-    paddingVertical: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-  },
-  balanceTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 14,
-  },
-  balanceTitle: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  exchangeChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(34,197,94,0.12)',
-    borderRadius: 14,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    gap: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(34,197,94,0.28)',
-  },
-  exchangeChipText: {
-    color: '#86efac',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  balanceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.02)',
-    borderRadius: 14,
-    paddingVertical: 12,
-  },
-  balanceItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  balanceIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  balanceValue: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#FFF',
-  },
-  balanceLabel: {
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.6)',
-    marginTop: 4,
-  },
-  balanceDivider: {
-    width: 1,
-    height: 50,
-    backgroundColor: 'rgba(255,255,255,0.1)',
   },
 
   // البطاقات الثنائية

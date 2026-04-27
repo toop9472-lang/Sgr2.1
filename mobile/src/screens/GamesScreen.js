@@ -2183,7 +2183,6 @@ const GamesScreen = ({
   const [showModeSelector, setShowModeSelector] = useState(null);
   const [showWaiting, setShowWaiting] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
-  const [userStats, setUserStats] = useState({ rank: '-', gems: 0, games: 0 });
   const [loading, setLoading] = useState(true);
   const [balance, setBalance] = useState({
     saqr_gems: normalizeNumber(user?.saqr_gems, 0),
@@ -2206,7 +2205,6 @@ const GamesScreen = ({
   const [adUnlockLoading, setAdUnlockLoading] = useState(false);
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
   const pendingOnlineGameRef = useRef(null);
   const connectionLostAlertLockRef = useRef(false);
   const onlineMatchmakingActiveRef = useRef(false);
@@ -3047,12 +3045,6 @@ const GamesScreen = ({
       ])
     ).start();
 
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, { toValue: 1, duration: 2000, useNativeDriver: true }),
-        Animated.timing(glowAnim, { toValue: 0, duration: 2000, useNativeDriver: true }),
-      ])
-    ).start();
   };
 
   const fetchLeaderboard = async () => {
@@ -3061,11 +3053,6 @@ const GamesScreen = ({
       if (response.ok) {
         const data = await response.json();
         setLeaderboard(data.leaderboard || []);
-        // Find user rank
-        const userRank = data.leaderboard?.findIndex((l) => l.user_id === userId);
-        if (userRank >= 0) {
-          setUserStats({ rank: userRank + 1, gems: data.leaderboard[userRank].saqr_gems ?? data.leaderboard[userRank].saqr_points ?? 0, games: 0 });
-        }
       }
     } catch (e) {
       if (__DEV__) console.log('Leaderboard error:', e.message);
@@ -3574,82 +3561,22 @@ const GamesScreen = ({
           </View>
         </View>
 
-        {/* Premium Stats Card */}
-        <View style={styles.premiumStatsCard}>
-          <LinearGradient
-            colors={['rgba(30,30,50,0.95)', 'rgba(20,20,35,0.98)']}
-            style={styles.premiumStatsGradient}
-          >
-            {/* Rank */}
-            <View style={styles.premiumStatItem}>
-              <View style={styles.premiumStatIconBg}>
-                <Ionicons name="trophy" size={20} color="#fbbf24" />
-              </View>
-              <View style={styles.premiumStatInfo}>
-                <Text style={styles.premiumStatValue}>#{userStats.rank || '-'}</Text>
-                <Text style={styles.premiumStatLabel}>ترتيبك</Text>
-              </View>
-            </View>
-
-            {/* Divider */}
-            <View style={styles.premiumStatDivider} />
-
-            {/* Saqr Gems */}
-            <View style={styles.premiumStatItem}>
-              <View style={[styles.premiumStatIconBg, { backgroundColor: 'rgba(244, 114, 182, 0.15)' }]}>
-                <Ionicons name="sparkles" size={20} color="#f472b6" />
-              </View>
-              <View style={styles.premiumStatInfo}>
-                <Text style={styles.premiumStatValue}>{(balance.saqr_gems || balance.saqr_points || 0).toLocaleString()}</Text>
-                <Text style={styles.premiumStatLabel}>جواهر صقر</Text>
-              </View>
-            </View>
-
-            {/* Divider */}
-            <View style={styles.premiumStatDivider} />
-
-            {/* Diamonds with Shop Button */}
-            <TouchableOpacity 
-              style={styles.premiumStatItem}
-              onPress={onOpenDiamondShop}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.premiumStatIconBg, { backgroundColor: 'rgba(96, 165, 250, 0.15)' }]}>
-                <Ionicons name="diamond" size={20} color="#60a5fa" />
-                <View style={styles.shopPlusBadge}>
-                  <Ionicons name="add" size={8} color="#FFF" />
-                </View>
-              </View>
-              <View style={styles.premiumStatInfo}>
-                <Text style={[styles.premiumStatValue, { color: '#60a5fa' }]}>{(balance.diamonds || 0).toLocaleString()}</Text>
-                <Text style={styles.premiumStatLabel}>ألماسات</Text>
-              </View>
-            </TouchableOpacity>
-          </LinearGradient>
-
-          {/* Daily Progress Bar */}
-          <View style={styles.dailyProgressContainer}>
-            <View style={styles.dailyProgressInfo}>
-              <Ionicons name="flash" size={14} color="#22c55e" />
-              <Text style={styles.dailyProgressText}>
-                {dailyRemaining} / {dailyLimit} ألماسة يومية متبقية
-              </Text>
-            </View>
-            <View style={styles.dailyProgressBar}>
-              <View 
-                style={[
-                  styles.dailyProgressFill, 
-                  { width: `${dailyProgressPercent}%` }
-                ]} 
-              />
-            </View>
+        {/* Daily Progress Bar */}
+        <View style={styles.dailyProgressContainer}>
+          <View style={styles.dailyProgressInfo}>
+            <Ionicons name="flash" size={14} color="#22c55e" />
+            <Text style={styles.dailyProgressText}>
+              {dailyRemaining} / {dailyLimit} ألماسة يومية متبقية
+            </Text>
           </View>
-        </View>
-
-        {/* Exchange Rate Info */}
-        <View style={styles.exchangeInfo}>
-          <Ionicons name="information-circle" size={16} color="#10b981" />
-          <Text style={styles.exchangeText}>500 جوهرة صقر = 1 ريال</Text>
+          <View style={styles.dailyProgressBar}>
+            <View
+              style={[
+                styles.dailyProgressFill,
+                { width: `${dailyProgressPercent}%` },
+              ]}
+            />
+          </View>
         </View>
 
         {/* Ad Challenges Button - ثروات صقر */}
@@ -3891,25 +3818,11 @@ const styles = StyleSheet.create({
   userStatLabel: { fontSize: 11, color: '#888', marginTop: 2 },
   userStatDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.1)' },
   
-  // Premium Stats Card
-  premiumStatsCard: { marginHorizontal: 20, marginBottom: 16, borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
-  premiumStatsGradient: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingVertical: 18, paddingHorizontal: 12 },
-  premiumStatItem: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  premiumStatIconBg: { width: 42, height: 42, borderRadius: 12, backgroundColor: 'rgba(251, 191, 36, 0.15)', justifyContent: 'center', alignItems: 'center', position: 'relative' },
-  premiumStatInfo: { alignItems: 'flex-start' },
-  premiumStatValue: { fontSize: 18, fontWeight: '800', color: '#FFF' },
-  premiumStatLabel: { fontSize: 10, color: 'rgba(255,255,255,0.5)', marginTop: 1 },
-  premiumStatDivider: { width: 1, height: 36, backgroundColor: 'rgba(255,255,255,0.08)' },
-  shopPlusBadge: { position: 'absolute', top: -3, right: -3, width: 14, height: 14, borderRadius: 7, backgroundColor: '#22c55e', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: 'rgba(20,20,35,1)' },
   dailyProgressContainer: { backgroundColor: 'rgba(0,0,0,0.3)', paddingVertical: 10, paddingHorizontal: 16 },
   dailyProgressInfo: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
   dailyProgressText: { fontSize: 11, color: 'rgba(255,255,255,0.6)' },
   dailyProgressBar: { height: 4, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' },
   dailyProgressFill: { height: '100%', backgroundColor: '#22c55e', borderRadius: 2 },
-  
-  // Exchange Info
-  exchangeInfo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 16 },
-  exchangeText: { fontSize: 12, color: '#10b981' },
   
   // Ad Challenges Button
   adChallengesBtn: { marginHorizontal: 20, marginBottom: 20, borderRadius: 16, overflow: 'hidden' },

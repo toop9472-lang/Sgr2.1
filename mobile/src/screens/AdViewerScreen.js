@@ -73,7 +73,6 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
   const [showPointsAnimation, setShowPointsAnimation] = useState(false);
   const [earnedGems, setEarnedGems] = useState(0);
   const [earnedDiamonds, setEarnedDiamonds] = useState(0);
-  const [totalEarnedSession, setTotalEarnedSession] = useState({ gems: 0, diamonds: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [videoLoading, setVideoLoading] = useState(true);
   const [isAdMobLoading, setIsAdMobLoading] = useState(false);
@@ -217,7 +216,6 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
         ) || 0;
         setEarnedGems(gems);
         setEarnedDiamonds(diamonds);
-        setTotalEarnedSession(prev => ({ gems: prev.gems + gems, diamonds: prev.diamonds + diamonds }));
         setShowPointsAnimation(true);
         Vibration.vibrate(100);
         if (onRewardsEarned) {
@@ -408,7 +406,6 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
       ) || 0;
       setEarnedGems(gems);
       setEarnedDiamonds(diamonds);
-      setTotalEarnedSession(prev => ({ gems: prev.gems + gems, diamonds: prev.diamonds + diamonds }));
       setShowPointsAnimation(true);
       Vibration.vibrate(100);
       setTimeout(() => setShowPointsAnimation(false), 3000);
@@ -545,12 +542,6 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
         </TouchableOpacity>
 
         <View style={styles.infoBar}>
-          <Text style={styles.infoText}>{totalEarnedSession.gems}</Text>
-          <Ionicons name="sparkles" size={14} color="#f472b6" />
-          <Text style={styles.infoDivider}>·</Text>
-          <Text style={styles.infoText}>{totalEarnedSession.diamonds}</Text>
-          <Ionicons name="diamond" size={14} color="#60a5fa" />
-          <Text style={styles.infoDivider}>·</Text>
           <Text style={styles.infoText}>{currentAd?.duration || 60}s</Text>
           <Text style={styles.infoDivider}>·</Text>
           <Text style={styles.infoText}>{formatTime(watchTime)}</Text>
