@@ -1,6 +1,6 @@
 // مركز مكافآت الإعلانات - Ad Rewards Center
 // نظام متكامل وممتع لمشاهدة الإعلانات والحصول على المكافآت
-// 1 جوهرة لكل دقيقة مشاهدة - 500 جوهرة = 1 ريال سعودي
+// 5 جواهر صقر لكل إعلان مكتمل - 500 جوهرة = 3 ريال سعودي
 
 import React, { useState, useEffect, useRef } from "react";
 import {
@@ -26,209 +26,12 @@ import admobService from "../services/admobService";
 const { width, height } = Dimensions.get("window");
 
 // ==================== ثوابت النظام ====================
-const GEMS_PER_RIYAL = 500; // 500 جوهرة = 1 ريال سعودي
+const GEMS_PER_RIYAL = 500; // 500 جوهرة = 3 ريال سعودي
+const SAR_PER_EXCHANGE = 3;
 const MAX_DAILY_ADS = 50; // الحد الأقصى للإعلانات اليومية
 
-// مكافآت إضافية
-const STREAK_BONUSES = {
-  3: 5, // 3 إعلانات متتالية = 5 جواهر إضافية
-  5: 10, // 5 إعلانات = 10 جواهر
-  10: 25, // 10 إعلانات = 25 جوهرة
-  20: 60, // 20 إعلان = 60 جوهرة
-  30: 100, // 30 إعلان = 100 جوهرة
-};
+const FIXED_AD_REWARD_GEMS = 5;
 
-// جوائز عجلة الحظ
-const WHEEL_PRIZES = [
-  { id: 1, gems: 1, probability: 0.3, color: "#3b82f6", label: "1" },
-  { id: 2, gems: 2, probability: 0.25, color: "#22c55e", label: "2" },
-  { id: 3, gems: 3, probability: 0.2, color: "#f59e0b", label: "3" },
-  { id: 4, gems: 5, probability: 0.12, color: "#ec4899", label: "5" },
-  { id: 5, gems: 10, probability: 0.08, color: "#8b5cf6", label: "10" },
-  { id: 6, gems: 25, probability: 0.04, color: "#ef4444", label: "25" },
-  { id: 7, gems: 50, probability: 0.009, color: "#fbbf24", label: "50" },
-  { id: 8, gems: 100, probability: 0.001, color: "#14b8a6", label: "100" },
-];
-
-// ==================== مكون عجلة الحظ ====================
-const LuckyWheel = ({ onSpin, spinning, prize }) => {
-  const spinAnim = useRef(new Animated.Value(0)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    // Glow animation
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, {
-          toValue: 1,
-          duration: 1500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(glowAnim, {
-          toValue: 0,
-          duration: 1500,
-          useNativeDriver: true,
-        }),
-      ]),
-    ).start();
-  }, []);
-
-  useEffect(() => {
-    if (spinning) {
-      // حساب زاوية الدوران بناءً على الجائزة
-      const prizeIndex = WHEEL_PRIZES.findIndex((p) => p.id === prize?.id) || 0;
-      const segmentAngle = 360 / WHEEL_PRIZES.length;
-      const targetAngle =
-        360 * 5 + (360 - prizeIndex * segmentAngle - segmentAngle / 2);
-
-      Animated.timing(spinAnim, {
-        toValue: targetAngle,
-        duration: 4000,
-        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [spinning, prize]);
-
-  const spin = spinAnim.interpolate({
-    inputRange: [0, 360],
-    outputRange: ["0deg", "360deg"],
-  });
-
-  const glowOpacity = glowAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.5, 1],
-  });
-
-  return (
-    <View style={wheelStyles.container}>
-      {/* Glow Effect */}
-      <Animated.View style={[wheelStyles.glow, { opacity: glowOpacity }]} />
-
-      {/* Wheel */}
-      <Animated.View
-        style={[wheelStyles.wheel, { transform: [{ rotate: spin }] }]}
-      >
-        {WHEEL_PRIZES.map((prize, index) => {
-          const rotation = (360 / WHEEL_PRIZES.length) * index;
-          return (
-            <View
-              key={prize.id}
-              style={[
-                wheelStyles.segment,
-                {
-                  backgroundColor: prize.color,
-                  transform: [
-                    { rotate: `${rotation}deg` },
-                    { translateY: -75 },
-                  ],
-                },
-              ]}
-            >
-              <View style={wheelStyles.prizeLabel}>
-                <Ionicons name="diamond" size={12} color="#FFF" />
-                <Text style={wheelStyles.prizeText}>{prize.label}</Text>
-              </View>
-            </View>
-          );
-        })}
-      </Animated.View>
-
-      {/* Pointer */}
-      <View style={wheelStyles.pointer}>
-        <Ionicons name="caret-down" size={32} color="#fbbf24" />
-      </View>
-
-      {/* Center Button */}
-      <TouchableOpacity
-        style={wheelStyles.centerButton}
-        onPress={onSpin}
-        disabled={spinning}
-      >
-        <LinearGradient
-          colors={spinning ? ["#666", "#444"] : ["#fbbf24", "#f59e0b"]}
-          style={wheelStyles.centerGradient}
-        >
-          {spinning ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
-            <Text style={wheelStyles.spinText}>دوّر</Text>
-          )}
-        </LinearGradient>
-      </TouchableOpacity>
-    </View>
-  );
-};
-
-const wheelStyles = StyleSheet.create({
-  container: {
-    width: 220,
-    height: 220,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  glow: {
-    position: "absolute",
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    backgroundColor: "rgba(251, 191, 36, 0.2)",
-  },
-  wheel: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: "#1a1a2e",
-    borderWidth: 4,
-    borderColor: "#fbbf24",
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
-  },
-  segment: {
-    position: "absolute",
-    width: 60,
-    height: 100,
-    justifyContent: "flex-end",
-    alignItems: "center",
-    paddingBottom: 30,
-  },
-  prizeLabel: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-  },
-  prizeText: {
-    color: "#FFF",
-    fontWeight: "bold",
-    fontSize: 12,
-  },
-  pointer: {
-    position: "absolute",
-    top: -5,
-    zIndex: 10,
-  },
-  centerButton: {
-    position: "absolute",
-    zIndex: 5,
-  },
-  centerGradient: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 3,
-    borderColor: "#FFF",
-  },
-  spinText: {
-    color: "#FFF",
-    fontWeight: "bold",
-    fontSize: 14,
-  },
-});
-
-// ==================== مكون نتيجة المكافأة ====================
 const RewardResultModal = ({
   visible,
   gems,
@@ -307,21 +110,21 @@ const RewardResultModal = ({
             <Animated.View
               style={[resultStyles.iconContainer, { transform: [{ rotate }] }]}
             >
-              <Ionicons name="diamond" size={60} color="#60a5fa" />
+              <Ionicons name="sparkles" size={60} color="#f472b6" />
             </Animated.View>
 
             <Text style={resultStyles.title}>
               {isBonus ? "مكافأة إضافية!" : "مبروك!"}
             </Text>
 
-            <Text style={resultStyles.diamondCount}>+{gems}</Text>
+            <Text style={resultStyles.gemsCount}>+{gems}</Text>
             <Text style={resultStyles.label}>جوهرة صقر</Text>
 
             {bonusReason && (
-              <View style={resultStyles.bonusReason}>
-                <Ionicons name="star" size={16} color="#fbbf24" />
-                <Text style={resultStyles.bonusText}>{bonusReason}</Text>
-              </View>
+            <View style={resultStyles.bonusReason}>
+              <Ionicons name="star" size={16} color="#fbbf24" />
+              <Text style={resultStyles.bonusText}>{bonusReason}</Text>
+            </View>
             )}
 
             <View style={resultStyles.valueInfo}>
@@ -398,11 +201,11 @@ const resultStyles = StyleSheet.create({
     color: "#FFF",
     marginBottom: 10,
   },
-  diamondCount: {
+  gemsCount: {
     fontSize: 56,
     fontWeight: "800",
-    color: "#60a5fa",
-    textShadowColor: "rgba(96,165,250,0.5)",
+    color: "#f472b6",
+    textShadowColor: "rgba(244,114,182,0.5)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 10,
   },
@@ -454,15 +257,15 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
   const [stats, setStats] = useState({
     todayAds: 0,
     totalGems: 0,
-    streak: 0,
     lastWatchDate: null,
   });
   const [adGateLoading, setAdGateLoading] = useState(false);
-  const [showWheel, setShowWheel] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  const [wheelSpinning, setWheelSpinning] = useState(false);
-  const [currentPrize, setCurrentPrize] = useState(null);
-  const [bonusInfo, setBonusInfo] = useState(null);
+  const [currentPrize, setCurrentPrize] = useState({
+    id: 1,
+    gems: FIXED_AD_REWARD_GEMS,
+    label: String(FIXED_AD_REWARD_GEMS),
+  });
   const [userGems, setUserGems] = useState(0);
 
   useEffect(() => {
@@ -474,23 +277,20 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
 
   const loadStats = async () => {
     try {
-      const savedStats = await AsyncStorage.getItem(
-        `ad_rewards_stats_${userId}`,
-      );
+      const savedStats = await AsyncStorage.getItem(`ad_rewards_stats_${userId}`);
       const today = new Date().toDateString();
 
       if (savedStats) {
         const parsed = JSON.parse(savedStats);
         const normalized = {
           ...parsed,
-          totalGems: parsed.totalGems ?? parsed.totalDiamonds ?? 0,
+          totalGems: parsed.totalGems ?? 0,
         };
         // Reset daily counter if new day
         if (normalized.lastWatchDate !== today) {
           setStats({
             todayAds: 0,
             totalGems: normalized.totalGems || 0,
-            streak: 0,
             lastWatchDate: today,
           });
         } else {
@@ -551,7 +351,7 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
       } else {
         Alert.alert(
           "لم تكتمل المشاهدة",
-          "يجب إكمال الإعلان كاملاً قبل تدوير العجلة.",
+          "يجب إكمال الإعلان كاملاً للحصول على المكافأة.",
         );
       }
     } catch (error) {
@@ -563,95 +363,51 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
 
   const handleAdComplete = async () => {
     // Update stats
-    const newStreak = stats.streak + 1;
     const today = new Date().toDateString();
     const newStats = {
       ...stats,
       todayAds: stats.todayAds + 1,
-      streak: newStreak,
       lastWatchDate: today,
     };
     setStats(newStats);
     await saveStats(newStats);
 
-    // Check for streak bonus
-    let bonus = null;
-    if (STREAK_BONUSES[newStreak]) {
-      bonus = {
-        gems: STREAK_BONUSES[newStreak],
-        reason: `مكافأة ${newStreak} إعلان متتالي!`,
+    try {
+      const response = await api.addSaqrGems(
+        userId,
+        FIXED_AD_REWARD_GEMS,
+        "ad_rewarded_watch",
+      );
+      if (!response.ok) {
+        throw new Error("failed_add_gems");
+      }
+      const data = await response.json();
+      setCurrentPrize({
+        id: 1,
+        gems: FIXED_AD_REWARD_GEMS,
+        label: String(FIXED_AD_REWARD_GEMS),
+      });
+      setUserGems(Number(data?.new_balance ?? 0) || 0);
+      const updatedStats = {
+        ...newStats,
+        totalGems: (newStats.totalGems || 0) + FIXED_AD_REWARD_GEMS,
       };
-      setBonusInfo(bonus);
-    }
-
-    // Show wheel
-    setShowWheel(true);
-  };
-
-  const spinWheel = () => {
-    setWheelSpinning(true);
-
-    // Calculate prize based on probability
-    const random = Math.random();
-    let cumulativeProbability = 0;
-    let selectedPrize = WHEEL_PRIZES[0];
-
-    for (const prize of WHEEL_PRIZES) {
-      cumulativeProbability += prize.probability;
-      if (random <= cumulativeProbability) {
-        selectedPrize = prize;
-        break;
-      }
-    }
-
-    setCurrentPrize(selectedPrize);
-
-    // Wait for animation
-    setTimeout(async () => {
-      setWheelSpinning(false);
-      setShowWheel(false);
-
-      // Calculate total gems
-      let totalGems = selectedPrize.gems;
-      if (bonusInfo) {
-        totalGems += bonusInfo.gems;
-      }
-
-      // Add gems to user account
-      try {
-        const response = await api.addSaqrGems(
-          userId,
-          totalGems,
-          "ad_wheel_reward",
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setUserGems(data.new_balance);
-
-          // Keep ad count stable (already incremented in handleAdComplete)
-          // and only append total gems.
-          const updatedStats = {
-            ...stats,
-            totalGems: (stats.totalGems || 0) + totalGems,
-          };
-          setStats(updatedStats);
-          await saveStats(updatedStats);
-
-          if (onBalanceUpdate) onBalanceUpdate();
-        }
-      } catch (e) {
-        console.log("Error adding gems:", e);
-      }
-
-      // Show result
+      setStats(updatedStats);
+      await saveStats(updatedStats);
       setShowResult(true);
-    }, 4500);
+      if (onBalanceUpdate) onBalanceUpdate({ saqr_gems: Number(data?.new_balance ?? 0) || 0 });
+    } catch (e) {
+      Alert.alert("خطأ", "تعذر إضافة الجواهر بعد الإعلان.");
+    }
   };
 
   const closeResult = () => {
     setShowResult(false);
-    setCurrentPrize(null);
-    setBonusInfo(null);
+    setCurrentPrize({
+      id: 1,
+      gems: FIXED_AD_REWARD_GEMS,
+      label: String(FIXED_AD_REWARD_GEMS),
+    });
   };
 
   if (!visible) return null;
@@ -676,9 +432,9 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
                 <Ionicons name="close" size={24} color="#FFF" />
               </TouchableOpacity>
               <Text style={styles.headerTitle}>مركز المكافآت</Text>
-              <View style={styles.diamondBadge}>
+              <View style={styles.gemsBadge}>
                 <Ionicons name="sparkles" size={16} color="#f472b6" />
-                <Text style={styles.diamondCount}>{userGems}</Text>
+                <Text style={styles.gemsCount}>{userGems}</Text>
               </View>
             </View>
 
@@ -690,7 +446,7 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
               >
                 <Ionicons name="swap-horizontal" size={20} color="#10b981" />
                 <Text style={styles.exchangeText}>
-                  500 جوهرة = 1 ريال سعودي
+                  500 جوهرة = 3 ريال سعودي
                 </Text>
               </LinearGradient>
 
@@ -701,8 +457,8 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
                   <Text style={styles.statLabel}>إعلانات اليوم</Text>
                 </View>
                 <View style={styles.statCard}>
-                  <Text style={styles.statValue}>{stats.streak}</Text>
-                  <Text style={styles.statLabel}>متتالي</Text>
+                  <Text style={styles.statValue}>{FIXED_AD_REWARD_GEMS}</Text>
+                  <Text style={styles.statLabel}>لكل إعلان</Text>
                 </View>
                 <View style={styles.statCard}>
                   <Text style={styles.statValue}>{stats.totalGems || 0}</Text>
@@ -730,12 +486,12 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
                     <Text style={styles.watchAdTitle}>
                       {adGateLoading
                         ? "جاري فتح إعلان AdMob..."
-                        : "شاهد إعلان AdMob وأدر العجلة!"}
+                        : "شاهد إعلان AdMob واربح الآن"}
                     </Text>
                     <Text style={styles.watchAdDesc}>
                       {adGateLoading
                         ? "انتظر قليلاً"
-                        : "اربح من 1 إلى 100 جوهرة"}
+                        : "مكافأة ثابتة: 5 جواهر صقر"}
                     </Text>
                   </View>
                   <View style={styles.watchAdBadge}>
@@ -744,72 +500,18 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
                     ) : (
                       <>
                         <Ionicons name="sparkles" size={14} color="#FFF" />
-                        <Text style={styles.watchAdBadgeText}>حتى 100</Text>
+                        <Text style={styles.watchAdBadgeText}>+5</Text>
                       </>
                     )}
                   </View>
                 </LinearGradient>
               </TouchableOpacity>
 
-              {/* Streak Bonuses */}
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>
-                  مكافآت الإعلانات المتتالية
-                </Text>
-                <View style={styles.streakGrid}>
-                  {Object.entries(STREAK_BONUSES).map(([count, bonus]) => {
-                    const achieved = stats.streak >= parseInt(count);
-                    return (
-                      <View
-                        key={count}
-                        style={[
-                          styles.streakItem,
-                          achieved && styles.streakItemAchieved,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.streakCount,
-                            achieved && styles.streakCountAchieved,
-                          ]}
-                        >
-                          {count}
-                        </Text>
-                        <View style={styles.streakReward}>
-                          <Ionicons
-                            name="sparkles"
-                            size={12}
-                            color={achieved ? "#fbbf24" : "#666"}
-                          />
-                          <Text
-                            style={[
-                              styles.streakBonus,
-                              achieved && styles.streakBonusAchieved,
-                            ]}
-                          >
-                            +{bonus}
-                          </Text>
-                        </View>
-                        {achieved && (
-                          <Ionicons
-                            name="checkmark-circle"
-                            size={14}
-                            color="#22c55e"
-                            style={styles.checkIcon}
-                          />
-                        )}
-                      </View>
-                    );
-                  })}
-                </View>
-              </View>
-
               {/* Tips */}
               <View style={styles.tipsCard}>
                 <Ionicons name="bulb" size={18} color="#fbbf24" />
                 <Text style={styles.tipsText}>
-                  شاهد إعلانات متتالية لتضاعف مكافآتك! كلما شاهدت أكثر، كلما
-                  ربحت أكثر.
+                  كل إعلان مكتمل يمنحك 5 جواهر صقر بشكل ثابت وواضح.
                 </Text>
               </View>
 
@@ -836,49 +538,13 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
           </LinearGradient>
         </View>
 
-        {/* Lucky Wheel Modal */}
-        {showWheel && (
-          <Modal
-            visible={showWheel}
-            animationType="fade"
-            transparent
-            presentationStyle="overFullScreen"
-            statusBarTranslucent
-          >
-            <View style={styles.wheelOverlay}>
-              <View style={styles.wheelContainer}>
-                <LinearGradient
-                  colors={["#1a1a2e", "#0a0a0f"]}
-                  style={styles.wheelGradient}
-                >
-                  <TouchableOpacity
-                    style={styles.wheelCloseBtn}
-                    onPress={() => !wheelSpinning && setShowWheel(false)}
-                  >
-                    <Ionicons name="close" size={20} color="#FFF" />
-                  </TouchableOpacity>
-                  <Text style={styles.wheelTitle}>أدر عجلة الحظ!</Text>
-                  <LuckyWheel
-                    onSpin={spinWheel}
-                    spinning={wheelSpinning}
-                    prize={currentPrize}
-                  />
-                  <Text style={styles.wheelHint}>
-                    اضغط على "دوّر" للفوز بجائزتك
-                  </Text>
-                </LinearGradient>
-              </View>
-            </View>
-          </Modal>
-        )}
-
         {/* Result Modal */}
         <RewardResultModal
           visible={showResult}
-          gems={(currentPrize?.gems || 0) + (bonusInfo?.gems || 0)}
+          gems={currentPrize?.gems || FIXED_AD_REWARD_GEMS}
           onClose={closeResult}
-          isBonus={!!bonusInfo}
-          bonusReason={bonusInfo?.reason}
+          isBonus={false}
+          bonusReason={null}
         />
       </View>
     </Modal>
@@ -930,7 +596,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#FFF",
   },
-  diamondBadge: {
+  gemsBadge: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "rgba(96, 165, 250, 0.15)",
@@ -939,7 +605,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     gap: 6,
   },
-  diamondCount: {
+  gemsCount: {
     color: "#60a5fa",
     fontWeight: "bold",
     fontSize: 14,

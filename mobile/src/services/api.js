@@ -840,124 +840,9 @@ export const api = {
 
   // ==================== Economy System ====================
 
-  // Get user balance (gems & diamonds)
+  // Get user balance
   async getBalance(userId) {
     return this.fetch(`/api/economy/balance/${userId}`);
-  },
-
-  // Get diamond packages
-  async getDiamondPackages() {
-    return this.fetch("/api/economy/packages");
-  },
-
-  // Apple/Google IAP catalog (server side products)
-  async getIapDiamondPackages() {
-    return this.fetch("/api/iap/diamond-packages");
-  },
-
-  // Purchase diamonds
-  async purchaseDiamonds(userId, packageId) {
-    return this.fetch("/api/economy/purchase-diamonds", {
-      method: "POST",
-      body: JSON.stringify({ user_id: userId, package_id: packageId }),
-    });
-  },
-
-  // Purchase through IAP pipeline (used on iOS flow)
-  async purchaseIapProduct(productId, receiptData = null) {
-    return this.fetch("/api/iap/purchase", {
-      method: "POST",
-      body: JSON.stringify({
-        product_id: productId,
-        payment_method: "apple_iap",
-        receipt_data: receiptData,
-      }),
-    });
-  },
-
-  // Feature bundles shop
-  async getFeatureBundles() {
-    return this.fetch("/api/economy/feature-bundles");
-  },
-
-  async getMyFeatureBundles(userId) {
-    return this.fetch(`/api/economy/my-feature-bundles/${userId}`);
-  },
-
-  async purchaseFeatureBundle(userId, bundleId) {
-    return this.fetch("/api/economy/purchase-feature-bundle", {
-      method: "POST",
-      body: JSON.stringify({ user_id: userId, bundle_id: bundleId }),
-    });
-  },
-
-  async equipFeatureBundle(userId, bundleId) {
-    return this.fetch("/api/economy/equip-feature-bundle", {
-      method: "POST",
-      body: JSON.stringify({ user_id: userId, bundle_id: bundleId }),
-    });
-  },
-
-  // Spend diamonds for one round / action
-  async spendDiamonds(userId, amount, source = "game_round", gameId = null) {
-    return this.fetch("/api/economy/spend-diamonds", {
-      method: "POST",
-      body: JSON.stringify({
-        user_id: userId,
-        amount,
-        source,
-        game_id: gameId,
-      }),
-    });
-  },
-
-  // Enter online game (spend diamonds)
-  async enterOnlineGame(userId, gameId, isOnline) {
-    return this.fetch("/api/economy/enter-game", {
-      method: "POST",
-      body: JSON.stringify({
-        user_id: userId,
-        game_id: gameId,
-        is_online: isOnline,
-      }),
-    });
-  },
-
-  // Record game result
-  async recordGameResult(userId, gameId, isOnline, won, opponentDiamonds = 0) {
-    return this.fetch("/api/economy/game-result", {
-      method: "POST",
-      body: JSON.stringify({
-        user_id: userId,
-        game_id: gameId,
-        is_online: isOnline,
-        won: won,
-        opponent_diamonds: opponentDiamonds,
-      }),
-    });
-  },
-
-  // Get daily login status
-  async getDailyLoginStatus(userId) {
-    return this.fetch(`/api/economy/daily-login-status/${userId}`);
-  },
-
-  // Claim daily reward
-  async claimDailyReward(userId) {
-    return this.fetch("/api/economy/claim-daily-reward", {
-      method: "POST",
-      body: JSON.stringify({ user_id: userId }),
-    });
-  },
-
-  // Get leaderboard
-  async getLeaderboard() {
-    return this.fetch("/api/economy/leaderboard");
-  },
-
-  // Get game costs
-  async getGameCosts() {
-    return this.fetch("/api/economy/game-costs");
   },
 
   // Initialize user economy (on first login)
@@ -975,14 +860,6 @@ export const api = {
     });
   },
 
-  // Add diamonds (for ad rewards)
-  async addDiamonds(userId, amount, source = "ad_reward") {
-    return this.fetch(`/api/economy/add-diamonds`, {
-      method: "POST",
-      body: JSON.stringify({ user_id: userId, amount, source }),
-    });
-  },
-
   // Add Saqr Gems (for ad rewards - exchangeable for cash)
   async addSaqrGems(userId, amount, source = "ad_reward") {
     return this.fetch(`/api/economy/add-saqr-gems`, {
@@ -993,7 +870,7 @@ export const api = {
 
   // ==================== Ad Watch Rewards ====================
 
-  // Claim ad watch reward (1 gem + 6 diamonds per minute)
+  // Claim ad watch reward (fixed 5 Saqr gems)
   async claimAdWatchReward(userId, watchDurationSeconds, adType = "video") {
     return this.fetch("/api/economy/ad-watch-reward", {
       method: "POST",
@@ -1010,17 +887,6 @@ export const api = {
     return this.fetch(`/api/economy/ad-stats/${userId}`);
   },
 
-  // Claim treasure chest reward
-  async claimChestReward(userId, chestType, rewardAmount) {
-    return this.fetch("/api/economy/claim-chest-reward", {
-      method: "POST",
-      body: JSON.stringify({
-        user_id: userId,
-        chest_type: chestType,
-        reward_amount: rewardAmount,
-      }),
-    });
-  },
 };
 
 export default api;

@@ -400,12 +400,12 @@ const ServerSelector = ({ servers, selectedServer, onSelect, onlineCount }) => {
   );
 };
 
-// نافذة نقص الألماس الاحترافية
-const InsufficientDiamondsModal = ({
+// نافذة رصيد غير كافٍ (للتوافق)
+const InsufficientBalanceModal = ({
   visible,
   onWatchAds,
   onClose,
-  currentDiamonds,
+  currentBalance,
   copy,
   messageCost,
 }) => {
@@ -438,15 +438,15 @@ const InsufficientDiamondsModal = ({
                 colors={["#ef4444", "#dc2626"]}
                 style={styles.modalIconGradient}
               >
-                <Ionicons name="diamond" size={40} color="#FFF" />
+                <Ionicons name="sparkles" size={40} color="#FFF" />
               </LinearGradient>
             </View>
 
-            <Text style={styles.modalTitle}>{copy.noDiamondsTitle}</Text>
+            <Text style={styles.modalTitle}>{copy.noBalanceTitle}</Text>
 
             <View style={styles.balanceBox}>
-              <Ionicons name="diamond-outline" size={20} color="#60a5fa" />
-              <Text style={styles.balanceText}>{currentDiamonds}</Text>
+              <Ionicons name="sparkles-outline" size={20} color="#60a5fa" />
+              <Text style={styles.balanceText}>{currentBalance}</Text>
               <Text style={styles.balanceLabel}>{copy.currentBalance}</Text>
             </View>
 
@@ -511,16 +511,16 @@ const GlobalChatScreen = ({
         ? "رصيدك منخفض! يمكنك إرسال"
         : "Low balance! You can send only",
       lowBalanceSuffix: isArabic ? "رسالة فقط" : "messages",
-      noDiamondsTitle: isArabic
-        ? "انتهت ألماساتك!"
-        : "You are out of diamonds!",
+      noBalanceTitle: isArabic
+        ? "رصيد الجواهر غير كافٍ"
+        : "Insufficient gems balance",
       currentBalance: isArabic ? "رصيدك الحالي" : "Current balance",
       requiresMessageCost: isArabic
-        ? "تحتاج {cost} ألماسات لإرسال رسالة"
-        : "You need {cost} diamonds to send a message",
+        ? "تحتاج {cost} جواهر صقر لإرسال رسالة"
+        : "You need {cost} Saqr gems to send a message",
       watchAdsAndEarn: isArabic
-        ? "شاهد إعلانات واحصل على الألماس"
-        : "Watch ads and earn diamonds",
+        ? "شاهد إعلانات واحصل على الجواهر"
+        : "Watch ads and earn Saqr gems",
       later: isArabic ? "لاحقاً" : "Later",
       emojiPickerTitle: isArabic ? "إيموجي صقر" : "Saqr Emojis",
       sendError: isArabic
@@ -538,7 +538,7 @@ const GlobalChatScreen = ({
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [diamonds, setDiamonds] = useState(0);
+  const [saqrGems, setSaqrGems] = useState(0);
   const [messageCost, setMessageCost] = useState(MESSAGE_COST);
   const [showInsufficientModal, setShowInsufficientModal] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -550,20 +550,20 @@ const GlobalChatScreen = ({
   const balanceInterval = useRef(null);
   const headerAnim = useRef(new Animated.Value(0)).current;
   const userId = user?.id || user?.user_id;
-  const applyDiamonds = useCallback(
+  const applyGems = useCallback(
     (value) => {
       const normalized = toSafeNumber(value, 0);
-      setDiamonds(normalized);
+      setSaqrGems(normalized);
       if (onBalanceUpdate) {
-        onBalanceUpdate({ diamonds: normalized });
+        onBalanceUpdate({ saqr_gems: normalized, saqr_points: normalized });
       }
     },
     [onBalanceUpdate],
   );
 
-  const normalizedDiamonds = useMemo(
-    () => toSafeNumber(diamonds, 0),
-    [diamonds],
+  const normalizedSaqrGems = useMemo(
+    () => toSafeNumber(saqrGems, 0),
+    [saqrGems],
   );
   const localizedServers = useMemo(() => {
     const namesByLanguage = {
@@ -598,8 +598,8 @@ const GlobalChatScreen = ({
 
   const loadBalance = useCallback(async () => {
     try {
-      if (user?.diamonds !== undefined) {
-        applyDiamonds(user.diamonds);
+      if (user?.saqr_gems !== undefined) {
+        applyGems(user.saqr_gems);
       }
 
       if (!userId) {
@@ -611,7 +611,7 @@ const GlobalChatScreen = ({
       );
       if (chatBalanceResponse.ok) {
         const data = await chatBalanceResponse.json();
-        applyDiamonds(data?.diamonds);
+        applyGems(data?.saqr_gems ?? data?.gems ?? 0);
         setMessageCost(toSafeNumber(data?.message_cost, MESSAGE_COST));
         return;
       }
@@ -619,14 +619,14 @@ const GlobalChatScreen = ({
       const fallbackBalanceResponse = await api.getBalance(userId);
       if (fallbackBalanceResponse.ok) {
         const data = await fallbackBalanceResponse.json();
-        applyDiamonds(data?.diamonds);
+        applyGems(data?.saqr_gems ?? 0);
       }
     } catch (e) {
-      if (user?.diamonds !== undefined) {
-        applyDiamonds(user.diamonds);
+      if (user?.saqr_gems !== undefined) {
+        applyGems(user.saqr_gems);
       }
     }
-  }, [applyDiamonds, user?.diamonds, userId]);
+  }, [applyGems, user?.saqr_gems, userId]);
 
   const checkChatBalance = useCallback(async () => {
     if (!userId) return null;
@@ -638,7 +638,7 @@ const GlobalChatScreen = ({
       if (!response.ok) return null;
       const data = await response.json();
       return {
-        diamonds: toSafeNumber(data?.diamonds, 0),
+        saqrGems: toSafeNumber(data?.saqr_gems, 0),
         canSend: Boolean(data?.can_send),
         messageCost: toSafeNumber(data?.message_cost, MESSAGE_COST),
       };
@@ -657,10 +657,10 @@ const GlobalChatScreen = ({
       return;
     }
 
-    if (messageCost > 0 && normalizedDiamonds < messageCost) {
+    if (messageCost > 0 && normalizedSaqrGems < messageCost) {
       const serverBalance = await checkChatBalance();
       if (serverBalance) {
-        applyDiamonds(serverBalance.diamonds);
+        applyGems(serverBalance.saqrGems);
         setMessageCost(serverBalance.messageCost);
         if (!serverBalance.canSend) {
           gameSounds.wrong();
@@ -695,7 +695,7 @@ const GlobalChatScreen = ({
 
       if (response.ok) {
         const data = await response.json();
-        applyDiamonds(data?.new_balance);
+        applyGems(data?.new_balance ?? normalizedSaqrGems);
         gameSounds.correct();
 
         if (data.chat_message) {
@@ -722,8 +722,8 @@ const GlobalChatScreen = ({
         } catch {
           error = {};
         }
-        if (error.detail?.error === "insufficient_diamonds") {
-          applyDiamonds(error?.detail?.current);
+        if (error.detail?.error === "insufficient_saqr_gems") {
+          applyGems(error?.detail?.current ?? normalizedSaqrGems);
           setShowInsufficientModal(true);
         } else {
           // Restore draft so user can retry without retyping.
@@ -740,12 +740,12 @@ const GlobalChatScreen = ({
       setSending(false);
     }
   }, [
-    applyDiamonds,
+    applyGems,
     checkChatBalance,
     copy,
     messageCost,
     newMessage,
-    normalizedDiamonds,
+    normalizedSaqrGems,
     selectedServer.id,
     sending,
     user?.avatar,
@@ -906,15 +906,6 @@ const GlobalChatScreen = ({
             </View>
           </View>
 
-          <TouchableOpacity style={styles.diamondBadge} activeOpacity={0.8}>
-            <LinearGradient
-              colors={["rgba(96,165,250,0.3)", "rgba(96,165,250,0.1)"]}
-              style={styles.diamondGradient}
-            >
-              <Ionicons name="diamond" size={16} color="#60a5fa" />
-              <Text style={styles.diamondText}>{diamonds}</Text>
-            </LinearGradient>
-          </TouchableOpacity>
         </Animated.View>
 
         {/* Cost Info */}
@@ -1013,13 +1004,13 @@ const GlobalChatScreen = ({
           <View style={styles.inputContainer}>
             {/* Balance Warning */}
             {messageCost > 0 &&
-              normalizedDiamonds < messageCost * 3 &&
-              normalizedDiamonds >= messageCost && (
+              normalizedSaqrGems < messageCost * 3 &&
+              normalizedSaqrGems >= messageCost && (
                 <View style={styles.lowBalanceWarning}>
                   <Ionicons name="warning" size={12} color="#f59e0b" />
                   <Text style={styles.lowBalanceText}>
                     {copy.lowBalancePrefix}{" "}
-                    {Math.floor(normalizedDiamonds / messageCost)}{" "}
+                    {Math.floor(normalizedSaqrGems / messageCost)}{" "}
                     {copy.lowBalanceSuffix}
                   </Text>
                 </View>
@@ -1074,12 +1065,12 @@ const GlobalChatScreen = ({
           </View>
         </KeyboardAvoidingView>
 
-        {/* Insufficient Diamonds Modal */}
-        <InsufficientDiamondsModal
+        {/* Insufficient balance modal */}
+        <InsufficientBalanceModal
           visible={showInsufficientModal}
           onWatchAds={handleWatchAds}
           onClose={() => setShowInsufficientModal(false)}
-          currentDiamonds={normalizedDiamonds}
+          currentBalance={normalizedSaqrGems}
           copy={copy}
           messageCost={messageCost}
         />
@@ -1142,25 +1133,6 @@ const styles = StyleSheet.create({
   onlineText: {
     color: "#22c55e",
     fontSize: 11,
-  },
-  diamondBadge: {
-    borderRadius: 20,
-    overflow: "hidden",
-  },
-  diamondGradient: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "rgba(96,165,250,0.3)",
-  },
-  diamondText: {
-    color: "#60a5fa",
-    fontWeight: "bold",
-    fontSize: 14,
   },
   costInfo: {
     marginHorizontal: 16,

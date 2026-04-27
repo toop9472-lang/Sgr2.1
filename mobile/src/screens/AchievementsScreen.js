@@ -74,11 +74,7 @@ const AchievementCard = ({ achievement, isUnlocked, progress, language = 'ar', o
       <View style={styles.rewardBadge}>
         <View style={styles.rewardItem}>
           <Ionicons name="sparkles" size={14} color="#f472b6" />
-          <Text style={styles.rewardText}>+{achievement.reward.points}</Text>
-        </View>
-        <View style={styles.rewardItem}>
-          <Ionicons name="diamond" size={14} color="#60a5fa" />
-          <Text style={styles.rewardText}>+{achievement.reward.diamonds}</Text>
+          <Text style={styles.rewardText}>+{achievement.reward.gems}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -150,16 +146,9 @@ const AchievementDetailModal = ({ achievement, isUnlocked, progress, language, o
               <View style={styles.modalRewardItems}>
                 <View style={styles.modalRewardItem}>
                   <Ionicons name="sparkles" size={24} color="#f472b6" />
-                  <Text style={styles.modalRewardValue}>+{achievement.reward.points}</Text>
+                  <Text style={styles.modalRewardValue}>+{achievement.reward.gems}</Text>
                   <Text style={styles.modalRewardType}>
                     {language === 'ar' ? 'جوهرة صقر' : 'Saqr Gems'}
-                  </Text>
-                </View>
-                <View style={styles.modalRewardItem}>
-                  <Ionicons name="diamond" size={24} color="#60a5fa" />
-                  <Text style={styles.modalRewardValue}>+{achievement.reward.diamonds}</Text>
-                  <Text style={styles.modalRewardType}>
-                    {language === 'ar' ? 'ماسة' : 'Diamonds'}
                   </Text>
                 </View>
               </View>
@@ -202,9 +191,7 @@ export const AchievementNotification = ({ achievement, language = 'ar', onClose 
             <Text style={styles.notificationName}>{name}</Text>
             <View style={styles.notificationReward}>
               <Ionicons name="sparkles" size={16} color="#f472b6" />
-              <Text style={styles.notificationRewardText}>+{achievement.reward.points}</Text>
-              <Ionicons name="diamond" size={16} color="#60a5fa" style={{ marginLeft: 10 }} />
-              <Text style={styles.notificationRewardText}>+{achievement.reward.diamonds}</Text>
+              <Text style={styles.notificationRewardText}>+{achievement.reward.gems}</Text>
             </View>
           </View>
           <TouchableOpacity style={styles.notificationClose} onPress={onClose}>

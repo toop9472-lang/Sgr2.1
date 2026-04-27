@@ -57,10 +57,6 @@ import PrivateMessagesScreen from "./src/screens/PrivateMessagesScreen";
 import BottomNav from "./src/components/BottomNav";
 import AIFloatingButton from "./src/components/AIFloatingButton";
 import AIChatModal from "./src/components/AIChatModal";
-import DailyRewardsModal from "./src/components/DailyRewardsModal";
-import DailyStreakModal, {
-  useDailyStreak,
-} from "./src/components/DailyStreakModal";
 
 // Contexts
 import { LanguageProvider, useLanguage } from "./src/i18n/LanguageContext";
@@ -68,7 +64,6 @@ import {
   AchievementsProvider,
   useAchievements,
 } from "./src/services/AchievementsContext";
-import { PointsProvider } from "./src/services/PointsContext";
 import { AchievementNotification } from "./src/screens/AchievementsScreen";
 
 // Services
@@ -95,7 +90,6 @@ function AppContent() {
   const [currentPage, setCurrentPage] = useState("home");
   const [showAdsViewer, setShowAdsViewer] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
-  const [showDailyRewards, setShowDailyRewards] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [settings, setSettings] = useState(null);
@@ -182,8 +176,6 @@ function AppContent() {
               const TYPES = NotificationService.NOTIFICATION_TYPES || {};
               if (data.type === TYPES.ACHIEVEMENT) {
                 setShowAchievements(true);
-              } else if (data.type === TYPES.DAILY_REWARD) {
-                setShowDailyRewards(true);
               }
             },
           );
@@ -297,7 +289,6 @@ function AppContent() {
                 ...userData.user,
                 points: userData.user.points || savedUser.points || 0,
                 saqr_gems: userData.user.saqr_gems || savedUser.saqr_gems || 0,
-                diamonds: userData.user.diamonds || savedUser.diamonds || 300,
                 total_earned:
                   userData.user.total_earned || savedUser.total_earned || 0,
               };
@@ -311,23 +302,6 @@ function AppContent() {
                 // Ignore economy init errors
               }
 
-              // Check daily login rewards
-              try {
-                const dailyResponse = await api.getDailyLoginStatus(
-                  updatedUser.id,
-                );
-                if (dailyResponse.ok) {
-                  const dailyData = await dailyResponse.json();
-                  if (
-                    dailyData.should_show_reward &&
-                    !dailyData.today_claimed
-                  ) {
-                    setTimeout(() => setShowDailyRewards(true), 1000);
-                  }
-                }
-              } catch (e) {
-                // Daily check skipped
-              }
             }
           }
         } catch (syncError) {
@@ -384,7 +358,6 @@ function AppContent() {
         if (!prev) return prev;
         const next = { ...prev, ...partial };
         const unchanged =
-          prev.diamonds === next.diamonds &&
           prev.saqr_gems === next.saqr_gems &&
           prev.saqr_points === next.saqr_points;
         if (unchanged) return prev;
@@ -404,9 +377,7 @@ function AppContent() {
         const data = await response.json();
         const normalizedGems =
           Number(data?.saqr_gems ?? data?.saqr_points ?? 0) || 0;
-        const normalizedDiamonds = Number(data?.diamonds ?? 0) || 0;
         updateUserBalanceLocally({
-          diamonds: normalizedDiamonds,
           saqr_gems: normalizedGems,
           saqr_points: normalizedGems,
         });
@@ -450,7 +421,7 @@ function AppContent() {
     setCurrentPage("home");
   };
 
-  const handleGemsEarned = async (gems = 0, diamonds = 0) => {
+  const handleGemsEarned = async (gems = 0) => {
     if (user && !user.isGuest) {
       setUser((prev) => {
         if (!prev) return prev;
@@ -458,7 +429,6 @@ function AppContent() {
           ...prev,
           saqr_gems: (prev.saqr_gems || 0) + gems,
           saqr_points: (prev.saqr_points || prev.saqr_gems || 0) + gems,
-          diamonds: (prev.diamonds || 0) + diamonds,
         };
         persistUserSnapshot(next);
         return next;
@@ -466,19 +436,10 @@ function AppContent() {
       setBalanceRefresh((prev) => prev + 1);
 
       // Update achievements
-      await updateCurrency(gems, diamonds);
+      await updateCurrency(gems);
       setTimeout(() => {
         syncBalanceFromServer();
       }, 0);
-    }
-  };
-
-  const handleDailyRewardClaimed = (data) => {
-    setBalanceRefresh((prev) => prev + 1);
-    if (data.reward_type === "gems" || data.reward_type === "points") {
-      handleGemsEarned(data.amount, 0);
-    } else if (data.reward_type === "diamonds") {
-      handleGemsEarned(0, data.amount);
     }
   };
 
@@ -538,9 +499,7 @@ function AppContent() {
           setShowAdsViewer(false);
           setCurrentPage("profile");
         }}
-        onRewardsEarned={({ gems = 0, diamonds = 0 }) =>
-          handleGemsEarned(gems, diamonds)
-        }
+        onRewardsEarned={({ gems = 0 }) => handleGemsEarned(gems)}
         user={user}
       />
     );
@@ -569,7 +528,6 @@ function AppContent() {
             onNavigateToChat={() => setCurrentPage("chat")}
             onNavigateToFortunes={() => setCurrentPage("fortunes")}
             onNavigateToFriends={() => setCurrentPage("friends")}
-            onOpenDailyChallenge={() => setShowDailyRewards(true)}
             onRefresh={initApp}
           />
         )}
@@ -674,14 +632,6 @@ function AppContent() {
       {/* AI Chat Modal */}
       <AIChatModal visible={showAIChat} onClose={() => setShowAIChat(false)} />
 
-      {/* Daily Rewards Modal - مكافآت الدخول اليومي */}
-      <DailyRewardsModal
-        visible={showDailyRewards}
-        onClose={() => setShowDailyRewards(false)}
-        userId={userId}
-        onRewardClaimed={handleDailyRewardClaimed}
-      />
-
       {/* Bottom Navigation - إخفاء عند فتح المقاطع أو الدردشة أو الأصدقاء */}
       {!["clips", "chat", "fortunes", "friends", "messages"].includes(
         currentPage,
@@ -704,9 +654,7 @@ function App() {
   return (
     <LanguageProvider>
       <AchievementsProvider>
-        <PointsProvider>
-          <AppContent />
-        </PointsProvider>
+        <AppContent />
       </AchievementsProvider>
     </LanguageProvider>
   );

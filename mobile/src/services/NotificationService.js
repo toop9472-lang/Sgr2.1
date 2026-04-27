@@ -37,11 +37,8 @@ initNotifications();
 export const NOTIFICATION_TYPES = {
   ACHIEVEMENT: 'achievement',
   DAILY_REWARD: 'daily_reward',
-  GAME_INVITE: 'game_invite',
   POINTS_EARNED: 'points_earned',
   STREAK_REMINDER: 'streak_reminder',
-  NEW_GAME: 'new_game',
-  LEADERBOARD: 'leaderboard',
 };
 
 // Register for push notifications
@@ -148,11 +145,12 @@ export const sendAchievementNotification = async (achievement, language = 'ar') 
     tr: 'Başarı Kazanıldı',
   };
   
+  const rewardPoints = Number(achievement?.reward?.points || 0);
   const bodies = {
-    ar: `تهانينا! لقد حصلت على "${name}" وربحت ${achievement.reward.points} جوهرة صقر و ${achievement.reward.diamonds} ماسة`,
-    en: `Congratulations! You earned "${name}" and won ${achievement.reward.points} Saqr gems and ${achievement.reward.diamonds} diamonds`,
-    fr: `Félicitations! Vous avez gagné "${name}" et remporté ${achievement.reward.points} gemmes Saqr et ${achievement.reward.diamonds} diamants`,
-    tr: `Tebrikler! "${name}" kazandınız ve ${achievement.reward.points} Saqr mücevheri ile ${achievement.reward.diamonds} elmas aldınız`,
+    ar: `تهانينا! لقد حصلت على "${name}" وربحت ${rewardPoints} جوهرة صقر`,
+    en: `Congratulations! You earned "${name}" and won ${rewardPoints} Saqr gems`,
+    fr: `Félicitations! Vous avez gagné "${name}" et remporté ${rewardPoints} gemmes Saqr`,
+    tr: `Tebrikler! "${name}" kazandınız ve ${rewardPoints} Saqr mücevheri aldınız`,
   };
   
   return scheduleLocalNotification({
@@ -205,10 +203,10 @@ export const scheduleDailyRewardReminder = async (hour = 10, minute = 0, languag
   };
   
   const bodies = {
-    ar: 'افتح صقر واحصل على جواهر صقر وألماسات مجانية كل يوم',
-    en: 'Open Saqr and get free Saqr gems and diamonds every day',
-    fr: 'Ouvrez Saqr et obtenez des gemmes Saqr et diamants gratuits chaque jour',
-    tr: 'Saqr\'ı açın ve her gün ücretsiz Saqr mücevheri ve elmas kazanın',
+    ar: 'افتح صقر وشاهد إعلاناً لتحصل على 5 جواهر صقر',
+    en: 'Open Saqr and watch an ad to earn 5 Saqr gems',
+    fr: 'Ouvrez Saqr et regardez une pub pour gagner 5 gemmes Saqr',
+    tr: "Saqr'ı aç ve 5 Saqr mücevheri kazanmak için reklam izle",
   };
   
   // Schedule for tomorrow
@@ -284,30 +282,6 @@ export const sendPointsEarnedNotification = async (points, source, language = 'a
   });
 };
 
-// Send new game notification
-export const sendNewGameNotification = async (gameName, language = 'ar') => {
-  const titles = {
-    ar: 'لعبة جديدة متاحة',
-    en: 'New game available',
-    fr: 'Nouveau jeu disponible',
-    tr: 'Yeni oyun mevcut',
-  };
-  
-  const bodies = {
-    ar: `جرّب الآن "${gameName}" واربح نقاط إضافية`,
-    en: `Try "${gameName}" now and earn bonus points`,
-    fr: `Essayez "${gameName}" maintenant et gagnez des points bonus`,
-    tr: `"${gameName}" şimdi deneyin ve bonus puan kazanın`,
-  };
-  
-  return scheduleLocalNotification({
-    title: titles[language] || titles.ar,
-    body: bodies[language] || bodies.ar,
-    data: { type: NOTIFICATION_TYPES.NEW_GAME, gameName },
-    channelId: 'default',
-  });
-};
-
 // Cancel all scheduled notifications
 export const cancelAllNotifications = async () => {
   if (!notificationsAvailable || !Notifications) return;
@@ -377,7 +351,6 @@ export default {
   scheduleDailyRewardReminder,
   sendStreakReminder,
   sendPointsEarnedNotification,
-  sendNewGameNotification,
   cancelAllNotifications,
   cancelScheduledNotifications,
   getNotificationSettings,

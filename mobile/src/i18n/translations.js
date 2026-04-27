@@ -97,9 +97,9 @@ export const translations = {
     about: 'حول التطبيق',
     
     // Currency
-    points: 'نقاط صقر',
-    diamonds: 'الماس',
-    buy_diamonds: 'شراء الماس',
+    points: 'جواهر صقر',
+    diamonds: 'جواهر صقر',
+    buy_diamonds: 'جمع الجواهر',
     
     // Ads
     watch_ad: 'شاهد إعلان',
@@ -118,8 +118,8 @@ export const translations = {
     puzzle_solver_desc: 'أكمل 50 لغز',
     streak_master: 'سيد السلسلة',
     streak_master_desc: 'حقق سلسلة 10 فوز متتالي',
-    diamond_collector: 'جامع الماس',
-    diamond_collector_desc: 'اجمع 1000 ماسة',
+    diamond_collector: 'جامع الجواهر',
+    diamond_collector_desc: 'اجمع 1000 جوهرة صقر',
     point_millionaire: 'مليونير النقاط',
     point_millionaire_desc: 'اجمع 10000 نقطة',
     daily_player: 'لاعب يومي',
@@ -229,9 +229,9 @@ export const translations = {
     about: 'About',
     
     // Currency
-    points: 'Saqr Points',
-    diamonds: 'Diamonds',
-    buy_diamonds: 'Buy Diamonds',
+    points: 'Saqr Gems',
+    diamonds: 'Saqr Gems',
+    buy_diamonds: 'Earn Gems',
     
     // Ads
     watch_ad: 'Watch Ad',
@@ -250,8 +250,8 @@ export const translations = {
     puzzle_solver_desc: 'Complete 50 puzzles',
     streak_master: 'Streak Master',
     streak_master_desc: 'Achieve 10 wins in a row',
-    diamond_collector: 'Diamond Collector',
-    diamond_collector_desc: 'Collect 1000 diamonds',
+    diamond_collector: 'Gem Collector',
+    diamond_collector_desc: 'Collect 1000 Saqr gems',
     point_millionaire: 'Point Millionaire',
     point_millionaire_desc: 'Collect 10000 points',
     daily_player: 'Daily Player',
@@ -361,9 +361,9 @@ export const translations = {
     about: 'À propos',
     
     // Currency
-    points: 'Points Saqr',
-    diamonds: 'Diamants',
-    buy_diamonds: 'Acheter des diamants',
+    points: 'Gemmes Saqr',
+    diamonds: 'Gemmes Saqr',
+    buy_diamonds: 'Gagner des gemmes',
     
     // Ads
     watch_ad: 'Regarder une pub',
@@ -382,8 +382,8 @@ export const translations = {
     puzzle_solver_desc: 'Complétez 50 puzzles',
     streak_master: 'Maître des séries',
     streak_master_desc: 'Obtenez 10 victoires consécutives',
-    diamond_collector: 'Collecteur de diamants',
-    diamond_collector_desc: 'Collectez 1000 diamants',
+    diamond_collector: 'Collectionneur de gemmes',
+    diamond_collector_desc: 'Collectez 1000 gemmes Saqr',
     point_millionaire: 'Millionnaire de points',
     point_millionaire_desc: 'Collectez 10000 points',
     daily_player: 'Joueur quotidien',
@@ -493,9 +493,9 @@ export const translations = {
     about: 'Hakkında',
     
     // Currency
-    points: 'Saqr Puanları',
-    diamonds: 'Elmaslar',
-    buy_diamonds: 'Elmas Satın Al',
+    points: 'Saqr Mücevherleri',
+    diamonds: 'Saqr Mücevherleri',
+    buy_diamonds: 'Mücevher Kazan',
     
     // Ads
     watch_ad: 'Reklam İzle',
@@ -514,8 +514,8 @@ export const translations = {
     puzzle_solver_desc: '50 bulmaca tamamla',
     streak_master: 'Seri Ustası',
     streak_master_desc: 'Arka arkaya 10 galibiyet al',
-    diamond_collector: 'Elmas Toplayıcı',
-    diamond_collector_desc: '1000 elmas topla',
+    diamond_collector: 'Mücevher Toplayıcı',
+    diamond_collector_desc: '1000 Saqr mücevheri topla',
     point_millionaire: 'Puan Milyoneri',
     point_millionaire_desc: '10000 puan topla',
     daily_player: 'Günlük Oyuncu',

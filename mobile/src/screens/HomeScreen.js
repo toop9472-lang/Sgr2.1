@@ -99,7 +99,6 @@ const HomeScreen = ({
   onNavigateToChat,
   onNavigateToFortunes,
   onNavigateToFriends,
-  onOpenDailyChallenge,
   settings,
   onRefresh,
 }) => {
@@ -116,16 +115,14 @@ const HomeScreen = ({
       fortunesSubtitle: isArabic
         ? "اربح جواهر صقر للاستبدال بالمال الحقيقي!"
         : "Earn Saqr gems and exchange them for real cash!",
-      exchangeBadge: isArabic ? "500 جوهرة = 1 ريال" : "500 gems = 1 SAR",
+      exchangeBadge: isArabic ? "500 جوهرة = 3 ريال" : "500 gems = 3 SAR",
       fortunesDesc: isArabic
-        ? "عجلة الحظ اليومية • صناديق الكنز • مكافآت مضاعفة"
-        : "Daily wheel • Treasure chests • Boosted rewards",
+        ? "إعلانات AdMob مكتملة • مكافأة ثابتة 5 جواهر • سحب مرن"
+        : "Completed AdMob ads • Fixed 5 gems reward • Flexible cashout",
       watchAndEarn: isArabic ? "شاهد واربح" : "Watch & Earn",
       watchAndEarnSubtitle: isArabic
         ? "إعلانات AdMob كاملة الشاشة + إعلانات المعلنين"
         : "Full-screen AdMob + advertiser ads",
-      dailyChallenge: isArabic ? "التحدي اليومي" : "Daily Challenge",
-      dailyChallengeSub: isArabic ? "جواهر إضافية يومياً" : "Daily bonus gems",
       clips: isArabic ? "ريلز المجتمع" : "Community Reels",
       clipsSub: isArabic
         ? "مقاطع 15 ثانية من المستخدمين"
@@ -224,20 +221,20 @@ const HomeScreen = ({
         {/* البطاقات الثنائية */}
         <View style={styles.dualCards}>
           <FeatureCard
-            title={copy.dailyChallenge}
-            subtitle={copy.dailyChallengeSub}
-            image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/9571396ba276f9f9cf70ce0622c4303850d05054256c99581ef235eec62d9760.png"
-            color="#f59e0b"
-            icon="flame"
-            onPress={onOpenDailyChallenge}
-          />
-          <FeatureCard
             title={copy.clips}
             subtitle={copy.clipsSub}
             image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e02071f57750c77c0db321a70a51ed7bceb6eeb4df5f78e29d834466fcf3f354.png"
             color="#8b5cf6"
             icon="film"
             onPress={onNavigateToClips}
+          />
+          <FeatureCard
+            title={copy.friends}
+            subtitle={copy.friendsSub}
+            image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/7f2948052c933ae7604200fd2c98d91f4504fce293deb36ce108cba1d36f062a.png"
+            color="#22c55e"
+            icon="person-add"
+            onPress={onNavigateToFriends}
           />
         </View>
 
@@ -252,14 +249,7 @@ const HomeScreen = ({
             onPress={onNavigateToChat}
             badge={copy.chatCostBadge}
           />
-          <FeatureCard
-            title={copy.friends}
-            subtitle={copy.friendsSub}
-            image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/7f2948052c933ae7604200fd2c98d91f4504fce293deb36ce108cba1d36f062a.png"
-            color="#22c55e"
-            icon="person-add"
-            onPress={onNavigateToFriends}
-          />
+          <View style={{ flex: 1 }} />
         </View>
 
         {/* نصيحة */}

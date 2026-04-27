@@ -230,7 +230,6 @@ const AuthScreen = ({ onLogin }) => {
         name: 'زائر',
         points: 0,
         saqr_gems: 0,
-        diamonds: 0,
         total_earned: 0,
         is_guest: true,
         isGuest: true,

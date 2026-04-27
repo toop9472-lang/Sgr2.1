@@ -81,7 +81,6 @@ const AdViewerScreen = ({
   const [fullScreenWatchMode, setFullScreenWatchMode] = useState(false);
   const [showPointsAnimation, setShowPointsAnimation] = useState(false);
   const [earnedGems, setEarnedGems] = useState(0);
-  const [earnedDiamonds, setEarnedDiamonds] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [videoLoading, setVideoLoading] = useState(true);
   const [isAdMobLoading, setIsAdMobLoading] = useState(false);
@@ -248,13 +247,11 @@ const AdViewerScreen = ({
               persisted?.payload?.points_earned ??
               0,
           ) || 0;
-        const diamonds = Number(persisted?.payload?.diamonds_earned ?? 6) || 0;
         setEarnedGems(gems);
-        setEarnedDiamonds(diamonds);
         setShowPointsAnimation(true);
         Vibration.vibrate(100);
         if (onRewardsEarned) {
-          onRewardsEarned({ gems, diamonds });
+          onRewardsEarned({ gems });
         }
         if (recordAdWatched) {
           recordAdWatched();
@@ -471,16 +468,12 @@ const AdViewerScreen = ({
               persisted?.payload?.points_earned ??
               0,
           ) || 0;
-        const diamonds =
-          Number(persisted?.payload?.diamonds_earned ?? requestedMinutes * 6) ||
-          0;
         setEarnedGems(gems);
-        setEarnedDiamonds(diamonds);
         setShowPointsAnimation(true);
         Vibration.vibrate(100);
         setTimeout(() => setShowPointsAnimation(false), 3000);
 
-        if (onRewardsEarned) onRewardsEarned({ gems, diamonds });
+        if (onRewardsEarned) onRewardsEarned({ gems });
         if (recordAdWatched) {
           recordAdWatched();
         }
@@ -617,17 +610,8 @@ const AdViewerScreen = ({
             <View style={styles.pointsAnimRow}>
               <Ionicons name="sparkles" size={28} color="#fbbf24" />
               <Text style={styles.pointsAnimValue}>+{earnedGems}</Text>
-              <Ionicons
-                name="diamond"
-                size={24}
-                color="#60a5fa"
-                style={{ marginLeft: 8 }}
-              />
-              <Text style={styles.pointsAnimMiniValue}>+{earnedDiamonds}</Text>
             </View>
-            <Text style={styles.pointsAnimSubtext}>
-              +6 ألماسات لكل إعلان مكافأة
-            </Text>
+            <Text style={styles.pointsAnimSubtext}>+5 جواهر صقر لكل إعلان مكتمل</Text>
           </View>
         </View>
       )}
@@ -1122,12 +1106,6 @@ const styles = StyleSheet.create({
     fontSize: 48,
     fontWeight: "bold",
     color: "#fbbf24",
-  },
-  pointsAnimMiniValue: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "#60a5fa",
-    marginLeft: 2,
   },
   pointsAnimSubtext: {
     color: "rgba(255,255,255,0.6)",
