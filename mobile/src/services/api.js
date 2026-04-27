@@ -704,8 +704,12 @@ export const api = {
 
   // ==================== Clips (short videos/reels) ====================
 
-  async getClips(limit = 30) {
-    return this.fetch(`/api/clips/feed?limit=${encodeURIComponent(limit)}`);
+  async getClips(limit = 30, viewerId = null) {
+    const base = `/api/clips/feed?limit=${encodeURIComponent(limit)}`;
+    const withViewer = viewerId
+      ? `${base}&viewer_id=${encodeURIComponent(viewerId)}`
+      : base;
+    return this.fetch(withViewer);
   },
 
   async createClip(payload) {
@@ -727,6 +731,24 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ clip_id: clipId, ...(payload || {}) }),
     });
+  },
+
+  async toggleClipFollow(viewerUserId, targetUserId) {
+    return this.fetch("/api/clips/follow/toggle", {
+      method: "POST",
+      body: JSON.stringify({
+        viewer_user_id: viewerUserId,
+        target_user_id: targetUserId,
+      }),
+    });
+  },
+
+  async getClipProfileStats(userId, viewerId = null) {
+    const base = `/api/clips/profile-stats/${encodeURIComponent(userId)}`;
+    const withViewer = viewerId
+      ? `${base}?viewer_id=${encodeURIComponent(viewerId)}`
+      : base;
+    return this.fetch(withViewer);
   },
 
   // ==================== Phone Authentication ====================

@@ -59,6 +59,10 @@ const ProfileScreen = ({
     saqr_points: user?.points || 0,
     saqr_gems: user?.saqr_gems || 0,
   });
+  const [followStats, setFollowStats] = useState({
+    followers_count: 0,
+    following_count: 0,
+  });
 
   // Achievements context
   const { recordAppShared } = useAchievements();
@@ -112,8 +116,25 @@ const ProfileScreen = ({
       }
     };
 
+    const loadFollowStats = async () => {
+      try {
+        const uid = user?.id || user?.user_id;
+        if (!uid) return;
+        const response = await api.getClipProfileStats(uid, uid);
+        if (!response.ok) return;
+        const data = await response.json().catch(() => ({}));
+        setFollowStats({
+          followers_count: Number(data?.followers_count ?? 0) || 0,
+          following_count: Number(data?.following_count ?? 0) || 0,
+        });
+      } catch (e) {
+        console.log("Profile follow stats load error:", e);
+      }
+    };
+
     loadProfileAppearance();
     loadBalance();
+    loadFollowStats();
   }, [user?.id, user?.user_id]);
 
   const handleWithdraw = () => {
@@ -597,6 +618,16 @@ const ProfileScreen = ({
             <Ionicons name="people" size={18} color="#22c55e" />
             <Text style={styles.statValue}>{referrals}</Text>
             <Text style={styles.statLabel}>إحالات</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Ionicons name="person-add-outline" size={18} color="#38bdf8" />
+            <Text style={styles.statValue}>{followStats.following_count}</Text>
+            <Text style={styles.statLabel}>يتابع</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Ionicons name="people-outline" size={18} color="#0ea5e9" />
+            <Text style={styles.statValue}>{followStats.followers_count}</Text>
+            <Text style={styles.statLabel}>متابعون</Text>
           </View>
         </View>
 

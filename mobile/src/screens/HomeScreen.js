@@ -122,8 +122,8 @@ const HomeScreen = ({
         : "Daily wheel • Treasure chests • Boosted rewards",
       watchAndEarn: isArabic ? "شاهد واربح" : "Watch & Earn",
       watchAndEarnSubtitle: isArabic
-        ? "كل إعلان مكافأة = 6 ألماسات"
-        : "Each rewarded ad = 6 diamonds",
+        ? "إعلانات AdMob كاملة الشاشة + إعلانات المعلنين"
+        : "Full-screen AdMob + advertiser ads",
       dailyChallenge: isArabic ? "التحدي اليومي" : "Daily Challenge",
       dailyChallengeSub: isArabic ? "جواهر إضافية يومياً" : "Daily bonus gems",
       clips: isArabic ? "ريلز المجتمع" : "Community Reels",
@@ -134,7 +134,7 @@ const HomeScreen = ({
       chatSub: isArabic ? "تواصل مع اللاعبين" : "Connect with players",
       friends: isArabic ? "الأصدقاء" : "Friends",
       friendsSub: isArabic ? "أضف أصدقاء جدد" : "Add new friends",
-      chatCostBadge: isArabic ? "5 ماسات" : "5 diamonds",
+      chatCostBadge: isArabic ? "مجاني" : "Free",
       tip: isArabic
         ? "ادعُ أصدقاءك واربح جواهر صقر مضاعفة!"
         : "Invite friends and earn boosted Saqr gems!",

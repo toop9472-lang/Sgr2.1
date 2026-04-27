@@ -25,6 +25,27 @@ const CLIP_PLACEHOLDERS = [
   "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=900&q=80",
   "https://images.unsplash.com/photo-1521334884684-d80222895322?auto=format&fit=crop&w=900&q=80",
 ];
+const normalizeClip = (clip = {}) => {
+  const safeComments = Array.isArray(clip?.comments)
+    ? clip.comments.map((c) => ({
+        ...c,
+        content: c?.content || c?.comment || "",
+      }))
+    : [];
+  return {
+    ...clip,
+    title: clip?.title || clip?.caption || "مقطع",
+    content: clip?.content || clip?.caption || "",
+    comments: safeComments,
+    comments_count: Number(clip?.comments_count ?? safeComments.length) || 0,
+    likes_count: Number(clip?.likes_count ?? 0) || 0,
+    liked_by_me: Boolean(clip?.liked_by_me),
+    followers_count: Number(clip?.followers_count ?? 0) || 0,
+    following_count: Number(clip?.following_count ?? 0) || 0,
+    followed_by_me: Boolean(clip?.followed_by_me),
+  };
+};
+
 const ClipsScreen = ({ user, onClose }) => {
   const userId = user?.id || user?.user_id;
   const [clips, setClips] = useState([]);
@@ -36,21 +57,23 @@ const ClipsScreen = ({ user, onClose }) => {
   const [newClipTitle, setNewClipTitle] = useState("");
   const [newClipText, setNewClipText] = useState("");
   const [newClipThumb, setNewClipThumb] = useState("");
+  const [followLoadingUserId, setFollowLoadingUserId] = useState(null);
 
   const loadClips = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await api.getClips();
+      const response = await api.getClips(30, userId);
       if (response.ok) {
         const data = await response.json();
-        setClips(Array.isArray(data?.clips) ? data.clips : []);
+        const list = Array.isArray(data?.clips) ? data.clips : [];
+        setClips(list.map((clip) => normalizeClip(clip)));
       }
     } catch (e) {
       console.log("Clips load error:", e?.message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     loadClips();
@@ -81,6 +104,8 @@ const ClipsScreen = ({ user, onClose }) => {
         user_name: user?.name || "مستخدم",
         title,
         content: text,
+        caption: text,
+        video_url: newClipThumb.trim() || fallbackImage,
         thumbnail_url: newClipThumb.trim() || fallbackImage,
       });
       if (!response.ok) {
@@ -153,7 +178,10 @@ const ClipsScreen = ({ user, onClose }) => {
       if (!response.ok) return;
       const data = await response.json();
       const comments = Array.isArray(data?.comments)
-        ? data.comments
+        ? data.comments.map((c) => ({
+            ...c,
+            content: c?.content || c?.comment || "",
+          }))
         : activeClip.comments || [];
       setCommentDraft("");
       setActiveClip((prev) =>
@@ -168,6 +196,50 @@ const ClipsScreen = ({ user, onClose }) => {
       );
     } catch {}
   }, [activeClip, commentDraft, ensureSignedIn, user?.name, userId]);
+
+  const toggleFollow = useCallback(
+    async (clip) => {
+      if (!ensureSignedIn()) return;
+      const targetUserId = clip?.user_id;
+      if (!targetUserId || targetUserId === userId) return;
+      setFollowLoadingUserId(targetUserId);
+      try {
+        const response = await api.toggleClipFollow(userId, targetUserId);
+        if (!response.ok) return;
+        const data = await response.json();
+        setClips((prev) =>
+          prev.map((item) =>
+            item.user_id === targetUserId
+              ? {
+                  ...item,
+                  followed_by_me: Boolean(data?.followed),
+                  followers_count:
+                    Number(data?.followers_count ?? item.followers_count) || 0,
+                  following_count:
+                    Number(data?.following_count ?? item.following_count) || 0,
+                }
+              : item,
+          ),
+        );
+        setActiveClip((prev) =>
+          prev?.user_id === targetUserId
+            ? {
+                ...prev,
+                followed_by_me: Boolean(data?.followed),
+                followers_count:
+                  Number(data?.followers_count ?? prev.followers_count) || 0,
+                following_count:
+                  Number(data?.following_count ?? prev.following_count) || 0,
+              }
+            : prev,
+        );
+      } catch {
+      } finally {
+        setFollowLoadingUserId(null);
+      }
+    },
+    [ensureSignedIn, userId],
+  );
 
   const renderClip = useCallback(
     ({ item, index }) => {
@@ -190,6 +262,33 @@ const ClipsScreen = ({ user, onClose }) => {
                 <Ionicons name="flash-outline" size={12} color="#22d3ee" />
                 <Text style={styles.clipBadgeText}>{MAX_CLIP_DURATION}s</Text>
               </View>
+            </View>
+            <View style={styles.followRow}>
+              <Text style={styles.followStatsText}>
+                {item.followers_count || 0} متابع • {item.following_count || 0}{" "}
+                يتابع
+              </Text>
+              {item.user_id && item.user_id !== userId && (
+                <TouchableOpacity
+                  style={[
+                    styles.followBtn,
+                    item.followed_by_me ? styles.followBtnActive : null,
+                    followLoadingUserId === item.user_id
+                      ? styles.followBtnDisabled
+                      : null,
+                  ]}
+                  disabled={followLoadingUserId === item.user_id}
+                  onPress={() => toggleFollow(item)}
+                >
+                  {followLoadingUserId === item.user_id ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.followBtnText}>
+                      {item.followed_by_me ? "متابَع" : "متابعة"}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              )}
             </View>
             <ImageBackground
               source={{ uri: image }}
@@ -240,7 +339,7 @@ const ClipsScreen = ({ user, onClose }) => {
         </TouchableOpacity>
       );
     },
-    [toggleLike],
+    [followLoadingUserId, toggleFollow, toggleLike, userId],
   );
 
   const emptyState = useMemo(
@@ -367,6 +466,33 @@ const ClipsScreen = ({ user, onClose }) => {
               </TouchableOpacity>
             </View>
             <Text style={styles.detailsText}>{activeClip?.content}</Text>
+            <View style={styles.detailsFollowRow}>
+              <Text style={styles.followStatsText}>
+                {activeClip?.followers_count || 0} متابع •{" "}
+                {activeClip?.following_count || 0} يتابع
+              </Text>
+              {activeClip?.user_id && activeClip.user_id !== userId && (
+                <TouchableOpacity
+                  style={[
+                    styles.followBtn,
+                    activeClip?.followed_by_me ? styles.followBtnActive : null,
+                    followLoadingUserId === activeClip.user_id
+                      ? styles.followBtnDisabled
+                      : null,
+                  ]}
+                  disabled={followLoadingUserId === activeClip.user_id}
+                  onPress={() => toggleFollow(activeClip)}
+                >
+                  {followLoadingUserId === activeClip.user_id ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.followBtnText}>
+                      {activeClip?.followed_by_me ? "متابَع" : "متابعة"}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              )}
+            </View>
             <View style={styles.detailsQuickActions}>
               <TouchableOpacity
                 style={styles.quickAction}
@@ -464,6 +590,46 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(34,211,238,0.12)",
   },
   clipBadgeText: { color: "#22d3ee", fontSize: 10, fontWeight: "700" },
+  followRow: {
+    marginTop: 10,
+    marginBottom: 2,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  detailsFollowRow: {
+    marginBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  followStatsText: {
+    color: "#94a3b8",
+    fontSize: 11,
+    flex: 1,
+  },
+  followBtn: {
+    minWidth: 78,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    backgroundColor: "#2563eb",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  followBtnActive: {
+    backgroundColor: "#0ea5e9",
+  },
+  followBtnDisabled: {
+    opacity: 0.65,
+  },
+  followBtnText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "700",
+  },
   clipVisual: {
     marginTop: 10,
     height: 110,

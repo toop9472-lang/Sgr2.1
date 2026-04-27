@@ -1,71 +1,90 @@
 // Saqr Mobile App - Main Entry Point
-import { StatusBar } from 'expo-status-bar';
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, StyleSheet, ActivityIndicator, Text, BackHandler, Alert, Image, I18nManager, LogBox, TouchableOpacity, Appearance, Platform } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getTrackingPermissionsAsync, requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
-import colors from './src/styles/colors';
+import { StatusBar } from "expo-status-bar";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import {
+  View,
+  StyleSheet,
+  ActivityIndicator,
+  Text,
+  BackHandler,
+  Alert,
+  Image,
+  I18nManager,
+  LogBox,
+  TouchableOpacity,
+  Appearance,
+  Platform,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  getTrackingPermissionsAsync,
+  requestTrackingPermissionsAsync,
+} from "expo-tracking-transparency";
+import colors from "./src/styles/colors";
 
 // Ignore specific warnings that don't affect functionality
 LogBox.ignoreLogs([
-  'Non-serializable values were found in the navigation state',
-  'Sending `onAnimatedValueUpdate`',
-  'componentWillReceiveProps has been renamed',
-  'componentWillMount has been renamed',
-  'expo-notifications',
-  'expo-device',
+  "Non-serializable values were found in the navigation state",
+  "Sending `onAnimatedValueUpdate`",
+  "componentWillReceiveProps has been renamed",
+  "componentWillMount has been renamed",
+  "expo-notifications",
+  "expo-device",
 ]);
 
 // RTL support - will be set dynamically based on language
 I18nManager.allowRTL(true);
 
 // Screens
-import AuthScreen from './src/screens/AuthScreen';
-import HomeScreen from './src/screens/HomeScreen';
-import ProfileScreen from './src/screens/ProfileScreen';
-import AdvertiserScreen from './src/screens/AdvertiserScreen';
-import AdvertiserDashboardScreen from './src/screens/AdvertiserDashboardScreen';
-import AdViewerScreen from './src/screens/AdViewerScreen';
-import SettingsScreen from './src/screens/SettingsScreen';
-import SupportScreen from './src/screens/SupportScreen';
-import ChallengesScreen from './src/screens/ChallengesScreen';
-import ClipsScreen from './src/screens/ClipsScreen';
-import AchievementsScreen from './src/screens/AchievementsScreen';
-import AdminWebViewScreen from './src/screens/AdminWebViewScreen';
-import GlobalChatScreen from './src/screens/GlobalChatScreen';
-import SaqrFortunesScreen from './src/screens/SaqrFortunesScreen';
-import FriendsScreen from './src/screens/FriendsScreen';
-import PrivateMessagesScreen from './src/screens/PrivateMessagesScreen';
-import InvitationsScreen from './src/screens/InvitationsScreen';
+import AuthScreen from "./src/screens/AuthScreen";
+import HomeScreen from "./src/screens/HomeScreen";
+import ProfileScreen from "./src/screens/ProfileScreen";
+import AdvertiserScreen from "./src/screens/AdvertiserScreen";
+import AdvertiserDashboardScreen from "./src/screens/AdvertiserDashboardScreen";
+import AdViewerScreen from "./src/screens/AdViewerScreen";
+import SettingsScreen from "./src/screens/SettingsScreen";
+import SupportScreen from "./src/screens/SupportScreen";
+import ClipsScreen from "./src/screens/ClipsScreen";
+import AchievementsScreen from "./src/screens/AchievementsScreen";
+import AdminWebViewScreen from "./src/screens/AdminWebViewScreen";
+import GlobalChatScreen from "./src/screens/GlobalChatScreen";
+import SaqrFortunesScreen from "./src/screens/SaqrFortunesScreen";
+import FriendsScreen from "./src/screens/FriendsScreen";
+import PrivateMessagesScreen from "./src/screens/PrivateMessagesScreen";
 
 // Components
-import BottomNav from './src/components/BottomNav';
-import AIFloatingButton from './src/components/AIFloatingButton';
-import AIChatModal from './src/components/AIChatModal';
-import DailyRewardsModal from './src/components/DailyRewardsModal';
-import DailyStreakModal, { useDailyStreak } from './src/components/DailyStreakModal';
+import BottomNav from "./src/components/BottomNav";
+import AIFloatingButton from "./src/components/AIFloatingButton";
+import AIChatModal from "./src/components/AIChatModal";
+import DailyRewardsModal from "./src/components/DailyRewardsModal";
+import DailyStreakModal, {
+  useDailyStreak,
+} from "./src/components/DailyStreakModal";
 
 // Contexts
-import { LanguageProvider, useLanguage } from './src/i18n/LanguageContext';
-import { AchievementsProvider, useAchievements } from './src/services/AchievementsContext';
-import { PointsProvider } from './src/services/PointsContext';
-import { AchievementNotification } from './src/screens/AchievementsScreen';
+import { LanguageProvider, useLanguage } from "./src/i18n/LanguageContext";
+import {
+  AchievementsProvider,
+  useAchievements,
+} from "./src/services/AchievementsContext";
+import { PointsProvider } from "./src/services/PointsContext";
+import { AchievementNotification } from "./src/screens/AchievementsScreen";
 
 // Services
-import api from './src/services/api';
-import storage from './src/services/storage';
-import admobService from './src/services/admobService';
+import api from "./src/services/api";
+import storage from "./src/services/storage";
+import admobService from "./src/services/admobService";
 
 // Safe notification import
 let NotificationService = null;
 try {
-  NotificationService = require('./src/services/NotificationService');
+  NotificationService = require("./src/services/NotificationService");
   if (NotificationService.default) {
     NotificationService = NotificationService.default;
   }
 } catch (e) {
-  console.log('Notifications not available');
+  console.log("Notifications not available");
 }
 
 // Main App Content (wrapped with providers)
@@ -73,7 +92,7 @@ function AppContent() {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState('home');
+  const [currentPage, setCurrentPage] = useState("home");
   const [showAdsViewer, setShowAdsViewer] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
   const [showDailyRewards, setShowDailyRewards] = useState(false);
@@ -82,26 +101,25 @@ function AppContent() {
   const [settings, setSettings] = useState(null);
   const [balanceRefresh, setBalanceRefresh] = useState(0);
   const [selectedFriend, setSelectedFriend] = useState(null);
-  const [themeMode, setThemeMode] = useState('dark');
-  const [systemColorScheme, setSystemColorScheme] = useState(Appearance.getColorScheme() || 'dark');
+  const [themeMode, setThemeMode] = useState("dark");
+  const [systemColorScheme, setSystemColorScheme] = useState(
+    Appearance.getColorScheme() || "dark",
+  );
   const userId = user?.id || user?.user_id;
 
   // Language context
   const { language } = useLanguage();
-  
+
   // Achievements context
-  const { 
-    newAchievement, 
-    clearNewAchievement, 
-    updateCurrency,
-  } = useAchievements();
+  const { newAchievement, clearNewAchievement, updateCurrency } =
+    useAchievements();
 
   // Notification listener ref
   const notificationListenerRef = useRef(null);
 
   // Dynamic RTL based on language
   useEffect(() => {
-    const isRTL = language === 'ar';
+    const isRTL = language === "ar";
     if (I18nManager.isRTL !== isRTL) {
       I18nManager.forceRTL(isRTL);
       // Note: RTL changes require app restart to take effect
@@ -110,7 +128,7 @@ function AppContent() {
 
   useEffect(() => {
     const sub = Appearance.addChangeListener(({ colorScheme }) => {
-      setSystemColorScheme(colorScheme || 'dark');
+      setSystemColorScheme(colorScheme || "dark");
     });
     return () => sub?.remove?.();
   }, []);
@@ -119,7 +137,7 @@ function AppContent() {
   useEffect(() => {
     initApp();
     setupNotifications();
-    
+
     return () => {
       if (notificationListenerRef.current) {
         notificationListenerRef.current();
@@ -130,47 +148,48 @@ function AppContent() {
   // Setup push notifications
   const setupNotifications = async () => {
     if (!NotificationService) {
-      console.log('NotificationService not available, skipping setup');
+      console.log("NotificationService not available, skipping setup");
       return;
     }
-    
+
     try {
       // Register for push notifications
       if (NotificationService.registerForPushNotifications) {
         await NotificationService.registerForPushNotifications();
       }
-      
+
       // Schedule daily reward reminder
       if (NotificationService.scheduleDailyRewardReminder) {
         await NotificationService.scheduleDailyRewardReminder(10, 0, language);
       }
-      
+
       // Add notification listeners
       if (NotificationService.addNotificationListeners) {
-        notificationListenerRef.current = NotificationService.addNotificationListeners(
-          // On notification received
-          (notification) => {
-            console.log('Notification received:', notification);
-          },
-          // On notification response (user tapped)
-          (response) => {
-            const data = response?.notification?.request?.content?.data;
-            if (!data) return;
-            
-            console.log('Notification response:', data);
-            
-            // Navigate based on notification type
-            const TYPES = NotificationService.NOTIFICATION_TYPES || {};
-            if (data.type === TYPES.ACHIEVEMENT) {
-              setShowAchievements(true);
-            } else if (data.type === TYPES.DAILY_REWARD) {
-              setShowDailyRewards(true);
-            }
-          }
-        );
+        notificationListenerRef.current =
+          NotificationService.addNotificationListeners(
+            // On notification received
+            (notification) => {
+              console.log("Notification received:", notification);
+            },
+            // On notification response (user tapped)
+            (response) => {
+              const data = response?.notification?.request?.content?.data;
+              if (!data) return;
+
+              console.log("Notification response:", data);
+
+              // Navigate based on notification type
+              const TYPES = NotificationService.NOTIFICATION_TYPES || {};
+              if (data.type === TYPES.ACHIEVEMENT) {
+                setShowAchievements(true);
+              } else if (data.type === TYPES.DAILY_REWARD) {
+                setShowDailyRewards(true);
+              }
+            },
+          );
       }
     } catch (error) {
-      console.log('Notification setup error:', error.message);
+      console.log("Notification setup error:", error.message);
     }
   };
 
@@ -181,47 +200,71 @@ function AppContent() {
         setShowAdminPanel(false);
         return true;
       }
-      
+
       if (showAchievements) {
         setShowAchievements(false);
         return true;
       }
-      
+
       if (showAIChat) {
         setShowAIChat(false);
         return true;
       }
-      
+
       if (showAdsViewer) {
         setShowAdsViewer(false);
         return true;
       }
 
-      if (currentPage !== 'home') {
-        setCurrentPage('home');
+      if (currentPage !== "home") {
+        setCurrentPage("home");
         return true;
       }
 
       // Show exit confirmation dialog
       Alert.alert(
-        language === 'ar' ? 'الخروج من التطبيق' : 'Exit App',
-        language === 'ar' ? 'هل أنت متأكد من الخروج؟' : 'Are you sure you want to exit?',
+        language === "ar" ? "الخروج من التطبيق" : "Exit App",
+        language === "ar"
+          ? "هل أنت متأكد من الخروج؟"
+          : "Are you sure you want to exit?",
         [
-          { text: language === 'ar' ? 'إلغاء' : 'Cancel', style: 'cancel', onPress: () => null },
-          { text: language === 'ar' ? 'خروج' : 'Exit', style: 'destructive', onPress: () => BackHandler.exitApp() }
-        ]
+          {
+            text: language === "ar" ? "إلغاء" : "Cancel",
+            style: "cancel",
+            onPress: () => null,
+          },
+          {
+            text: language === "ar" ? "خروج" : "Exit",
+            style: "destructive",
+            onPress: () => BackHandler.exitApp(),
+          },
+        ],
       );
       return true;
     };
 
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction,
+    );
 
     return () => backHandler.remove();
-  }, [showAIChat, showAdsViewer, showAchievements, showAdminPanel, currentPage, language]);
+  }, [
+    showAIChat,
+    showAdsViewer,
+    showAchievements,
+    showAdminPanel,
+    currentPage,
+    language,
+  ]);
 
   // Send notification when achievement is unlocked
   useEffect(() => {
-    if (newAchievement && NotificationService && NotificationService.sendAchievementNotification) {
+    if (
+      newAchievement &&
+      NotificationService &&
+      NotificationService.sendAchievementNotification
+    ) {
       NotificationService.sendAchievementNotification(newAchievement, language);
     }
   }, [newAchievement, language]);
@@ -241,7 +284,7 @@ function AppContent() {
       if (savedToken && savedUser) {
         setUser(savedUser);
         setIsAuthenticated(true);
-        
+
         // Try to sync with server (but don't block on failure)
         try {
           api.setTokens(savedToken, null);
@@ -255,24 +298,30 @@ function AppContent() {
                 points: userData.user.points || savedUser.points || 0,
                 saqr_gems: userData.user.saqr_gems || savedUser.saqr_gems || 0,
                 diamonds: userData.user.diamonds || savedUser.diamonds || 300,
-                total_earned: userData.user.total_earned || savedUser.total_earned || 0,
+                total_earned:
+                  userData.user.total_earned || savedUser.total_earned || 0,
               };
               setUser(updatedUser);
               await storage.setUserData(updatedUser);
-              
+
               // Initialize economy for user if needed
               try {
                 await api.initializeUserEconomy(updatedUser.id);
               } catch (e) {
                 // Ignore economy init errors
               }
-              
+
               // Check daily login rewards
               try {
-                const dailyResponse = await api.getDailyLoginStatus(updatedUser.id);
+                const dailyResponse = await api.getDailyLoginStatus(
+                  updatedUser.id,
+                );
                 if (dailyResponse.ok) {
                   const dailyData = await dailyResponse.json();
-                  if (dailyData.should_show_reward && !dailyData.today_claimed) {
+                  if (
+                    dailyData.should_show_reward &&
+                    !dailyData.today_claimed
+                  ) {
                     setTimeout(() => setShowDailyRewards(true), 1000);
                   }
                 }
@@ -288,26 +337,26 @@ function AppContent() {
 
       // Load settings
       await loadSettings();
-      const storedTheme = await AsyncStorage.getItem('saqr_theme');
+      const storedTheme = await AsyncStorage.getItem("saqr_theme");
       if (storedTheme) {
         setThemeMode(storedTheme);
       }
     } catch (error) {
-      console.error('Init error:', error);
+      console.error("Init error:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const ensureTrackingPermission = async () => {
-    if (Platform.OS !== 'ios') return;
+    if (Platform.OS !== "ios") return;
     try {
       const current = await getTrackingPermissionsAsync();
-      if (current?.canAskAgain && current?.status === 'undetermined') {
+      if (current?.canAskAgain && current?.status === "undetermined") {
         await requestTrackingPermissionsAsync();
       }
     } catch (e) {
-      console.log('ATT permission check skipped:', e?.message);
+      console.log("ATT permission check skipped:", e?.message);
     }
   };
 
@@ -319,7 +368,7 @@ function AppContent() {
         setSettings(data);
       }
     } catch (error) {
-      console.error('Settings error:', error);
+      console.error("Settings error:", error);
     }
   };
 
@@ -328,52 +377,64 @@ function AppContent() {
     storage.setUserData(nextUser).catch(() => {});
   }, []);
 
-  const updateUserBalanceLocally = useCallback((partial = {}) => {
-    if (!partial || typeof partial !== 'object') return;
-    setUser((prev) => {
-      if (!prev) return prev;
-      const next = { ...prev, ...partial };
-      const unchanged = (
-        prev.diamonds === next.diamonds
-        && prev.saqr_gems === next.saqr_gems
-        && prev.saqr_points === next.saqr_points
-      );
-      if (unchanged) return prev;
-      persistUserSnapshot(next);
-      return next;
-    });
-  }, [persistUserSnapshot]);
-
-  const syncBalanceFromServer = useCallback(async (targetUserId = userId) => {
-    if (!targetUserId) return null;
-    try {
-      const response = await api.getBalance(targetUserId);
-      if (!response.ok) return null;
-      const data = await response.json();
-      const normalizedGems = Number(data?.saqr_gems ?? data?.saqr_points ?? 0) || 0;
-      const normalizedDiamonds = Number(data?.diamonds ?? 0) || 0;
-      updateUserBalanceLocally({
-        diamonds: normalizedDiamonds,
-        saqr_gems: normalizedGems,
-        saqr_points: normalizedGems,
+  const updateUserBalanceLocally = useCallback(
+    (partial = {}) => {
+      if (!partial || typeof partial !== "object") return;
+      setUser((prev) => {
+        if (!prev) return prev;
+        const next = { ...prev, ...partial };
+        const unchanged =
+          prev.diamonds === next.diamonds &&
+          prev.saqr_gems === next.saqr_gems &&
+          prev.saqr_points === next.saqr_points;
+        if (unchanged) return prev;
+        persistUserSnapshot(next);
+        return next;
       });
-      return data;
-    } catch (_) {
-      return null;
-    }
-  }, [updateUserBalanceLocally, userId]);
+    },
+    [persistUserSnapshot],
+  );
 
-  const handleBalanceUpdate = useCallback((partial) => {
-    updateUserBalanceLocally(partial);
-  }, [updateUserBalanceLocally]);
+  const syncBalanceFromServer = useCallback(
+    async (targetUserId = userId) => {
+      if (!targetUserId) return null;
+      try {
+        const response = await api.getBalance(targetUserId);
+        if (!response.ok) return null;
+        const data = await response.json();
+        const normalizedGems =
+          Number(data?.saqr_gems ?? data?.saqr_points ?? 0) || 0;
+        const normalizedDiamonds = Number(data?.diamonds ?? 0) || 0;
+        updateUserBalanceLocally({
+          diamonds: normalizedDiamonds,
+          saqr_gems: normalizedGems,
+          saqr_points: normalizedGems,
+        });
+        return data;
+      } catch (_) {
+        return null;
+      }
+    },
+    [updateUserBalanceLocally, userId],
+  );
+
+  const handleBalanceUpdate = useCallback(
+    (partial) => {
+      updateUserBalanceLocally(partial);
+    },
+    [updateUserBalanceLocally],
+  );
 
   const handleLogin = (userData) => {
     setUser(userData);
     setIsAuthenticated(true);
     persistUserSnapshot(userData);
-    storage.getToken().then((token) => {
-      if (token) api.setTokens(token, null);
-    }).catch(() => {});
+    storage
+      .getToken()
+      .then((token) => {
+        if (token) api.setTokens(token, null);
+      })
+      .catch(() => {});
     setTimeout(() => {
       const incomingUserId = userData?.id || userData?.user_id;
       if (incomingUserId) {
@@ -386,12 +447,12 @@ function AppContent() {
     await storage.clearAll();
     setUser(null);
     setIsAuthenticated(false);
-    setCurrentPage('home');
+    setCurrentPage("home");
   };
 
   const handleGemsEarned = async (gems = 0, diamonds = 0) => {
     if (user && !user.isGuest) {
-      setUser(prev => {
+      setUser((prev) => {
         if (!prev) return prev;
         const next = {
           ...prev,
@@ -402,8 +463,8 @@ function AppContent() {
         persistUserSnapshot(next);
         return next;
       });
-      setBalanceRefresh(prev => prev + 1);
-      
+      setBalanceRefresh((prev) => prev + 1);
+
       // Update achievements
       await updateCurrency(gems, diamonds);
       setTimeout(() => {
@@ -413,37 +474,54 @@ function AppContent() {
   };
 
   const handleDailyRewardClaimed = (data) => {
-    setBalanceRefresh(prev => prev + 1);
-    if (data.reward_type === 'gems' || data.reward_type === 'points') {
+    setBalanceRefresh((prev) => prev + 1);
+    if (data.reward_type === "gems" || data.reward_type === "points") {
       handleGemsEarned(data.amount, 0);
-    } else if (data.reward_type === 'diamonds') {
+    } else if (data.reward_type === "diamonds") {
       handleGemsEarned(0, data.amount);
     }
   };
 
   const handleThemeChange = (nextTheme) => {
-    setThemeMode(nextTheme || 'dark');
+    setThemeMode(nextTheme || "dark");
   };
 
-  const effectiveTheme = themeMode === 'system' ? (systemColorScheme === 'light' ? 'light' : 'dark') : themeMode;
-  const appGradient = effectiveTheme === 'light'
-    ? ['#f8fafc', '#eef2ff', '#e2e8f0']
-    : colors.gradients.dark;
+  const effectiveTheme =
+    themeMode === "system"
+      ? systemColorScheme === "light"
+        ? "light"
+        : "dark"
+      : themeMode;
+  const appGradient =
+    effectiveTheme === "light"
+      ? ["#f8fafc", "#eef2ff", "#e2e8f0"]
+      : colors.gradients.dark;
 
   // Loading Screen
   if (isLoading) {
     return (
       <LinearGradient colors={appGradient} style={styles.loadingContainer}>
         <View style={styles.loadingLogoContainer}>
-          <Image 
-            source={require('./assets/logo_saqr.png')} 
+          <Image
+            source={require("./assets/logo_saqr.png")}
             style={styles.loadingLogo}
             resizeMode="contain"
           />
         </View>
         <Text style={styles.loadingAppName}>صقر</Text>
-        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
-        <Text style={[styles.loadingText, effectiveTheme === 'light' && styles.loadingTextLight]}>جاري التحميل...</Text>
+        <ActivityIndicator
+          size="large"
+          color={colors.primary}
+          style={{ marginTop: 20 }}
+        />
+        <Text
+          style={[
+            styles.loadingText,
+            effectiveTheme === "light" && styles.loadingTextLight,
+          ]}
+        >
+          جاري التحميل...
+        </Text>
       </LinearGradient>
     );
   }
@@ -454,13 +532,15 @@ function AppContent() {
       <AdViewerScreen
         onClose={() => {
           setShowAdsViewer(false);
-          setCurrentPage('home');
+          setCurrentPage("home");
         }}
         onNavigateToProfile={() => {
           setShowAdsViewer(false);
-          setCurrentPage('profile');
+          setCurrentPage("profile");
         }}
-        onRewardsEarned={({ gems = 0, diamonds = 0 }) => handleGemsEarned(gems, diamonds)}
+        onRewardsEarned={({ gems = 0, diamonds = 0 }) =>
+          handleGemsEarned(gems, diamonds)
+        }
         user={user}
       />
     );
@@ -473,24 +553,29 @@ function AppContent() {
 
   // Main App
   return (
-    <View style={[styles.container, effectiveTheme === 'light' && styles.containerLight]}>
+    <View
+      style={[
+        styles.container,
+        effectiveTheme === "light" && styles.containerLight,
+      ]}
+    >
       <LinearGradient colors={appGradient} style={styles.mainArea}>
-        {currentPage === 'home' && (
-          <HomeScreen 
-            user={user} 
+        {currentPage === "home" && (
+          <HomeScreen
+            user={user}
             settings={settings}
             onNavigateToAds={() => setShowAdsViewer(true)}
-            onNavigateToGames={() => setCurrentPage('clips')}
-            onNavigateToChat={() => setCurrentPage('chat')}
-            onNavigateToFortunes={() => setCurrentPage('fortunes')}
-            onNavigateToFriends={() => setCurrentPage('friends')}
+            onNavigateToClips={() => setCurrentPage("clips")}
+            onNavigateToChat={() => setCurrentPage("chat")}
+            onNavigateToFortunes={() => setCurrentPage("fortunes")}
+            onNavigateToFriends={() => setCurrentPage("friends")}
             onOpenDailyChallenge={() => setShowDailyRewards(true)}
             onRefresh={initApp}
           />
         )}
-        {currentPage === 'profile' && (
-          <ProfileScreen 
-            user={user} 
+        {currentPage === "profile" && (
+          <ProfileScreen
+            user={user}
             onLogout={handleLogout}
             onNavigate={setCurrentPage}
             onOpenAchievements={() => setShowAchievements(true)}
@@ -502,91 +587,59 @@ function AppContent() {
             }}
           />
         )}
-        {currentPage === 'settings' && (
-          <SettingsScreen 
-            onBack={() => setCurrentPage('profile')}
+        {currentPage === "settings" && (
+          <SettingsScreen
+            onBack={() => setCurrentPage("profile")}
             onLogout={handleLogout}
             currentTheme={themeMode}
             onThemeChange={handleThemeChange}
           />
         )}
-        {currentPage === 'advertiser' && (
-          <AdvertiserScreen />
-        )}
-        {currentPage === 'advertiser-dashboard' && (
-          <AdvertiserDashboardScreen 
+        {currentPage === "advertiser" && <AdvertiserScreen />}
+        {currentPage === "advertiser-dashboard" && (
+          <AdvertiserDashboardScreen
             navigation={{ navigate: setCurrentPage }}
           />
         )}
-        {currentPage === 'support' && (
-          <SupportScreen 
-            navigation={{ navigate: setCurrentPage }}
-          />
+        {currentPage === "support" && (
+          <SupportScreen navigation={{ navigate: setCurrentPage }} />
         )}
-        {currentPage === 'challenges' && (
-          <ChallengesScreen 
-            user={user}
-            onPointsEarned={(gems) => handleGemsEarned(gems, 0)}
-          />
+        {currentPage === "clips" && (
+          <ClipsScreen user={user} onClose={() => setCurrentPage("home")} />
         )}
-        {currentPage === 'clips' && (
-          <ClipsScreen
-            user={user}
-            onClose={() => setCurrentPage('home')}
-          />
-        )}
-        {currentPage === 'chat' && (
-          <GlobalChatScreen 
+        {currentPage === "chat" && (
+          <GlobalChatScreen
             user={user}
             onBalanceUpdate={handleBalanceUpdate}
-            onClose={() => setCurrentPage('home')}
-            onNavigateToFortunes={() => setCurrentPage('fortunes')}
+            onClose={() => setCurrentPage("home")}
+            onNavigateToFortunes={() => setCurrentPage("fortunes")}
           />
         )}
-        {currentPage === 'fortunes' && (
-          <SaqrFortunesScreen 
+        {currentPage === "fortunes" && (
+          <SaqrFortunesScreen
             user={user}
-            onClose={() => setCurrentPage('home')}
+            onClose={() => setCurrentPage("home")}
             onBalanceUpdate={(partial) => {
               if (partial) handleBalanceUpdate(partial);
-              setBalanceRefresh(prev => prev + 1);
+              setBalanceRefresh((prev) => prev + 1);
             }}
           />
         )}
-        {currentPage === 'friends' && (
-          <FriendsScreen 
+        {currentPage === "friends" && (
+          <FriendsScreen
             user={user}
-            onClose={() => setCurrentPage('home')}
+            onClose={() => setCurrentPage("home")}
             onOpenMessages={(friend) => {
               setSelectedFriend(friend);
-              setCurrentPage('messages');
-            }}
-            onOpenGameInvite={(friend) => {
-              setSelectedFriend(friend);
-              setCurrentPage('invitations');
+              setCurrentPage("messages");
             }}
           />
         )}
-        {currentPage === 'messages' && (
-          <PrivateMessagesScreen 
+        {currentPage === "messages" && (
+          <PrivateMessagesScreen
             user={user}
-            onClose={() => setCurrentPage('friends')}
+            onClose={() => setCurrentPage("friends")}
             initialFriend={selectedFriend}
-          />
-        )}
-        {currentPage === 'invitations' && (
-          <InvitationsScreen 
-            user={user}
-            onClose={() => setCurrentPage(selectedFriend ? 'friends' : 'home')}
-            onPlayGame={(gameId) => {
-              const gameIdMap = {
-                math: 'mathrace',
-                word: 'wordrace',
-                brick: 'brickbreaker',
-              };
-              const normalizedGameId = gameIdMap[gameId] || gameId;
-              setCurrentPage('clips');
-            }}
           />
         )}
       </LinearGradient>
@@ -594,7 +647,7 @@ function AppContent() {
       {/* Achievements Screen */}
       {showAchievements && (
         <View style={StyleSheet.absoluteFill}>
-          <AchievementsScreen 
+          <AchievementsScreen
             onClose={() => setShowAchievements(false)}
             language={language}
           />
@@ -619,10 +672,7 @@ function AppContent() {
       <AIFloatingButton onPress={() => setShowAIChat(true)} />
 
       {/* AI Chat Modal */}
-      <AIChatModal 
-        visible={showAIChat} 
-        onClose={() => setShowAIChat(false)} 
-      />
+      <AIChatModal visible={showAIChat} onClose={() => setShowAIChat(false)} />
 
       {/* Daily Rewards Modal - مكافآت الدخول اليومي */}
       <DailyRewardsModal
@@ -633,16 +683,18 @@ function AppContent() {
       />
 
       {/* Bottom Navigation - إخفاء عند فتح المقاطع أو الدردشة أو الأصدقاء */}
-      {!['clips', 'chat', 'fortunes', 'friends', 'messages', 'invitations'].includes(currentPage) && (
+      {!["clips", "chat", "fortunes", "friends", "messages"].includes(
+        currentPage,
+      ) && (
         <BottomNav
           currentPage={currentPage}
           onNavigate={setCurrentPage}
           onAdsPress={() => setShowAdsViewer(true)}
-          onGamesPress={() => setCurrentPage('clips')}
+          onClipsPress={() => setCurrentPage("clips")}
         />
       )}
 
-      <StatusBar style={effectiveTheme === 'light' ? 'dark' : 'light'} />
+      <StatusBar style={effectiveTheme === "light" ? "dark" : "light"} />
     </View>
   );
 }
@@ -664,22 +716,22 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.dark.bg },
   containerLight: { backgroundColor: colors.light.bg },
   mainArea: { flex: 1 }, // No fixed padding - handled per screen
-  
-  loadingContainer: { 
-    flex: 1, 
-    justifyContent: 'center', 
-    alignItems: 'center' 
+
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingLogoContainer: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: "#0a0a0f",
     borderWidth: 2,
-    borderColor: 'rgba(59, 130, 246, 0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#3b82f6',
+    borderColor: "rgba(59, 130, 246, 0.3)",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#3b82f6",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -688,17 +740,17 @@ const styles = StyleSheet.create({
   loadingLogo: { width: 96, height: 96 },
   loadingAppName: {
     fontSize: 36,
-    fontWeight: 'bold',
-    color: '#60a5fa',
+    fontWeight: "bold",
+    color: "#60a5fa",
     marginTop: 16,
   },
-  loadingText: { 
-    color: 'rgba(255,255,255,0.6)', 
-    marginTop: 16, 
-    fontSize: 16 
+  loadingText: {
+    color: "rgba(255,255,255,0.6)",
+    marginTop: 16,
+    fontSize: 16,
   },
   loadingTextLight: {
-    color: '#334155',
+    color: "#334155",
   },
 });
 
@@ -714,8 +766,8 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.log('App Error:', error, errorInfo);
-    console.log('Error details:', error?.message, error?.stack);
+    console.log("App Error:", error, errorInfo);
+    console.log("Error details:", error?.message, error?.stack);
   }
 
   handleRetry = () => {
@@ -726,16 +778,26 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <View style={errorStyles.container}>
-          <LinearGradient colors={['#0a0a0f', '#1a1a2e']} style={errorStyles.gradient}>
+          <LinearGradient
+            colors={["#0a0a0f", "#1a1a2e"]}
+            style={errorStyles.gradient}
+          >
             <Text style={errorStyles.icon}>!</Text>
             <Text style={errorStyles.title}>حدث خطأ غير متوقع</Text>
-            <Text style={errorStyles.message}>نعتذر عن هذا الخطأ. يرجى المحاولة مرة أخرى.</Text>
-            <TouchableOpacity style={errorStyles.retryBtn} onPress={this.handleRetry}>
+            <Text style={errorStyles.message}>
+              نعتذر عن هذا الخطأ. يرجى المحاولة مرة أخرى.
+            </Text>
+            <TouchableOpacity
+              style={errorStyles.retryBtn}
+              onPress={this.handleRetry}
+            >
               <Text style={errorStyles.retryText}>إعادة المحاولة</Text>
             </TouchableOpacity>
             <Text style={errorStyles.support}>للدعم: sky-321@hotmail.com</Text>
             {__DEV__ && this.state.error && (
-              <Text style={errorStyles.errorDetails}>{this.state.error.toString()}</Text>
+              <Text style={errorStyles.errorDetails}>
+                {this.state.error.toString()}
+              </Text>
             )}
           </LinearGradient>
         </View>
@@ -748,14 +810,41 @@ class ErrorBoundary extends React.Component {
 
 const errorStyles = StyleSheet.create({
   container: { flex: 1 },
-  gradient: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  gradient: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
   icon: { fontSize: 60, marginBottom: 20 },
-  title: { fontSize: 22, fontWeight: 'bold', color: '#FFF', marginBottom: 10, textAlign: 'center' },
-  message: { fontSize: 16, color: 'rgba(255,255,255,0.7)', textAlign: 'center', marginBottom: 20 },
-  retryBtn: { backgroundColor: '#3b82f6', paddingHorizontal: 30, paddingVertical: 12, borderRadius: 10, marginBottom: 20 },
-  retryText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
-  support: { fontSize: 14, color: '#60a5fa', textAlign: 'center' },
-  errorDetails: { fontSize: 10, color: '#ef4444', marginTop: 20, textAlign: 'center' },
+  title: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#FFF",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  message: {
+    fontSize: 16,
+    color: "rgba(255,255,255,0.7)",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  retryBtn: {
+    backgroundColor: "#3b82f6",
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginBottom: 20,
+  },
+  retryText: { color: "#FFF", fontSize: 16, fontWeight: "bold" },
+  support: { fontSize: 14, color: "#60a5fa", textAlign: "center" },
+  errorDetails: {
+    fontSize: 10,
+    color: "#ef4444",
+    marginTop: 20,
+    textAlign: "center",
+  },
 });
 
 // Export with Error Boundary

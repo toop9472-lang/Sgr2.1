@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import Optional, List
-from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime, timezone
 import os
+from typing import Dict, Optional, Set, Tuple
 import uuid
+
+from fastapi import APIRouter, HTTPException
+from motor.motor_asyncio import AsyncIOMotorClient
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/clips", tags=["Clips"])
 
@@ -12,53 +13,171 @@ mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ.get("DB_NAME", "saqr_db")]
 
+DEFAULT_CLIP_VISUAL = "https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e14c91a9e40e8d29b6f8d3bf567a4fcb7020c985b1a9d3e96e2035b06f9921e6.png"
+
 
 class CreateClipRequest(BaseModel):
     user_id: str
-    user_name: str
+    user_name: Optional[str] = "مستخدم"
     user_avatar: Optional[str] = None
-    video_url: str
+    video_url: Optional[str] = None
     thumbnail_url: Optional[str] = None
     caption: Optional[str] = ""
-    duration_seconds: int = 15
+    duration_seconds: Optional[int] = 15
+    title: Optional[str] = None
+    content: Optional[str] = None
+    image_url: Optional[str] = None
 
 
 class ToggleLikeRequest(BaseModel):
     user_id: str
 
 
+class LegacyToggleLikeRequest(BaseModel):
+    clip_id: str
+    user_id: str
+
+
 class AddCommentRequest(BaseModel):
     user_id: str
-    user_name: str
-    comment: str
+    user_name: Optional[str] = "مستخدم"
+    comment: Optional[str] = None
+    content: Optional[str] = None
+
+
+class LegacyAddCommentRequest(BaseModel):
+    clip_id: str
+    user_id: str
+    user_name: Optional[str] = "مستخدم"
+    comment: Optional[str] = None
+    content: Optional[str] = None
+
+
+class ToggleFollowRequest(BaseModel):
+    viewer_user_id: str
+    target_user_id: str
+
+
+def _normalize_comment(comment: dict) -> dict:
+    text = (comment.get("content") or comment.get("comment") or "").strip()
+    return {
+        "comment_id": comment.get("comment_id") or str(uuid.uuid4()),
+        "user_id": comment.get("user_id"),
+        "user_name": comment.get("user_name") or "مستخدم",
+        "content": text,
+        "comment": text,
+        "created_at": comment.get("created_at")
+        or datetime.now(timezone.utc).isoformat(),
+    }
+
+
+async def _build_follow_maps(
+    owner_ids: Set[str],
+    viewer_id: Optional[str] = None,
+) -> Tuple[Dict[str, int], Dict[str, int], Set[str]]:
+    if not owner_ids:
+        return {}, {}, set()
+
+    followers_count_map: Dict[str, int] = {}
+    following_count_map: Dict[str, int] = {}
+    viewer_following_set: Set[str] = set()
+
+    for owner_id in owner_ids:
+        followers_count_map[owner_id] = await db.clips_follows.count_documents(
+            {"target_user_id": owner_id}
+        )
+        following_count_map[owner_id] = await db.clips_follows.count_documents(
+            {"follower_user_id": owner_id}
+        )
+
+    if viewer_id:
+        followed_docs = await db.clips_follows.find(
+            {"follower_user_id": viewer_id, "target_user_id": {"$in": list(owner_ids)}},
+            {"_id": 0, "target_user_id": 1},
+        ).to_list(len(owner_ids))
+        viewer_following_set = {
+            str(doc.get("target_user_id")) for doc in followed_docs if doc.get("target_user_id")
+        }
+
+    return followers_count_map, following_count_map, viewer_following_set
 
 
 @router.get("/feed")
-async def get_clips_feed(limit: int = 30):
+async def get_clips_feed(limit: int = 30, viewer_id: Optional[str] = None):
     normalized_limit = max(1, min(80, int(limit or 30)))
     clips = await db.clips_posts.find(
         {},
         {"_id": 0},
     ).sort("created_at", -1).limit(normalized_limit).to_list(normalized_limit)
 
+    owner_ids = {str((clip or {}).get("user_id")) for clip in clips if (clip or {}).get("user_id")}
+    followers_count_map, following_count_map, viewer_following_set = await _build_follow_maps(
+        owner_ids,
+        viewer_id,
+    )
+
+    normalized_clips = []
+    for clip in clips:
+        liked_by = clip.get("liked_by", []) or []
+        comments = [_normalize_comment(c) for c in (clip.get("comments") or [])]
+        owner_id = str(clip.get("user_id") or "")
+        normalized_clip = {
+            **clip,
+            "title": (clip.get("title") or clip.get("caption") or "مقطع").strip()[:80],
+            "content": (clip.get("content") or clip.get("caption") or "").strip()[:220],
+            "caption": (clip.get("caption") or clip.get("content") or "").strip()[:180],
+            "likes_count": int(clip.get("likes_count", len(liked_by)) or 0),
+            "liked_by_me": bool(viewer_id and viewer_id in liked_by),
+            "comments": comments,
+            "comments_count": int(clip.get("comments_count", len(comments)) or 0),
+            "followers_count": followers_count_map.get(owner_id, 0),
+            "following_count": following_count_map.get(owner_id, 0),
+            "followed_by_me": bool(
+                viewer_id and owner_id and viewer_id != owner_id and owner_id in viewer_following_set
+            ),
+        }
+        normalized_clips.append(normalized_clip)
+
     return {
-        "clips": clips,
-        "count": len(clips),
+        "clips": normalized_clips,
+        "count": len(normalized_clips),
     }
 
 
 @router.post("/create")
 async def create_clip_post(request: CreateClipRequest):
-    duration = int(request.duration_seconds or 0)
+    duration = int(request.duration_seconds or 15)
     if duration <= 0 or duration > 15:
         raise HTTPException(status_code=400, detail="مدة المقطع يجب أن تكون بين 1 و 15 ثانية")
 
-    video_url = (request.video_url or "").strip()
-    if not video_url.startswith("http"):
-        raise HTTPException(status_code=400, detail="رابط المقطع غير صالح")
+    visual_source = (
+        (request.video_url or "").strip()
+        or (request.thumbnail_url or "").strip()
+        or (request.image_url or "").strip()
+        or DEFAULT_CLIP_VISUAL
+    )
+    if not visual_source.startswith("http"):
+        visual_source = DEFAULT_CLIP_VISUAL
 
-    thumb = (request.thumbnail_url or "").strip() or "https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e14c91a9e40e8d29b6f8d3bf567a4fcb7020c985b1a9d3e96e2035b06f9921e6.png"
-    caption = (request.caption or "").strip()[:180]
+    thumb = (request.thumbnail_url or "").strip() or visual_source
+    if not thumb.startswith("http"):
+        thumb = DEFAULT_CLIP_VISUAL
+
+    caption_text = (
+        (request.caption or "").strip()
+        or (request.content or "").strip()
+        or (request.title or "").strip()
+    )[:180]
+    title_text = (
+        (request.title or "").strip()
+        or (request.caption or "").strip()
+        or "مقطع جديد"
+    )[:80]
+    content_text = (
+        (request.content or "").strip()
+        or (request.caption or "").strip()
+    )[:220]
+
     created_at = datetime.now(timezone.utc).isoformat()
     clip_id = str(uuid.uuid4())
 
@@ -67,9 +186,11 @@ async def create_clip_post(request: CreateClipRequest):
         "user_id": request.user_id,
         "user_name": request.user_name or "مستخدم",
         "user_avatar": request.user_avatar,
-        "video_url": video_url,
+        "video_url": visual_source,
         "thumbnail_url": thumb,
-        "caption": caption,
+        "caption": caption_text,
+        "title": title_text,
+        "content": content_text,
         "duration_seconds": duration,
         "likes_count": 0,
         "liked_by": [],
@@ -104,7 +225,12 @@ async def toggle_clip_like(clip_id: str, request: ToggleLikeRequest):
                 "$set": {"likes_count": likes_count},
             },
         )
-        return {"success": True, "liked": False, "likes_count": likes_count}
+        return {
+            "success": True,
+            "liked": False,
+            "liked_by_me": False,
+            "likes_count": likes_count,
+        }
 
     likes_count = int(clip.get("likes_count", len(liked_by))) + 1
     await db.clips_posts.update_one(
@@ -114,24 +240,36 @@ async def toggle_clip_like(clip_id: str, request: ToggleLikeRequest):
             "$set": {"likes_count": likes_count},
         },
     )
-    return {"success": True, "liked": True, "likes_count": likes_count}
+    return {
+        "success": True,
+        "liked": True,
+        "liked_by_me": True,
+        "likes_count": likes_count,
+    }
+
+
+@router.post("/like")
+async def toggle_clip_like_legacy(request: LegacyToggleLikeRequest):
+    return await toggle_clip_like(request.clip_id, ToggleLikeRequest(user_id=request.user_id))
 
 
 @router.post("/{clip_id}/comment")
 async def add_clip_comment(clip_id: str, request: AddCommentRequest):
-    text = (request.comment or "").strip()
+    text = (request.comment or request.content or "").strip()
     if not text:
         raise HTTPException(status_code=400, detail="التعليق مطلوب")
     if len(text) > 220:
         raise HTTPException(status_code=400, detail="التعليق طويل جداً")
 
-    comment_doc = {
-        "comment_id": str(uuid.uuid4()),
-        "user_id": request.user_id,
-        "user_name": request.user_name or "مستخدم",
-        "comment": text,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-    }
+    comment_doc = _normalize_comment(
+        {
+            "comment_id": str(uuid.uuid4()),
+            "user_id": request.user_id,
+            "user_name": request.user_name or "مستخدم",
+            "content": text,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+    )
 
     updated = await db.clips_posts.find_one_and_update(
         {"clip_id": clip_id},
@@ -144,14 +282,95 @@ async def add_clip_comment(clip_id: str, request: AddCommentRequest):
                 }
             },
         },
-        projection={"_id": 0, "comments_count": 1},
+        projection={"_id": 0, "comments_count": 1, "comments": 1},
     )
 
     if not updated:
         raise HTTPException(status_code=404, detail="المقطع غير موجود")
 
+    comments = [_normalize_comment(c) for c in (updated.get("comments") or [])]
     return {
         "success": True,
         "comment": comment_doc,
+        "comments": comments,
         "comments_count": int((updated.get("comments_count", 0) or 0) + 1),
+    }
+
+
+@router.post("/comment")
+async def add_clip_comment_legacy(request: LegacyAddCommentRequest):
+    return await add_clip_comment(
+        request.clip_id,
+        AddCommentRequest(
+            user_id=request.user_id,
+            user_name=request.user_name or "مستخدم",
+            comment=request.comment,
+            content=request.content,
+        ),
+    )
+
+
+@router.post("/follow/toggle")
+async def toggle_follow(request: ToggleFollowRequest):
+    viewer_id = (request.viewer_user_id or "").strip()
+    target_id = (request.target_user_id or "").strip()
+    if not viewer_id or not target_id:
+        raise HTTPException(status_code=400, detail="بيانات المتابعة غير مكتملة")
+    if viewer_id == target_id:
+        raise HTTPException(status_code=400, detail="لا يمكنك متابعة نفسك")
+
+    existing = await db.clips_follows.find_one(
+        {"follower_user_id": viewer_id, "target_user_id": target_id},
+        {"_id": 0, "follow_id": 1},
+    )
+
+    followed = False
+    if existing:
+        await db.clips_follows.delete_one(
+            {"follower_user_id": viewer_id, "target_user_id": target_id}
+        )
+        followed = False
+    else:
+        await db.clips_follows.insert_one(
+            {
+                "follow_id": str(uuid.uuid4()),
+                "follower_user_id": viewer_id,
+                "target_user_id": target_id,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }
+        )
+        followed = True
+
+    followers_count = await db.clips_follows.count_documents({"target_user_id": target_id})
+    following_count = await db.clips_follows.count_documents({"follower_user_id": target_id})
+    viewer_following_count = await db.clips_follows.count_documents({"follower_user_id": viewer_id})
+
+    return {
+        "success": True,
+        "followed": followed,
+        "target_user_id": target_id,
+        "followers_count": followers_count,
+        "following_count": following_count,
+        "viewer_following_count": viewer_following_count,
+    }
+
+
+@router.get("/profile-stats/{user_id}")
+async def get_profile_follow_stats(user_id: str, viewer_id: Optional[str] = None):
+    followers_count = await db.clips_follows.count_documents({"target_user_id": user_id})
+    following_count = await db.clips_follows.count_documents({"follower_user_id": user_id})
+
+    followed_by_me = False
+    if viewer_id and viewer_id != user_id:
+        existing = await db.clips_follows.find_one(
+            {"follower_user_id": viewer_id, "target_user_id": user_id},
+            {"_id": 0, "follow_id": 1},
+        )
+        followed_by_me = bool(existing)
+
+    return {
+        "user_id": user_id,
+        "followers_count": followers_count,
+        "following_count": following_count,
+        "followed_by_me": followed_by_me,
     }
