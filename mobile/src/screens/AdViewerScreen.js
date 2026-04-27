@@ -69,6 +69,7 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
   const [isMuted, setIsMuted] = useState(false);
   const [watchTime, setWatchTime] = useState(0);
   const [showControls, setShowControls] = useState(false);
+  const [fullScreenWatchMode, setFullScreenWatchMode] = useState(false);
   const [showPointsAnimation, setShowPointsAnimation] = useState(false);
   const [earnedGems, setEarnedGems] = useState(0);
   const [earnedDiamonds, setEarnedDiamonds] = useState(0);
@@ -169,13 +170,13 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
   }, [currentUserId]);
 
   // Show AdMob Rewarded Ad
-  const showAdMobAd = async () => {
+  const showAdMobAd = async ({ advanceAfterWatch = false } = {}) => {
     if (!adMobReady) {
       setAdMobStatusMessage('جاري إعادة تحميل إعلان المكافأة...');
       await initAdMob();
       if (!admobService.isReady()) {
         Alert.alert('انتظر', adMobStatusMessage || 'جاري تحميل الإعلان...');
-        return;
+        return false;
       }
       setAdMobReady(true);
     }
@@ -186,13 +187,13 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
       if (!result.success) {
         Alert.alert('تنبيه', result.error || 'لا تتوفر إعلانات حالياً. حاول لاحقاً.');
         setAdMobReady(admobService.isReady());
-        return;
+        return false;
       }
 
       if (!result.rewarded) {
         Alert.alert('تنبيه', 'يجب إكمال الإعلان للحصول على المكافأة.');
         setAdMobReady(admobService.isReady());
-        return;
+        return false;
       }
 
       const persisted = await persistReward({
@@ -226,11 +227,17 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
           recordAdWatched();
         }
       }
+
+      if (advanceAfterWatch && ads.length > 0) {
+        setCurrentIndex((prev) => (prev + 1) % ads.length);
+      }
       
       setTimeout(() => setShowPointsAnimation(false), 3000);
+      return true;
     } catch (error) {
       console.log('AdMob error:', error);
       Alert.alert('خطأ', 'لا تتوفر إعلانات حالياً. حاول لاحقاً.');
+      return false;
     } finally {
       setIsAdMobLoading(false);
     }
@@ -554,25 +561,85 @@ const AdViewerScreen = ({ onClose, onNavigateToProfile, onRewardsEarned, user })
         </TouchableOpacity>
       </View>
 
+      {/* Full-screen watch CTA (primary AdMob flow) */}
+      {!showComments && (
+        <View style={styles.watchPrimaryContainer}>
+          <View style={styles.watchPrimaryCard}>
+            <Text style={styles.watchPrimaryTitle}>
+              {currentAd?.title || 'إعلان ممول'}
+            </Text>
+            <Text style={styles.watchPrimarySubtitle}>
+              {currentAd?.advertiser ? `من ${currentAd.advertiser}` : 'إعلان ممول داخل التطبيق'}
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.watchPrimaryBtn,
+                (!adMobReady || isAdMobLoading) && styles.watchPrimaryBtnDisabled,
+              ]}
+              onPress={() => {
+                setFullScreenWatchMode(true);
+                showAdMobAd({ advanceAfterWatch: true }).finally(() => setFullScreenWatchMode(false));
+              }}
+              disabled={isAdMobLoading || !adMobReady}
+              activeOpacity={0.9}
+            >
+              {isAdMobLoading || fullScreenWatchMode ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <>
+                  <Ionicons name="play-circle" size={20} color="#fff" />
+                  <Text style={styles.watchPrimaryBtnText}>مشاهدة إعلان كامل الشاشة</Text>
+                </>
+              )}
+            </TouchableOpacity>
+            <Text style={styles.watchPrimaryHint}>بعد نهاية الإعلان تنتقل تلقائياً للإعلان التالي</Text>
+            <View style={styles.watchPrimaryNavRow}>
+              <TouchableOpacity
+                style={[
+                  styles.watchPrimaryNavBtn,
+                  currentIndex === 0 && styles.watchPrimaryNavBtnDisabled,
+                ]}
+                onPress={() => navigateAd('prev')}
+                disabled={currentIndex === 0}
+              >
+                <Ionicons name="chevron-up" size={18} color="#fff" />
+                <Text style={styles.watchPrimaryNavText}>السابق</Text>
+              </TouchableOpacity>
+              <Text style={styles.watchPrimaryCounterText}>
+                {currentIndex + 1}/{ads.length}
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.watchPrimaryNavBtn,
+                  currentIndex === ads.length - 1 && styles.watchPrimaryNavBtnDisabled,
+                ]}
+                onPress={() => navigateAd('next')}
+                disabled={currentIndex === ads.length - 1}
+              >
+                <Text style={styles.watchPrimaryNavText}>التالي</Text>
+                <Ionicons name="chevron-down" size={18} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
+
       {/* Right Side Actions - Always visible */}
       <View style={styles.rightActions}>
         {/* AdMob Rewarded Ad Button */}
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[
             styles.actionBtn,
             styles.adMobBtn,
-            (!adMobReady || isAdMobLoading) && styles.actionBtnDisabled
+            (!adMobReady || isAdMobLoading) && styles.actionBtnDisabled,
           ]}
-          onPress={showAdMobAd}
+          onPress={() => showAdMobAd({ advanceAfterWatch: true })}
           disabled={isAdMobLoading || !adMobReady}
         >
           {isAdMobLoading ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <>
-              <Ionicons name="gift" size={24} color="#fbbf24" />
-              <Text style={[styles.actionCount, { color: '#fbbf24' }]}>+6</Text>
-            </>
+            <Ionicons name="play" size={22} color="#fbbf24" />
           )}
         </TouchableOpacity>
         <Text style={styles.adMobStatusText}>{adMobStatusMessage}</Text>
@@ -912,12 +979,92 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.4)',
     fontSize: 13,
   },
+  watchPrimaryContainer: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 22,
+    zIndex: 25,
+  },
+  watchPrimaryCard: {
+    borderRadius: 22,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 12,
+    backgroundColor: 'rgba(9,11,24,0.75)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+  },
+  watchPrimaryTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'right',
+  },
+  watchPrimarySubtitle: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 12,
+    marginTop: 3,
+    textAlign: 'right',
+  },
+  watchPrimaryBtn: {
+    height: 46,
+    borderRadius: 14,
+    backgroundColor: '#2563eb',
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  watchPrimaryBtnDisabled: {
+    opacity: 0.55,
+  },
+  watchPrimaryBtnText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  watchPrimaryHint: {
+    color: 'rgba(255,255,255,0.65)',
+    fontSize: 11,
+    textAlign: 'right',
+    marginTop: 6,
+  },
+  watchPrimaryNavRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  watchPrimaryNavBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  watchPrimaryNavBtnDisabled: {
+    opacity: 0.4,
+  },
+  watchPrimaryNavText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  watchPrimaryCounterText: {
+    color: 'rgba(255,255,255,0.75)',
+    fontSize: 12,
+    fontWeight: '600',
+  },
 
   // Right Actions
   rightActions: {
     position: 'absolute',
     right: 16,
-    bottom: 120,
+    bottom: 180,
     alignItems: 'center',
     gap: 16,
     zIndex: 20,
