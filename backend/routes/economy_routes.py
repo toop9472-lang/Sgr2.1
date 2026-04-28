@@ -440,17 +440,20 @@ async def get_saqr_gems(user_id: str):
 
 @router.post("/chat/send")
 async def send_chat_message(request: SendChatMessageRequest):
-    await _fetch_user(request.user_id, {"_id": 0, "saqr_gems": 1})
+    # Chat is intentionally free and should also work for guest/transient IDs.
+    # We therefore do not block sending when the user record does not exist yet.
     text = (request.message or "").strip()
     if not text:
         raise HTTPException(status_code=400, detail="الرسالة فارغة")
     message_id = str(uuid.uuid4())
     timestamp = datetime.now(timezone.utc).isoformat()
+    safe_user_name = (request.user_name or "مستخدم").strip()[:60] or "مستخدم"
+    safe_avatar = request.user_avatar if isinstance(request.user_avatar, str) else None
     chat_message = {
         "id": message_id,
         "user_id": request.user_id,
-        "user_name": request.user_name,
-        "user_avatar": request.user_avatar,
+        "user_name": safe_user_name,
+        "user_avatar": safe_avatar,
         "message": text,
         "server_id": request.server_id,
         "timestamp": timestamp,
@@ -471,9 +474,16 @@ async def get_chat_messages(server_id: str, limit: int = 50, before: Optional[st
     query = {"server_id": server_id}
     if before:
         query["timestamp"] = {"$lt": before}
-    messages = await db.chat_messages.find(query, {"_id": 0}).sort("timestamp", -1).limit(limit).to_list(limit)
+    normalized_limit = max(1, min(int(limit or 50), 200))
+    messages = await db.chat_messages.find(query, {"_id": 0}).sort("timestamp", -1).limit(normalized_limit).to_list(normalized_limit)
     messages.reverse()
-    return {"server_id": server_id, "messages": messages, "count": len(messages)}
+    active_users = len({(msg or {}).get("user_id") for msg in messages if (msg or {}).get("user_id")})
+    return {
+        "server_id": server_id,
+        "messages": messages,
+        "count": len(messages),
+        "online_users_count": max(1, active_users),
+    }
 
 
 @router.get("/chat/servers")
@@ -511,7 +521,7 @@ async def get_chat_servers():
 
 @router.get("/chat/check-balance/{user_id}")
 async def check_chat_balance(user_id: str):
-    await _fetch_user(user_id, {"_id": 0, "id": 1})
+    # Keep endpoint permissive for guests because chat is free.
     return {
         "diamonds": 0,
         "saqr_gems": 0,

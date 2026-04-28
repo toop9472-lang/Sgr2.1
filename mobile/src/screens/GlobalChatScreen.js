@@ -613,7 +613,10 @@ const GlobalChatScreen = ({
       );
       if (chatBalanceResponse.ok) {
         const data = await chatBalanceResponse.json();
+        const serverMessageCost = toSafeNumber(data?.message_cost, MESSAGE_COST);
         applyGems(data?.saqr_gems ?? data?.gems ?? 0);
+        // Keep message cost consistent with backend-free chat contract.
+        setMessageCost(serverMessageCost > 0 ? serverMessageCost : 0);
         setMessageCost(toSafeNumber(data?.message_cost, MESSAGE_COST));
         return;
       }
@@ -698,6 +701,7 @@ const GlobalChatScreen = ({
       if (response.ok) {
         const data = await response.json();
         applyGems(data?.new_balance ?? normalizedSaqrGems);
+        setMessageCost(0);
         gameSounds.correct();
 
         if (data.chat_message) {
@@ -730,6 +734,9 @@ const GlobalChatScreen = ({
         ) {
           applyGems(error?.detail?.current ?? normalizedSaqrGems);
           setShowInsufficientModal(true);
+        } else if (response.status === 400 && typeof error?.detail === "string") {
+          setNewMessage(trimmedDraft);
+          Alert.alert(copy.chatTitle, error.detail);
         } else if (response.status === 404 || response.status === 405) {
           // Endpoint mismatch on older environments; guide user to retry and auto refresh.
           await loadMessages(false);
@@ -773,7 +780,12 @@ const GlobalChatScreen = ({
           `/api/chat/messages/${selectedServer.id}?limit=100`,
         ]);
         if (response.ok) {
-          const data = await response.json();
+          let data = {};
+          try {
+            data = await response.json();
+          } catch {
+            data = {};
+          }
           const nextMessages = Array.isArray(data.messages)
             ? data.messages
             : [];
