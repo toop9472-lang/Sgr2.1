@@ -1,4 +1,5 @@
 from fastapi import FastAPI, APIRouter, Request
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import PlainTextResponse, HTMLResponse, FileResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -73,6 +74,10 @@ db = client[os.environ['DB_NAME']]
 
 # Create the main app without a prefix
 app = FastAPI()
+MEDIA_DIR = ROOT_DIR / "static" / "media"
+MEDIA_DIR.mkdir(parents=True, exist_ok=True)
+(MEDIA_DIR / "clips").mkdir(parents=True, exist_ok=True)
+app.mount("/media", StaticFiles(directory=str(MEDIA_DIR)), name="media")
 
 # App-ads.txt for Google AdMob verification (must be at root, not under /api)
 @app.get("/app-ads.txt", response_class=PlainTextResponse)

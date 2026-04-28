@@ -22,6 +22,7 @@ import {
   requestTrackingPermissionsAsync,
 } from "expo-tracking-transparency";
 import colors from "./src/styles/colors";
+import * as NavigationBar from "expo-navigation-bar";
 
 // Ignore specific warnings that don't affect functionality
 LogBox.ignoreLogs([
@@ -119,6 +120,12 @@ function AppContent() {
       // Note: RTL changes require app restart to take effect
     }
   }, [language]);
+
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    NavigationBar.setBackgroundColorAsync("#0a0a0f").catch(() => {});
+    NavigationBar.setButtonStyleAsync("light").catch(() => {});
+  }, []);
 
   useEffect(() => {
     const sub = Appearance.addChangeListener(({ colorScheme }) => {

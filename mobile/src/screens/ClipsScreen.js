@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -13,9 +13,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   ImageBackground,
+  Dimensions,
+  RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { Video, ResizeMode } from "expo-av";
+import * as ImagePicker from "expo-image-picker";
 import api from "../services/api";
 
 const MAX_CLIP_DURATION = 15;
@@ -25,6 +29,16 @@ const CLIP_PLACEHOLDERS = [
   "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=900&q=80",
   "https://images.unsplash.com/photo-1521334884684-d80222895322?auto=format&fit=crop&w=900&q=80",
 ];
+const toAbsoluteMediaUrl = (value) => {
+  const normalized = (value || "").trim();
+  if (!normalized) return "";
+  if (normalized.startsWith("http")) return normalized;
+  if (normalized.startsWith("/")) {
+    return `${api.getActiveBaseUrl()}${normalized}`;
+  }
+  return normalized;
+};
+
 const normalizeClip = (clip = {}) => {
   const safeComments = Array.isArray(clip?.comments)
     ? clip.comments.map((c) => ({
@@ -36,6 +50,8 @@ const normalizeClip = (clip = {}) => {
     ...clip,
     title: clip?.title || clip?.caption || "مقطع",
     content: clip?.content || clip?.caption || "",
+    video_url: toAbsoluteMediaUrl(clip?.video_url),
+    thumbnail_url: toAbsoluteMediaUrl(clip?.thumbnail_url),
     comments: safeComments,
     comments_count: Number(clip?.comments_count ?? safeComments.length) || 0,
     likes_count: Number(clip?.likes_count ?? 0) || 0,
@@ -49,15 +65,23 @@ const normalizeClip = (clip = {}) => {
 const ClipsScreen = ({ user, onClose }) => {
   const userId = user?.id || user?.user_id;
   const [clips, setClips] = useState([]);
+  const [filteredClips, setFilteredClips] = useState([]);
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [publishing, setPublishing] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [activeClip, setActiveClip] = useState(null);
   const [commentDraft, setCommentDraft] = useState("");
   const [newClipTitle, setNewClipTitle] = useState("");
   const [newClipText, setNewClipText] = useState("");
   const [newClipThumb, setNewClipThumb] = useState("");
+  const [newClipVideoUrl, setNewClipVideoUrl] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
   const [followLoadingUserId, setFollowLoadingUserId] = useState(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const listRef = useRef(null);
+  const { height: screenHeight } = Dimensions.get("window");
 
   const loadClips = useCallback(async () => {
     setLoading(true);
@@ -66,7 +90,9 @@ const ClipsScreen = ({ user, onClose }) => {
       if (response.ok) {
         const data = await response.json();
         const list = Array.isArray(data?.clips) ? data.clips : [];
-        setClips(list.map((clip) => normalizeClip(clip)));
+        const normalized = list.map((clip) => normalizeClip(clip));
+        setClips(normalized);
+        setFilteredClips(normalized);
       }
     } catch (e) {
       console.log("Clips load error:", e?.message);
@@ -74,6 +100,20 @@ const ClipsScreen = ({ user, onClose }) => {
       setLoading(false);
     }
   }, [userId]);
+
+  useEffect(() => {
+    const term = query.trim().toLowerCase();
+    if (!term) {
+      setFilteredClips(clips);
+      return;
+    }
+    setFilteredClips(
+      clips.filter((clip) => {
+        const haystack = `${clip.title || ""} ${clip.content || ""} ${clip.user_name || ""}`.toLowerCase();
+        return haystack.includes(term);
+      }),
+    );
+  }, [clips, query]);
 
   useEffect(() => {
     loadClips();
@@ -87,12 +127,49 @@ const ClipsScreen = ({ user, onClose }) => {
     return true;
   }, [userId]);
 
+  const pickAndUploadVideo = useCallback(async () => {
+    if (!ensureSignedIn()) return;
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert("إذن مطلوب", "يرجى السماح بالوصول إلى الاستديو لرفع الفيديو.");
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+        quality: 0.8,
+        videoMaxDuration: MAX_CLIP_DURATION,
+        allowsEditing: false,
+      });
+      if (result.canceled || !result.assets?.length) return;
+      const videoAsset = result.assets[0];
+      setUploadingVideo(true);
+      const uploadResponse = await api.uploadClipVideo(videoAsset.uri, userId);
+      if (!uploadResponse.ok) {
+        Alert.alert("خطأ", "تعذر رفع الفيديو حالياً.");
+        return;
+      }
+      const uploadData = await uploadResponse.json();
+      setNewClipVideoUrl(toAbsoluteMediaUrl(uploadData?.video_url || ""));
+      setNewClipThumb(uploadData?.thumbnail_url || "");
+      Alert.alert("تم", "تم رفع الفيديو بنجاح.");
+    } catch (e) {
+      Alert.alert("خطأ", "حدث خطأ أثناء اختيار أو رفع الفيديو.");
+    } finally {
+      setUploadingVideo(false);
+    }
+  }, [ensureSignedIn, userId]);
+
   const publishClip = useCallback(async () => {
     if (!ensureSignedIn()) return;
     const title = newClipTitle.trim();
     const text = newClipText.trim();
     if (!title || !text) {
       Alert.alert("تنبيه", "أضف عنوانًا ووصفًا للمقطع.");
+      return;
+    }
+    if (!newClipVideoUrl.trim()) {
+      Alert.alert("تنبيه", "اختر فيديو من الاستديو أولاً.");
       return;
     }
     setPublishing(true);
@@ -105,7 +182,7 @@ const ClipsScreen = ({ user, onClose }) => {
         title,
         content: text,
         caption: text,
-        video_url: newClipThumb.trim() || fallbackImage,
+        video_url: newClipVideoUrl.trim(),
         thumbnail_url: newClipThumb.trim() || fallbackImage,
       });
       if (!response.ok) {
@@ -116,6 +193,7 @@ const ClipsScreen = ({ user, onClose }) => {
       setNewClipTitle("");
       setNewClipText("");
       setNewClipThumb("");
+      setNewClipVideoUrl("");
       await loadClips();
       Alert.alert("تم", "تم نشر المقطع بنجاح.");
     } catch (e) {
@@ -128,6 +206,7 @@ const ClipsScreen = ({ user, onClose }) => {
     loadClips,
     newClipText,
     newClipThumb,
+    newClipVideoUrl,
     newClipTitle,
     user?.name,
     userId,
@@ -246,100 +325,101 @@ const ClipsScreen = ({ user, onClose }) => {
       const image =
         item.thumbnail_url ||
         CLIP_PLACEHOLDERS[index % CLIP_PLACEHOLDERS.length];
+      const hasVideo =
+        typeof item.video_url === "string" &&
+        (item.video_url.includes("/media/clips/") || item.video_url.endsWith(".mp4"));
       return (
-        <TouchableOpacity
-          style={styles.clipCard}
-          onPress={() => setActiveClip(item)}
-          activeOpacity={0.85}
-        >
+        <View style={[styles.reelCard, { height: screenHeight - 92 }]}>
+          {hasVideo ? (
+            <Video
+              source={{ uri: item.video_url }}
+              style={styles.reelVideo}
+              resizeMode={ResizeMode.COVER}
+              isLooping
+              shouldPlay={index === activeIndex}
+              useNativeControls={false}
+            />
+          ) : (
+            <ImageBackground source={{ uri: image }} style={styles.reelVideo}>
+              <LinearGradient
+                colors={["rgba(0,0,0,0.2)", "rgba(0,0,0,0.7)"]}
+                style={StyleSheet.absoluteFillObject}
+              />
+            </ImageBackground>
+          )}
+
           <LinearGradient
-            colors={["#111827", "#0f172a"]}
-            style={styles.clipGradient}
+            colors={["rgba(0,0,0,0.05)", "rgba(0,0,0,0.85)"]}
+            style={styles.reelOverlay}
           >
-            <View style={styles.clipHeader}>
+            <View style={styles.reelTopRow}>
               <Text style={styles.clipUser}>{item.user_name || "مستخدم"}</Text>
               <View style={styles.clipBadge}>
                 <Ionicons name="flash-outline" size={12} color="#22d3ee" />
                 <Text style={styles.clipBadgeText}>{MAX_CLIP_DURATION}s</Text>
               </View>
             </View>
-            <View style={styles.followRow}>
-              <Text style={styles.followStatsText}>
-                {item.followers_count || 0} متابع • {item.following_count || 0}{" "}
-                يتابع
-              </Text>
-              {item.user_id && item.user_id !== userId && (
-                <TouchableOpacity
-                  style={[
-                    styles.followBtn,
-                    item.followed_by_me ? styles.followBtnActive : null,
-                    followLoadingUserId === item.user_id
-                      ? styles.followBtnDisabled
-                      : null,
-                  ]}
-                  disabled={followLoadingUserId === item.user_id}
-                  onPress={() => toggleFollow(item)}
-                >
-                  {followLoadingUserId === item.user_id ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Text style={styles.followBtnText}>
-                      {item.followed_by_me ? "متابَع" : "متابعة"}
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              )}
-            </View>
-            <ImageBackground
-              source={{ uri: image }}
-              style={styles.clipVisual}
-              imageStyle={styles.clipVisualImage}
-            >
-              <LinearGradient
-                colors={["rgba(2,6,23,0.1)", "rgba(2,6,23,0.85)"]}
-                style={styles.clipVisualOverlay}
-              >
-                <View style={styles.clipPlayRing}>
-                  <Ionicons name="play" size={20} color="#fff" />
-                </View>
-                <Text style={styles.clipThumbUrl} numberOfLines={1}>
+
+            <View style={styles.reelBottomRow}>
+              <View style={styles.reelMetaBlock}>
+                <Text style={styles.clipTitle} numberOfLines={1}>
                   {item.title}
                 </Text>
-              </LinearGradient>
-            </ImageBackground>
-            <Text style={styles.clipTitle} numberOfLines={1}>
-              {item.title}
-            </Text>
-            <Text style={styles.clipText} numberOfLines={2}>
-              {item.content}
-            </Text>
-            <View style={styles.clipActions}>
-              <TouchableOpacity
-                style={styles.actionBtn}
-                onPress={() => toggleLike(item)}
-              >
-                <Ionicons
-                  name={item.liked_by_me ? "heart" : "heart-outline"}
-                  size={16}
-                  color={item.liked_by_me ? "#ef4444" : "#cbd5e1"}
-                />
-                <Text style={styles.actionText}>{item.likes_count || 0}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.actionBtn}
-                onPress={() => setActiveClip(item)}
-              >
-                <Ionicons name="chatbubble-outline" size={16} color="#cbd5e1" />
-                <Text style={styles.actionText}>
-                  {item.comments_count || 0}
+                <Text style={styles.clipText} numberOfLines={2}>
+                  {item.content}
                 </Text>
-              </TouchableOpacity>
+                <Text style={styles.followStatsText}>
+                  {item.followers_count || 0} متابع • {item.following_count || 0} يتابع
+                </Text>
+              </View>
+
+              <View style={styles.reelActionsStack}>
+                <TouchableOpacity
+                  style={styles.reelActionBtn}
+                  onPress={() => toggleLike(item)}
+                >
+                  <Ionicons
+                    name={item.liked_by_me ? "heart" : "heart-outline"}
+                    size={22}
+                    color={item.liked_by_me ? "#ef4444" : "#fff"}
+                  />
+                  <Text style={styles.actionText}>{item.likes_count || 0}</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.reelActionBtn}
+                  onPress={() => setActiveClip(item)}
+                >
+                  <Ionicons name="chatbubble-outline" size={22} color="#fff" />
+                  <Text style={styles.actionText}>{item.comments_count || 0}</Text>
+                </TouchableOpacity>
+
+                {item.user_id && item.user_id !== userId && (
+                  <TouchableOpacity
+                    style={[
+                      styles.followBtn,
+                      item.followed_by_me ? styles.followBtnActive : null,
+                      followLoadingUserId === item.user_id ? styles.followBtnDisabled : null,
+                    ]}
+                    disabled={followLoadingUserId === item.user_id}
+                    onPress={() => toggleFollow(item)}
+                  >
+                    {followLoadingUserId === item.user_id ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Text style={styles.followBtnText}>
+                        {item.followed_by_me ? "متابَع" : "متابعة"}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           </LinearGradient>
-        </TouchableOpacity>
+        </View>
       );
     },
-    [followLoadingUserId, toggleFollow, toggleLike, userId],
+    [activeIndex, followLoadingUserId, screenHeight, toggleFollow, toggleLike, userId],
   );
 
   const emptyState = useMemo(
@@ -356,7 +436,7 @@ const ClipsScreen = ({ user, onClose }) => {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={["#060a13", "#0f172a", "#111827"]}
+        colors={["#0a1020", "#111827", "#0b1220"]}
         style={styles.bg}
       >
         <View style={styles.header}>
@@ -372,6 +452,17 @@ const ClipsScreen = ({ user, onClose }) => {
           </TouchableOpacity>
         </View>
 
+        <View style={styles.searchWrap}>
+          <Ionicons name="search" size={16} color="#94a3b8" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="ابحث في المقاطع..."
+            placeholderTextColor="#64748b"
+            value={query}
+            onChangeText={setQuery}
+          />
+        </View>
+
         {loading ? (
           <View style={styles.loadingWrap}>
             <ActivityIndicator size="large" color="#60a5fa" />
@@ -379,12 +470,34 @@ const ClipsScreen = ({ user, onClose }) => {
           </View>
         ) : (
           <FlatList
-            data={clips}
+            ref={listRef}
+            data={filteredClips}
             keyExtractor={(item) => item.clip_id}
             renderItem={renderClip}
             ListEmptyComponent={emptyState}
-            contentContainerStyle={styles.listContent}
+            contentContainerStyle={styles.reelsListContent}
             showsVerticalScrollIndicator={false}
+            pagingEnabled
+            decelerationRate="fast"
+            snapToAlignment="start"
+            onMomentumScrollEnd={(event) => {
+              const itemHeight = screenHeight - 92;
+              const offsetY = event.nativeEvent.contentOffset.y;
+              const index = Math.max(0, Math.round(offsetY / itemHeight));
+              setActiveIndex(index);
+            }}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={async () => {
+                  setRefreshing(true);
+                  await loadClips();
+                  setRefreshing(false);
+                }}
+                tintColor="#60a5fa"
+                colors={["#60a5fa"]}
+              />
+            }
           />
         )}
       </LinearGradient>
@@ -410,11 +523,32 @@ const ClipsScreen = ({ user, onClose }) => {
             />
             <TextInput
               style={styles.input}
-              placeholder="رابط صورة الغلاف (اختياري)"
+              placeholder="رابط صورة الغلاف (اختياري - يملأ تلقائيًا)"
               placeholderTextColor="#64748b"
               value={newClipThumb}
               onChangeText={setNewClipThumb}
             />
+            <TouchableOpacity
+              style={[styles.uploadBtn, uploadingVideo ? styles.uploadBtnDisabled : null]}
+              disabled={uploadingVideo}
+              onPress={pickAndUploadVideo}
+            >
+              {uploadingVideo ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <>
+                  <Ionicons name="cloud-upload-outline" size={18} color="#fff" />
+                  <Text style={styles.uploadBtnText}>
+                    {newClipVideoUrl ? "تغيير الفيديو" : "اختيار فيديو من الاستديو"}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+            {!!newClipVideoUrl && (
+              <Text style={styles.uploadedHint} numberOfLines={1}>
+                تم تجهيز الفيديو: {newClipVideoUrl}
+              </Text>
+            )}
             <TextInput
               style={[styles.input, styles.inputLarge]}
               placeholder="وصف أو فكرة المقطع التعاوني..."
@@ -567,6 +701,48 @@ const styles = StyleSheet.create({
   loadingWrap: { flex: 1, justifyContent: "center", alignItems: "center" },
   loadingText: { color: "#cbd5e1", marginTop: 10 },
   listContent: { padding: 14, paddingBottom: 110 },
+  reelsListContent: { paddingBottom: 90 },
+  reelCard: {
+    width: "100%",
+    marginBottom: 8,
+    borderRadius: 20,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+    backgroundColor: "#0f172a",
+  },
+  reelVideo: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  reelOverlay: {
+    flex: 1,
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 16,
+  },
+  reelTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  reelBottomRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  reelMetaBlock: {
+    flex: 1,
+  },
+  reelActionsStack: {
+    alignItems: "center",
+    gap: 12,
+  },
+  reelActionBtn: {
+    alignItems: "center",
+    gap: 5,
+  },
   clipCard: { marginBottom: 12, borderRadius: 16, overflow: "hidden" },
   clipGradient: {
     padding: 12,
@@ -703,6 +879,48 @@ const styles = StyleSheet.create({
   },
   inputLarge: { minHeight: 90, textAlignVertical: "top" },
   modalActions: { flexDirection: "row", justifyContent: "flex-end", gap: 10 },
+  uploadBtn: {
+    marginBottom: 10,
+    backgroundColor: "#0ea5e9",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  uploadBtnDisabled: {
+    opacity: 0.7,
+  },
+  uploadBtnText: {
+    color: "#fff",
+    fontWeight: "700",
+  },
+  uploadedHint: {
+    color: "#67e8f9",
+    fontSize: 11,
+    marginBottom: 10,
+  },
+  searchWrap: {
+    marginHorizontal: 14,
+    marginBottom: 8,
+    borderRadius: 12,
+    backgroundColor: "rgba(15,23,42,0.78)",
+    borderWidth: 1,
+    borderColor: "rgba(148,163,184,0.25)",
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    color: "#fff",
+    fontSize: 14,
+    paddingVertical: 0,
+  },
   secondaryBtn: {
     paddingHorizontal: 14,
     paddingVertical: 10,

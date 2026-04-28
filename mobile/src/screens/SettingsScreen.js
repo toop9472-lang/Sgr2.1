@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import storage from '../services/storage';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -177,7 +178,10 @@ const SettingsScreen = ({ onBack, onLogout, currentTheme = 'dark', onThemeChange
   ];
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={["#0b1020", "#111a33", "#0e172d"]}
+      style={styles.container}
+    >
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
@@ -286,7 +290,7 @@ const SettingsScreen = ({ onBack, onLogout, currentTheme = 'dark', onThemeChange
           </View>
         </View>
       </Modal>
-    </View>
+    </LinearGradient>
   );
 };
 
@@ -320,7 +324,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   card: {
-    backgroundColor: 'rgba(17, 17, 24, 0.8)',
+    backgroundColor: "rgba(8,16,32,0.86)",
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',

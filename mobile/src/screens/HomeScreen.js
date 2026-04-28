@@ -152,19 +152,30 @@ const HomeScreen = ({
   }, [onRefresh]);
 
   return (
-    <ScrollView
-      style={styles.container}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-          tintColor="#3b82f6"
-          colors={["#3b82f6"]}
-        />
-      }
+    <ImageBackground
+      source={{
+        uri: "https://static.prod-images.emergentagent.com/jobs/40eca190-5242-4463-8c95-bc5f66df29cb/images/e35d59ccd161791b6e9cbecdfa426302685267afa2c8e806fa233976816403de.png",
+      }}
+      style={styles.bg}
+      resizeMode="cover"
     >
-      <View style={styles.content}>
+      <LinearGradient
+        colors={["rgba(15,23,42,0.26)", "rgba(30,41,59,0.68)", "rgba(30,27,75,0.88)"]}
+        style={styles.bgOverlay}
+      >
+        <ScrollView
+          style={styles.container}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor="#3b82f6"
+              colors={["#3b82f6"]}
+            />
+          }
+        >
+          <View style={styles.content}>
         {/* الترويسة */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -257,15 +268,23 @@ const HomeScreen = ({
           <Ionicons name="bulb-outline" size={18} color="#fbbf24" />
           <Text style={styles.tipText}>{copy.tip}</Text>
         </View>
-      </View>
-    </ScrollView>
+          </View>
+        </ScrollView>
+      </LinearGradient>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: "transparent",
+  },
+  bg: {
+    flex: 1,
+  },
+  bgOverlay: {
+    flex: 1,
   },
   content: {
     padding: 16,

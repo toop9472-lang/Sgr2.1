@@ -69,7 +69,8 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "يستخدم التطبيق الكاميرا لتحميل الصور",
-        "NSPhotoLibraryUsageDescription": "يستخدم التطبيق مكتبة الصور لتحميل الصور",
+        "NSPhotoLibraryUsageDescription": "يستخدم التطبيق مكتبة الصور لاختيار ورفع مقاطع الريلز",
+        "NSPhotoLibraryAddUsageDescription": "يحتاج التطبيق صلاحية إضافة الوسائط عند مشاركة أو حفظ المحتوى",
         "NSUserTrackingUsageDescription": "يستخدم هذا التطبيق معرّف الإعلان لتقديم إعلانات مخصصة",
         "GADApplicationIdentifier": "ca-app-pub-5132559433385403~1073385732",
         "UIRequiresFullScreen": false,

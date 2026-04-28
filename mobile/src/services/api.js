@@ -719,6 +719,55 @@ export const api = {
     });
   },
 
+  async uploadClipVideo(fileUri, userId) {
+    const formData = new FormData();
+    const filename = (fileUri || "").split("/").pop() || `clip-${Date.now()}.mp4`;
+    formData.append("user_id", String(userId || ""));
+    formData.append("file", {
+      uri: fileUri,
+      name: filename,
+      type: "video/mp4",
+    });
+
+    const headers = {};
+    if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+
+    const baseCandidates = Array.from(
+      new Set(
+        [this.baseUrl, activeApiBase, ...API_BASE_CANDIDATES].filter(Boolean),
+      ),
+    );
+    let lastError = null;
+
+    for (const baseUrl of baseCandidates) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), CONNECTION_TIMEOUT);
+        const response = await fetch(`${baseUrl}/api/clips/upload`, {
+          method: "POST",
+          headers,
+          body: formData,
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        if (![404, 405].includes(response.status)) {
+          activeApiBase = baseUrl;
+          this.baseUrl = baseUrl;
+          this.BASE_URL = baseUrl;
+          return response;
+        }
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (lastError) throw lastError;
+    return new Response(
+      JSON.stringify({ detail: "تعذر رفع الفيديو حالياً." }),
+      { status: 503, headers: { "Content-Type": "application/json" } },
+    );
+  },
+
   async toggleClipLike(clipId, userId) {
     return this.fetch("/api/clips/like", {
       method: "POST",

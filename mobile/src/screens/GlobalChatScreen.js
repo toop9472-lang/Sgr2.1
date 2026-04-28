@@ -124,6 +124,8 @@ const SERVERS = [
 ];
 
 const MESSAGE_COST = 0;
+const CHAT_BG_FALLBACK =
+  "https://static.prod-images.emergentagent.com/jobs/40eca190-5242-4463-8c95-bc5f66df29cb/images/e35d59ccd161791b6e9cbecdfa426302685267afa2c8e806fa233976816403de.png";
 
 const toSafeNumber = (value, fallback = 0) => {
   const parsed = Number(value);
@@ -722,9 +724,17 @@ const GlobalChatScreen = ({
         } catch {
           error = {};
         }
-        if (error.detail?.error === "insufficient_saqr_gems") {
+        if (
+          error.detail?.error === "insufficient_saqr_gems" ||
+          error?.error === "insufficient_saqr_gems"
+        ) {
           applyGems(error?.detail?.current ?? normalizedSaqrGems);
           setShowInsufficientModal(true);
+        } else if (response.status === 404 || response.status === 405) {
+          // Endpoint mismatch on older environments; guide user to retry and auto refresh.
+          await loadMessages(false);
+          setNewMessage(trimmedDraft);
+          Alert.alert(copy.chatTitle, copy.networkError);
         } else {
           // Restore draft so user can retry without retyping.
           setNewMessage(trimmedDraft);
@@ -863,7 +873,7 @@ const GlobalChatScreen = ({
 
   return (
     <ImageBackground
-      source={{ uri: CHAT_BG }}
+      source={{ uri: CHAT_BG || CHAT_BG_FALLBACK }}
       style={styles.container}
       resizeMode="cover"
     >
