@@ -18,6 +18,20 @@ import { useLanguage } from "../i18n/LanguageContext";
 
 const { width } = Dimensions.get("window");
 
+const QuickActionPill = memo(({ icon, title, subtitle, colors, onPress }) => (
+  <TouchableOpacity style={styles.quickActionPill} onPress={onPress} activeOpacity={0.85}>
+    <LinearGradient colors={colors} style={styles.quickActionPillGradient}>
+      <View style={styles.quickActionPillIcon}>
+        <Ionicons name={icon} size={17} color="#fff" />
+      </View>
+      <View style={styles.quickActionPillTextWrap}>
+        <Text style={styles.quickActionPillTitle}>{title}</Text>
+        <Text style={styles.quickActionPillSub}>{subtitle}</Text>
+      </View>
+    </LinearGradient>
+  </TouchableOpacity>
+));
+
 // بطاقة مميزة كبيرة
 const FeaturedCard = memo(
   ({ title, subtitle, image, colors, icon, onPress, badge }) => (
@@ -135,6 +149,14 @@ const HomeScreen = ({
       tip: isArabic
         ? "ادعُ أصدقاءك واربح جواهر صقر مضاعفة!"
         : "Invite friends and earn boosted Saqr gems!",
+      adsPill: isArabic ? "صفحة الإعلانات" : "Ads Feed",
+      adsPillSub: isArabic ? "AdMob + المعلنين" : "AdMob + advertisers",
+      reelsPill: isArabic ? "صفحة الريلز" : "Reels Feed",
+      reelsPillSub: isArabic ? "15 ثانية لكل فيديو" : "15s per reel",
+      chatPill: isArabic ? "الدردشة العامة" : "Global Chat",
+      chatPillSub: isArabic ? "مجانية بالكامل" : "Always free",
+      fortunesPill: isArabic ? "ثروات صقر" : "Saqr Fortunes",
+      fortunesPillSub: isArabic ? "500 = 3 ريال" : "500 = 3 SAR",
     }),
     [isArabic],
   );
@@ -189,6 +211,55 @@ const HomeScreen = ({
           </View>
         </View>
 
+        <View style={styles.quickStatsRow}>
+          <View style={styles.quickStatCard}>
+            <Ionicons name="sparkles-outline" size={16} color="#fbbf24" />
+            <Text style={styles.quickStatValue}>{user?.saqr_gems || 0}</Text>
+            <Text style={styles.quickStatLabel}>جواهر</Text>
+          </View>
+          <View style={styles.quickStatCard}>
+            <Ionicons name="videocam-outline" size={16} color="#a5f3fc" />
+            <Text style={styles.quickStatValue}>{user?.clips_count || 0}</Text>
+            <Text style={styles.quickStatLabel}>ريلز</Text>
+          </View>
+          <View style={styles.quickStatCard}>
+            <Ionicons name="chatbubble-ellipses-outline" size={16} color="#93c5fd" />
+            <Text style={styles.quickStatValue}>24/7</Text>
+            <Text style={styles.quickStatLabel}>دردشة</Text>
+          </View>
+        </View>
+
+        <View style={styles.quickActionsWrap}>
+          <QuickActionPill
+            icon="play-circle-outline"
+            title={copy.adsPill}
+            subtitle={copy.adsPillSub}
+            colors={["rgba(245,158,11,0.35)", "rgba(180,83,9,0.45)"]}
+            onPress={onNavigateToAds}
+          />
+          <QuickActionPill
+            icon="videocam-outline"
+            title={copy.reelsPill}
+            subtitle={copy.reelsPillSub}
+            colors={["rgba(99,102,241,0.35)", "rgba(79,70,229,0.45)"]}
+            onPress={onNavigateToClips}
+          />
+          <QuickActionPill
+            icon="chatbubble-ellipses-outline"
+            title={copy.chatPill}
+            subtitle={copy.chatPillSub}
+            colors={["rgba(14,165,233,0.35)", "rgba(3,105,161,0.45)"]}
+            onPress={onNavigateToChat}
+          />
+          <QuickActionPill
+            icon="planet-outline"
+            title={copy.fortunesPill}
+            subtitle={copy.fortunesPillSub}
+            colors={["rgba(236,72,153,0.34)", "rgba(124,58,237,0.44)"]}
+            onPress={onNavigateToFortunes}
+          />
+        </View>
+
         {/* ثروات صقر - القسم الرئيسي */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -212,21 +283,39 @@ const HomeScreen = ({
           <Text style={styles.fortunesDesc}>{copy.fortunesDesc}</Text>
         </View>
 
-        {/* شاهد واربح */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="play-circle" size={18} color="#f59e0b" />
-            <Text style={styles.sectionTitle}>{copy.watchAndEarn}</Text>
-          </View>
+        <View style={styles.primaryActionsRow}>
+          <TouchableOpacity style={styles.primaryAction} onPress={onNavigateToAds}>
+            <LinearGradient
+              colors={["rgba(245,158,11,0.30)", "rgba(194,65,12,0.35)"]}
+              style={styles.primaryActionGradient}
+            >
+              <View style={styles.primaryActionIcon}>
+                <Ionicons name="play-circle-outline" size={18} color="#fff" />
+              </View>
+              <View style={styles.primaryActionTextWrap}>
+                <Text style={styles.primaryActionTitle}>{copy.watchAndEarn}</Text>
+                <Text style={styles.primaryActionSub}>{copy.watchAndEarnSubtitle}</Text>
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
 
-          <FeaturedCard
-            title={copy.watchAndEarn}
-            subtitle={copy.watchAndEarnSubtitle}
-            image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e14c91a9e40e8d29b6f8d3bf567a4fcb7020c985b1a9d3e96e2035b06f9921e6.png"
-            colors={["#f59e0b", "#d97706"]}
-            icon="play"
-            onPress={onNavigateToAds}
-          />
+          <TouchableOpacity
+            style={styles.primaryAction}
+            onPress={onNavigateToFortunes}
+          >
+            <LinearGradient
+              colors={["rgba(236,72,153,0.32)", "rgba(99,102,241,0.36)"]}
+              style={styles.primaryActionGradient}
+            >
+              <View style={styles.primaryActionIcon}>
+                <Ionicons name="planet-outline" size={18} color="#fff" />
+              </View>
+              <View style={styles.primaryActionTextWrap}>
+                <Text style={styles.primaryActionTitle}>{copy.fortunes}</Text>
+                <Text style={styles.primaryActionSub}>{copy.exchangeBadge}</Text>
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
 
         {/* البطاقات الثنائية */}
@@ -291,6 +380,73 @@ const styles = StyleSheet.create({
     paddingTop: 28,
     paddingBottom: 120,
   },
+  quickStatsRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 14,
+  },
+  quickStatCard: {
+    flex: 1,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
+    backgroundColor: "rgba(10,14,30,0.38)",
+    paddingVertical: 10,
+    alignItems: "center",
+    gap: 3,
+  },
+  quickStatValue: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  quickStatLabel: {
+    color: "rgba(255,255,255,0.66)",
+    fontSize: 10,
+  },
+  quickActionsWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 16,
+  },
+  quickActionPill: {
+    width: (width - 48) / 2,
+    borderRadius: 14,
+    overflow: "hidden",
+  },
+  quickActionPillGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: 64,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+  },
+  quickActionPillIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.16)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
+  },
+  quickActionPillTextWrap: {
+    flex: 1,
+  },
+  quickActionPillTitle: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  quickActionPillSub: {
+    marginTop: 2,
+    color: "rgba(255,255,255,0.74)",
+    fontSize: 10,
+  },
 
   // الترويسة
   header: {
@@ -346,6 +502,45 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: "center",
     marginTop: 8,
+  },
+  primaryActionsRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 16,
+  },
+  primaryAction: {
+    flex: 1,
+    borderRadius: 14,
+    overflow: "hidden",
+  },
+  primaryActionGradient: {
+    minHeight: 86,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+    borderRadius: 14,
+  },
+  primaryActionIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
+  primaryActionTextWrap: {
+    gap: 3,
+  },
+  primaryActionTitle: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  primaryActionSub: {
+    color: "rgba(255,255,255,0.76)",
+    fontSize: 10,
+    lineHeight: 14,
   },
 
   // البطاقة المميزة

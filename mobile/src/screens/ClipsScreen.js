@@ -139,7 +139,7 @@ const ClipsScreen = ({ user, onClose }) => {
         mediaTypes: ImagePicker.MediaTypeOptions.Videos,
         quality: 0.8,
         videoMaxDuration: MAX_CLIP_DURATION,
-        allowsEditing: false,
+        allowsEditing: true,
       });
       if (result.canceled || !result.assets?.length) return;
       const videoAsset = result.assets[0];

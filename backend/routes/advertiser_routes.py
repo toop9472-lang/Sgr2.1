@@ -5,8 +5,10 @@ from auth.dependencies import get_current_user_id
 from typing import List, Optional
 from datetime import datetime, timedelta
 import os
+import uuid
 
 router = APIRouter(prefix='/advertiser', tags=['Advertiser'])
+MAX_VIDEO_UPLOAD_MB = 80
 
 # Hourly pricing packages
 HOURLY_PACKAGES = {
@@ -25,6 +27,62 @@ def get_db():
     client = AsyncIOMotorClient(mongo_url)
     return client[os.environ['DB_NAME']]
 
+
+def _is_video_filename(filename: str) -> bool:
+    lowered = (filename or "").lower()
+    return lowered.endswith((".mp4", ".mov", ".m4v", ".webm"))
+
+
+def _is_valid_video_url(value: str) -> bool:
+    normalized = (value or "").strip()
+    return normalized.startswith("http") or normalized.startswith("/media/ads/")
+
+
+@router.post('/upload-video', response_model=dict)
+async def upload_advertiser_video(file: UploadFile = File(...)):
+    filename = file.filename or "advertiser-video.mp4"
+    if not _is_video_filename(filename):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='صيغة فيديو غير مدعومة',
+        )
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='ملف الفيديو فارغ',
+        )
+
+    max_bytes = MAX_VIDEO_UPLOAD_MB * 1024 * 1024
+    if len(content) > max_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f'حجم الفيديو يتجاوز {MAX_VIDEO_UPLOAD_MB}MB',
+        )
+
+    file_id = str(uuid.uuid4())
+    ext = filename.split(".")[-1].lower()
+    safe_ext = ext if ext in {"mp4", "mov", "m4v", "webm"} else "mp4"
+
+    media_ads_dir = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "static",
+        "media",
+        "ads",
+    )
+    os.makedirs(media_ads_dir, exist_ok=True)
+    output_path = os.path.join(media_ads_dir, f"{file_id}.{safe_ext}")
+    with open(output_path, "wb") as output:
+        output.write(content)
+
+    video_url = f"/media/ads/{file_id}.{safe_ext}"
+    return {
+        "success": True,
+        "video_url": video_url,
+    }
+
 @router.post('/ads', response_model=dict)
 async def create_advertiser_ad(ad_data: AdvertiserAdCreate):
     """
@@ -33,6 +91,13 @@ async def create_advertiser_ad(ad_data: AdvertiserAdCreate):
     db = get_db()
     
     try:
+        video_url = (ad_data.video_url or "").strip()
+        if not video_url or not _is_valid_video_url(video_url):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='يرجى رفع فيديو الإعلان أو إدخال رابط فيديو صالح',
+            )
+
         # Get price based on duration_hours
         duration_hours = ad_data.duration_hours
         total_price = HOURLY_PACKAGES.get(duration_hours, 79.0)
@@ -45,7 +110,7 @@ async def create_advertiser_ad(ad_data: AdvertiserAdCreate):
             advertiser_phone=ad_data.advertiser_phone,
             title=ad_data.title,
             description=ad_data.description,
-            video_url=ad_data.video_url,
+            video_url=video_url,
             thumbnail_url=ad_data.thumbnail_url,
             duration=ad_data.duration,
             price=total_price,
@@ -101,6 +166,8 @@ async def create_advertiser_ad(ad_data: AdvertiserAdCreate):
             },
             'message': f'تم إنشاء طلب الإعلان بنجاح! المبلغ المطلوب: {total_price} ريال'
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -134,11 +201,12 @@ async def get_advertiser_ad(ad_id: str):
             thumbnail_url=ad.get('thumbnail_url'),
             duration=ad['duration'],
             price=ad['price'],
-            duration_months=ad['duration_months'],
+            duration_hours=ad.get('duration_hours', 1),
             status=ad['status'],
             payment_status=ad['payment_status'],
             created_at=ad['created_at'],
-            expires_at=ad.get('expires_at')
+            expires_at=ad.get('expires_at'),
+            ad_type=ad.get('ad_type', 'local')
         ),
         'payment': {
             'id': payment['id'],

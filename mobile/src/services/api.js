@@ -643,6 +643,64 @@ export const api = {
     });
   },
 
+  async uploadAdvertiserVideo(fileUri, thumbnailUri = null) {
+    const formData = new FormData();
+    const videoFilename =
+      (fileUri || "").split("/").pop() || `advertiser-${Date.now()}.mp4`;
+    formData.append("file", {
+      uri: fileUri,
+      name: videoFilename,
+      type: "video/mp4",
+    });
+    if (thumbnailUri) {
+      const thumbFilename =
+        (thumbnailUri || "").split("/").pop() || `thumb-${Date.now()}.jpg`;
+      formData.append("thumbnail", {
+        uri: thumbnailUri,
+        name: thumbFilename,
+        type: "image/jpeg",
+      });
+    }
+
+    const headers = {};
+    if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+
+    const baseCandidates = Array.from(
+      new Set(
+        [this.baseUrl, activeApiBase, ...API_BASE_CANDIDATES].filter(Boolean),
+      ),
+    );
+    let lastError = null;
+
+    for (const baseUrl of baseCandidates) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), CONNECTION_TIMEOUT);
+        const response = await fetch(`${baseUrl}/api/advertiser/upload-video`, {
+          method: "POST",
+          headers,
+          body: formData,
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        if (![404, 405].includes(response.status)) {
+          activeApiBase = baseUrl;
+          this.baseUrl = baseUrl;
+          this.BASE_URL = baseUrl;
+          return response;
+        }
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (lastError) throw lastError;
+    return new Response(
+      JSON.stringify({ detail: "تعذر رفع فيديو الإعلان حالياً." }),
+      { status: 503, headers: { "Content-Type": "application/json" } },
+    );
+  },
+
   async createAdvertiserCheckout(packageId, adId, originUrl, advertiserEmail) {
     return this.fetch("/api/payments/checkout", {
       method: "POST",

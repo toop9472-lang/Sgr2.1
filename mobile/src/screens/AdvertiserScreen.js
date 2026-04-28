@@ -11,9 +11,11 @@ import {
   Alert,
   ActivityIndicator,
   Linking,
+  ImageBackground,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from "expo-image-picker";
 import api from '../services/api';
 
 // الباقات الساعية الجديدة (تطابق الويب)
@@ -35,6 +37,8 @@ const AdvertiserScreen = () => {
   const [packages, setPackages] = useState(HOURLY_PACKAGES);
   const [createdAd, setCreatedAd] = useState(null);
   const [adType, setAdType] = useState('local'); // local or global
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [uploadedVideoPreview, setUploadedVideoPreview] = useState('');
   const [videoError, setVideoError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
@@ -87,6 +91,49 @@ const AdvertiserScreen = () => {
   const handleVideoUrlChange = (url) => {
     setFormData({ ...formData, video_url: url });
     validateVideoUrl(url);
+  };
+
+  const pickAndUploadAdvertiserVideo = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('إذن مطلوب', 'يرجى السماح بالوصول إلى الاستديو لاختيار فيديو الإعلان.');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+        quality: 0.8,
+        videoMaxDuration: 60,
+        allowsEditing: false,
+      });
+      if (result.canceled || !result.assets?.length) return;
+
+      setUploadingVideo(true);
+      const asset = result.assets[0];
+      const response = await api.uploadAdvertiserVideo(
+        asset.uri,
+        asset.thumbnailUri || null,
+      );
+      if (!response.ok) {
+        Alert.alert('خطأ', 'تعذر رفع فيديو الإعلان حالياً.');
+        return;
+      }
+      const payload = await response.json().catch(() => ({}));
+      const videoUrl = payload?.video_url || '';
+      if (!videoUrl) {
+        Alert.alert('خطأ', 'لم يتم استلام رابط الفيديو بعد الرفع.');
+        return;
+      }
+
+      setFormData((prev) => ({ ...prev, video_url: videoUrl }));
+      setUploadedVideoPreview(asset.uri);
+      setVideoError('');
+      Alert.alert('تم', 'تم رفع فيديو الإعلان بنجاح.');
+    } catch (e) {
+      Alert.alert('خطأ', 'حدث خطأ أثناء رفع الفيديو.');
+    } finally {
+      setUploadingVideo(false);
+    }
   };
 
   // الباقات ثابتة (ساعية) - لا حاجة لجلبها من السيرفر
@@ -179,6 +226,7 @@ const AdvertiserScreen = () => {
     setStep(1);
     setSelectedPackage(null);
     setCreatedAd(null);
+    setUploadedVideoPreview('');
     setFormData({ name: '', email: '', phone: '', website: '', title: '', description: '', video_url: '' });
   };
 
@@ -417,11 +465,41 @@ const AdvertiserScreen = () => {
               {/* Video URL */}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>
-                  <Ionicons name="videocam-outline" size={14} color="#9ca3af" /> رابط الفيديو (اختياري)
+                  <Ionicons name="videocam-outline" size={14} color="#9ca3af" /> فيديو الإعلان (اختياري)
                 </Text>
+                <TouchableOpacity
+                  style={[styles.uploadVideoBtn, uploadingVideo && styles.submitBtnDisabled]}
+                  onPress={pickAndUploadAdvertiserVideo}
+                  disabled={uploadingVideo}
+                  activeOpacity={0.8}
+                >
+                  {uploadingVideo ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                  ) : (
+                    <>
+                      <Ionicons name="cloud-upload-outline" size={18} color="#FFF" />
+                      <Text style={styles.uploadVideoBtnText}>اختيار ورفع فيديو من الاستديو</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+                {uploadedVideoPreview ? (
+                  <ImageBackground
+                    source={{ uri: uploadedVideoPreview }}
+                    style={styles.uploadedPreview}
+                    imageStyle={styles.uploadedPreviewImage}
+                  >
+                    <LinearGradient
+                      colors={["rgba(0,0,0,0.2)", "rgba(0,0,0,0.75)"]}
+                      style={styles.uploadedPreviewOverlay}
+                    >
+                      <Ionicons name="checkmark-circle" size={20} color="#22c55e" />
+                      <Text style={styles.uploadedPreviewText}>تم تجهيز فيديو الإعلان</Text>
+                    </LinearGradient>
+                  </ImageBackground>
+                ) : null}
                 <TextInput
                   style={[styles.input, videoError ? styles.inputError : null]}
-                  placeholder="https://example.com/video.mp4"
+                  placeholder="سيظهر رابط الفيديو بعد الرفع"
                   placeholderTextColor="#6b7280"
                   value={formData.video_url}
                   onChangeText={handleVideoUrlChange}
@@ -852,6 +930,45 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: '#ef4444',
+  },
+  uploadVideoBtn: {
+    backgroundColor: '#0ea5e9',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  uploadVideoBtnText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  uploadedPreview: {
+    height: 96,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(34,197,94,0.4)',
+  },
+  uploadedPreviewImage: {
+    borderRadius: 12,
+  },
+  uploadedPreviewOverlay: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 6,
+    padding: 10,
+  },
+  uploadedPreviewText: {
+    color: '#dcfce7',
+    fontSize: 12,
+    fontWeight: '600',
   },
   videoHintContainer: {
     flexDirection: 'row',
