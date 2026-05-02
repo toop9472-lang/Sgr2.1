@@ -9,6 +9,7 @@ from typing import Optional
 import os
 import uuid
 import httpx
+from auth.jwt_handler import create_token_pair
 
 router = APIRouter(prefix='/auth', tags=['OAuth Authentication'])
 
@@ -60,6 +61,12 @@ async def process_session(request: Request, response: Response):
             {'_id': 0}
         )
         
+        provider_name = (
+            user_data.get('provider')
+            or user_data.get('auth_provider')
+            or 'google'
+        )
+
         if existing_user:
             user_id = existing_user.get('user_id') or existing_user.get('id')
             # Update user data
@@ -68,6 +75,7 @@ async def process_session(request: Request, response: Response):
                 {'$set': {
                     'name': user_data['name'],
                     'picture': user_data.get('picture'),
+                    'provider': provider_name,
                     'updated_at': datetime.now(timezone.utc)
                 }}
             )
@@ -79,7 +87,7 @@ async def process_session(request: Request, response: Response):
                 'email': user_data['email'],
                 'name': user_data['name'],
                 'picture': user_data.get('picture'),
-                'provider': 'google',
+                'provider': provider_name,
                 'points': 0,
                 'saqr_points': 0,
                 'saqr_gems': 0,
@@ -127,8 +135,12 @@ async def process_session(request: Request, response: Response):
         # Get updated user
         user = await db.users.find_one({"$or": [{"user_id": user_id}, {"id": user_id}]}, {'_id': 0})
         
+        access_token, refresh_token = create_token_pair(user_id)
+
         return {
             'success': True,
+            'token': access_token,
+            'refresh_token': refresh_token,
             'user': {
                 'user_id': user.get('user_id', user.get('id')),
                 'id': user.get('id', user.get('user_id')),

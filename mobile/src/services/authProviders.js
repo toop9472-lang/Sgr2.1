@@ -19,6 +19,7 @@ const googleDiscovery = {
 
 const getApiBase = () => (api.baseUrl || api.BASE_URL || 'https://saqr-ui-sync.emergent.host').replace(/\/+$/, '');
 const OAUTH_PROBE_ENDPOINTS = ['/api/auth/providers-status', '/api/settings/public/oauth', '/api/health', '/health'];
+const EMERGENT_AUTH_BASE = 'https://auth.emergentagent.com';
 
 const withTimeout = async (promise, timeoutMs = 9000) => {
   let timeoutId;
@@ -95,6 +96,146 @@ const normalizeErrorMessage = (value, fallback = 'خطأ غير معروف') => 
   return fallback;
 };
 
+const extractUrlParam = (url, key) => {
+  if (!url || !key) return null;
+  const fallbackMatch = String(url).match(new RegExp(`[?#&]${key}=([^&#]+)`));
+  let rawValue = fallbackMatch ? fallbackMatch[1] : null;
+
+  try {
+    const parsedUrl = new URL(url);
+    rawValue = parsedUrl.searchParams.get(key) || rawValue;
+    if (!rawValue && parsedUrl.hash) {
+      const hash = parsedUrl.hash.startsWith('#') ? parsedUrl.hash.slice(1) : parsedUrl.hash;
+      rawValue = new URLSearchParams(hash).get(key) || rawValue;
+    }
+  } catch (_) {
+    // URL parsing can fail for malformed callback URLs. Regex fallback above is enough.
+  }
+
+  if (!rawValue) return null;
+  try {
+    return decodeURIComponent(String(rawValue).replace(/\+/g, '%20'));
+  } catch (_) {
+    return String(rawValue);
+  }
+};
+
+const buildOAuthError = (provider, code) => {
+  const normalizedCode = String(code || '').toLowerCase();
+  const map = {
+    google_not_configured: 'إعداد تسجيل Google غير مكتمل على الخادم',
+    apple_not_configured: 'إعداد تسجيل Apple غير مكتمل على الخادم',
+    token_exchange_failed: 'فشل التحقق من Google. حاول مرة أخرى',
+    userinfo_failed: 'تعذر الحصول على بيانات الحساب من المزود',
+    invalid_session_id: 'جلسة تسجيل الدخول غير صالحة',
+    access_denied: 'تم إلغاء عملية تسجيل الدخول',
+    auth_failed: `فشل تسجيل الدخول عبر ${provider}`,
+  };
+  const message = map[normalizedCode] || `فشل تسجيل الدخول عبر ${provider}`;
+  const error = new Error(message);
+  error.oauthCode = normalizedCode;
+  return error;
+};
+
+const getOAuthProvidersStatus = async (oauthBase) => {
+  try {
+    const response = await withTimeout(fetch(`${oauthBase}/api/auth/providers-status`, {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+    }));
+    if (!response.ok) return null;
+    const data = await response.json().catch(() => ({}));
+    return data && typeof data === 'object' ? data : null;
+  } catch (_) {
+    return null;
+  }
+};
+
+const exchangeSessionIdForUser = async (oauthBase, sessionId) => {
+  const failures = [];
+
+  try {
+    const getResponse = await fetch(`${oauthBase}/api/auth/session/${encodeURIComponent(sessionId)}`, {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+    });
+    const getData = await getResponse.json().catch(() => ({}));
+    if (getResponse.ok) {
+      const token = getData?.token || getData?.session_token || null;
+      const user = getData?.user || null;
+      if (!token || !user) {
+        throw new Error('بيانات جلسة الدخول غير مكتملة');
+      }
+      return {
+        token,
+        refreshToken: getData?.refresh_token || null,
+        user,
+      };
+    }
+    failures.push(normalizeErrorMessage(getData, 'فشل استلام بيانات المستخدم'));
+  } catch (error) {
+    failures.push(normalizeErrorMessage(error, 'فشل استلام بيانات المستخدم'));
+  }
+
+  const postResponse = await fetch(`${oauthBase}/api/auth/session`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ session_id: sessionId }),
+  });
+  const postData = await postResponse.json().catch(() => ({}));
+  if (!postResponse.ok) {
+    failures.push(normalizeErrorMessage(postData, 'فشل التحقق من جلسة تسجيل الدخول'));
+    throw new Error(failures.find(Boolean) || 'فشل تسجيل الدخول');
+  }
+
+  const token = postData?.token || postData?.session_token || null;
+  const user = postData?.user || null;
+  if (!token || !user) {
+    throw new Error('الخادم لم يرجع بيانات دخول مكتملة');
+  }
+
+  return {
+    token,
+    refreshToken: postData?.refresh_token || null,
+    user,
+  };
+};
+
+const performOAuthWebSession = async ({ authUrl, redirectUri, oauthBase, providerName }) => {
+  const result = await WebBrowser.openAuthSessionAsync(
+    authUrl,
+    redirectUri,
+    {
+      preferEphemeralSession: true,
+      showInRecents: true,
+    },
+  );
+
+  if (result.type === 'cancel') {
+    return { success: false, cancelled: true };
+  }
+  if (result.type !== 'success' || !result.url) {
+    throw new Error('فشل فتح صفحة تسجيل الدخول');
+  }
+
+  const sessionId = extractUrlParam(result.url, 'session_id');
+  if (!sessionId) {
+    const oauthErrorCode = extractUrlParam(result.url, 'error');
+    if (oauthErrorCode) {
+      throw buildOAuthError(providerName, oauthErrorCode);
+    }
+    throw new Error('لم نتمكن من استلام بيانات الجلسة');
+  }
+
+  const sessionData = await exchangeSessionIdForUser(oauthBase, sessionId);
+  return {
+    success: true,
+    token: sessionData.token,
+    refreshToken: sessionData.refreshToken,
+    user: sessionData.user,
+  };
+};
+
 /**
  * Sign in with Google using Web Browser OAuth
  * Works on both iOS and Android without native SDK
@@ -102,61 +243,46 @@ const normalizeErrorMessage = (value, fallback = 'خطأ غير معروف') => 
 export const signInWithGoogle = async () => {
   try {
     const oauthBase = await resolveOAuthBase();
-    // Use web-based OAuth for better compatibility
     const redirectUri = AuthSession.makeRedirectUri({
       scheme: 'saqr',
-      path: 'auth/callback'
+      path: 'auth/callback',
     });
+    const emergentGoogleAuthUrl = `${EMERGENT_AUTH_BASE}/?redirect=${encodeURIComponent(redirectUri)}`;
 
-    // Request authorization
-    const authUrl = `${oauthBase}/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
-    
-    const result = await WebBrowser.openAuthSessionAsync(
-      authUrl,
-      redirectUri,
-      {
-        preferEphemeralSession: true,
-        showInRecents: true,
-      }
-    );
+    const providers = await getOAuthProvidersStatus(oauthBase);
+    const shouldUseEmergentDirectly = providers?.google_enabled === false;
 
-    if (result.type === 'success' && result.url) {
-      // Extract session_id from callback URL
-      const sessionMatch = result.url.match(/session_id=([^&]+)/);
-      
-      if (sessionMatch) {
-        const sessionId = sessionMatch[1];
-        
-        // Get user data from session
-        const response = await fetch(`${oauthBase}/api/auth/session/${sessionId}`, {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' },
+    if (shouldUseEmergentDirectly) {
+      return await performOAuthWebSession({
+        authUrl: emergentGoogleAuthUrl,
+        redirectUri,
+        oauthBase,
+        providerName: 'Google',
+      });
+    }
+
+    try {
+      return await performOAuthWebSession({
+        authUrl: `${oauthBase}/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`,
+        redirectUri,
+        oauthBase,
+        providerName: 'Google',
+      });
+    } catch (primaryError) {
+      const shouldRetryWithEmergent =
+        primaryError?.oauthCode === 'google_not_configured' ||
+        primaryError?.oauthCode === 'token_exchange_failed' ||
+        primaryError?.oauthCode === 'userinfo_failed';
+
+      if (shouldRetryWithEmergent) {
+        return await performOAuthWebSession({
+          authUrl: emergentGoogleAuthUrl,
+          redirectUri,
+          oauthBase,
+          providerName: 'Google',
         });
-        
-        if (response.ok) {
-          const data = await response.json();
-          return {
-            success: true,
-            token: data.token,
-            refreshToken: data.refresh_token,
-            user: data.user
-          };
-        } else {
-          const error = await response.json().catch(() => ({}));
-          throw new Error(normalizeErrorMessage(error, 'فشل استلام بيانات المستخدم'));
-        }
-      } else {
-        // Check for error in URL
-        const errorMatch = result.url.match(/error=([^&]+)/);
-        if (errorMatch) {
-          throw new Error(decodeURIComponent(errorMatch[1]));
-        }
-        throw new Error('لم نتمكن من استلام بيانات الجلسة');
       }
-    } else if (result.type === 'cancel') {
-      return { success: false, cancelled: true };
-    } else {
-      throw new Error('فشل فتح صفحة تسجيل الدخول');
+      throw primaryError;
     }
   } catch (error) {
     console.error('Google SignIn Error:', error);
@@ -169,8 +295,9 @@ export const signInWithGoogle = async () => {
  * Uses native Apple Authentication on iOS
  */
 export const signInWithApple = async () => {
+  let oauthBase = null;
   try {
-    const oauthBase = await resolveOAuthBase();
+    oauthBase = await resolveOAuthBase();
     // Check if Apple Sign In is available
     const isAvailable = await AppleAuthentication.isAvailableAsync();
     
@@ -229,8 +356,7 @@ export const signInWithApple = async () => {
     
     // ERR_REQUEST_UNKNOWN usually means Apple Sign In is not properly configured
     if (error.code === 'ERR_REQUEST_UNKNOWN') {
-      console.error('Apple SignIn Config Error:', error);
-      throw new Error('تسجيل الدخول بأبل غير متاح حالياً. جاري العمل على إصلاحه.');
+      return await signInWithAppleWeb(oauthBase);
     }
     
     console.error('Apple SignIn Error:', error);
@@ -249,47 +375,36 @@ export const signInWithAppleWeb = async (preResolvedBase = null) => {
       scheme: 'saqr',
       path: 'auth/callback',
     });
-    const authUrl = `${oauthBase}/api/auth/apple?redirect_uri=${encodeURIComponent(redirectUri)}`;
-    
-    const result = await WebBrowser.openAuthSessionAsync(
-      authUrl,
-      redirectUri,
-      {
-        preferEphemeralSession: true,
-        showInRecents: true,
-      }
-    );
+    const emergentAppleAuthUrl = `${EMERGENT_AUTH_BASE}/apple?redirect=${encodeURIComponent(redirectUri)}`;
+    const providers = await getOAuthProvidersStatus(oauthBase);
+    const shouldUseEmergentDirectly = providers?.apple_enabled === false;
 
-    if (result.type === 'success' && result.url) {
-      const sessionMatch = result.url.match(/session_id=([^&]+)/);
-      
-      if (sessionMatch) {
-        const sessionId = sessionMatch[1];
-        
-        const response = await fetch(`${oauthBase}/api/auth/session/${sessionId}`, {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' },
+    if (shouldUseEmergentDirectly) {
+      return await performOAuthWebSession({
+        authUrl: emergentAppleAuthUrl,
+        redirectUri,
+        oauthBase,
+        providerName: 'Apple',
+      });
+    }
+
+    try {
+      return await performOAuthWebSession({
+        authUrl: `${oauthBase}/api/auth/apple?redirect_uri=${encodeURIComponent(redirectUri)}`,
+        redirectUri,
+        oauthBase,
+        providerName: 'Apple',
+      });
+    } catch (primaryError) {
+      if (primaryError?.oauthCode === 'apple_not_configured') {
+        return await performOAuthWebSession({
+          authUrl: emergentAppleAuthUrl,
+          redirectUri,
+          oauthBase,
+          providerName: 'Apple',
         });
-        
-        if (response.ok) {
-          const data = await response.json();
-          return {
-            success: true,
-            token: data.token,
-            refreshToken: data.refresh_token,
-            user: data.user
-          };
-        } else {
-          const error = await response.json().catch(() => ({}));
-          throw new Error(normalizeErrorMessage(error, 'فشل استلام بيانات المستخدم'));
-        }
-      } else {
-        throw new Error('لم نتمكن من استلام بيانات الجلسة');
       }
-    } else if (result.type === 'cancel') {
-      return { success: false, cancelled: true };
-    } else {
-      throw new Error('فشل فتح صفحة تسجيل الدخول');
+      throw primaryError;
     }
   } catch (error) {
     console.error('Apple Web SignIn Error:', error);
