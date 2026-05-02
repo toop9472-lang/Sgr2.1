@@ -17,6 +17,17 @@ DEFAULT_CLIP_VISUAL = "https://static.prod-images.emergentagent.com/jobs/3943d01
 MAX_UPLOAD_MB = 60
 
 
+def _user_filter(user_id: str):
+    return {"$or": [{"id": user_id}, {"user_id": user_id}]}
+
+
+async def _fetch_user(user_id: str, projection=None):
+    user = await db.users.find_one(_user_filter(user_id), projection)
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    return user
+
+
 class CreateClipRequest(BaseModel):
     user_id: str
     user_name: Optional[str] = "مستخدم"
