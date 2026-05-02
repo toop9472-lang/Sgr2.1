@@ -1057,6 +1057,11 @@ export const api = {
     return this.fetch(`/api/economy/ad-stats/${userId}`);
   },
 
+  // Get daily AdMob challenge status (30 gems/day target)
+  async getAdChallengeStatus(userId) {
+    return this.fetch(`/api/economy/ad-challenge/${userId}`);
+  },
+
 };
 
 export default api;

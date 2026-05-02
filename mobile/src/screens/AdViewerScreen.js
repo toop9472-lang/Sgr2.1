@@ -23,7 +23,7 @@ import admobService from "../services/admobService";
 import { useAchievements } from "../services/AchievementsContext";
 import { shuffleArray } from "../utils/random";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
 const ADMOB_SLOT_PREFIX = "admob-slot-";
 const ADMOB_INSERT_EVERY = 2;
@@ -160,42 +160,51 @@ const AdViewerScreen = ({
     }
   };
 
-  const persistReward = useCallback(
-    async ({ adId, watchDuration, adType }) => {
-      try {
-        if (currentUserId) {
-          const rewardResponse = await api.claimAdWatchReward(
-            currentUserId,
-            watchDuration,
-            adType,
-          );
-          if (rewardResponse.ok) {
-            const payload = await rewardResponse.json().catch(() => ({}));
-            return { ok: true, payload };
-          }
-        }
-      } catch (error) {
-        console.log("Claim reward failed, fallback to recordAdView");
+  const parseRewardErrorMessage = useCallback(async (response) => {
+    try {
+      const payload = await response.json().catch(() => ({}));
+      const detail = payload?.detail;
+      if (typeof detail === "string" && detail.trim()) return detail;
+      if (detail && typeof detail?.message === "string" && detail.message.trim()) {
+        return detail.message;
       }
+      if (typeof payload?.message === "string" && payload.message.trim()) {
+        return payload.message;
+      }
+    } catch (_) {
+      // ignore
+    }
+    if (response?.status === 429) {
+      return "أنهيت تحديات إعلانات اليوم (30 جوهرة). عد غداً.";
+    }
+    return "تعذر احتساب مكافأة الإعلان حالياً.";
+  }, []);
 
+  const persistReward = useCallback(
+    async ({ watchDuration, adType }) => {
+      if (!currentUserId) {
+        return { ok: false, message: "تسجيل الدخول مطلوب لاحتساب المكافأة." };
+      }
       try {
-        const token = await storage.getToken();
-        if (!token) return false;
-        const fallbackResponse = await api.recordAdView(
-          adId,
+        const rewardResponse = await api.claimAdWatchReward(
+          currentUserId,
           watchDuration,
-          token,
-          1,
+          adType,
         );
-        if (!fallbackResponse.ok) return { ok: false };
-        const payload = await fallbackResponse.json().catch(() => ({}));
+        if (!rewardResponse.ok) {
+          const message = await parseRewardErrorMessage(rewardResponse);
+          return { ok: false, status: rewardResponse.status, message };
+        }
+        const payload = await rewardResponse.json().catch(() => ({}));
         return { ok: true, payload };
       } catch (error) {
-        console.log("Fallback reward save failed:", error);
-        return { ok: false };
+        return {
+          ok: false,
+          message: "تعذر الاتصال بالخادم أثناء حفظ مكافأة الإعلان.",
+        };
       }
     },
-    [currentUserId],
+    [currentUserId, parseRewardErrorMessage],
   );
 
   // Show AdMob Rewarded Ad
@@ -229,16 +238,12 @@ const AdViewerScreen = ({
       }
 
       const persisted = await persistReward({
-        adId: "admob_rewarded",
         watchDuration: 60,
-        adType: "rewarded",
+        adType: "admob_rewarded",
       });
 
       if (!persisted?.ok) {
-        Alert.alert(
-          "تنبيه",
-          "تم تسجيل المكافأة محلياً، وسيتم مزامنتها عند تحسن الاتصال.",
-        );
+        Alert.alert("تنبيه", persisted?.message || "تعذر احتساب المكافأة حالياً.");
       } else {
         const gems =
           Number(
@@ -453,12 +458,11 @@ const AdViewerScreen = ({
       const requestedMinutes = Math.max(1, Number(points) || 1);
       if (currentAd) {
         const persisted = await persistReward({
-          adId: currentAd.id,
           watchDuration: requestedMinutes * 60,
-          adType: "video",
+          adType: "advertiser_rewarded",
         });
         if (!persisted?.ok) {
-          console.log("Failed to record ad reward");
+          Alert.alert("تنبيه", persisted?.message || "تعذر احتساب المكافأة حالياً.");
           return;
         }
         const gems =

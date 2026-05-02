@@ -267,8 +267,8 @@ class TestAddSaqrGemsAPI:
         
         print(f"✓ Added 5 saqr gems - new balance: {data['new_balance']}")
     
-    def test_add_saqr_gems_from_wheel_spin(self):
-        """Add saqr gems from wheel spin source"""
+    def test_add_saqr_gems_rejects_non_ad_source(self):
+        """Add saqr gems should reject non-ad sources"""
         # Get initial balance
         initial_response = requests.get(f"{BASE_URL}/api/economy/balance/{self.test_user_id}")
         if initial_response.status_code == 404:
@@ -278,29 +278,25 @@ class TestAddSaqrGemsAPI:
         
         payload = {
             "user_id": self.test_user_id,
-            "amount": 10,
+            "amount": 5,
             "source": "wheel_spin"
         }
         
         response = requests.post(f"{BASE_URL}/api/economy/add-saqr-gems", json=payload)
         
-        assert response.status_code == 200
-        data = response.json()
-        assert data["success"] == True
-        assert data["gems_earned"] == 10
-        
-        print(f"✓ Added 10 saqr gems from wheel spin")
+        assert response.status_code == 400
+        print("✓ Non-ad source correctly rejected")
     
-    def test_add_saqr_gems_returns_usd_value(self):
-        """Response should include value_usd (calculated as SAR)"""
+    def test_add_saqr_gems_returns_sar_value(self):
+        """Response should include saqr_gems_value_sar"""
         initial_response = requests.get(f"{BASE_URL}/api/economy/balance/{self.test_user_id}")
         if initial_response.status_code == 404:
             pytest.skip("Test user not found")
         
         payload = {
             "user_id": self.test_user_id,
-            "amount": 100,
-            "source": "chest_reward"
+            "amount": 5,
+            "source": "admob_rewarded"
         }
         
         response = requests.post(f"{BASE_URL}/api/economy/add-saqr-gems", json=payload)
@@ -308,15 +304,12 @@ class TestAddSaqrGemsAPI:
         assert response.status_code == 200
         data = response.json()
         
-        # Note: API returns value_usd but it's actually SAR calculation (500 gems = 1 SAR)
-        assert "value_usd" in data, "Missing value_usd field"
-        
-        # value_usd = new_balance / 500 (since GEMS_PER_RIYAL = 500)
-        expected_value = data["new_balance"] / 500
-        assert data["value_usd"] == expected_value, \
-            f"Value calculation wrong: expected {expected_value}, got {data['value_usd']}"
-        
-        print(f"✓ Value returned: {data['value_usd']} SAR (from {data['new_balance']} gems)")
+        assert "saqr_gems_value_sar" in data, "Missing saqr_gems_value_sar field"
+        expected_value = round(data["new_balance"] * 3 / 500, 3)
+        assert data["saqr_gems_value_sar"] == expected_value, \
+            f"Value calculation wrong: expected {expected_value}, got {data['saqr_gems_value_sar']}"
+
+        print(f"✓ Value returned: {data['saqr_gems_value_sar']} SAR (from {data['new_balance']} gems)")
     
     def test_add_saqr_gems_404_for_nonexistent_user(self):
         """Should return 404 for non-existent user"""
@@ -335,7 +328,7 @@ class TestAddSaqrGemsAPI:
 
 
 class TestCurrencyVerification:
-    """Test currency is SAR (Saudi Riyal) not USD - التحقق من ظهور 500 جوهرة = 1 ريال"""
+    """Test currency is SAR (Saudi Riyal) - التحقق من ظهور 500 جوهرة = 3 ريال"""
     
     def test_diamond_packages_uses_sar(self):
         """Diamond packages should use SAR currency"""
@@ -352,25 +345,25 @@ class TestCurrencyVerification:
         print(f"✓ Packages use SAR currency: {data.get('currency')} ({data.get('currency_symbol')})")
     
     def test_gems_per_riyal_is_500(self):
-        """Exchange rate should be 500 gems = 1 SAR"""
+        """Exchange rate should be 500 gems = 3 SAR"""
         # Check balance endpoint returns correct rate
         response = requests.get(f"{BASE_URL}/api/economy/balance/user_142f6a6ff7e2")
         
         if response.status_code == 200:
             data = response.json()
             
-            # Check gems_per_dollar field (should be 500 for SAR)
+            # Check 500 gems to 3 SAR based on balance conversion
             if "gems_per_dollar" in data:
                 assert data["gems_per_dollar"] == 500, \
                     f"gems_per_dollar should be 500, got {data['gems_per_dollar']}"
             
             # Verify saqr_gems_value_sar calculation
             if "saqr_gems" in data and "saqr_gems_value_sar" in data:
-                expected_sar = data["saqr_gems"] / 500
+                expected_sar = round(data["saqr_gems"] * 3 / 500, 3)
                 assert data["saqr_gems_value_sar"] == expected_sar, \
                     f"SAR value mismatch: expected {expected_sar}, got {data['saqr_gems_value_sar']}"
             
-            print(f"✓ Exchange rate: 500 gems = 1 SAR")
+            print(f"✓ Exchange rate: 500 gems = 3 SAR")
         else:
             # Alternative: check game-costs or packages
             pkg_response = requests.get(f"{BASE_URL}/api/economy/packages")
@@ -387,18 +380,12 @@ class TestCurrencyVerification:
             data = response.json()
             
             assert "saqr_gems" in data, "Missing saqr_gems"
-            assert "value_usd" in data, "Missing value_usd (SAR calculation)"
-            assert "gems_per_dollar" in data, "Missing gems_per_dollar"
-            
-            # Verify 500 gems = 1 SAR
-            assert data["gems_per_dollar"] == 500, \
-                f"gems_per_dollar should be 500, got {data['gems_per_dollar']}"
-            
-            expected_value = data["saqr_gems"] / 500
-            assert data["value_usd"] == expected_value, \
-                f"Value wrong: expected {expected_value}, got {data['value_usd']}"
-            
-            print(f"✓ Saqr gems endpoint: {data['saqr_gems']} gems = {data['value_usd']} SAR")
+            assert "saqr_gems_value_sar" in data, "Missing saqr_gems_value_sar"
+            expected_value = round(data["saqr_gems"] * 3 / 500, 3)
+            assert data["saqr_gems_value_sar"] == expected_value, \
+                f"Value wrong: expected {expected_value}, got {data['saqr_gems_value_sar']}"
+
+            print(f"✓ Saqr gems endpoint: {data['saqr_gems']} gems = {data['saqr_gems_value_sar']} SAR")
         elif response.status_code == 404:
             print("✓ Saqr gems endpoint exists (404 for test user is expected)")
 
@@ -425,12 +412,11 @@ class TestAdWatchReward:
         yield
     
     def test_ad_watch_reward_endpoint(self):
-        """POST /api/economy/ad-watch-reward should add gems per minute"""
+        """POST /api/economy/ad-watch-reward should add fixed 5 gems per completed ad"""
         payload = {
             "user_id": self.test_user_id,
-            "watch_duration_seconds": 60,  # 1 minute = 1 gem
-            "ad_type": "video",
-            "gems_earned": 1
+            "watch_duration_seconds": 60,
+            "ad_type": "admob_rewarded",
         }
         
         response = requests.post(f"{BASE_URL}/api/economy/ad-watch-reward", json=payload)
@@ -440,7 +426,9 @@ class TestAdWatchReward:
             
             assert data["success"] == True
             assert "saqr_gems_earned" in data, "Missing saqr_gems_earned"
-            assert data["saqr_gems_earned"] >= 1, "Should earn at least 1 gem per minute"
+            assert data["saqr_gems_earned"] == 5, "Each completed ad should grant 5 gems"
+            assert data.get("daily_goal_gems") == 30, "Daily gems goal should be 30"
+            assert data.get("daily_goal_ads") == 6, "Daily ads goal should be 6"
             
             print(f"✓ Ad watch reward: {data['saqr_gems_earned']} gems, {data.get('diamonds_earned', 0)} diamonds")
         elif response.status_code == 404:
@@ -455,9 +443,20 @@ class TestAdWatchReward:
         if response.status_code == 200:
             data = response.json()
             
-            expected_fields = ["total_ads_watched", "today_ads_watched", "current_diamonds"]
+            expected_fields = [
+                "total_ads_watched",
+                "today_ads_watched",
+                "today_gems_earned",
+                "daily_goal_ads",
+                "daily_goal_gems",
+                "remaining_ads_today",
+                "remaining_gems_today",
+                "current_diamonds",
+            ]
             for field in expected_fields:
                 assert field in data, f"Missing {field}"
+            assert data["daily_goal_gems"] == 30, "Daily gems goal should be 30"
+            assert data["daily_goal_ads"] == 6, "Daily ads goal should be 6"
             
             print(f"✓ Ad stats: total={data['total_ads_watched']}, today={data['today_ads_watched']}")
         elif response.status_code == 404:

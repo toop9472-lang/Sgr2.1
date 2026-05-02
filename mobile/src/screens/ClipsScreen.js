@@ -102,7 +102,6 @@ const ClipsScreen = ({ user, onClose }) => {
   const [activeClip, setActiveClip] = useState(null);
   const [commentDraft, setCommentDraft] = useState("");
   const [newClipTitle, setNewClipTitle] = useState("");
-  const [newClipText, setNewClipText] = useState("");
   const [newClipThumb, setNewClipThumb] = useState("");
   const [newClipVideoUrl, setNewClipVideoUrl] = useState("");
   const [refreshing, setRefreshing] = useState(false);
@@ -202,9 +201,8 @@ const ClipsScreen = ({ user, onClose }) => {
   const publishClip = useCallback(async () => {
     if (!ensureSignedIn()) return;
     const title = newClipTitle.trim();
-    const text = newClipText.trim();
-    if (!title || !text) {
-      Alert.alert("تنبيه", "أضف عنوانًا ووصفًا للمقطع.");
+    if (!title) {
+      Alert.alert("تنبيه", "أضف عنوانًا للمقطع قبل النشر.");
       return;
     }
     if (!newClipVideoUrl.trim()) {
@@ -219,8 +217,9 @@ const ClipsScreen = ({ user, onClose }) => {
         user_id: userId,
         user_name: user?.name || "مستخدم",
         title,
-        content: text,
-        caption: text,
+        // Upload flow now requests title only before publish.
+        content: "",
+        caption: title,
         video_url: newClipVideoUrl.trim(),
         thumbnail_url: newClipThumb.trim() || fallbackImage,
       });
@@ -234,7 +233,6 @@ const ClipsScreen = ({ user, onClose }) => {
       }
       setShowCreate(false);
       setNewClipTitle("");
-      setNewClipText("");
       setNewClipThumb("");
       setNewClipVideoUrl("");
       await loadClips();
@@ -254,7 +252,6 @@ const ClipsScreen = ({ user, onClose }) => {
   }, [
     ensureSignedIn,
     loadClips,
-    newClipText,
     newClipThumb,
     newClipVideoUrl,
     newClipTitle,
@@ -415,9 +412,11 @@ const ClipsScreen = ({ user, onClose }) => {
                 <Text style={styles.clipTitle} numberOfLines={1}>
                   {item.title}
                 </Text>
-                <Text style={styles.clipText} numberOfLines={2}>
-                  {item.content}
-                </Text>
+                {!!item.content && (
+                  <Text style={styles.clipText} numberOfLines={2}>
+                    {item.content}
+                  </Text>
+                )}
                 <Text style={styles.followStatsText}>
                   {item.followers_count || 0} متابع • {item.following_count || 0} يتابع
                 </Text>
@@ -567,20 +566,16 @@ const ClipsScreen = ({ user, onClose }) => {
           behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>نشر مقطع 15 ثانية</Text>
+            <Text style={styles.modalTitle}>نشر ريل احترافي (15 ثانية)</Text>
+            <Text style={styles.modalSubtitle}>
+              المطلوب قبل النشر: عنوان الفيديو فقط، ثم اختر الفيديو.
+            </Text>
             <TextInput
               style={styles.input}
               placeholder="عنوان المقطع"
               placeholderTextColor="#64748b"
               value={newClipTitle}
               onChangeText={setNewClipTitle}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="رابط صورة الغلاف (اختياري - يملأ تلقائيًا)"
-              placeholderTextColor="#64748b"
-              value={newClipThumb}
-              onChangeText={setNewClipThumb}
             />
             <TouchableOpacity
               style={[styles.uploadBtn, uploadingVideo ? styles.uploadBtnDisabled : null]}
@@ -603,14 +598,6 @@ const ClipsScreen = ({ user, onClose }) => {
                 تم تجهيز الفيديو: {newClipVideoUrl}
               </Text>
             )}
-            <TextInput
-              style={[styles.input, styles.inputLarge]}
-              placeholder="وصف أو فكرة المقطع التعاوني..."
-              placeholderTextColor="#64748b"
-              multiline
-              value={newClipText}
-              onChangeText={setNewClipText}
-            />
             <View style={styles.modalActions}>
               <TouchableOpacity
                 style={styles.secondaryBtn}
@@ -921,6 +908,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 10,
   },
+  modalSubtitle: {
+    color: "#94a3b8",
+    fontSize: 12,
+    marginBottom: 10,
+    lineHeight: 18,
+  },
   input: {
     backgroundColor: "rgba(255,255,255,0.06)",
     borderRadius: 10,
@@ -931,7 +924,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginBottom: 10,
   },
-  inputLarge: { minHeight: 90, textAlignVertical: "top" },
   modalActions: { flexDirection: "row", justifyContent: "flex-end", gap: 10 },
   uploadBtn: {
     marginBottom: 10,

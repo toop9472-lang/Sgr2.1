@@ -14,21 +14,20 @@ import {
   Alert,
   Animated,
   Dimensions,
-  Easing,
   Vibration,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../services/api";
 import admobService from "../services/admobService";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
 // ==================== ثوابت النظام ====================
 const GEMS_PER_RIYAL = 500; // 500 جوهرة = 3 ريال سعودي
 const SAR_PER_EXCHANGE = 3;
-const MAX_DAILY_ADS = 50; // الحد الأقصى للإعلانات اليومية
+const DEFAULT_DAILY_GOAL_GEMS = 30;
+const DEFAULT_DAILY_GOAL_ADS = 6;
 
 const FIXED_AD_REWARD_GEMS = 5;
 
@@ -256,8 +255,13 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     todayAds: 0,
+    todayGems: 0,
     totalGems: 0,
-    lastWatchDate: null,
+    remainingAds: DEFAULT_DAILY_GOAL_ADS,
+    remainingGems: DEFAULT_DAILY_GOAL_GEMS,
+    dailyGoalAds: DEFAULT_DAILY_GOAL_ADS,
+    dailyGoalGems: DEFAULT_DAILY_GOAL_GEMS,
+    challengeCompleted: false,
   });
   const [adGateLoading, setAdGateLoading] = useState(false);
   const [showResult, setShowResult] = useState(false);
@@ -270,35 +274,66 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
 
   useEffect(() => {
     if (visible) {
-      loadStats();
+      loadAdStats();
       loadBalance();
     }
   }, [visible]);
 
-  const loadStats = async () => {
+  const parseApiError = async (response, fallbackMessage) => {
     try {
-      const savedStats = await AsyncStorage.getItem(`ad_rewards_stats_${userId}`);
-      const today = new Date().toDateString();
-
-      if (savedStats) {
-        const parsed = JSON.parse(savedStats);
-        const normalized = {
-          ...parsed,
-          totalGems: parsed.totalGems ?? 0,
-        };
-        // Reset daily counter if new day
-        if (normalized.lastWatchDate !== today) {
-          setStats({
-            todayAds: 0,
-            totalGems: normalized.totalGems || 0,
-            lastWatchDate: today,
-          });
-        } else {
-          setStats(normalized);
-        }
+      const payload = await response.json().catch(() => ({}));
+      const detail = payload?.detail;
+      if (typeof detail === "string" && detail.trim()) return detail;
+      if (detail && typeof detail?.message === "string" && detail.message.trim()) {
+        return detail.message;
       }
+      if (typeof payload?.message === "string" && payload.message.trim()) {
+        return payload.message;
+      }
+    } catch (_) {
+      // ignore
+    }
+    return fallbackMessage;
+  };
+
+  const loadAdStats = async () => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const response = await api.getAdChallengeStatus(userId);
+      if (!response.ok) {
+        throw new Error(`ad_stats_${response.status}`);
+      }
+      const data = await response.json().catch(() => ({}));
+      const todayAds = Number(data?.today_ads_watched ?? 0) || 0;
+      const todayGems = Number(data?.today_gems_earned ?? 0) || 0;
+      const totalGems = Number(data?.total_ad_gems ?? 0) || 0;
+      const dailyGoalAds =
+        Number(data?.daily_goal_ads ?? DEFAULT_DAILY_GOAL_ADS) || DEFAULT_DAILY_GOAL_ADS;
+      const dailyGoalGems =
+        Number(data?.daily_goal_gems ?? DEFAULT_DAILY_GOAL_GEMS) || DEFAULT_DAILY_GOAL_GEMS;
+      const remainingAds = Math.max(
+        0,
+        Number(data?.remaining_ads_today ?? dailyGoalAds - todayAds) || 0,
+      );
+      const remainingGems = Math.max(
+        0,
+        Number(data?.remaining_gems_today ?? dailyGoalGems - todayGems) || 0,
+      );
+      setStats({
+        todayAds,
+        todayGems,
+        totalGems,
+        remainingAds,
+        remainingGems,
+        dailyGoalAds,
+        dailyGoalGems,
+        challengeCompleted: Boolean(data?.challenge_completed || remainingGems <= 0),
+      });
     } catch (e) {
-      console.log("Error loading stats:", e);
+      console.log("Error loading ad stats:", e);
     } finally {
       setLoading(false);
     }
@@ -316,22 +351,12 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
     }
   };
 
-  const saveStats = async (newStats) => {
-    try {
-      await AsyncStorage.setItem(
-        `ad_rewards_stats_${userId}`,
-        JSON.stringify(newStats),
-      );
-    } catch (e) {
-      console.log("Error saving stats:", e);
-    }
-  };
-
   const startWatchingAd = async () => {
-    if (stats.todayAds >= MAX_DAILY_ADS) {
+    if (loading) return;
+    if (stats.challengeCompleted || stats.remainingAds <= 0) {
       Alert.alert(
         "الحد اليومي",
-        `لقد شاهدت ${MAX_DAILY_ADS} إعلان اليوم. عد غداً للمزيد!`,
+        `أنهيت تحدي اليوم بالكامل: ${stats.dailyGoalGems} جوهرة. عد غداً للمزيد!`,
       );
       return;
     }
@@ -362,40 +387,46 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
   };
 
   const handleAdComplete = async () => {
-    // Update stats
-    const today = new Date().toDateString();
-    const newStats = {
-      ...stats,
-      todayAds: stats.todayAds + 1,
-      lastWatchDate: today,
-    };
-    setStats(newStats);
-    await saveStats(newStats);
-
     try {
-      const response = await api.addSaqrGems(
+      const response = await api.claimAdWatchReward(
         userId,
-        FIXED_AD_REWARD_GEMS,
-        "ad_rewarded_watch",
+        60,
+        "admob_rewarded",
       );
       if (!response.ok) {
-        throw new Error("failed_add_gems");
+        const message = await parseApiError(
+          response,
+          "تعذر احتساب مكافأة الإعلان حالياً.",
+        );
+        Alert.alert("تنبيه", message);
+        await loadAdStats();
+        return;
       }
       const data = await response.json();
+      const rewardedGems =
+        Number(data?.saqr_gems_earned ?? data?.gems_earned ?? FIXED_AD_REWARD_GEMS) ||
+        FIXED_AD_REWARD_GEMS;
       setCurrentPrize({
         id: 1,
-        gems: FIXED_AD_REWARD_GEMS,
-        label: String(FIXED_AD_REWARD_GEMS),
+        gems: rewardedGems,
+        label: String(rewardedGems),
       });
-      setUserGems(Number(data?.new_balance ?? 0) || 0);
-      const updatedStats = {
-        ...newStats,
-        totalGems: (newStats.totalGems || 0) + FIXED_AD_REWARD_GEMS,
-      };
-      setStats(updatedStats);
-      await saveStats(updatedStats);
+      const nextBalance =
+        Number(data?.new_gems_balance ?? data?.new_balance ?? userGems + rewardedGems) ||
+        userGems + rewardedGems;
+      setUserGems(nextBalance);
       setShowResult(true);
-      if (onBalanceUpdate) onBalanceUpdate({ saqr_gems: Number(data?.new_balance ?? 0) || 0 });
+      await loadAdStats();
+      if (onBalanceUpdate) {
+        onBalanceUpdate({
+          saqr_gems: nextBalance,
+          today_ads_watched: data?.today_ads_watched,
+          today_gems_earned: data?.today_gems_earned,
+          remaining_ads_today: data?.remaining_ads_today,
+          remaining_gems_today: data?.remaining_gems_today,
+          daily_goal_gems: data?.daily_goal_gems,
+        });
+      }
     } catch (e) {
       Alert.alert("خطأ", "تعذر إضافة الجواهر بعد الإعلان.");
     }
@@ -457,8 +488,10 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
                   <Text style={styles.statLabel}>إعلانات اليوم</Text>
                 </View>
                 <View style={styles.statCard}>
-                  <Text style={styles.statValue}>{FIXED_AD_REWARD_GEMS}</Text>
-                  <Text style={styles.statLabel}>لكل إعلان</Text>
+                    <Text style={styles.statValue}>
+                      {stats.todayGems}/{stats.dailyGoalGems}
+                    </Text>
+                    <Text style={styles.statLabel}>تحدي اليوم</Text>
                 </View>
                 <View style={styles.statCard}>
                   <Text style={styles.statValue}>{stats.totalGems || 0}</Text>
@@ -468,9 +501,13 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
 
               {/* Main Watch Ad Button */}
               <TouchableOpacity
-                style={styles.watchAdBtn}
+                style={[
+                  styles.watchAdBtn,
+                  (adGateLoading || loading || stats.challengeCompleted) &&
+                    styles.watchAdBtnDisabled,
+                ]}
                 onPress={startWatchingAd}
-                disabled={adGateLoading}
+                disabled={adGateLoading || loading || stats.challengeCompleted}
                 activeOpacity={0.85}
               >
                 <LinearGradient
@@ -484,14 +521,22 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
                   </View>
                   <View style={styles.watchAdInfo}>
                     <Text style={styles.watchAdTitle}>
-                      {adGateLoading
+                      {loading
+                        ? "جاري تحديث تقدمك اليومي..."
+                        : adGateLoading
                         ? "جاري فتح إعلان AdMob..."
-                        : "شاهد إعلان AdMob واربح الآن"}
+                        : stats.challengeCompleted
+                          ? "تم إكمال تحدي اليوم"
+                          : "شاهد إعلان AdMob واربح الآن"}
                     </Text>
                     <Text style={styles.watchAdDesc}>
-                      {adGateLoading
+                      {loading
+                        ? "لحظات من فضلك"
+                        : adGateLoading
                         ? "انتظر قليلاً"
-                        : "مكافأة ثابتة: 5 جواهر صقر"}
+                        : stats.challengeCompleted
+                          ? "عد غداً لتجديد التحديات اليومية"
+                          : `المتبقي اليوم: ${stats.remainingGems} جوهرة`}
                     </Text>
                   </View>
                   <View style={styles.watchAdBadge}>
@@ -511,7 +556,7 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
               <View style={styles.tipsCard}>
                 <Ionicons name="bulb" size={18} color="#fbbf24" />
                 <Text style={styles.tipsText}>
-                  كل إعلان مكتمل يمنحك 5 جواهر صقر بشكل ثابت وواضح.
+                  كل إعلان مكتمل يمنحك 5 جواهر صقر باحتساب فعلي. هدف اليوم: 30 جوهرة (6 إعلانات).
                 </Text>
               </View>
 
@@ -520,17 +565,25 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
                 <View style={styles.progressHeader}>
                   <Text style={styles.progressTitle}>تقدم اليوم</Text>
                   <Text style={styles.progressCount}>
-                    {stats.todayAds}/{MAX_DAILY_ADS}
+                    {stats.todayGems}/{stats.dailyGoalGems}
                   </Text>
                 </View>
                 <View style={styles.progressBar}>
                   <View
                     style={[
                       styles.progressFill,
-                      { width: `${(stats.todayAds / MAX_DAILY_ADS) * 100}%` },
+                      {
+                        width: `${Math.min(
+                          100,
+                          ((stats.todayGems || 0) / Math.max(1, stats.dailyGoalGems || 1)) * 100,
+                        )}%`,
+                      },
                     ]}
                   />
                 </View>
+                <Text style={styles.progressMetaText}>
+                  المتبقي: {stats.remainingAds} إعلان • {stats.remainingGems} جوهرة
+                </Text>
               </View>
 
               <View style={{ height: 30 }} />
@@ -657,6 +710,9 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     overflow: "hidden",
     marginBottom: 20,
+  },
+  watchAdBtnDisabled: {
+    opacity: 0.65,
   },
   watchAdGradient: {
     flexDirection: "row",
@@ -808,6 +864,12 @@ const styles = StyleSheet.create({
     height: "100%",
     backgroundColor: "#22c55e",
     borderRadius: 3,
+  },
+  progressMetaText: {
+    marginTop: 8,
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 12,
+    textAlign: "right",
   },
   wheelOverlay: {
     flex: 1,
