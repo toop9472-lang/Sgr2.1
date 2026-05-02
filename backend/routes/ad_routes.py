@@ -24,6 +24,21 @@ async def get_ads(ad_type: Optional[str] = Query(None, description="Filter by ty
     """
     db = get_db()
     current_time = datetime.now(timezone.utc)
+
+    def _is_demo_like_text(value: Optional[str]) -> bool:
+        normalized = (value or "").strip().lower()
+        if not normalized:
+            return False
+        markers = ("test", "demo", "dummy", "sample", "placeholder", "تجريبي", "اختبار")
+        return any(marker in normalized for marker in markers)
+
+    def _is_demo_ad(ad_doc: dict) -> bool:
+        if not isinstance(ad_doc, dict):
+            return False
+        for field in ("title", "description", "advertiser", "advertiser_name"):
+            if _is_demo_like_text(ad_doc.get(field)):
+                return True
+        return False
     
     # Build query for advertiser ads
     advertiser_query = {'status': 'active', 'is_active': True}
@@ -46,8 +61,15 @@ async def get_ads(ad_type: Optional[str] = Query(None, description="Filter by ty
     
     all_ads = []
     
+    removed_main_ad_ids = []
+    removed_advertiser_ad_ids = []
+
     # Process main ads
     for ad in main_ads:
+        if _is_demo_ad(ad):
+            if ad.get("id"):
+                removed_main_ad_ids.append(ad["id"])
+            continue
         all_ads.append(AdResponse(
             id=ad['id'],
             title=ad['title'],
@@ -63,6 +85,10 @@ async def get_ads(ad_type: Optional[str] = Query(None, description="Filter by ty
     
     # Process advertiser ads - check expiration
     for ad in advertiser_ads:
+        if _is_demo_ad(ad):
+            if ad.get("id"):
+                removed_advertiser_ad_ids.append(ad["id"])
+            continue
         expires_at = ad.get('expires_at')
         if expires_at:
             # Parse expiration time
@@ -101,6 +127,12 @@ async def get_ads(ad_type: Optional[str] = Query(None, description="Filter by ty
             points=ad.get('points', 1),
             ad_type=ad.get('ad_type', 'local')
         ))
+
+    # Cleanup test/demo records so they stop reappearing.
+    if removed_main_ad_ids:
+        await db.ads.delete_many({"id": {"$in": removed_main_ad_ids}})
+    if removed_advertiser_ad_ids:
+        await db.advertiser_ads.delete_many({"id": {"$in": removed_advertiser_ad_ids}})
     
     return all_ads
 

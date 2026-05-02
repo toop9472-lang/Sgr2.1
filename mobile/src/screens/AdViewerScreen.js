@@ -109,6 +109,11 @@ const AdViewerScreen = ({
   const isAdMobSlot = currentAd?.ad_source === "admob";
   const currentVisualUri =
     currentAd?.image_url || currentAd?.thumbnail_url || null;
+  const advertiserLabel = isAdMobSlot
+    ? "Google AdMob"
+    : currentAd?.advertiser ||
+      currentAd?.advertiser_name ||
+      "معلن";
   const currentUserId = user?.user_id || user?.id;
 
   // Initialize AdMob
@@ -659,10 +664,14 @@ const AdViewerScreen = ({
             <Text style={styles.watchPrimarySubtitle}>
               {isAdMobSlot
                 ? "إعلان ممول من Google بكامل الشاشة"
-                : currentAd?.advertiser
-                  ? `إعلان ${currentAd.advertiser}`
-                  : "إعلان معلن شخصي"}
+                : "إعلان ممول من معلن موثّق"}
             </Text>
+            <View style={styles.advertiserStrip}>
+              <Ionicons name="megaphone-outline" size={13} color="#cbd5e1" />
+              <Text style={styles.advertiserStripText} numberOfLines={1}>
+                المعلن: {advertiserLabel}
+              </Text>
+            </View>
             <TouchableOpacity
               style={[
                 styles.watchPrimaryBtn,
@@ -1179,6 +1188,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 3,
     textAlign: "right",
+  },
+  advertiserStrip: {
+    marginTop: 8,
+    alignSelf: "flex-end",
+    maxWidth: "90%",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: "rgba(2,6,23,0.36)",
+    borderWidth: 1,
+    borderColor: "rgba(203,213,225,0.34)",
+  },
+  advertiserStripText: {
+    color: "#e2e8f0",
+    fontSize: 11,
+    fontWeight: "600",
   },
   watchPrimaryBtn: {
     height: 46,

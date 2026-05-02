@@ -38,6 +38,14 @@ def _is_valid_video_url(value: str) -> bool:
     return normalized.startswith("http") or normalized.startswith("/media/ads/")
 
 
+def _looks_demo_content(*values: str) -> bool:
+    normalized = " ".join((v or "") for v in values).strip().lower()
+    if not normalized:
+        return False
+    markers = ("test", "demo", "dummy", "sample", "placeholder", "تجريبي", "اختبار")
+    return any(marker in normalized for marker in markers)
+
+
 @router.post('/upload-video', response_model=dict)
 async def upload_advertiser_video(file: UploadFile = File(...)):
     filename = file.filename or "advertiser-video.mp4"
@@ -91,6 +99,12 @@ async def create_advertiser_ad(ad_data: AdvertiserAdCreate):
     db = get_db()
     
     try:
+        if _looks_demo_content(ad_data.title, ad_data.description, ad_data.advertiser_name):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='لا يمكن نشر إعلان تجريبي. يرجى إدخال بيانات إعلان حقيقية.',
+            )
+
         video_url = (ad_data.video_url or "").strip()
         if not video_url or not _is_valid_video_url(video_url):
             raise HTTPException(
@@ -191,6 +205,15 @@ async def get_advertiser_ad(ad_id: str):
     # Get payment info
     payment = await db.advertiser_payments.find_one({'ad_id': ad_id})
     
+    # Hide legacy test/demo ads from production API responses.
+    advertiser_name = (ad.get('advertiser_name') or '').strip()
+    title = (ad.get('title') or '').strip()
+    if 'test' in advertiser_name.lower() or 'demo' in advertiser_name.lower() or 'test' in title.lower() or 'demo' in title.lower():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Ad not found'
+        )
+
     return {
         'ad': AdvertiserAdResponse(
             id=ad['id'],

@@ -90,11 +90,10 @@ const parseApiErrorMessage = async (
   return fallback;
 };
 
-const ClipsScreen = ({ user, onClose }) => {
+const ClipsScreen = ({ user, onClose, onNavigateToAds }) => {
   const userId = user?.id || user?.user_id;
   const [clips, setClips] = useState([]);
   const [filteredClips, setFilteredClips] = useState([]);
-  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [publishing, setPublishing] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
@@ -108,6 +107,7 @@ const ClipsScreen = ({ user, onClose }) => {
   const [followLoadingUserId, setFollowLoadingUserId] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const listRef = useRef(null);
+  const touchStartRef = useRef({ y: 0, x: 0, time: 0 });
   const { height: screenHeight } = Dimensions.get("window");
 
   const loadClips = useCallback(async () => {
@@ -129,18 +129,8 @@ const ClipsScreen = ({ user, onClose }) => {
   }, [userId]);
 
   useEffect(() => {
-    const term = query.trim().toLowerCase();
-    if (!term) {
-      setFilteredClips(clips);
-      return;
-    }
-    setFilteredClips(
-      clips.filter((clip) => {
-        const haystack = `${clip.title || ""} ${clip.content || ""} ${clip.user_name || ""}`.toLowerCase();
-        return haystack.includes(term);
-      }),
-    );
-  }, [clips, query]);
+    setFilteredClips(clips);
+  }, [clips]);
 
   useEffect(() => {
     loadClips();
@@ -376,7 +366,7 @@ const ClipsScreen = ({ user, onClose }) => {
         typeof item.video_url === "string" &&
         (item.video_url.includes("/media/clips/") || item.video_url.endsWith(".mp4"));
       return (
-        <View style={[styles.reelCard, { height: screenHeight - 92 }]}>
+        <View style={[styles.reelCard, { height: screenHeight }]}>
           {hasVideo ? (
             <Video
               source={{ uri: item.video_url }}
@@ -396,11 +386,16 @@ const ClipsScreen = ({ user, onClose }) => {
           )}
 
           <LinearGradient
-            colors={["rgba(0,0,0,0.05)", "rgba(0,0,0,0.85)"]}
+            colors={["rgba(0,0,0,0.06)", "rgba(0,0,0,0.86)"]}
             style={styles.reelOverlay}
           >
             <View style={styles.reelTopRow}>
-              <Text style={styles.clipUser}>{item.user_name || "مستخدم"}</Text>
+              <View style={styles.publisherStrip}>
+                <Ionicons name="person-circle-outline" size={14} color="#cbd5e1" />
+                <Text style={styles.publisherStripText} numberOfLines={1}>
+                  الناشر: {item.user_name || "مستخدم"}
+                </Text>
+              </View>
               <View style={styles.clipBadge}>
                 <Ionicons name="flash-outline" size={12} color="#22d3ee" />
                 <Text style={styles.clipBadgeText}>{MAX_CLIP_DURATION}s</Text>
@@ -482,14 +477,73 @@ const ClipsScreen = ({ user, onClose }) => {
     [],
   );
 
+  const navigateClip = useCallback(
+    (direction) => {
+      if (!filteredClips.length) return;
+      setActiveIndex((prev) => {
+        let next = prev;
+        // المطلوب: السحب للأسفل للتنقل إلى التالي.
+        if (direction === "next") next = Math.min(filteredClips.length - 1, prev + 1);
+        if (direction === "prev") next = Math.max(0, prev - 1);
+        if (next !== prev) {
+          listRef.current?.scrollToOffset({
+            offset: next * screenHeight,
+            animated: true,
+          });
+        }
+        return next;
+      });
+    },
+    [filteredClips.length, screenHeight],
+  );
+
+  const handleTouchStart = useCallback((event) => {
+    touchStartRef.current = {
+      y: event.nativeEvent.pageY,
+      x: event.nativeEvent.pageX,
+      time: Date.now(),
+    };
+  }, []);
+
+  const handleTouchEnd = useCallback(
+    (event) => {
+      const dx = event.nativeEvent.pageX - touchStartRef.current.x;
+      const dy = event.nativeEvent.pageY - touchStartRef.current.y;
+      const elapsed = Date.now() - touchStartRef.current.time;
+
+      if (elapsed > 350) return;
+
+      // سحب يمين: خروج. سحب يسار: انتقال لصفحة الإعلانات.
+      if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+        if (dx > 0) {
+          onClose?.();
+          return;
+        }
+        if (dx < 0 && onNavigateToAds) {
+          onNavigateToAds();
+          return;
+        }
+      }
+
+      // سحب للأسفل: التالي، سحب للأعلى: السابق.
+      if (Math.abs(dy) > 80 && Math.abs(dy) > Math.abs(dx)) {
+        if (dy > 0) navigateClip("next");
+        if (dy < 0) navigateClip("prev");
+      }
+    },
+    [navigateClip, onClose, onNavigateToAds],
+  );
+
   return (
     <ImageBackground
       source={{ uri: APP_BACKGROUND_IMAGE }}
       style={styles.container}
       resizeMode="cover"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       <LinearGradient
-        colors={["rgba(15,23,42,0.26)", "rgba(30,41,59,0.68)", "rgba(30,27,75,0.88)"]}
+        colors={["rgba(15,23,42,0.18)", "rgba(30,41,59,0.38)", "rgba(30,27,75,0.52)"]}
         style={styles.bg}
       >
         <View style={styles.header}>
@@ -503,17 +557,6 @@ const ClipsScreen = ({ user, onClose }) => {
           >
             <Ionicons name="add" size={22} color="#22d3ee" />
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.searchWrap}>
-          <Ionicons name="search" size={16} color="#94a3b8" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="ابحث في المقاطع..."
-            placeholderTextColor="#64748b"
-            value={query}
-            onChangeText={setQuery}
-          />
         </View>
 
         {loading ? (
@@ -531,12 +574,13 @@ const ClipsScreen = ({ user, onClose }) => {
             contentContainerStyle={styles.reelsListContent}
             showsVerticalScrollIndicator={false}
             pagingEnabled
+            scrollEnabled={false}
             decelerationRate="fast"
             snapToAlignment="start"
+            snapToInterval={screenHeight}
             onMomentumScrollEnd={(event) => {
-              const itemHeight = screenHeight - 92;
               const offsetY = event.nativeEvent.contentOffset.y;
-              const index = Math.max(0, Math.round(offsetY / itemHeight));
+              const index = Math.max(0, Math.round(offsetY / screenHeight));
               setActiveIndex(index);
             }}
             refreshControl={
@@ -723,12 +767,17 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   bg: { flex: 1 },
   header: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 20,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingTop: 34,
-    paddingBottom: 14,
+    paddingBottom: 10,
   },
   headerBtn: {
     width: 40,
@@ -742,14 +791,13 @@ const styles = StyleSheet.create({
   loadingWrap: { flex: 1, justifyContent: "center", alignItems: "center" },
   loadingText: { color: "#cbd5e1", marginTop: 10 },
   listContent: { padding: 14, paddingBottom: 110 },
-  reelsListContent: { paddingBottom: 90 },
+  reelsListContent: { paddingBottom: 0 },
   reelCard: {
     width: "100%",
-    marginBottom: 8,
-    borderRadius: 20,
+    marginBottom: 0,
+    borderRadius: 0,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderWidth: 0,
     backgroundColor: "#0f172a",
   },
   reelVideo: {
@@ -766,6 +814,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    gap: 10,
   },
   reelBottomRow: {
     flexDirection: "row",
@@ -797,6 +846,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   clipUser: { color: "#e2e8f0", fontSize: 12, fontWeight: "700" },
+  publisherStrip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    maxWidth: "76%",
+    backgroundColor: "rgba(2,6,23,0.38)",
+    borderWidth: 1,
+    borderColor: "rgba(203,213,225,0.35)",
+  },
+  publisherStripText: {
+    color: "#e2e8f0",
+    fontSize: 11,
+    fontWeight: "600",
+  },
   clipBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -947,25 +1013,6 @@ const styles = StyleSheet.create({
     color: "#67e8f9",
     fontSize: 11,
     marginBottom: 10,
-  },
-  searchWrap: {
-    marginHorizontal: 14,
-    marginBottom: 8,
-    borderRadius: 12,
-    backgroundColor: "rgba(15,23,42,0.78)",
-    borderWidth: 1,
-    borderColor: "rgba(148,163,184,0.25)",
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  searchInput: {
-    flex: 1,
-    color: "#fff",
-    fontSize: 14,
-    paddingVertical: 0,
   },
   secondaryBtn: {
     paddingHorizontal: 14,

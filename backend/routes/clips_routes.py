@@ -93,6 +93,14 @@ def _normalize_comment(comment: dict) -> dict:
     }
 
 
+def _looks_test_content(text: str) -> bool:
+    normalized = (text or "").strip().lower()
+    if not normalized:
+        return False
+    blocked_tokens = {"test", "demo", "dummy", "sample", "placeholder", "تجريبي", "تجربة"}
+    return any(token in normalized for token in blocked_tokens)
+
+
 async def _build_follow_maps(
     owner_ids: Set[str],
     viewer_id: Optional[str] = None,
@@ -131,6 +139,23 @@ async def get_clips_feed(limit: int = 30, viewer_id: Optional[str] = None):
         {},
         {"_id": 0},
     ).sort("created_at", -1).limit(normalized_limit).to_list(normalized_limit)
+    hidden_test_clip_ids = []
+    safe_clips = []
+    for clip in clips:
+        clip_text = (
+            f"{(clip or {}).get('title', '')} "
+            f"{(clip or {}).get('caption', '')} "
+            f"{(clip or {}).get('content', '')} "
+            f"{(clip or {}).get('user_name', '')}"
+        )
+        if _looks_test_content(clip_text):
+            if clip and clip.get("clip_id"):
+                hidden_test_clip_ids.append(clip["clip_id"])
+            continue
+        safe_clips.append(clip)
+    clips = safe_clips
+    if hidden_test_clip_ids:
+        await db.clips_posts.delete_many({"clip_id": {"$in": hidden_test_clip_ids}})
 
     owner_ids = {str((clip or {}).get("user_id")) for clip in clips if (clip or {}).get("user_id")}
     followers_count_map, following_count_map, viewer_following_set = await _build_follow_maps(

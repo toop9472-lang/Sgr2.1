@@ -57,8 +57,6 @@ import PrivateMessagesScreen from "./src/screens/PrivateMessagesScreen";
 
 // Components
 import BottomNav from "./src/components/BottomNav";
-import AIFloatingButton from "./src/components/AIFloatingButton";
-import AIChatModal from "./src/components/AIChatModal";
 
 // Contexts
 import { LanguageProvider, useLanguage } from "./src/i18n/LanguageContext";
@@ -92,7 +90,6 @@ function AppContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState("home");
   const [showAdsViewer, setShowAdsViewer] = useState(false);
-  const [showAIChat, setShowAIChat] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [settings, setSettings] = useState(null);
@@ -207,11 +204,6 @@ function AppContent() {
         return true;
       }
 
-      if (showAIChat) {
-        setShowAIChat(false);
-        return true;
-      }
-
       if (showAdsViewer) {
         setShowAdsViewer(false);
         return true;
@@ -251,7 +243,6 @@ function AppContent() {
 
     return () => backHandler.remove();
   }, [
-    showAIChat,
     showAdsViewer,
     showAchievements,
     showAdminPanel,
@@ -577,7 +568,14 @@ function AppContent() {
             <SupportScreen navigation={{ navigate: setCurrentPage }} />
           )}
           {currentPage === "clips" && (
-            <ClipsScreen user={user} onClose={() => setCurrentPage("home")} />
+            <ClipsScreen
+              user={user}
+              onClose={() => setCurrentPage("home")}
+              onNavigateToAds={() => {
+                setCurrentPage("home");
+                setShowAdsViewer(true);
+              }}
+            />
           )}
           {currentPage === "chat" && (
             <GlobalChatScreen
@@ -640,12 +638,6 @@ function AppContent() {
         language={language}
         onClose={clearNewAchievement}
       />
-
-      {/* AI Floating Button */}
-      <AIFloatingButton onPress={() => setShowAIChat(true)} />
-
-      {/* AI Chat Modal */}
-      <AIChatModal visible={showAIChat} onClose={() => setShowAIChat(false)} />
 
       {/* Bottom Navigation - إخفاء عند فتح المقاطع أو الدردشة أو الأصدقاء */}
       {!["clips", "chat", "fortunes", "friends", "messages"].includes(
