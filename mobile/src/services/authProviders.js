@@ -63,6 +63,38 @@ const resolveOAuthBase = async () => {
   return getApiBase();
 };
 
+const normalizeErrorMessage = (value, fallback = 'خطأ غير معروف') => {
+  if (typeof value === 'string' && value.trim()) return value.trim();
+  if (value instanceof Error) return normalizeErrorMessage(value.message, fallback);
+
+  if (value && typeof value === 'object') {
+    const candidates = [
+      value.detail,
+      value.message,
+      value.error,
+      value.description,
+      value.reason,
+      value?.data?.detail,
+      value?.data?.message,
+    ];
+    for (const candidate of candidates) {
+      if (typeof candidate === 'string' && candidate.trim()) return candidate.trim();
+      if (candidate && typeof candidate === 'object') {
+        const nested = normalizeErrorMessage(candidate, '');
+        if (nested) return nested;
+      }
+    }
+    try {
+      const serialized = JSON.stringify(value);
+      if (serialized && serialized !== '{}' && serialized !== '[]') return serialized;
+    } catch (_) {
+      // Ignore serialization failures.
+    }
+  }
+
+  return fallback;
+};
+
 /**
  * Sign in with Google using Web Browser OAuth
  * Works on both iOS and Android without native SDK
@@ -110,8 +142,8 @@ export const signInWithGoogle = async () => {
             user: data.user
           };
         } else {
-          const error = await response.json();
-          throw new Error(error.detail || 'فشل استلام بيانات المستخدم');
+          const error = await response.json().catch(() => ({}));
+          throw new Error(normalizeErrorMessage(error, 'فشل استلام بيانات المستخدم'));
         }
       } else {
         // Check for error in URL
@@ -128,7 +160,7 @@ export const signInWithGoogle = async () => {
     }
   } catch (error) {
     console.error('Google SignIn Error:', error);
-    throw new Error('فشل تسجيل الدخول بجوجل: ' + (error.message || 'خطأ غير معروف'));
+    throw new Error(`فشل تسجيل الدخول بجوجل: ${normalizeErrorMessage(error)}`);
   }
 };
 
@@ -186,8 +218,8 @@ export const signInWithApple = async () => {
         user: data.user
       };
     } else {
-      const error = await response.json();
-      throw new Error(error.detail || 'فشل تسجيل الدخول');
+      const error = await response.json().catch(() => ({}));
+      throw new Error(normalizeErrorMessage(error, 'فشل تسجيل الدخول'));
     }
   } catch (error) {
     // Handle different error types
@@ -202,7 +234,7 @@ export const signInWithApple = async () => {
     }
     
     console.error('Apple SignIn Error:', error);
-    throw new Error('فشل تسجيل الدخول بأبل: ' + (error.message || 'خطأ غير معروف'));
+    throw new Error(`فشل تسجيل الدخول بأبل: ${normalizeErrorMessage(error)}`);
   }
 };
 
@@ -248,8 +280,8 @@ export const signInWithAppleWeb = async (preResolvedBase = null) => {
             user: data.user
           };
         } else {
-          const error = await response.json();
-          throw new Error(error.detail || 'فشل استلام بيانات المستخدم');
+          const error = await response.json().catch(() => ({}));
+          throw new Error(normalizeErrorMessage(error, 'فشل استلام بيانات المستخدم'));
         }
       } else {
         throw new Error('لم نتمكن من استلام بيانات الجلسة');
@@ -261,7 +293,7 @@ export const signInWithAppleWeb = async (preResolvedBase = null) => {
     }
   } catch (error) {
     console.error('Apple Web SignIn Error:', error);
-    throw new Error('فشل تسجيل الدخول بأبل: ' + (error.message || 'خطأ غير معروف'));
+    throw new Error(`فشل تسجيل الدخول بأبل: ${normalizeErrorMessage(error)}`);
   }
 };
 
