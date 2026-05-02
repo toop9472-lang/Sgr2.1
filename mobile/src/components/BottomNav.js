@@ -7,20 +7,21 @@ import {
   StyleSheet,
   Platform,
   Dimensions,
+  Image,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
-import { Ionicons } from "@expo/vector-icons";
 import { useLanguage } from "../i18n/LanguageContext";
+import { ICON_ASSETS } from "../constants/uiAssets";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const hasNotch = Platform.OS === "ios" && SCREEN_HEIGHT >= 812;
 const NAV_ICONS = {
-  home: "home-outline",
-  clips: "videocam-outline",
-  watch: "play-circle-outline",
-  advertiser: "megaphone-outline",
-  profile: "person-outline",
+  home: ICON_ASSETS.home,
+  clips: ICON_ASSETS.clips,
+  watch: ICON_ASSETS.watch,
+  advertiser: ICON_ASSETS.advertise,
+  profile: ICON_ASSETS.profile,
 };
 
 const BottomNav = ({ currentPage, onNavigate, onAdsPress, onClipsPress }) => {
@@ -58,10 +59,13 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress, onClipsPress }) => {
             isActive && styles.navIconWrapperActive,
           ]}
         >
-          <Ionicons
-            name={item.icon}
-            size={20}
-            color={isActive ? "#dbeafe" : "rgba(255,255,255,0.55)"}
+          <Image
+            source={{ uri: item.icon }}
+            style={[
+              styles.navIcon,
+              { opacity: isActive ? 1 : 0.68 },
+              isActive ? styles.navIconActive : null,
+            ]}
           />
         </View>
         <Text style={[styles.navLabel, isActive && styles.navLabelActive]}>
@@ -93,7 +97,7 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress, onClipsPress }) => {
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <Ionicons name={NAV_ICONS.clips} size={18} color="#FFF" />
+              <Image source={{ uri: NAV_ICONS.clips }} style={styles.centerIcon} />
               <Text style={styles.centerButtonText}>
                 {language === "ar" ? "مقاطع" : "Clips"}
               </Text>
@@ -118,7 +122,7 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress, onClipsPress }) => {
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <Ionicons name={NAV_ICONS.watch} size={18} color="#FFF" />
+              <Image source={{ uri: NAV_ICONS.watch }} style={styles.centerIcon} />
               <Text style={styles.centerButtonText}>
                 {language === "ar" ? "شاهد" : "Watch"}
               </Text>
@@ -172,6 +176,14 @@ const styles = StyleSheet.create({
   navIconWrapperActive: {
     backgroundColor: "rgba(96, 165, 250, 0.15)",
   },
+  navIcon: {
+    width: 20,
+    height: 20,
+    resizeMode: "contain",
+  },
+  navIconActive: {
+    tintColor: "#dbeafe",
+  },
   navLabel: {
     fontSize: 10,
     color: "rgba(255,255,255,0.5)",
@@ -219,6 +231,12 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 13,
     fontWeight: "700",
+  },
+  centerIcon: {
+    width: 18,
+    height: 18,
+    resizeMode: "contain",
+    tintColor: "#fff",
   },
 });
 

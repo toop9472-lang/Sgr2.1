@@ -21,6 +21,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Video, ResizeMode } from "expo-av";
 import * as ImagePicker from "expo-image-picker";
 import api from "../services/api";
+import { APP_BACKGROUND_IMAGE } from "../constants/uiAssets";
 
 const MAX_CLIP_DURATION = 15;
 const CLIP_PLACEHOLDERS = [
@@ -60,6 +61,33 @@ const normalizeClip = (clip = {}) => {
     following_count: Number(clip?.following_count ?? 0) || 0,
     followed_by_me: Boolean(clip?.followed_by_me),
   };
+};
+
+const parseApiErrorMessage = async (
+  response,
+  fallback = "تعذر تنفيذ العملية حالياً.",
+) => {
+  if (!response) return fallback;
+  try {
+    const data = await response.json();
+    const detail = data?.detail;
+    if (typeof detail === "string" && detail.trim()) return detail;
+    if (detail && typeof detail?.message === "string" && detail.message.trim()) {
+      return detail.message;
+    }
+    if (typeof data?.message === "string" && data.message.trim()) {
+      return data.message;
+    }
+  } catch (_) {
+    // Ignore parse failures and fall back.
+  }
+  if (response.status === 404 || response.status === 405) {
+    return "ميزة المقاطع غير مفعلة بعد على الخادم الحالي.";
+  }
+  if (response.status >= 500) {
+    return "الخادم مشغول حالياً. حاول بعد قليل.";
+  }
+  return fallback;
 };
 
 const ClipsScreen = ({ user, onClose }) => {
@@ -146,7 +174,11 @@ const ClipsScreen = ({ user, onClose }) => {
       setUploadingVideo(true);
       const uploadResponse = await api.uploadClipVideo(videoAsset.uri, userId);
       if (!uploadResponse.ok) {
-        Alert.alert("خطأ", "تعذر رفع الفيديو حالياً.");
+        const message = await parseApiErrorMessage(
+          uploadResponse,
+          "تعذر رفع الفيديو حالياً.",
+        );
+        Alert.alert("خطأ", message);
         return;
       }
       const uploadData = await uploadResponse.json();
@@ -154,7 +186,14 @@ const ClipsScreen = ({ user, onClose }) => {
       setNewClipThumb(uploadData?.thumbnail_url || "");
       Alert.alert("تم", "تم رفع الفيديو بنجاح.");
     } catch (e) {
-      Alert.alert("خطأ", "حدث خطأ أثناء اختيار أو رفع الفيديو.");
+      const isNetworkError =
+        e?.message === "NO_CONNECTION" || e?.message === "CONNECTION_TIMEOUT";
+      Alert.alert(
+        "خطأ",
+        isNetworkError
+          ? "تعذر الاتصال بالخادم الآن. تحقق من الشبكة ثم حاول مجدداً."
+          : "حدث خطأ أثناء اختيار أو رفع الفيديو.",
+      );
     } finally {
       setUploadingVideo(false);
     }
@@ -186,7 +225,11 @@ const ClipsScreen = ({ user, onClose }) => {
         thumbnail_url: newClipThumb.trim() || fallbackImage,
       });
       if (!response.ok) {
-        Alert.alert("خطأ", "تعذر نشر المقطع حالياً.");
+        const message = await parseApiErrorMessage(
+          response,
+          "تعذر نشر المقطع حالياً.",
+        );
+        Alert.alert("خطأ", message);
         return;
       }
       setShowCreate(false);
@@ -197,7 +240,14 @@ const ClipsScreen = ({ user, onClose }) => {
       await loadClips();
       Alert.alert("تم", "تم نشر المقطع بنجاح.");
     } catch (e) {
-      Alert.alert("خطأ", "حدث خطأ أثناء نشر المقطع.");
+      const isNetworkError =
+        e?.message === "NO_CONNECTION" || e?.message === "CONNECTION_TIMEOUT";
+      Alert.alert(
+        "خطأ",
+        isNetworkError
+          ? "تعذر الاتصال بالخادم الآن. تحقق من الشبكة ثم حاول مجدداً."
+          : "حدث خطأ أثناء نشر المقطع.",
+      );
     } finally {
       setPublishing(false);
     }
@@ -434,9 +484,13 @@ const ClipsScreen = ({ user, onClose }) => {
   );
 
   return (
-    <View style={styles.container}>
+    <ImageBackground
+      source={{ uri: APP_BACKGROUND_IMAGE }}
+      style={styles.container}
+      resizeMode="cover"
+    >
       <LinearGradient
-        colors={["#0a1020", "#111827", "#0b1220"]}
+        colors={["rgba(15,23,42,0.26)", "rgba(30,41,59,0.68)", "rgba(30,27,75,0.88)"]}
         style={styles.bg}
       >
         <View style={styles.header}>
@@ -674,7 +728,7 @@ const ClipsScreen = ({ user, onClose }) => {
           </View>
         </KeyboardAvoidingView>
       </Modal>
-    </View>
+    </ImageBackground>
   );
 };
 

@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from "expo-image-picker";
 import api from '../services/api';
+import { APP_BACKGROUND_IMAGE } from "../constants/uiAssets";
 
 // الباقات الساعية الجديدة (تطابق الويب)
 const HOURLY_PACKAGES = [
@@ -49,6 +50,28 @@ const AdvertiserScreen = () => {
     description: '',
     video_url: '',
   });
+
+  const parseUploadError = async (response, fallbackMessage) => {
+    if (!response) return fallbackMessage;
+    try {
+      const data = await response.json();
+      const detail = data?.detail;
+      if (typeof detail === "string" && detail.trim()) return detail;
+      if (detail && typeof detail?.message === "string" && detail.message.trim()) {
+        return detail.message;
+      }
+      if (typeof data?.message === "string" && data.message.trim()) return data.message;
+    } catch (_) {
+      // Fallback to generic message below.
+    }
+    if (response.status === 404 || response.status === 405) {
+      return "ميزة رفع فيديو الإعلان غير متاحة حالياً على الخادم.";
+    }
+    if (response.status >= 500) {
+      return "الخادم مشغول حالياً. حاول بعد قليل.";
+    }
+    return fallbackMessage;
+  };
 
   const parseErrorMessage = async (response, fallback) => {
     try {
@@ -115,7 +138,11 @@ const AdvertiserScreen = () => {
         asset.thumbnailUri || null,
       );
       if (!response.ok) {
-        Alert.alert('خطأ', 'تعذر رفع فيديو الإعلان حالياً.');
+        const message = await parseUploadError(
+          response,
+          "تعذر رفع فيديو الإعلان حالياً.",
+        );
+        Alert.alert('خطأ', message);
         return;
       }
       const payload = await response.json().catch(() => ({}));
@@ -130,7 +157,14 @@ const AdvertiserScreen = () => {
       setVideoError('');
       Alert.alert('تم', 'تم رفع فيديو الإعلان بنجاح.');
     } catch (e) {
-      Alert.alert('خطأ', 'حدث خطأ أثناء رفع الفيديو.');
+      const isNetworkError =
+        e?.message === "NO_CONNECTION" || e?.message === "CONNECTION_TIMEOUT";
+      Alert.alert(
+        'خطأ',
+        isNetworkError
+          ? "تعذر الاتصال بالخادم الآن. تحقق من الشبكة ثم حاول مجدداً."
+          : 'حدث خطأ أثناء رفع الفيديو.',
+      );
     } finally {
       setUploadingVideo(false);
     }
@@ -257,31 +291,40 @@ const AdvertiserScreen = () => {
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.content}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerIcon}>
-            <Ionicons name="megaphone" size={28} color="#60a5fa" />
-          </View>
-          <Text style={styles.pageTitle}>أعلن معنا</Text>
-          <Text style={styles.pageSubtitle}>وصل إعلانك لآلاف المستخدمين النشطين</Text>
-        </View>
+    <ImageBackground
+      source={{ uri: APP_BACKGROUND_IMAGE }}
+      style={styles.container}
+      resizeMode="cover"
+    >
+      <LinearGradient
+        colors={["rgba(15,23,42,0.26)", "rgba(30,41,59,0.68)", "rgba(30,27,75,0.88)"]}
+        style={styles.pageOverlay}
+      >
+        <ScrollView style={styles.scrollArea} showsVerticalScrollIndicator={false}>
+          <View style={styles.content}>
+            {/* Header */}
+            <View style={styles.header}>
+              <View style={styles.headerIcon}>
+                <Ionicons name="megaphone" size={28} color="#60a5fa" />
+              </View>
+              <Text style={styles.pageTitle}>أعلن معنا</Text>
+              <Text style={styles.pageSubtitle}>وصل إعلانك لآلاف المستخدمين النشطين</Text>
+            </View>
 
-        {/* Step Indicator */}
-        <View style={styles.stepIndicator}>
-          <View style={[styles.stepDot, step >= 1 && styles.stepDotActive]}>
-            <Ionicons name={step > 1 ? "checkmark" : "cart"} size={16} color={step >= 1 ? '#FFF' : '#666'} />
-          </View>
-          <View style={[styles.stepLine, step >= 2 && styles.stepLineActive]} />
-          <View style={[styles.stepDot, step >= 2 && styles.stepDotActive]}>
-            <Ionicons name={step > 2 ? "checkmark" : "document-text"} size={16} color={step >= 2 ? '#FFF' : '#666'} />
-          </View>
-          <View style={[styles.stepLine, step >= 3 && styles.stepLineActive]} />
-          <View style={[styles.stepDot, step >= 3 && styles.stepDotActive]}>
-            <Ionicons name={step > 3 ? "checkmark" : "card"} size={16} color={step >= 3 ? '#FFF' : '#666'} />
-          </View>
-        </View>
+            {/* Step Indicator */}
+            <View style={styles.stepIndicator}>
+              <View style={[styles.stepDot, step >= 1 && styles.stepDotActive]}>
+                <Ionicons name={step > 1 ? "checkmark" : "cart"} size={16} color={step >= 1 ? '#FFF' : '#666'} />
+              </View>
+              <View style={[styles.stepLine, step >= 2 && styles.stepLineActive]} />
+              <View style={[styles.stepDot, step >= 2 && styles.stepDotActive]}>
+                <Ionicons name={step > 2 ? "checkmark" : "document-text"} size={16} color={step >= 2 ? '#FFF' : '#666'} />
+              </View>
+              <View style={[styles.stepLine, step >= 3 && styles.stepLineActive]} />
+              <View style={[styles.stepDot, step >= 3 && styles.stepDotActive]}>
+                <Ionicons name={step > 3 ? "checkmark" : "card"} size={16} color={step >= 3 ? '#FFF' : '#666'} />
+              </View>
+            </View>
 
         {/* Step 1: Package Selection */}
         {step === 1 && (
@@ -639,13 +682,17 @@ const AdvertiserScreen = () => {
             </View>
           </>
         )}
-      </View>
-    </ScrollView>
+          </View>
+        </ScrollView>
+      </LinearGradient>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0f' },
+  container: { flex: 1, backgroundColor: 'transparent' },
+  scrollArea: { flex: 1, backgroundColor: "transparent" },
+  pageOverlay: { flex: 1 },
   content: { padding: 20, paddingTop: 50, paddingBottom: 100 },
 
   loadingContainer: { 

@@ -9,6 +9,7 @@ import {
   BackHandler,
   Alert,
   Image,
+  ImageBackground,
   I18nManager,
   LogBox,
   TouchableOpacity,
@@ -71,6 +72,7 @@ import { AchievementNotification } from "./src/screens/AchievementsScreen";
 import api from "./src/services/api";
 import storage from "./src/services/storage";
 import admobService from "./src/services/admobService";
+import { APP_BACKGROUND_IMAGE } from "./src/constants/uiAssets";
 
 // Safe notification import
 let NotificationService = null;
@@ -525,89 +527,95 @@ function AppContent() {
         effectiveTheme === "light" && styles.containerLight,
       ]}
     >
-      <LinearGradient colors={appGradient} style={styles.mainArea}>
-        {currentPage === "home" && (
-          <HomeScreen
-            user={user}
-            settings={settings}
-            onNavigateToAds={() => setShowAdsViewer(true)}
-            onNavigateToClips={() => setCurrentPage("clips")}
-            onNavigateToChat={() => setCurrentPage("chat")}
-            onNavigateToFortunes={() => setCurrentPage("fortunes")}
-            onNavigateToFriends={() => setCurrentPage("friends")}
-            onRefresh={initApp}
-          />
-        )}
-        {currentPage === "profile" && (
-          <ProfileScreen
-            user={user}
-            onLogout={handleLogout}
-            onNavigate={setCurrentPage}
-            onOpenAchievements={() => setShowAchievements(true)}
-            onOpenAdminPanel={() => setShowAdminPanel(true)}
-            onUpdateProfile={async (updates) => {
-              const updatedUser = { ...(user || {}), ...(updates || {}) };
-              setUser(updatedUser);
-              await storage.setUserData(updatedUser);
-            }}
-          />
-        )}
-        {currentPage === "settings" && (
-          <SettingsScreen
-            onBack={() => setCurrentPage("profile")}
-            onLogout={handleLogout}
-            currentTheme={themeMode}
-            onThemeChange={handleThemeChange}
-          />
-        )}
-        {currentPage === "advertiser" && <AdvertiserScreen />}
-        {currentPage === "advertiser-dashboard" && (
-          <AdvertiserDashboardScreen
-            navigation={{ navigate: setCurrentPage }}
-          />
-        )}
-        {currentPage === "support" && (
-          <SupportScreen navigation={{ navigate: setCurrentPage }} />
-        )}
-        {currentPage === "clips" && (
-          <ClipsScreen user={user} onClose={() => setCurrentPage("home")} />
-        )}
-        {currentPage === "chat" && (
-          <GlobalChatScreen
-            user={user}
-            onBalanceUpdate={handleBalanceUpdate}
-            onClose={() => setCurrentPage("home")}
-            onNavigateToFortunes={() => setCurrentPage("fortunes")}
-          />
-        )}
-        {currentPage === "fortunes" && (
-          <SaqrFortunesScreen
-            user={user}
-            onClose={() => setCurrentPage("home")}
-            onBalanceUpdate={(partial) => {
-              if (partial) handleBalanceUpdate(partial);
-              setBalanceRefresh((prev) => prev + 1);
-            }}
-          />
-        )}
-        {currentPage === "friends" && (
-          <FriendsScreen
-            user={user}
-            onClose={() => setCurrentPage("home")}
-            onOpenMessages={(friend) => {
-              setSelectedFriend(friend);
-              setCurrentPage("messages");
-            }}
-          />
-        )}
-        {currentPage === "messages" && (
-          <PrivateMessagesScreen
-            user={user}
-            onClose={() => setCurrentPage("friends")}
-            initialFriend={selectedFriend}
-          />
-        )}
-      </LinearGradient>
+      <ImageBackground
+        source={{ uri: APP_BACKGROUND_IMAGE }}
+        style={styles.mainArea}
+        resizeMode="cover"
+      >
+        <LinearGradient colors={appGradient} style={styles.mainAreaOverlay}>
+          {currentPage === "home" && (
+            <HomeScreen
+              user={user}
+              settings={settings}
+              onNavigateToAds={() => setShowAdsViewer(true)}
+              onNavigateToClips={() => setCurrentPage("clips")}
+              onNavigateToChat={() => setCurrentPage("chat")}
+              onNavigateToFortunes={() => setCurrentPage("fortunes")}
+              onNavigateToFriends={() => setCurrentPage("friends")}
+              onRefresh={initApp}
+            />
+          )}
+          {currentPage === "profile" && (
+            <ProfileScreen
+              user={user}
+              onLogout={handleLogout}
+              onNavigate={setCurrentPage}
+              onOpenAchievements={() => setShowAchievements(true)}
+              onOpenAdminPanel={() => setShowAdminPanel(true)}
+              onUpdateProfile={async (updates) => {
+                const updatedUser = { ...(user || {}), ...(updates || {}) };
+                setUser(updatedUser);
+                await storage.setUserData(updatedUser);
+              }}
+            />
+          )}
+          {currentPage === "settings" && (
+            <SettingsScreen
+              onBack={() => setCurrentPage("profile")}
+              onLogout={handleLogout}
+              currentTheme={themeMode}
+              onThemeChange={handleThemeChange}
+            />
+          )}
+          {currentPage === "advertiser" && <AdvertiserScreen />}
+          {currentPage === "advertiser-dashboard" && (
+            <AdvertiserDashboardScreen
+              navigation={{ navigate: setCurrentPage }}
+            />
+          )}
+          {currentPage === "support" && (
+            <SupportScreen navigation={{ navigate: setCurrentPage }} />
+          )}
+          {currentPage === "clips" && (
+            <ClipsScreen user={user} onClose={() => setCurrentPage("home")} />
+          )}
+          {currentPage === "chat" && (
+            <GlobalChatScreen
+              user={user}
+              onBalanceUpdate={handleBalanceUpdate}
+              onClose={() => setCurrentPage("home")}
+              onNavigateToFortunes={() => setCurrentPage("fortunes")}
+            />
+          )}
+          {currentPage === "fortunes" && (
+            <SaqrFortunesScreen
+              user={user}
+              onClose={() => setCurrentPage("home")}
+              onBalanceUpdate={(partial) => {
+                if (partial) handleBalanceUpdate(partial);
+                setBalanceRefresh((prev) => prev + 1);
+              }}
+            />
+          )}
+          {currentPage === "friends" && (
+            <FriendsScreen
+              user={user}
+              onClose={() => setCurrentPage("home")}
+              onOpenMessages={(friend) => {
+                setSelectedFriend(friend);
+                setCurrentPage("messages");
+              }}
+            />
+          )}
+          {currentPage === "messages" && (
+            <PrivateMessagesScreen
+              user={user}
+              onClose={() => setCurrentPage("friends")}
+              initialFriend={selectedFriend}
+            />
+          )}
+        </LinearGradient>
+      </ImageBackground>
 
       {/* Achievements Screen */}
       {showAchievements && (
@@ -671,6 +679,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.dark.bg },
   containerLight: { backgroundColor: colors.light.bg },
   mainArea: { flex: 1 }, // No fixed padding - handled per screen
+  mainAreaOverlay: { flex: 1 },
 
   loadingContainer: {
     flex: 1,

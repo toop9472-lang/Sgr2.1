@@ -23,9 +23,10 @@ import { getTrackingPermissionsAsync, requestTrackingPermissionsAsync } from 'ex
 import { signInWithGoogle, signInWithApple } from '../services/authProviders';
 import api from '../services/api';
 import storage from '../services/storage';
+import { APP_BACKGROUND_IMAGE } from '../constants/uiAssets';
 
 // Premium Background Image
-const AUTH_BG_IMAGE = 'https://static.prod-images.emergentagent.com/jobs/40eca190-5242-4463-8c95-bc5f66df29cb/images/e35d59ccd161791b6e9cbecdfa426302685267afa2c8e806fa233976816403de.png';
+const AUTH_BG_IMAGE = APP_BACKGROUND_IMAGE;
 const AUTH_FORM_GRADIENT = ['#131729', '#181f38', '#121b33'];
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

@@ -35,13 +35,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../services/api";
 import gameSounds from "../utils/gameSounds";
 import { useLanguage } from "../i18n/LanguageContext";
-import storage from "../services/storage";
+import { APP_BACKGROUND_IMAGE } from "../constants/uiAssets";
 
 const { width, height } = Dimensions.get("window");
-
-// خلفية الدردشة الاحترافية
-const CHAT_BG =
-  "https://static.prod-images.emergentagent.com/jobs/e23d200c-4b60-4ee7-aeca-e6db4f28f9dd/images/4d3046cfc1a9d31450a57219cfbd557c5dbee891f4bc793b5c782bdd9e9c112d.png";
 
 // إيموجي صقر الخاصة بالتطبيق - ملصقات مربعة بدون خلفية
 const SAQR_EMOJIS = [
@@ -124,12 +120,35 @@ const SERVERS = [
 ];
 
 const MESSAGE_COST = 0;
-const CHAT_BG_FALLBACK =
-  "https://static.prod-images.emergentagent.com/jobs/40eca190-5242-4463-8c95-bc5f66df29cb/images/e35d59ccd161791b6e9cbecdfa426302685267afa2c8e806fa233976816403de.png";
 
 const toSafeNumber = (value, fallback = 0) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const extractApiError = (errorPayload) => {
+  if (!errorPayload || typeof errorPayload !== "object") {
+    return { code: null, message: "" };
+  }
+  const detail =
+    errorPayload?.detail && typeof errorPayload.detail === "object"
+      ? errorPayload.detail
+      : null;
+  const detailText =
+    typeof errorPayload?.detail === "string" ? errorPayload.detail : "";
+  return {
+    code: detail?.error || errorPayload?.error || null,
+    message:
+      detail?.message ||
+      detailText ||
+      (typeof errorPayload?.message === "string" ? errorPayload.message : "") ||
+      "",
+    required: toSafeNumber(detail?.required ?? detail?.message_cost, 0),
+    current: toSafeNumber(
+      detail?.current ?? detail?.saqr_gems ?? detail?.gems,
+      0,
+    ),
+  };
 };
 
 // تحويل أكواد الإيموجي إلى صور
@@ -528,7 +547,15 @@ const GlobalChatScreen = ({
       sendError: isArabic
         ? "حدث خطأ أثناء إرسال الرسالة"
         : "Failed to send message",
-      networkError: isArabic ? "حدث خطأ في الاتصال" : "Connection error",
+      networkError: isArabic
+        ? "تعذر الاتصال بالخادم. تحقق من الشبكة ثم حاول مجدداً."
+        : "Unable to connect to the server. Check your connection and try again.",
+      serviceUnavailable: isArabic
+        ? "الخدمة غير متاحة حالياً على الخادم."
+        : "This service is currently unavailable on the server.",
+      serverBusy: isArabic
+        ? "الخادم مشغول حالياً. حاول بعد قليل."
+        : "Server is busy right now. Please try again soon.",
       loginRequired: isArabic
         ? "يجب تسجيل الدخول أولاً"
         : "You need to sign in first",
@@ -608,16 +635,17 @@ const GlobalChatScreen = ({
         return;
       }
 
-      const chatBalanceResponse = await api.fetch(
+      const chatBalanceResponse = await api.fetchWithFallback([
         `/api/economy/chat/check-balance/${encodeURIComponent(userId)}`,
-      );
+        `/api/economy/chat/check-balance`,
+        `/api/chat/check-balance/${encodeURIComponent(userId)}`,
+      ]);
       if (chatBalanceResponse.ok) {
         const data = await chatBalanceResponse.json();
         const serverMessageCost = toSafeNumber(data?.message_cost, MESSAGE_COST);
         applyGems(data?.saqr_gems ?? data?.gems ?? 0);
         // Keep message cost consistent with backend-free chat contract.
         setMessageCost(serverMessageCost > 0 ? serverMessageCost : 0);
-        setMessageCost(toSafeNumber(data?.message_cost, MESSAGE_COST));
         return;
       }
 
@@ -638,6 +666,7 @@ const GlobalChatScreen = ({
     try {
       const response = await api.fetchWithFallback([
         `/api/economy/chat/check-balance/${encodeURIComponent(userId)}`,
+        `/api/economy/chat/check-balance`,
         `/api/chat/check-balance/${encodeURIComponent(userId)}`,
       ]);
       if (!response.ok) return null;
@@ -728,12 +757,24 @@ const GlobalChatScreen = ({
         } catch {
           error = {};
         }
+        const parsedError = extractApiError(error);
         if (
-          error.detail?.error === "insufficient_saqr_gems" ||
-          error?.error === "insufficient_saqr_gems"
+          parsedError.code === "insufficient_saqr_gems" ||
+          parsedError.code === "insufficient_diamonds"
         ) {
-          applyGems(error?.detail?.current ?? normalizedSaqrGems);
+          applyGems(
+            Number.isFinite(parsedError.current)
+              ? parsedError.current
+              : normalizedSaqrGems,
+          );
+          setMessageCost(parsedError.required > 0 ? parsedError.required : messageCost);
           setShowInsufficientModal(true);
+          if (parsedError.message) {
+            Alert.alert(copy.chatTitle, parsedError.message);
+          }
+        } else if (parsedError.message) {
+          setNewMessage(trimmedDraft);
+          Alert.alert(copy.chatTitle, parsedError.message);
         } else if (response.status === 400 && typeof error?.detail === "string") {
           setNewMessage(trimmedDraft);
           Alert.alert(copy.chatTitle, error.detail);
@@ -741,7 +782,10 @@ const GlobalChatScreen = ({
           // Endpoint mismatch on older environments; guide user to retry and auto refresh.
           await loadMessages(false);
           setNewMessage(trimmedDraft);
-          Alert.alert(copy.chatTitle, copy.networkError);
+          Alert.alert(copy.chatTitle, copy.serviceUnavailable);
+        } else if (response.status >= 500) {
+          setNewMessage(trimmedDraft);
+          Alert.alert(copy.chatTitle, copy.serverBusy);
         } else {
           // Restore draft so user can retry without retyping.
           setNewMessage(trimmedDraft);
@@ -752,7 +796,11 @@ const GlobalChatScreen = ({
       console.log("Error sending message:", e);
       // Restore draft so user can retry without retyping.
       setNewMessage(trimmedDraft);
-      Alert.alert(copy.chatTitle, copy.networkError);
+      if (e?.message === "API_UNAVAILABLE") {
+        Alert.alert(copy.chatTitle, copy.serviceUnavailable);
+      } else {
+        Alert.alert(copy.chatTitle, copy.networkError);
+      }
     } finally {
       setSending(false);
     }
@@ -885,7 +933,7 @@ const GlobalChatScreen = ({
 
   return (
     <ImageBackground
-      source={{ uri: CHAT_BG || CHAT_BG_FALLBACK }}
+      source={{ uri: APP_BACKGROUND_IMAGE }}
       style={styles.container}
       resizeMode="cover"
     >

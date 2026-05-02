@@ -10,19 +10,27 @@ import {
   Dimensions,
   RefreshControl,
   ImageBackground,
+  Image,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import { useLanguage } from "../i18n/LanguageContext";
+import { APP_BACKGROUND_IMAGE, ICON_ASSETS } from "../constants/uiAssets";
 
 const { width } = Dimensions.get("window");
 
-const QuickActionPill = memo(({ icon, title, subtitle, colors, onPress }) => (
+const AppIcon = ({ uri, size = 18, tintColor = "#fff", style }) => (
+  <Image
+    source={{ uri }}
+    style={[{ width: size, height: size, tintColor, resizeMode: "contain" }, style]}
+  />
+);
+
+const QuickActionPill = memo(({ iconSource, title, subtitle, colors, onPress }) => (
   <TouchableOpacity style={styles.quickActionPill} onPress={onPress} activeOpacity={0.85}>
     <LinearGradient colors={colors} style={styles.quickActionPillGradient}>
       <View style={styles.quickActionPillIcon}>
-        <Ionicons name={icon} size={17} color="#fff" />
+        <AppIcon uri={iconSource} size={17} />
       </View>
       <View style={styles.quickActionPillTextWrap}>
         <Text style={styles.quickActionPillTitle}>{title}</Text>
@@ -34,7 +42,7 @@ const QuickActionPill = memo(({ icon, title, subtitle, colors, onPress }) => (
 
 // بطاقة مميزة كبيرة
 const FeaturedCard = memo(
-  ({ title, subtitle, image, colors, icon, onPress, badge }) => (
+  ({ title, subtitle, image, colors, iconSource, onPress, badge }) => (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.9}
@@ -60,7 +68,7 @@ const FeaturedCard = memo(
               <Text style={styles.featuredSubtitle}>{subtitle}</Text>
             </View>
             <View style={[styles.playBtn, { backgroundColor: colors[0] }]}>
-              <Ionicons name={icon || "play"} size={16} color="#FFF" />
+              <AppIcon uri={iconSource || ICON_ASSETS.watch} size={16} />
             </View>
           </View>
         </LinearGradient>
@@ -71,7 +79,7 @@ const FeaturedCard = memo(
 
 // بطاقة ميزة
 const FeatureCard = memo(
-  ({ title, subtitle, image, color, icon, onPress, badge }) => (
+  ({ title, subtitle, image, color, iconSource, onPress, badge }) => (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.9}
@@ -97,7 +105,7 @@ const FeatureCard = memo(
               <Text style={styles.featureSubtitle}>{subtitle}</Text>
             </View>
             <View style={[styles.featureBtn, { backgroundColor: color }]}>
-              <Ionicons name={icon} size={14} color="#FFF" />
+              <AppIcon uri={iconSource || ICON_ASSETS.watch} size={14} />
             </View>
           </View>
         </LinearGradient>
@@ -175,9 +183,7 @@ const HomeScreen = ({
 
   return (
     <ImageBackground
-      source={{
-        uri: "https://static.prod-images.emergentagent.com/jobs/40eca190-5242-4463-8c95-bc5f66df29cb/images/e35d59ccd161791b6e9cbecdfa426302685267afa2c8e806fa233976816403de.png",
-      }}
+      source={{ uri: APP_BACKGROUND_IMAGE }}
       style={styles.bg}
       resizeMode="cover"
     >
@@ -213,17 +219,17 @@ const HomeScreen = ({
 
         <View style={styles.quickStatsRow}>
           <View style={styles.quickStatCard}>
-            <Ionicons name="sparkles-outline" size={16} color="#fbbf24" />
+            <AppIcon uri={ICON_ASSETS.gems} size={16} tintColor="#fbbf24" />
             <Text style={styles.quickStatValue}>{user?.saqr_gems || 0}</Text>
             <Text style={styles.quickStatLabel}>جواهر</Text>
           </View>
           <View style={styles.quickStatCard}>
-            <Ionicons name="videocam-outline" size={16} color="#a5f3fc" />
+            <AppIcon uri={ICON_ASSETS.clips} size={16} tintColor="#a5f3fc" />
             <Text style={styles.quickStatValue}>{user?.clips_count || 0}</Text>
             <Text style={styles.quickStatLabel}>ريلز</Text>
           </View>
           <View style={styles.quickStatCard}>
-            <Ionicons name="chatbubble-ellipses-outline" size={16} color="#93c5fd" />
+            <AppIcon uri={ICON_ASSETS.chat} size={16} tintColor="#93c5fd" />
             <Text style={styles.quickStatValue}>24/7</Text>
             <Text style={styles.quickStatLabel}>دردشة</Text>
           </View>
@@ -231,28 +237,28 @@ const HomeScreen = ({
 
         <View style={styles.quickActionsWrap}>
           <QuickActionPill
-            icon="play-circle-outline"
+            iconSource={ICON_ASSETS.watch}
             title={copy.adsPill}
             subtitle={copy.adsPillSub}
             colors={["rgba(245,158,11,0.35)", "rgba(180,83,9,0.45)"]}
             onPress={onNavigateToAds}
           />
           <QuickActionPill
-            icon="videocam-outline"
+            iconSource={ICON_ASSETS.clips}
             title={copy.reelsPill}
             subtitle={copy.reelsPillSub}
             colors={["rgba(99,102,241,0.35)", "rgba(79,70,229,0.45)"]}
             onPress={onNavigateToClips}
           />
           <QuickActionPill
-            icon="chatbubble-ellipses-outline"
+            iconSource={ICON_ASSETS.chat}
             title={copy.chatPill}
             subtitle={copy.chatPillSub}
             colors={["rgba(14,165,233,0.35)", "rgba(3,105,161,0.45)"]}
             onPress={onNavigateToChat}
           />
           <QuickActionPill
-            icon="planet-outline"
+            iconSource={ICON_ASSETS.fortunes}
             title={copy.fortunesPill}
             subtitle={copy.fortunesPillSub}
             colors={["rgba(236,72,153,0.34)", "rgba(124,58,237,0.44)"]}
@@ -263,7 +269,7 @@ const HomeScreen = ({
         {/* ثروات صقر - القسم الرئيسي */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="sparkles" size={18} color="#ec4899" />
+            <AppIcon uri={ICON_ASSETS.fortunes} size={18} tintColor="#ec4899" />
             <Text style={styles.sectionTitle}>{copy.fortunes}</Text>
             <View style={styles.newTag}>
               <Text style={styles.newTagText}>{copy.newLabel}</Text>
@@ -275,7 +281,7 @@ const HomeScreen = ({
             subtitle={copy.fortunesSubtitle}
             image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png"
             colors={["#ec4899", "#be185d"]}
-            icon="sparkles"
+            iconSource={ICON_ASSETS.fortunes}
             onPress={onNavigateToFortunes}
             badge={copy.exchangeBadge}
           />
@@ -290,7 +296,7 @@ const HomeScreen = ({
               style={styles.primaryActionGradient}
             >
               <View style={styles.primaryActionIcon}>
-                <Ionicons name="play-circle-outline" size={18} color="#fff" />
+                <AppIcon uri={ICON_ASSETS.watch} size={18} />
               </View>
               <View style={styles.primaryActionTextWrap}>
                 <Text style={styles.primaryActionTitle}>{copy.watchAndEarn}</Text>
@@ -308,7 +314,7 @@ const HomeScreen = ({
               style={styles.primaryActionGradient}
             >
               <View style={styles.primaryActionIcon}>
-                <Ionicons name="planet-outline" size={18} color="#fff" />
+                <AppIcon uri={ICON_ASSETS.fortunes} size={18} />
               </View>
               <View style={styles.primaryActionTextWrap}>
                 <Text style={styles.primaryActionTitle}>{copy.fortunes}</Text>
@@ -325,7 +331,7 @@ const HomeScreen = ({
             subtitle={copy.clipsSub}
             image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e02071f57750c77c0db321a70a51ed7bceb6eeb4df5f78e29d834466fcf3f354.png"
             color="#8b5cf6"
-            icon="film"
+            iconSource={ICON_ASSETS.clips}
             onPress={onNavigateToClips}
           />
           <FeatureCard
@@ -333,7 +339,7 @@ const HomeScreen = ({
             subtitle={copy.friendsSub}
             image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/7f2948052c933ae7604200fd2c98d91f4504fce293deb36ce108cba1d36f062a.png"
             color="#22c55e"
-            icon="person-add"
+            iconSource={ICON_ASSETS.friends}
             onPress={onNavigateToFriends}
           />
         </View>
@@ -345,7 +351,7 @@ const HomeScreen = ({
             subtitle={copy.chatSub}
             image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/bcdacd75d090c4626f5432d13b9b6c4c4560cc34282e9424de1cbc6732f06abf.png"
             color="#3b82f6"
-            icon="chatbubbles"
+            iconSource={ICON_ASSETS.chat}
             onPress={onNavigateToChat}
             badge={copy.chatCostBadge}
           />
@@ -354,7 +360,7 @@ const HomeScreen = ({
 
         {/* نصيحة */}
         <View style={styles.tipCard}>
-          <Ionicons name="bulb-outline" size={18} color="#fbbf24" />
+          <AppIcon uri={ICON_ASSETS.home} size={18} tintColor="#fbbf24" />
           <Text style={styles.tipText}>{copy.tip}</Text>
         </View>
           </View>

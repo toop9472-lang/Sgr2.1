@@ -32,7 +32,8 @@ let activeApiBase = API_BASE_CANDIDATES[0] || API_URL;
 const isHtmlContentType = (contentType = "") =>
   contentType.toLowerCase().includes("text/html");
 const isApiEndpoint = (endpoint = "") =>
-  typeof endpoint === "string" && endpoint.startsWith("/api/");
+  typeof endpoint === "string" &&
+  (/^\/api\//.test(endpoint) || /^\/backend\/api\//.test(endpoint));
 const buildServiceUnavailableResponse = (
   message = "تعذر الوصول لخدمة تسجيل الدخول. تحقق من الخادم.",
 ) =>
@@ -328,7 +329,7 @@ export const api = {
 
       if (!response) {
         if (lastHtmlApiResponse) {
-          throw new Error("NO_CONNECTION");
+          throw new Error("API_UNAVAILABLE");
         }
         if (lastNotFoundResponse) return lastNotFoundResponse;
         throw lastNetworkError || new Error("NO_CONNECTION");
@@ -382,7 +383,11 @@ export const api = {
       } catch (error) {
         lastError = error;
         // Continue trying alternative endpoints for connectivity fluctuations.
-        if (["NO_CONNECTION", "CONNECTION_TIMEOUT"].includes(error?.message)) {
+        if (
+          ["NO_CONNECTION", "CONNECTION_TIMEOUT", "API_UNAVAILABLE"].includes(
+            error?.message,
+          )
+        ) {
           continue;
         }
         throw error;
@@ -670,31 +675,58 @@ export const api = {
         [this.baseUrl, activeApiBase, ...API_BASE_CANDIDATES].filter(Boolean),
       ),
     );
+    const endpointCandidates = [
+      "/api/advertiser/upload-video",
+      "/backend/api/advertiser/upload-video",
+      "/advertiser/upload-video",
+    ];
     let lastError = null;
+    let lastResponse = null;
+    let receivedHtmlInsteadOfApi = false;
 
     for (const baseUrl of baseCandidates) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), CONNECTION_TIMEOUT);
-        const response = await fetch(`${baseUrl}/api/advertiser/upload-video`, {
-          method: "POST",
-          headers,
-          body: formData,
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-        if (![404, 405].includes(response.status)) {
+      for (const endpoint of endpointCandidates) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(
+            () => controller.abort(),
+            CONNECTION_TIMEOUT,
+          );
+          const response = await fetch(`${baseUrl}${endpoint}`, {
+            method: "POST",
+            headers,
+            body: formData,
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+          const contentType = response.headers?.get?.("content-type") || "";
+          if (response.ok && isHtmlContentType(contentType)) {
+            // Misconfigured target serving SPA HTML instead of API JSON.
+            receivedHtmlInsteadOfApi = true;
+            continue;
+          }
+          if ([404, 405].includes(response.status)) {
+            lastResponse = response;
+            continue;
+          }
           activeApiBase = baseUrl;
           this.baseUrl = baseUrl;
           this.BASE_URL = baseUrl;
           return response;
+        } catch (error) {
+          lastError = error;
         }
-      } catch (error) {
-        lastError = error;
       }
     }
 
     if (lastError) throw lastError;
+    if (receivedHtmlInsteadOfApi) {
+      return new Response(
+        JSON.stringify({ detail: "خدمة رفع الفيديو غير متاحة حالياً على الخادم." }),
+        { status: 503, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    if (lastResponse) return lastResponse;
     return new Response(
       JSON.stringify({ detail: "تعذر رفع فيديو الإعلان حالياً." }),
       { status: 503, headers: { "Content-Type": "application/json" } },
@@ -763,11 +795,15 @@ export const api = {
   // ==================== Clips (short videos/reels) ====================
 
   async getClips(limit = 30, viewerId = null) {
-    const base = `/api/clips/feed?limit=${encodeURIComponent(limit)}`;
-    const withViewer = viewerId
-      ? `${base}&viewer_id=${encodeURIComponent(viewerId)}`
-      : base;
-    return this.fetch(withViewer);
+    const clipsBase = `/api/clips/feed?limit=${encodeURIComponent(limit)}`;
+    const reelsBase = `/api/reels/feed?limit=${encodeURIComponent(limit)}`;
+    const clipsWithViewer = viewerId
+      ? `${clipsBase}&viewer_id=${encodeURIComponent(viewerId)}`
+      : clipsBase;
+    const reelsWithViewer = viewerId
+      ? `${reelsBase}&viewer_id=${encodeURIComponent(viewerId)}`
+      : reelsBase;
+    return this.fetchWithFallback([clipsWithViewer, reelsWithViewer]);
   },
 
   async createClip(payload) {
@@ -795,31 +831,58 @@ export const api = {
         [this.baseUrl, activeApiBase, ...API_BASE_CANDIDATES].filter(Boolean),
       ),
     );
+    const endpointCandidates = [
+      "/api/clips/upload",
+      "/backend/api/clips/upload",
+      "/clips/upload",
+    ];
     let lastError = null;
+    let lastResponse = null;
+    let receivedHtmlInsteadOfApi = false;
 
     for (const baseUrl of baseCandidates) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), CONNECTION_TIMEOUT);
-        const response = await fetch(`${baseUrl}/api/clips/upload`, {
-          method: "POST",
-          headers,
-          body: formData,
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-        if (![404, 405].includes(response.status)) {
+      for (const endpoint of endpointCandidates) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(
+            () => controller.abort(),
+            CONNECTION_TIMEOUT,
+          );
+          const response = await fetch(`${baseUrl}${endpoint}`, {
+            method: "POST",
+            headers,
+            body: formData,
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+          const contentType = response.headers?.get?.("content-type") || "";
+          if (response.ok && isHtmlContentType(contentType)) {
+            // Misconfigured target serving SPA HTML instead of API JSON.
+            receivedHtmlInsteadOfApi = true;
+            continue;
+          }
+          if ([404, 405].includes(response.status)) {
+            lastResponse = response;
+            continue;
+          }
           activeApiBase = baseUrl;
           this.baseUrl = baseUrl;
           this.BASE_URL = baseUrl;
           return response;
+        } catch (error) {
+          lastError = error;
         }
-      } catch (error) {
-        lastError = error;
       }
     }
 
     if (lastError) throw lastError;
+    if (receivedHtmlInsteadOfApi) {
+      return new Response(
+        JSON.stringify({ detail: "خدمة رفع المقاطع غير متاحة حالياً على الخادم." }),
+        { status: 503, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    if (lastResponse) return lastResponse;
     return new Response(
       JSON.stringify({ detail: "تعذر رفع الفيديو حالياً." }),
       { status: 503, headers: { "Content-Type": "application/json" } },
