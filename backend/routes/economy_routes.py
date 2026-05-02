@@ -72,6 +72,16 @@ async def _get_today_ad_progress(user_id: str):
     return today_count, today_gems
 
 
+def _build_daily_challenge_payload(today_count: int, today_gems: int):
+    return {
+        "daily_goal_ads": AD_DAILY_ADS_LIMIT,
+        "daily_goal_gems": AD_DAILY_GEMS_LIMIT,
+        "remaining_ads_today": max(0, AD_DAILY_ADS_LIMIT - today_count),
+        "remaining_gems_today": max(0, AD_DAILY_GEMS_LIMIT - today_gems),
+        "challenge_completed": today_gems >= AD_DAILY_GEMS_LIMIT,
+    }
+
+
 class PurchasePackageRequest(BaseModel):
     user_id: str
     package_id: str
@@ -339,19 +349,6 @@ async def claim_ad_watch_reward(request: AdWatchRewardRequest):
             pass
 
     today_count, today_gems = await _get_today_ad_progress(request.user_id)
-    if today_gems >= AD_DAILY_GEMS_LIMIT or today_count >= AD_DAILY_ADS_LIMIT:
-        raise HTTPException(
-            status_code=429,
-            detail={
-                "error": "daily_ad_goal_completed",
-                "message": "أنهيت تحديات إعلانات اليوم بالكامل (30 جوهرة). عد غداً لمكافآت جديدة.",
-                "today_gems_earned": today_gems,
-                "daily_goal_gems": AD_DAILY_GEMS_LIMIT,
-                "today_ads_watched": today_count,
-                "daily_goal_ads": AD_DAILY_ADS_LIMIT,
-            },
-        )
-
     new_gems = int(user.get("saqr_gems", 0) or 0) + AD_REWARD_GEMS
     updated_total_ads = int(user.get("total_ads_watched", 0) or 0) + 1
     updated_today_count = today_count + 1
@@ -397,10 +394,7 @@ async def claim_ad_watch_reward(request: AdWatchRewardRequest):
         "total_ads_watched": updated_total_ads,
         "today_ads_watched": updated_today_count,
         "today_gems_earned": updated_today_gems,
-        "daily_goal_ads": AD_DAILY_ADS_LIMIT,
-        "daily_goal_gems": AD_DAILY_GEMS_LIMIT,
-        "remaining_ads_today": max(0, AD_DAILY_ADS_LIMIT - updated_today_count),
-        "remaining_gems_today": max(0, AD_DAILY_GEMS_LIMIT - updated_today_gems),
+        **_build_daily_challenge_payload(updated_today_count, updated_today_gems),
         "carry_seconds": 0,
         "saqr_gems_value_sar": _gems_to_sar(new_gems),
         "exchange_rate": f"{EXCHANGE_GEMS} جوهرة صقر = {EXCHANGE_SAR} ريال سعودي",
@@ -420,11 +414,7 @@ async def get_ad_stats(user_id: str):
         "total_ad_gems": int(user.get("total_ad_gems", 0) or 0),
         "today_ads_watched": today_count,
         "today_gems_earned": today_gems,
-        "daily_goal_ads": AD_DAILY_ADS_LIMIT,
-        "daily_goal_gems": AD_DAILY_GEMS_LIMIT,
-        "remaining_ads_today": max(0, AD_DAILY_ADS_LIMIT - today_count),
-        "remaining_gems_today": max(0, AD_DAILY_GEMS_LIMIT - today_gems),
-        "challenge_completed": today_gems >= AD_DAILY_GEMS_LIMIT,
+        **_build_daily_challenge_payload(today_count, today_gems),
         "current_saqr_gems": int(user.get("saqr_gems", 0) or 0),
         "current_diamonds": EMPTY_DIAMONDS,
         "exchange_rate": f"{EXCHANGE_GEMS} جوهرة صقر = {EXCHANGE_SAR} ريال سعودي",
@@ -450,18 +440,6 @@ async def add_saqr_gems(request: AddSaqrGemsRequest):
         {"_id": 0, "id": 1, "saqr_gems": 1, "total_ads_watched": 1},
     )
     today_count, today_gems = await _get_today_ad_progress(request.user_id)
-    if today_gems >= AD_DAILY_GEMS_LIMIT or today_count >= AD_DAILY_ADS_LIMIT:
-        raise HTTPException(
-            status_code=429,
-            detail={
-                "error": "daily_ad_goal_completed",
-                "message": "أنهيت تحديات إعلانات اليوم بالكامل (30 جوهرة). عد غداً لمكافآت جديدة.",
-                "today_gems_earned": today_gems,
-                "daily_goal_gems": AD_DAILY_GEMS_LIMIT,
-                "today_ads_watched": today_count,
-                "daily_goal_ads": AD_DAILY_ADS_LIMIT,
-            },
-        )
     now_iso = datetime.now(timezone.utc).isoformat()
     result = await db.users.find_one_and_update(
         _user_filter(request.user_id),
@@ -506,10 +484,7 @@ async def add_saqr_gems(request: AddSaqrGemsRequest):
         "total_ads_watched": updated_total_ads,
         "today_ads_watched": updated_today_count,
         "today_gems_earned": updated_today_gems,
-        "daily_goal_ads": AD_DAILY_ADS_LIMIT,
-        "daily_goal_gems": AD_DAILY_GEMS_LIMIT,
-        "remaining_ads_today": max(0, AD_DAILY_ADS_LIMIT - updated_today_count),
-        "remaining_gems_today": max(0, AD_DAILY_GEMS_LIMIT - updated_today_gems),
+        **_build_daily_challenge_payload(updated_today_count, updated_today_gems),
         "new_balance": new_balance,
         "saqr_gems_value_sar": _gems_to_sar(new_balance),
         "message": f"حصلت على {AD_REWARD_GEMS} جوهرة صقر.",
@@ -524,14 +499,10 @@ async def get_ad_challenge_status(user_id: str):
     today_count, today_gems = await _get_today_ad_progress(user_id)
     return {
         "challenge_type": "admob_daily",
-        "daily_goal_gems": AD_DAILY_GEMS_LIMIT,
-        "daily_goal_ads": AD_DAILY_ADS_LIMIT,
         "reward_per_ad_gems": AD_REWARD_GEMS,
         "today_ads_watched": today_count,
         "today_gems_earned": today_gems,
-        "remaining_ads_today": max(0, AD_DAILY_ADS_LIMIT - today_count),
-        "remaining_gems_today": max(0, AD_DAILY_GEMS_LIMIT - today_gems),
-        "challenge_completed": today_gems >= AD_DAILY_GEMS_LIMIT,
+        **_build_daily_challenge_payload(today_count, today_gems),
         "total_ads_watched": int(user.get("total_ads_watched", 0) or 0),
         "total_ad_gems": int(user.get("total_ad_gems", 0) or 0),
         "current_saqr_gems": int(user.get("saqr_gems", 0) or 0),

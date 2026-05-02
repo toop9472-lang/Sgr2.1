@@ -353,13 +353,6 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
 
   const startWatchingAd = async () => {
     if (loading) return;
-    if (stats.challengeCompleted || stats.remainingAds <= 0) {
-      Alert.alert(
-        "الحد اليومي",
-        `أنهيت تحدي اليوم بالكامل: ${stats.dailyGoalGems} جوهرة. عد غداً للمزيد!`,
-      );
-      return;
-    }
     if (adGateLoading) return;
 
     setAdGateLoading(true);
@@ -503,11 +496,11 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
               <TouchableOpacity
                 style={[
                   styles.watchAdBtn,
-                  (adGateLoading || loading || stats.challengeCompleted) &&
+                  (adGateLoading || loading) &&
                     styles.watchAdBtnDisabled,
                 ]}
                 onPress={startWatchingAd}
-                disabled={adGateLoading || loading || stats.challengeCompleted}
+                disabled={adGateLoading || loading}
                 activeOpacity={0.85}
               >
                 <LinearGradient
@@ -526,7 +519,7 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
                         : adGateLoading
                         ? "جاري فتح إعلان AdMob..."
                         : stats.challengeCompleted
-                          ? "تم إكمال تحدي اليوم"
+                          ? "التحدي اليومي مكتمل - استمر بالكسب"
                           : "شاهد إعلان AdMob واربح الآن"}
                     </Text>
                     <Text style={styles.watchAdDesc}>
@@ -535,7 +528,7 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
                         : adGateLoading
                         ? "انتظر قليلاً"
                         : stats.challengeCompleted
-                          ? "عد غداً لتجديد التحديات اليومية"
+                          ? "ممتاز! أكملت 30 جوهرة اليوم ويمكنك الاستمرار بلا حد"
                           : `المتبقي اليوم: ${stats.remainingGems} جوهرة`}
                     </Text>
                   </View>
@@ -556,7 +549,7 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
               <View style={styles.tipsCard}>
                 <Ionicons name="bulb" size={18} color="#fbbf24" />
                 <Text style={styles.tipsText}>
-                  كل إعلان مكتمل يمنحك 5 جواهر صقر باحتساب فعلي. هدف اليوم: 30 جوهرة (6 إعلانات).
+                  كل إعلان مكتمل يمنحك 5 جواهر صقر باحتساب فعلي. هدف اليوم 30 جوهرة كتحدي، ويمكنك الاستمرار بالكسب بعده بلا حد.
                 </Text>
               </View>
 
@@ -582,7 +575,9 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
                   />
                 </View>
                 <Text style={styles.progressMetaText}>
-                  المتبقي: {stats.remainingAds} إعلان • {stats.remainingGems} جوهرة
+                  {stats.challengeCompleted
+                    ? "اكتمل التحدي اليومي 30 جوهرة - بإمكانك متابعة كسب 5 جواهر لكل إعلان بدون حد."
+                    : `المتبقي: ${stats.remainingAds} إعلان • ${stats.remainingGems} جوهرة`}
                 </Text>
               </View>
 
