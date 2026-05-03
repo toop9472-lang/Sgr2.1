@@ -504,14 +504,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 16,
-    paddingTop: 28,
+    padding: 18,
+    paddingTop: 24,
     paddingBottom: 120,
   },
   quickStatsRow: {
     flexDirection: "row",
     gap: 8,
-    marginBottom: 14,
+    marginBottom: 12,
   },
   quickStatCard: {
     flex: 1,
@@ -534,18 +534,19 @@ const styles = StyleSheet.create({
   },
   quickStatValue: {
     color: "#fff",
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "800",
   },
   quickStatLabel: {
     color: "rgba(255,255,255,0.66)",
     fontSize: 10,
+    fontWeight: "600",
   },
   quickActionsWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 18,
   },
   quickActionPill: {
     width: (width - 48) / 2,
@@ -565,8 +566,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.16)",
     borderRadius: 14,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
   },
   quickActionPillIcon: {
     width: 32,
@@ -583,11 +584,13 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 12,
     fontWeight: "800",
+    lineHeight: 16,
   },
   quickActionPillSub: {
     marginTop: 2,
     color: "rgba(255,255,255,0.74)",
     fontSize: 10,
+    lineHeight: 13,
   },
 
   // الترويسة
@@ -604,7 +607,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 11,
   },
   headerLeft: {
     flexDirection: "row",
@@ -634,7 +637,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   greeting: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "800",
     color: "#f8fafc",
     maxWidth: "100%",
@@ -643,21 +646,22 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontSize: 11,
     color: "rgba(226,232,240,0.72)",
+    lineHeight: 15,
   },
 
   // الأقسام
   section: {
-    marginBottom: 20,
+    marginBottom: 18,
   },
   sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 10,
     gap: 8,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 17,
+    fontWeight: "800",
     color: "#FFF",
     flex: 1,
   },
@@ -675,13 +679,14 @@ const styles = StyleSheet.create({
   fortunesDesc: {
     color: "rgba(255,255,255,0.6)",
     fontSize: 12,
+    lineHeight: 17,
     textAlign: "center",
-    marginTop: 8,
+    marginTop: 10,
   },
   primaryActionsRow: {
     flexDirection: "row",
     gap: 10,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   primaryAction: {
     flex: 1,
@@ -696,7 +701,7 @@ const styles = StyleSheet.create({
   },
   primaryActionGradient: {
     minHeight: 86,
-    padding: 12,
+    padding: 13,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.15)",
     borderRadius: 14,
@@ -716,6 +721,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 13,
     fontWeight: "800",
+    lineHeight: 17,
   },
   primaryActionSub: {
     color: "rgba(255,255,255,0.76)",
@@ -734,7 +740,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   featuredBg: {
-    height: 160,
+    height: 164,
   },
   featuredImage: {
     borderRadius: 16,
@@ -763,7 +769,7 @@ const styles = StyleSheet.create({
   },
   featuredInfo: {},
   featuredTitle: {
-    fontSize: 20,
+    fontSize: 21,
     fontWeight: "800",
     color: "#FFF",
     textShadowColor: "rgba(0,0,0,0.5)",
@@ -774,6 +780,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "rgba(255,255,255,0.9)",
     marginTop: 4,
+    lineHeight: 16,
   },
   playBtn: {
     padding: 8,
@@ -783,7 +790,7 @@ const styles = StyleSheet.create({
   dualCards: {
     flexDirection: "row",
     gap: 10,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   featureCard: {
     flex: 1,
@@ -821,7 +828,7 @@ const styles = StyleSheet.create({
   featureContent: {},
   featureTitle: {
     fontSize: 14,
-    fontWeight: "700",
+    fontWeight: "800",
     color: "#FFF",
     textShadowColor: "rgba(0,0,0,0.5)",
     textShadowOffset: { width: 0, height: 1 },
@@ -831,6 +838,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: "rgba(255,255,255,0.85)",
     marginTop: 2,
+    lineHeight: 13,
   },
   featureBtn: {
     padding: 6,
@@ -840,7 +848,7 @@ const styles = StyleSheet.create({
   tipCard: {
     borderRadius: 12,
     overflow: "hidden",
-    marginTop: 4,
+    marginTop: 6,
   },
   tipImage: {
     borderRadius: 12,
@@ -857,6 +865,7 @@ const styles = StyleSheet.create({
   tipText: {
     color: "rgba(255,255,255,0.86)",
     fontSize: 12,
+    lineHeight: 17,
     flex: 1,
   },
 });
