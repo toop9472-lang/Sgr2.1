@@ -350,26 +350,28 @@ const HomeScreen = ({
         >
           <Animated.View style={[styles.content, { opacity: presetFade }]}>
         {/* الترويسة */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <LanguageSwitcher />
-            <View>
-              <Text style={styles.greeting}>
-                {copy.welcomePrefix} {userName}
-              </Text>
-              <Text style={styles.subGreeting}>{copy.welcomeSub}</Text>
+        <View style={styles.headerShell}>
+          <View style={styles.header}>
+            <View style={styles.headerLeft}>
+              <LanguageSwitcher />
+              <View style={styles.headerTextWrap}>
+                <Text style={styles.greeting}>
+                  {copy.welcomePrefix} {userName}
+                </Text>
+                <Text style={styles.subGreeting}>{copy.welcomeSub}</Text>
+              </View>
             </View>
+            <TouchableOpacity
+              style={styles.presetSwitchBtn}
+              onPress={handleQuickPresetToggle}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="swap-horizontal" size={14} color="#e2e8f0" />
+              <Text style={styles.presetSwitchText}>
+                {homePreset === "brightModern" ? copy.styleBright : copy.styleLuxury}
+              </Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={styles.presetSwitchBtn}
-            onPress={handleQuickPresetToggle}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="swap-horizontal" size={14} color="#fff" />
-            <Text style={styles.presetSwitchText}>
-              {homePreset === "brightModern" ? copy.styleBright : copy.styleLuxury}
-            </Text>
-          </TouchableOpacity>
         </View>
 
         <View style={styles.quickStatsRow}>
@@ -589,41 +591,58 @@ const styles = StyleSheet.create({
   },
 
   // الترويسة
+  headerShell: {
+    marginBottom: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(148,163,184,0.2)",
+    backgroundColor: "rgba(2,6,23,0.42)",
+    overflow: "hidden",
+  },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 24,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   headerLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 8,
+    flex: 1,
+    minWidth: 0,
+  },
+  headerTextWrap: {
+    flex: 1,
+    minWidth: 0,
   },
   presetSwitchBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "rgba(59,130,246,0.24)",
+    backgroundColor: "rgba(15,23,42,0.55)",
     borderWidth: 1,
-    borderColor: "rgba(147,197,253,0.45)",
-    paddingHorizontal: 10,
-    paddingVertical: 7,
+    borderColor: "rgba(148,163,184,0.32)",
+    paddingHorizontal: 9,
+    paddingVertical: 6,
     borderRadius: 999,
   },
   presetSwitchText: {
-    color: "#fff",
-    fontSize: 10,
+    color: "#e2e8f0",
+    fontSize: 9,
     fontWeight: "700",
   },
   greeting: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#f8fafc",
+    maxWidth: "100%",
   },
   subGreeting: {
-    fontSize: 12,
-    color: "rgba(255,255,255,0.5)",
+    marginTop: 2,
+    fontSize: 11,
+    color: "rgba(226,232,240,0.72)",
   },
 
   // الأقسام
