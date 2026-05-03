@@ -12,6 +12,7 @@ import {
   ImageBackground,
   Image,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import { useLanguage } from "../i18n/LanguageContext";
@@ -172,6 +173,7 @@ const HomeScreen = ({
   onNavigateToFriends,
   settings,
   homePreset,
+  onHomePresetChange,
   onRefresh,
 }) => {
   const { language } = useLanguage();
@@ -219,6 +221,8 @@ const HomeScreen = ({
       chatPillSub: isArabic ? "مجانية بالكامل" : "Always free",
       fortunesPill: isArabic ? "ثروات صقر" : "Saqr Fortunes",
       fortunesPillSub: isArabic ? "500 = 3 ريال" : "500 = 3 SAR",
+      styleLuxury: isArabic ? "فاخر داكن" : "Luxury Dark",
+      styleBright: isArabic ? "مشرق عصري" : "Bright Modern",
     }),
     [isArabic],
   );
@@ -234,6 +238,12 @@ const HomeScreen = ({
     if (onRefresh) await onRefresh();
     setRefreshing(false);
   }, [onRefresh]);
+
+  const handleQuickPresetToggle = useCallback(() => {
+    if (!onHomePresetChange) return;
+    const nextPreset = homePreset === "brightModern" ? "luxuryDark" : "brightModern";
+    onHomePresetChange(nextPreset);
+  }, [homePreset, onHomePresetChange]);
 
   return (
     <ImageBackground
@@ -269,6 +279,16 @@ const HomeScreen = ({
               <Text style={styles.subGreeting}>{copy.welcomeSub}</Text>
             </View>
           </View>
+          <TouchableOpacity
+            style={styles.presetSwitchBtn}
+            onPress={handleQuickPresetToggle}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="swap-horizontal" size={14} color="#fff" />
+            <Text style={styles.presetSwitchText}>
+              {homePreset === "brightModern" ? copy.styleBright : copy.styleLuxury}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.quickStatsRow}>
@@ -537,6 +557,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+  },
+  presetSwitchBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "rgba(59,130,246,0.24)",
+    borderWidth: 1,
+    borderColor: "rgba(147,197,253,0.45)",
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 999,
+  },
+  presetSwitchText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "700",
   },
   greeting: {
     fontSize: 18,

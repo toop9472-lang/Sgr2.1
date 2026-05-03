@@ -544,6 +544,7 @@ function AppContent() {
               user={user}
               settings={settings}
               homePreset={homePreset}
+              onHomePresetChange={handleHomePresetChange}
               onNavigateToAds={() => setShowAdsViewer(true)}
               onNavigateToClips={() => setCurrentPage("clips")}
               onNavigateToChat={() => setCurrentPage("chat")}
