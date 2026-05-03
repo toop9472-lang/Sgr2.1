@@ -536,10 +536,10 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds }) => {
         }
       }
 
-      // سحب للأسفل: التالي، سحب للأعلى: السابق.
+      // المطلوب: سحب للأعلى = التالي، سحب للأسفل = السابق.
       if (Math.abs(dy) > 80 && Math.abs(dy) > Math.abs(dx)) {
-        if (dy > 0) navigateClip("next");
-        if (dy < 0) navigateClip("prev");
+        if (dy < 0) navigateClip("next");
+        if (dy > 0) navigateClip("prev");
       }
     },
     [navigateClip, onClose, onNavigateToAds],

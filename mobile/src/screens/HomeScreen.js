@@ -1,6 +1,6 @@
 // Home Screen - الصفحة الرئيسية
 // بدون ألعاب - فقط ثروات صقر والميزات الأساسية
-import React, { useState, useMemo, useCallback, memo } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef, memo } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   RefreshControl,
   ImageBackground,
   Image,
+  Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -179,6 +180,7 @@ const HomeScreen = ({
   const { language } = useLanguage();
   const isArabic = language === "ar";
   const [refreshing, setRefreshing] = useState(false);
+  const presetFade = useRef(new Animated.Value(1)).current;
   const homeCardBackgrounds = useMemo(
     () => getHomeCardBackgrounds(homePreset),
     [homePreset],
@@ -245,6 +247,22 @@ const HomeScreen = ({
     onHomePresetChange(nextPreset);
   }, [homePreset, onHomePresetChange]);
 
+  useEffect(() => {
+    // Smoothly fade home content when switching background presets.
+    Animated.sequence([
+      Animated.timing(presetFade, {
+        toValue: 0.35,
+        duration: 140,
+        useNativeDriver: true,
+      }),
+      Animated.timing(presetFade, {
+        toValue: 1,
+        duration: 220,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [homePreset, presetFade]);
+
   return (
     <ImageBackground
       source={{ uri: APP_BACKGROUND_IMAGE }}
@@ -267,7 +285,7 @@ const HomeScreen = ({
             />
           }
         >
-          <View style={styles.content}>
+          <Animated.View style={[styles.content, { opacity: presetFade }]}>
         {/* الترويسة */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -440,7 +458,7 @@ const HomeScreen = ({
             <Text style={styles.tipText}>{copy.tip}</Text>
           </LinearGradient>
         </ImageBackground>
-          </View>
+          </Animated.View>
         </ScrollView>
       </LinearGradient>
     </ImageBackground>
