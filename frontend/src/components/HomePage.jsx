@@ -68,20 +68,27 @@ const HOME_CARD_BACKGROUND_PRESETS = {
 
 const QuickStatSticker = ({ iconName, value, label, tintColor, backgroundImage }) => (
   <div
-    className="flex-1 relative rounded-[14px] overflow-hidden border border-white/15 min-h-[82px]"
+    className="flex-1 relative rounded-[14px] overflow-hidden min-h-[82px]"
     style={{
       backgroundImage: `url(${backgroundImage})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
     }}
   >
-    <div
-      className="h-full w-full px-2 py-2.5 flex flex-col items-center justify-center gap-[3px]"
-      style={{ background: 'linear-gradient(to bottom, rgba(15,23,42,0.24), rgba(15,23,42,0.76))' }}
-    >
-      <AppIcon name={iconName} size={16} color={tintColor} />
-      <div className="text-white text-[15px] font-extrabold leading-none">{value}</div>
-      <div className="text-white/65 text-[10px] font-semibold">{label}</div>
+    <div className="h-full w-full px-2 py-2.5 flex flex-col items-center justify-center gap-[3px]">
+      <AppIcon name={iconName} size={18} color={tintColor} strokeWidth={2.5} />
+      <div
+        className="text-white text-[15px] font-extrabold leading-none"
+        style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6)' }}
+      >
+        {value}
+      </div>
+      <div
+        className="text-white/95 text-[10px] font-semibold"
+        style={{ textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}
+      >
+        {label}
+      </div>
     </div>
   </div>
 );
