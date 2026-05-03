@@ -50,22 +50,28 @@ const HOME_CARD_BACKGROUND_PRESETS = {
   },
 };
 
-const AppIcon = ({ uri, size = 18 }) => (
+const AppIcon = ({ uri, size = 18, tint = '#fff' }) => (
   <img
     src={uri}
     alt=""
-    className="object-contain"
+    className="object-contain shrink-0"
     style={{
       width: size,
       height: size,
-      filter: 'brightness(0) invert(1)',
+      filter: `brightness(0) saturate(100%) ${tint === '#fff'
+        ? 'invert(100%)'
+        : tint === '#fbbf24'
+        ? 'invert(79%) sepia(66%) saturate(475%) hue-rotate(348deg) brightness(100%) contrast(98%)'
+        : tint === '#ec4899'
+        ? 'invert(50%) sepia(92%) saturate(2614%) hue-rotate(307deg) brightness(98%) contrast(95%)'
+        : 'invert(100%)'}`,
     }}
   />
 );
 
-const QuickStatSticker = ({ iconSource, value, label, backgroundImage, valueColor = '#fff' }) => (
+const QuickStatSticker = ({ iconSource, value, label, tintColor, backgroundImage }) => (
   <div
-    className="relative rounded-2xl overflow-hidden border border-white/10"
+    className="flex-1 relative rounded-[14px] overflow-hidden border border-white/15 min-h-[82px]"
     style={{
       backgroundImage: `url(${backgroundImage})`,
       backgroundSize: 'cover',
@@ -73,132 +79,136 @@ const QuickStatSticker = ({ iconSource, value, label, backgroundImage, valueColo
     }}
   >
     <div
-      className="px-3 py-3 text-center"
+      className="h-full w-full px-2 py-2.5 flex flex-col items-center justify-center gap-[3px]"
       style={{ background: 'linear-gradient(to bottom, rgba(15,23,42,0.24), rgba(15,23,42,0.76))' }}
     >
-      <div className="flex items-center justify-center mb-1">
-        <AppIcon uri={iconSource} size={16} />
-      </div>
-      <div className="text-lg font-bold leading-none" style={{ color: valueColor }}>
-        {value}
-      </div>
-      <div className="text-white/55 text-[10px] mt-1">{label}</div>
+      <AppIcon uri={iconSource} size={16} tint={tintColor} />
+      <div className="text-white text-[15px] font-extrabold leading-none">{value}</div>
+      <div className="text-white/65 text-[10px] font-semibold">{label}</div>
     </div>
   </div>
 );
 
-const QuickActionPill = ({ iconSource, title, subtitle, gradient, backgroundImage, onClick, testId }) => (
+const QuickActionPill = ({ iconSource, title, subtitle, backgroundImage, onClick, testId }) => (
   <button
     onClick={onClick}
-    className="flex-1 min-w-[150px] rounded-2xl overflow-hidden text-right relative"
+    className="relative rounded-[14px] overflow-hidden text-right"
+    style={{ width: 'calc((100% - 8px) / 2)' }}
     data-testid={testId}
   >
     <img src={backgroundImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
     <div
-      className="relative flex items-center gap-3 px-4 py-3 backdrop-blur-[2px]"
-      style={{ background: gradient }}
+      className="relative flex items-center gap-2 px-3 py-[11px] border border-white/15 rounded-[14px] min-h-[64px]"
+      style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.42), rgba(15,23,42,0.68))' }}
     >
-      <div className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center flex-shrink-0">
+      <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0">
         <AppIcon uri={iconSource} size={17} />
       </div>
-      <div className="flex-1 text-right">
-        <div className="text-white font-bold text-sm leading-tight drop-shadow">{title}</div>
-        <div className="text-white/85 text-[11px] leading-tight mt-0.5">{subtitle}</div>
+      <div className="flex-1 text-right min-w-0">
+        <div className="text-white text-[12px] font-extrabold leading-[16px] truncate">{title}</div>
+        <div className="text-white/75 text-[10px] leading-[13px] mt-0.5 truncate">{subtitle}</div>
       </div>
     </div>
   </button>
 );
 
-const FeaturedCard = ({ title, subtitle, image, color, iconSource, onClick, badge, testId }) => (
+const PrimaryActionCard = ({ iconSource, title, subtitle, backgroundImage, onClick, testId }) => (
   <button
     onClick={onClick}
-    className="w-full rounded-3xl overflow-hidden relative h-44 shadow-xl group"
-    data-testid={testId}
-  >
-    <img
-      src={image}
-      alt={title}
-      className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
-    />
-    <div
-      className="absolute inset-0"
-      style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%)' }}
-    />
-    {badge && (
-      <div className="absolute top-3 right-3 bg-white/15 backdrop-blur-md px-3 py-1 rounded-full">
-        <span className="text-white text-xs font-semibold">{badge}</span>
-      </div>
-    )}
-    <div className="absolute bottom-0 right-0 left-0 p-4 flex items-center justify-between">
-      <div className="text-right flex-1">
-        <h3 className="text-white text-xl font-bold drop-shadow-lg">{title}</h3>
-        <p className="text-white/85 text-sm mt-1">{subtitle}</p>
-      </div>
-      <div
-        className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0"
-        style={{ backgroundColor: color }}
-      >
-        <AppIcon uri={iconSource} size={20} />
-      </div>
-    </div>
-  </button>
-);
-
-const FeatureCard = ({ title, subtitle, image, color, iconSource, onClick, badge, testId }) => (
-  <button
-    onClick={onClick}
-    className="flex-1 rounded-2xl overflow-hidden relative h-32 shadow-lg group min-w-[140px]"
-    data-testid={testId}
-  >
-    <img
-      src={image}
-      alt={title}
-      className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
-    />
-    <div
-      className="absolute inset-0"
-      style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.78) 100%)' }}
-    />
-    {badge && (
-      <div
-        className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
-        style={{ backgroundColor: color }}
-      >
-        {badge}
-      </div>
-    )}
-    <div className="absolute bottom-2 right-2 left-2 flex items-end justify-between">
-      <div className="text-right flex-1">
-        <h4 className="text-white text-sm font-bold drop-shadow-md">{title}</h4>
-        <p className="text-white/80 text-[11px] mt-0.5">{subtitle}</p>
-      </div>
-      <div
-        className="w-8 h-8 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
-        style={{ backgroundColor: color }}
-      >
-        <AppIcon uri={iconSource} size={16} />
-      </div>
-    </div>
-  </button>
-);
-
-const PrimaryActionCard = ({ iconSource, title, subtitle, gradient, backgroundImage, onClick, testId }) => (
-  <button
-    onClick={onClick}
-    className="flex-1 rounded-2xl overflow-hidden min-w-[150px] text-right relative h-[72px]"
+    className="flex-1 rounded-[14px] overflow-hidden relative text-right"
     data-testid={testId}
   >
     <img src={backgroundImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
     <div
-      className="relative h-full flex items-center gap-3 px-4 py-4 backdrop-blur-[2px]"
-      style={{ background: gradient }}
+      className="relative min-h-[86px] p-[13px] border border-white/15 rounded-[14px]"
+      style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.48), rgba(15,23,42,0.72))' }}
     >
-      <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center flex-shrink-0">
+      <div className="w-[34px] h-[34px] rounded-full flex items-center justify-center mb-2">
         <AppIcon uri={iconSource} size={18} />
       </div>
-      <div className="flex-1 text-right">
-        <div className="text-white font-bold text-sm leading-tight drop-shadow">{title}</div>
-        <div className="text-white/85 text-[11px] leading-tight mt-0.5">{subtitle}</div>
+      <div className="space-y-[3px] text-right">
+        <div className="text-white text-[13px] font-extrabold leading-[17px]">{title}</div>
+        <div className="text-white/75 text-[10px] leading-[14px]">{subtitle}</div>
+      </div>
+    </div>
+  </button>
+);
+
+const FeaturedCard = ({ title, subtitle, image, iconSource, onClick, badge, testId }) => (
+  <button
+    onClick={onClick}
+    className="w-full rounded-2xl overflow-hidden relative shadow-xl group text-right"
+    style={{ boxShadow: '0 4px 8px rgba(236,72,153,0.3)' }}
+    data-testid={testId}
+  >
+    <img
+      src={image}
+      alt={title}
+      className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
+    />
+    <div
+      className="relative h-[164px] p-4 flex flex-col justify-between"
+      style={{ background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.8))' }}
+    >
+      {badge && (
+        <div className="self-start bg-emerald-500 px-3 py-1 rounded-xl">
+          <span className="text-white text-[11px] font-bold">{badge}</span>
+        </div>
+      )}
+      <div className="flex items-end justify-between">
+        <div className="text-right flex-1">
+          <h3
+            className="text-white text-[21px] font-extrabold"
+            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}
+          >
+            {title}
+          </h3>
+          <p className="text-white/90 text-[12px] mt-1 leading-[16px]">{subtitle}</p>
+        </div>
+        <div className="p-2">
+          <AppIcon uri={iconSource} size={16} />
+        </div>
+      </div>
+    </div>
+  </button>
+);
+
+const FeatureCard = ({ title, subtitle, image, iconSource, onClick, badge, testId }) => (
+  <button
+    onClick={onClick}
+    className="flex-1 rounded-[14px] overflow-hidden relative group text-right"
+    data-testid={testId}
+  >
+    <img
+      src={image}
+      alt={title}
+      className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
+    />
+    <div
+      className="relative h-[110px] p-3 flex flex-col justify-between"
+      style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.75))' }}
+    >
+      {badge && (
+        <div
+          className="self-start px-2 py-[3px] rounded-lg"
+          style={{ backgroundColor: 'rgba(96,165,250,0.8)' }}
+        >
+          <span className="text-white text-[9px] font-bold">{badge}</span>
+        </div>
+      )}
+      <div className="flex items-end justify-between">
+        <div className="text-right flex-1">
+          <h4
+            className="text-white text-[14px] font-extrabold"
+            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+          >
+            {title}
+          </h4>
+          <p className="text-white/85 text-[10px] mt-0.5 leading-[13px]">{subtitle}</p>
+        </div>
+        <div className="p-1.5">
+          <AppIcon uri={iconSource} size={14} />
+        </div>
       </div>
     </div>
   </button>
@@ -209,7 +219,6 @@ const PRESET_STORAGE_KEY = 'saqr_home_preset';
 const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
   const { language } = useLanguage();
   const isArabic = language === 'ar';
-  const [refreshing, setRefreshing] = useState(false);
   const [homePreset, setHomePreset] = useState('luxuryDark');
   const [fadeOpacity, setFadeOpacity] = useState(1);
 
@@ -244,11 +253,8 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
         : 'Full-screen AdMob + advertiser ads',
       clips: isArabic ? 'ريلز المجتمع' : 'Community Reels',
       clipsSub: isArabic ? 'مقاطع 15 ثانية من المستخدمين' : '15-second clips by users',
-      chat: isArabic ? 'الدردشة' : 'Chat',
-      chatSub: isArabic ? 'تواصل مع اللاعبين' : 'Connect with players',
       friends: isArabic ? 'الأصدقاء' : 'Friends',
       friendsSub: isArabic ? 'أضف أصدقاء جدد' : 'Add new friends',
-      chatCostBadge: isArabic ? 'مجاني' : 'Free',
       tip: isArabic
         ? 'ادعُ أصدقاءك واربح جواهر صقر مضاعفة!'
         : 'Invite friends and earn boosted Saqr gems!',
@@ -256,8 +262,6 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
       adsPillSub: isArabic ? 'AdMob + المعلنين' : 'AdMob + advertisers',
       reelsPill: isArabic ? 'صفحة الريلز' : 'Reels Feed',
       reelsPillSub: isArabic ? '15 ثانية لكل فيديو' : '15s per reel',
-      chatPill: isArabic ? 'الدردشة العامة' : 'Global Chat',
-      chatPillSub: isArabic ? 'مجانية بالكامل' : 'Always free',
       fortunesPill: isArabic ? 'ثروات صقر' : 'Saqr Fortunes',
       fortunesPillSub: isArabic ? '500 = 3 ريال' : '500 = 3 SAR',
       styleLuxury: isArabic ? 'فاخر داكن' : 'Luxury Dark',
@@ -271,17 +275,8 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
 
   const userName = user?.name || copy.defaultPlayer;
 
-  const handleRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-      if (typeof window !== 'undefined') window.location.reload();
-    }, 600);
-  }, []);
-
   const handleQuickPresetToggle = useCallback(() => {
     const next = homePreset === 'brightModern' ? 'luxuryDark' : 'brightModern';
-    // Fade animation like mobile
     setFadeOpacity(0.35);
     setTimeout(() => {
       setHomePreset(next);
@@ -294,9 +289,36 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
 
   const goAds = onNavigateToAds || (() => onNavigate && onNavigate('ads'));
   const goClips = () => onNavigate && onNavigate('clips');
-  const goChat = () => onNavigate && onNavigate('chat');
   const goFortunes = () => onNavigate && onNavigate('fortunes');
   const goFriends = () => onNavigate && onNavigate('friends');
+
+  // Quick pills - 3 items like the latest mobile (ads, reels, fortunes)
+  const quickPrimaryCards = [
+    {
+      id: 'ads',
+      title: copy.adsPill,
+      subtitle: copy.adsPillSub,
+      iconSource: ICON_ASSETS.watch,
+      onClick: goAds,
+      backgroundImage: bg.quickAds,
+    },
+    {
+      id: 'reels',
+      title: copy.reelsPill,
+      subtitle: copy.reelsPillSub,
+      iconSource: ICON_ASSETS.clips,
+      onClick: goClips,
+      backgroundImage: bg.quickReels,
+    },
+    {
+      id: 'fortunes',
+      title: copy.fortunesPill,
+      subtitle: copy.fortunesPillSub,
+      iconSource: ICON_ASSETS.fortunes,
+      onClick: goFortunes,
+      backgroundImage: bg.quickFortunes,
+    },
+  ];
 
   return (
     <div
@@ -322,30 +344,49 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
       />
 
       <div
-        className="max-w-2xl mx-auto px-4 pt-6 pb-4 space-y-5 transition-opacity duration-200"
+        className="max-w-2xl mx-auto px-[18px] pt-6 pb-4 transition-opacity duration-200"
         style={{ opacity: fadeOpacity }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-3">
-            <LanguageSwitcher />
-            <div className="text-right">
-              <div className="text-white text-lg font-bold leading-tight">
-                {copy.welcomePrefix} {userName}
-              </div>
-              <div className="text-white/65 text-[12px] leading-tight">
-                {copy.welcomeSub}
+        {/* Header Shell */}
+        <div
+          className="mb-4 rounded-[16px] border overflow-hidden"
+          style={{
+            borderColor: 'rgba(148,163,184,0.2)',
+            backgroundColor: 'rgba(2,6,23,0.42)',
+          }}
+        >
+          <div className="flex items-center justify-between px-3 py-[11px] gap-2">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <LanguageSwitcher />
+              <div className="flex-1 min-w-0 text-right">
+                <div
+                  className="text-[17px] font-extrabold leading-tight truncate"
+                  style={{ color: '#f8fafc' }}
+                >
+                  {copy.welcomePrefix} {userName}
+                </div>
+                <div
+                  className="text-[11px] leading-[15px] mt-0.5 truncate"
+                  style={{ color: 'rgba(226,232,240,0.72)' }}
+                >
+                  {copy.welcomeSub}
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
             <button
               onClick={handleQuickPresetToggle}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/15 border border-white/15 transition"
+              className="flex items-center gap-1.5 rounded-full border transition hover:bg-slate-900/70"
+              style={{
+                backgroundColor: 'rgba(15,23,42,0.55)',
+                borderColor: 'rgba(148,163,184,0.32)',
+                paddingInline: '9px',
+                paddingBlock: '6px',
+              }}
               data-testid="home-preset-toggle"
             >
               <svg
-                className="w-3.5 h-3.5 text-white"
+                className="w-[14px] h-[14px]"
+                style={{ color: '#e2e8f0' }}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -357,134 +398,92 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
                   d="M8 7h12m0 0l-4-4m4 4l-4 4m-4 6H4m0 0l4 4m-4-4l4-4"
                 />
               </svg>
-              <span className="text-white text-[11px] font-semibold whitespace-nowrap">
+              <span
+                className="text-[9px] font-bold whitespace-nowrap"
+                style={{ color: '#e2e8f0' }}
+              >
                 {homePreset === 'brightModern' ? copy.styleBright : copy.styleLuxury}
               </span>
-            </button>
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/15 transition flex items-center justify-center disabled:opacity-50"
-              data-testid="home-refresh"
-              aria-label="Refresh"
-            >
-              <svg
-                className={`w-3.5 h-3.5 text-white ${refreshing ? 'animate-spin' : ''}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4 4v5h5m11 11v-5h-5M5.5 9A7 7 0 0118 6.5M18.5 15A7 7 0 016 17.5"
-                />
-              </svg>
             </button>
           </div>
         </div>
 
-        {/* Quick Stats Row with backgrounds */}
-        <div className="grid grid-cols-3 gap-2">
+        {/* Quick Stats Row */}
+        <div className="flex gap-2 mb-3">
           <QuickStatSticker
             iconSource={ICON_ASSETS.gems}
             value={user?.saqr_gems || 0}
             label={copy.gemsLabel}
-            valueColor="#fbbf24"
+            tintColor="#fbbf24"
             backgroundImage={bg.statGems}
           />
           <QuickStatSticker
             iconSource={ICON_ASSETS.clips}
             value={user?.clips_count || 0}
             label={copy.reelsLabel}
-            valueColor="#a5f3fc"
+            tintColor="#a5f3fc"
             backgroundImage={bg.statReels}
           />
           <QuickStatSticker
             iconSource={ICON_ASSETS.chat}
             value="24/7"
             label={copy.chatLabel}
-            valueColor="#93c5fd"
+            tintColor="#93c5fd"
             backgroundImage={bg.statChat}
           />
         </div>
 
-        {/* Quick Actions - Pills with backgrounds */}
-        <div className="grid grid-cols-2 gap-2">
-          <QuickActionPill
-            iconSource={ICON_ASSETS.watch}
-            title={copy.adsPill}
-            subtitle={copy.adsPillSub}
-            gradient="linear-gradient(135deg, rgba(245,158,11,0.55), rgba(180,83,9,0.65))"
-            backgroundImage={bg.quickAds}
-            onClick={goAds}
-            testId="home-pill-ads"
-          />
-          <QuickActionPill
-            iconSource={ICON_ASSETS.clips}
-            title={copy.reelsPill}
-            subtitle={copy.reelsPillSub}
-            gradient="linear-gradient(135deg, rgba(99,102,241,0.55), rgba(79,70,229,0.65))"
-            backgroundImage={bg.quickReels}
-            onClick={goClips}
-            testId="home-pill-clips"
-          />
-          <QuickActionPill
-            iconSource={ICON_ASSETS.chat}
-            title={copy.chatPill}
-            subtitle={copy.chatPillSub}
-            gradient="linear-gradient(135deg, rgba(14,165,233,0.55), rgba(3,105,161,0.65))"
-            backgroundImage={bg.quickChat}
-            onClick={goChat}
-            testId="home-pill-chat"
-          />
-          <QuickActionPill
-            iconSource={ICON_ASSETS.fortunes}
-            title={copy.fortunesPill}
-            subtitle={copy.fortunesPillSub}
-            gradient="linear-gradient(135deg, rgba(236,72,153,0.54), rgba(124,58,237,0.64))"
-            backgroundImage={bg.quickFortunes}
-            onClick={goFortunes}
-            testId="home-pill-fortunes"
-          />
+        {/* Quick Actions - 3 Pills (flex-wrap) */}
+        <div className="flex flex-wrap gap-2 mb-[18px]">
+          {quickPrimaryCards.map((card) => (
+            <QuickActionPill
+              key={card.id}
+              iconSource={card.iconSource}
+              title={card.title}
+              subtitle={card.subtitle}
+              backgroundImage={card.backgroundImage}
+              onClick={card.onClick}
+              testId={`home-pill-${card.id}`}
+            />
+          ))}
         </div>
 
         {/* Saqr Fortunes Section */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <AppIcon uri={ICON_ASSETS.fortunes} size={18} />
-            <h2 className="text-white text-base font-bold flex-1 text-right">
+        <div className="mb-[18px]">
+          <div className="flex items-center gap-2 mb-2.5">
+            <AppIcon uri={ICON_ASSETS.fortunes} size={18} tint="#ec4899" />
+            <h2 className="text-white text-[17px] font-extrabold flex-1 text-right">
               {copy.fortunes}
             </h2>
-            <span className="bg-pink-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-              {copy.newLabel}
-            </span>
+            <div
+              className="px-2.5 py-1 rounded-lg"
+              style={{ backgroundColor: '#22c55e' }}
+            >
+              <span className="text-white text-[10px] font-bold">{copy.newLabel}</span>
+            </div>
           </div>
 
           <FeaturedCard
             title={copy.fortunes}
             subtitle={copy.fortunesSubtitle}
             image={bg.featuredFortunes}
-            color="#ec4899"
             iconSource={ICON_ASSETS.fortunes}
             onClick={goFortunes}
             badge={copy.exchangeBadge}
             testId="home-featured-fortunes"
           />
 
-          <p className="text-white/65 text-xs mt-2.5 text-right">
+          <p className="text-white/60 text-[12px] leading-[17px] text-center mt-2.5">
             {copy.fortunesDesc}
           </p>
         </div>
 
-        {/* Primary Actions Row with backgrounds */}
-        <div className="grid grid-cols-2 gap-2.5">
+        {/* Primary Actions Row */}
+        <div className="flex gap-2.5 mb-[14px]">
           <PrimaryActionCard
             iconSource={ICON_ASSETS.watch}
             title={copy.watchAndEarn}
             subtitle={copy.watchAndEarnSubtitle}
-            gradient="linear-gradient(135deg, rgba(245,158,11,0.50), rgba(194,65,12,0.55))"
             backgroundImage={bg.primaryWatch}
             onClick={goAds}
             testId="home-primary-ads"
@@ -493,20 +492,18 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
             iconSource={ICON_ASSETS.fortunes}
             title={copy.fortunes}
             subtitle={copy.exchangeBadge}
-            gradient="linear-gradient(135deg, rgba(236,72,153,0.52), rgba(99,102,241,0.56))"
             backgroundImage={bg.primaryFortunes}
             onClick={goFortunes}
             testId="home-primary-fortunes"
           />
         </div>
 
-        {/* Dual Cards: Reels + Friends */}
-        <div className="grid grid-cols-2 gap-2.5">
+        {/* Dual Cards: Reels + Friends (no chat card, removed) */}
+        <div className="flex gap-2.5 mb-2.5">
           <FeatureCard
             title={copy.clips}
             subtitle={copy.clipsSub}
             image={bg.reels}
-            color="#8b5cf6"
             iconSource={ICON_ASSETS.clips}
             onClick={goClips}
             testId="home-card-clips"
@@ -515,37 +512,27 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
             title={copy.friends}
             subtitle={copy.friendsSub}
             image={bg.friends}
-            color="#22c55e"
             iconSource={ICON_ASSETS.friends}
             onClick={goFriends}
             testId="home-card-friends"
           />
         </div>
 
-        {/* Chat Card (single row like mobile) */}
-        <div className="grid grid-cols-2 gap-2.5">
-          <FeatureCard
-            title={copy.chat}
-            subtitle={copy.chatSub}
-            image={bg.chat}
-            color="#3b82f6"
-            iconSource={ICON_ASSETS.chat}
-            onClick={goChat}
-            badge={copy.chatCostBadge}
-            testId="home-card-chat"
-          />
-          <div />
-        </div>
-
         {/* Tip Card with background */}
-        <div className="relative rounded-2xl overflow-hidden border border-amber-500/20 shadow-lg">
-          <img src={bg.tip} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
+        <div
+          className="relative rounded-xl overflow-hidden mt-1.5 border"
+          style={{ borderColor: 'rgba(251,191,36,0.26)' }}
+        >
+          <img src={bg.tip} alt="" className="absolute inset-0 w-full h-full object-cover" />
           <div
-            className="relative px-4 py-3 flex items-center gap-3"
-            style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(0,0,0,0.55))' }}
+            className="relative flex items-center gap-2.5 p-3.5"
+            style={{
+              background:
+                'linear-gradient(135deg, rgba(251,191,36,0.14), rgba(15,23,42,0.74))',
+            }}
           >
-            <AppIcon uri={ICON_ASSETS.home} size={18} />
-            <p className="text-white/90 text-[12px] flex-1 text-right leading-snug drop-shadow">
+            <AppIcon uri={ICON_ASSETS.home} size={18} tint="#fbbf24" />
+            <p className="text-white/85 text-[12px] leading-[17px] flex-1 text-right">
               {copy.tip}
             </p>
           </div>
