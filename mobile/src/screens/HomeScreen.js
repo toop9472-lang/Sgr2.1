@@ -18,10 +18,11 @@ import { useLanguage } from "../i18n/LanguageContext";
 import {
   APP_BACKGROUND_IMAGE,
   ICON_ASSETS,
-  HOME_CARD_BACKGROUNDS,
+  getHomeCardBackgrounds,
 } from "../constants/uiAssets";
 
 const { width } = Dimensions.get("window");
+const HOME_CARD_BACKGROUNDS = getHomeCardBackgrounds();
 
 const AppIcon = ({ uri, size = 18, tintColor = "#fff", style }) => (
   <Image
