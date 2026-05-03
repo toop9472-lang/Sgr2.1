@@ -1,84 +1,147 @@
 import React from 'react';
-import { Home, User, Megaphone, PlayCircle, Gamepad2 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 
-const BottomNav = ({ currentPage, onNavigate }) => {
+const ICON_ASSETS = {
+  home: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/80a9b958945b14e3f85f8b8e2b49544963122866ce9cdc8af6f2ab70c5c8bb31.png',
+  clips: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e02071f57750c77c0db321a70a51ed7bceb6eeb4df5f78e29d834466fcf3f354.png',
+  watch: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e14c91a9e40e8d29b6f8d3bf567a4fcb7020c985b1a9d3e96e2035b06f9921e6.png',
+  advertise: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/9571396ba276f9f9cf70ce0622c4303850d05054256c99581ef235eec62d9760.png',
+  profile: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/45a8a3fbd10c46b785a5178ca02ae00c0c4aa43973b95689ebf41e18eb5cbada.png',
+};
+
+const NavButton = ({ id, icon, label, isActive, onClick, testId }) => (
+  <button
+    onClick={onClick}
+    className="flex flex-col items-center justify-center min-w-[50px] flex-shrink-0"
+    data-testid={testId}
+  >
+    <div
+      className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+        isActive ? 'bg-blue-400/15' : ''
+      }`}
+    >
+      <img
+        src={icon}
+        alt={label}
+        className="w-5 h-5 object-contain transition-opacity"
+        style={{
+          opacity: isActive ? 1 : 0.68,
+          filter: isActive
+            ? 'brightness(0) saturate(100%) invert(94%) sepia(8%) saturate(1138%) hue-rotate(176deg) brightness(99%) contrast(98%)'
+            : 'brightness(0) invert(1)',
+        }}
+      />
+    </div>
+    <span
+      className={`text-[10px] mt-0.5 font-medium transition-colors ${
+        isActive ? 'text-blue-400 font-semibold' : 'text-white/50'
+      }`}
+    >
+      {label}
+    </span>
+  </button>
+);
+
+const CenterButton = ({ icon, label, onClick, gradient, glowColor, testId }) => (
+  <button
+    onClick={onClick}
+    className="relative rounded-2xl overflow-hidden flex-shrink-0 shadow-lg shadow-black/30"
+    style={{ minHeight: 44 }}
+    data-testid={testId}
+  >
+    <div
+      className="absolute -inset-1 blur-md opacity-60 -z-10"
+      style={{ backgroundColor: glowColor }}
+    />
+    <div
+      className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl"
+      style={{ background: gradient }}
+    >
+      <img
+        src={icon}
+        alt={label}
+        className="w-[18px] h-[18px] object-contain"
+        style={{ filter: 'brightness(0) invert(1)' }}
+      />
+      <span className="text-white text-[13px] font-bold whitespace-nowrap">
+        {label}
+      </span>
+    </div>
+  </button>
+);
+
+const BottomNav = ({ currentPage, onNavigate, onAdsPress, onClipsPress }) => {
   const { language } = useLanguage();
 
+  const navItems = {
+    home: { id: 'home', label: language === 'ar' ? 'الرئيسية' : 'Home', icon: ICON_ASSETS.home },
+    advertiser: { id: 'advertiser', label: language === 'ar' ? 'أعلن' : 'Advertise', icon: ICON_ASSETS.advertise },
+    profile: { id: 'profile', label: language === 'ar' ? 'حسابي' : 'Profile', icon: ICON_ASSETS.profile },
+  };
+
+  const handleClips = () => {
+    if (onClipsPress) onClipsPress();
+    else onNavigate('clips');
+  };
+
+  const handleAds = () => {
+    if (onAdsPress) onAdsPress();
+    else onNavigate('ads');
+  };
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-[#0a0a0f]/98 backdrop-blur-xl border-t border-white/10 z-40">
-      <div className="flex items-center justify-around px-4 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-        {/* Home */}
-        <button
+    <div
+      className="fixed bottom-0 left-0 right-0 z-40 backdrop-blur-2xl"
+      style={{
+        backgroundColor: 'rgba(10, 10, 15, 0.85)',
+        borderTop: '0.5px solid rgba(255,255,255,0.1)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
+    >
+      <div className="flex items-center justify-around px-2.5 pt-2 pb-1">
+        {/* الرئيسية */}
+        <NavButton
+          {...navItems.home}
+          isActive={currentPage === 'home'}
           onClick={() => onNavigate('home')}
-          className={`flex flex-col items-center gap-1 py-1.5 px-4 rounded-xl transition-all duration-200 ${
-            currentPage === 'home'
-              ? 'text-[#60a5fa]'
-              : 'text-gray-500 hover:text-gray-300'
-          }`}
-          data-testid="nav-home"
-        >
-          <Home size={22} strokeWidth={currentPage === 'home' ? 2.5 : 2} />
-          <span className={`text-[10px] ${currentPage === 'home' ? 'font-semibold' : 'font-medium'}`}>
-            {language === 'ar' ? 'الرئيسية' : 'Home'}
-          </span>
-        </button>
+          testId="nav-home"
+        />
 
-        {/* Watch - أحمر */}
-        <button
-          onClick={() => onNavigate('ads')}
-          className="flex items-center gap-1.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 px-4 py-2 rounded-2xl transition-all shadow-lg shadow-red-500/25"
-          data-testid="nav-watch-ads"
-        >
-          <PlayCircle size={18} className="text-white" />
-          <span className="text-white text-xs font-bold">{language === 'ar' ? 'شاهد' : 'Watch'}</span>
-        </button>
+        {/* زر المقاطع - أخضر ليموني */}
+        <CenterButton
+          icon={ICON_ASSETS.clips}
+          label={language === 'ar' ? 'مقاطع' : 'Clips'}
+          onClick={handleClips}
+          gradient="linear-gradient(135deg, #a3e635, #65a30d)"
+          glowColor="rgba(132,204,22,0.3)"
+          testId="nav-clips"
+        />
 
-        {/* Games - أخضر ليموني - في المنتصف */}
-        <button
-          onClick={() => onNavigate('games')}
-          className={`flex items-center gap-1.5 px-5 py-2.5 rounded-2xl transition-all shadow-lg ${
-            currentPage === 'games'
-              ? 'bg-gradient-to-r from-lime-400 to-lime-500 shadow-lime-400/40'
-              : 'bg-gradient-to-r from-lime-500 to-lime-600 hover:from-lime-400 hover:to-lime-500 shadow-lime-500/30'
-          }`}
-          data-testid="nav-games"
-        >
-          <Gamepad2 size={20} className="text-white" />
-          <span className="text-white text-sm font-bold">{language === 'ar' ? 'ألعاب' : 'Games'}</span>
-        </button>
+        {/* زر المشاهدة - أحمر وردي */}
+        <CenterButton
+          icon={ICON_ASSETS.watch}
+          label={language === 'ar' ? 'شاهد' : 'Watch'}
+          onClick={handleAds}
+          gradient="linear-gradient(135deg, #f43f5e, #be123c)"
+          glowColor="rgba(236,72,153,0.32)"
+          testId="nav-watch-ads"
+        />
 
-        {/* Advertise */}
-        <button
+        {/* أعلن */}
+        <NavButton
+          {...navItems.advertiser}
+          isActive={currentPage === 'advertiser'}
           onClick={() => onNavigate('advertiser')}
-          className={`flex flex-col items-center gap-1 py-1.5 px-4 rounded-xl transition-all duration-200 ${
-            currentPage === 'advertiser'
-              ? 'text-[#60a5fa]'
-              : 'text-gray-500 hover:text-gray-300'
-          }`}
-          data-testid="nav-advertiser"
-        >
-          <Megaphone size={22} strokeWidth={currentPage === 'advertiser' ? 2.5 : 2} />
-          <span className={`text-[10px] ${currentPage === 'advertiser' ? 'font-semibold' : 'font-medium'}`}>
-            {language === 'ar' ? 'أعلن' : 'Advertise'}
-          </span>
-        </button>
+          testId="nav-advertiser"
+        />
 
-        {/* Profile */}
-        <button
+        {/* حسابي */}
+        <NavButton
+          {...navItems.profile}
+          isActive={currentPage === 'profile'}
           onClick={() => onNavigate('profile')}
-          className={`flex flex-col items-center gap-1 py-1.5 px-4 rounded-xl transition-all duration-200 ${
-            currentPage === 'profile'
-              ? 'text-[#60a5fa]'
-              : 'text-gray-500 hover:text-gray-300'
-          }`}
-          data-testid="nav-profile"
-        >
-          <User size={22} strokeWidth={currentPage === 'profile' ? 2.5 : 2} />
-          <span className={`text-[10px] ${currentPage === 'profile' ? 'font-semibold' : 'font-medium'}`}>
-            {language === 'ar' ? 'حسابي' : 'Profile'}
-          </span>
-        </button>
+          testId="nav-profile"
+        />
       </div>
     </div>
   );

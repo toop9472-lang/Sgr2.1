@@ -25,7 +25,7 @@ import DeleteAccountPage from "./pages/DeleteAccountPage";
 import AISupportPage from "./components/SupportPage";
 import SettingsPage from "./components/SettingsPage";
 import ChallengesPage from "./components/ChallengesPage";
-import GamesPage from "./components/GamesPage";
+import ClipsPage from "./components/ClipsPage";
 import SaqrFortunesPage from "./components/SaqrFortunesPage";
 import GlobalChatPage from "./components/GlobalChatPage";
 import FriendsPage from "./components/FriendsPage";
@@ -508,11 +508,10 @@ function MainApp() {
                   onPointsEarned={handlePointsEarned}
                 />
               )}
-              {currentPage === 'games' && !showFullScreenAds && (
-                <GamesPage 
+              {currentPage === 'clips' && !showFullScreenAds && (
+                <ClipsPage 
                   user={user}
-                  onNavigate={handleNavigate}
-                  onPointsEarned={handlePointsEarned}
+                  onBack={() => setCurrentPage('home')}
                 />
               )}
               {currentPage === 'fortunes' && !showFullScreenAds && (
@@ -560,6 +559,8 @@ function MainApp() {
                 <BottomNav 
                   currentPage={currentPage}
                   onNavigate={handleNavigate}
+                  onAdsPress={() => setShowFullScreenAds(true)}
+                  onClipsPress={() => handleNavigate('clips')}
                 />
               )}
             </>

@@ -1,475 +1,555 @@
-import React, { useState, useEffect } from 'react';
-import { TrendingUp, Clock, Play, ChevronRight, BarChart3, Award, Calendar, Zap, Lightbulb, Star, Trophy, CheckCircle, Timer, PlayCircle, Film, LogIn, Rocket, Gift, MessageCircle, Users, Flame, Gamepad2 } from 'lucide-react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useLanguage } from '../i18n/LanguageContext';
-import { useTheme } from '../context/ThemeContext';
 import LanguageSwitcher from './LanguageSwitcher';
-import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const APP_BACKGROUND_IMAGE =
+  'https://static.prod-images.emergentagent.com/jobs/40eca190-5242-4463-8c95-bc5f66df29cb/images/e35d59ccd161791b6e9cbecdfa426302685267afa2c8e806fa233976816403de.png';
 
-const HomePage = ({ user, onNavigateToAds, onNavigate }) => {
-  const { t, isRTL, language } = useLanguage();
-  const { isDark } = useTheme();
-  const [currentTip, setCurrentTip] = useState(0);
-  const [settings, setSettings] = useState(null);
-  const [userAnalytics, setUserAnalytics] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [dailyChallenges, setDailyChallenges] = useState([]);
-  const [challengeStats, setChallengeStats] = useState({ earned_today: 0, max_daily_points: 69 });
+const ICON_ASSETS = {
+  home: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/80a9b958945b14e3f85f8b8e2b49544963122866ce9cdc8af6f2ab70c5c8bb31.png',
+  clips: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e02071f57750c77c0db321a70a51ed7bceb6eeb4df5f78e29d834466fcf3f354.png',
+  watch: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e14c91a9e40e8d29b6f8d3bf567a4fcb7020c985b1a9d3e96e2035b06f9921e6.png',
+  gems: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png',
+  chat: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/bcdacd75d090c4626f5432d13b9b6c4c4560cc34282e9424de1cbc6732f06abf.png',
+  friends: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/7f2948052c933ae7604200fd2c98d91f4504fce293deb36ce108cba1d36f062a.png',
+  fortunes: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png',
+};
+
+const HOME_CARD_BACKGROUND_PRESETS = {
+  luxuryDark: {
+    featuredFortunes: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1400&q=80',
+    statGems: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?auto=format&fit=crop&w=1200&q=80',
+    statReels: 'https://images.unsplash.com/photo-1524253482453-3fed8d2fe12b?auto=format&fit=crop&w=1200&q=80',
+    statChat: 'https://images.unsplash.com/photo-1526498460520-4c246339dccb?auto=format&fit=crop&w=1200&q=80',
+    quickAds: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80',
+    quickReels: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
+    quickChat: 'https://images.unsplash.com/photo-1525182008055-f88b95ff7980?auto=format&fit=crop&w=1200&q=80',
+    quickFortunes: 'https://images.unsplash.com/photo-1559526324-593bc073d938?auto=format&fit=crop&w=1200&q=80',
+    primaryWatch: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=80',
+    primaryFortunes: 'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1200&q=80',
+    reels: 'https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=1400&q=80',
+    friends: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1400&q=80',
+    chat: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1400&q=80',
+    tip: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1400&q=80',
+  },
+  brightModern: {
+    featuredFortunes: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1400&q=80',
+    statGems: 'https://images.unsplash.com/photo-1473186505569-9c61870c11f9?auto=format&fit=crop&w=1200&q=80',
+    statReels: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80',
+    statChat: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1200&q=80',
+    quickAds: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80',
+    quickReels: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=1200&q=80',
+    quickChat: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80',
+    quickFortunes: 'https://images.unsplash.com/photo-1553729459-efe14ef6055d?auto=format&fit=crop&w=1200&q=80',
+    primaryWatch: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
+    primaryFortunes: 'https://images.unsplash.com/photo-1462899006636-339e08d1844e?auto=format&fit=crop&w=1200&q=80',
+    reels: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1400&q=80',
+    friends: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1400&q=80',
+    chat: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=1400&q=80',
+    tip: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1400&q=80',
+  },
+};
+
+const AppIcon = ({ uri, size = 18 }) => (
+  <img
+    src={uri}
+    alt=""
+    className="object-contain"
+    style={{
+      width: size,
+      height: size,
+      filter: 'brightness(0) invert(1)',
+    }}
+  />
+);
+
+const QuickStatSticker = ({ iconSource, value, label, backgroundImage, valueColor = '#fff' }) => (
+  <div
+    className="relative rounded-2xl overflow-hidden border border-white/10"
+    style={{
+      backgroundImage: `url(${backgroundImage})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    }}
+  >
+    <div
+      className="px-3 py-3 text-center"
+      style={{ background: 'linear-gradient(to bottom, rgba(15,23,42,0.24), rgba(15,23,42,0.76))' }}
+    >
+      <div className="flex items-center justify-center mb-1">
+        <AppIcon uri={iconSource} size={16} />
+      </div>
+      <div className="text-lg font-bold leading-none" style={{ color: valueColor }}>
+        {value}
+      </div>
+      <div className="text-white/55 text-[10px] mt-1">{label}</div>
+    </div>
+  </div>
+);
+
+const QuickActionPill = ({ iconSource, title, subtitle, gradient, backgroundImage, onClick, testId }) => (
+  <button
+    onClick={onClick}
+    className="flex-1 min-w-[150px] rounded-2xl overflow-hidden text-right relative"
+    data-testid={testId}
+  >
+    <img src={backgroundImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+    <div
+      className="relative flex items-center gap-3 px-4 py-3 backdrop-blur-[2px]"
+      style={{ background: gradient }}
+    >
+      <div className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center flex-shrink-0">
+        <AppIcon uri={iconSource} size={17} />
+      </div>
+      <div className="flex-1 text-right">
+        <div className="text-white font-bold text-sm leading-tight drop-shadow">{title}</div>
+        <div className="text-white/85 text-[11px] leading-tight mt-0.5">{subtitle}</div>
+      </div>
+    </div>
+  </button>
+);
+
+const FeaturedCard = ({ title, subtitle, image, color, iconSource, onClick, badge, testId }) => (
+  <button
+    onClick={onClick}
+    className="w-full rounded-3xl overflow-hidden relative h-44 shadow-xl group"
+    data-testid={testId}
+  >
+    <img
+      src={image}
+      alt={title}
+      className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
+    />
+    <div
+      className="absolute inset-0"
+      style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%)' }}
+    />
+    {badge && (
+      <div className="absolute top-3 right-3 bg-white/15 backdrop-blur-md px-3 py-1 rounded-full">
+        <span className="text-white text-xs font-semibold">{badge}</span>
+      </div>
+    )}
+    <div className="absolute bottom-0 right-0 left-0 p-4 flex items-center justify-between">
+      <div className="text-right flex-1">
+        <h3 className="text-white text-xl font-bold drop-shadow-lg">{title}</h3>
+        <p className="text-white/85 text-sm mt-1">{subtitle}</p>
+      </div>
+      <div
+        className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0"
+        style={{ backgroundColor: color }}
+      >
+        <AppIcon uri={iconSource} size={20} />
+      </div>
+    </div>
+  </button>
+);
+
+const FeatureCard = ({ title, subtitle, image, color, iconSource, onClick, badge, testId }) => (
+  <button
+    onClick={onClick}
+    className="flex-1 rounded-2xl overflow-hidden relative h-32 shadow-lg group min-w-[140px]"
+    data-testid={testId}
+  >
+    <img
+      src={image}
+      alt={title}
+      className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
+    />
+    <div
+      className="absolute inset-0"
+      style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.78) 100%)' }}
+    />
+    {badge && (
+      <div
+        className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
+        style={{ backgroundColor: color }}
+      >
+        {badge}
+      </div>
+    )}
+    <div className="absolute bottom-2 right-2 left-2 flex items-end justify-between">
+      <div className="text-right flex-1">
+        <h4 className="text-white text-sm font-bold drop-shadow-md">{title}</h4>
+        <p className="text-white/80 text-[11px] mt-0.5">{subtitle}</p>
+      </div>
+      <div
+        className="w-8 h-8 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
+        style={{ backgroundColor: color }}
+      >
+        <AppIcon uri={iconSource} size={16} />
+      </div>
+    </div>
+  </button>
+);
+
+const PrimaryActionCard = ({ iconSource, title, subtitle, gradient, backgroundImage, onClick, testId }) => (
+  <button
+    onClick={onClick}
+    className="flex-1 rounded-2xl overflow-hidden min-w-[150px] text-right relative h-[72px]"
+    data-testid={testId}
+  >
+    <img src={backgroundImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+    <div
+      className="relative h-full flex items-center gap-3 px-4 py-4 backdrop-blur-[2px]"
+      style={{ background: gradient }}
+    >
+      <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center flex-shrink-0">
+        <AppIcon uri={iconSource} size={18} />
+      </div>
+      <div className="flex-1 text-right">
+        <div className="text-white font-bold text-sm leading-tight drop-shadow">{title}</div>
+        <div className="text-white/85 text-[11px] leading-tight mt-0.5">{subtitle}</div>
+      </div>
+    </div>
+  </button>
+);
+
+const PRESET_STORAGE_KEY = 'saqr_home_preset';
+
+const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
+  const { language } = useLanguage();
+  const isArabic = language === 'ar';
+  const [refreshing, setRefreshing] = useState(false);
+  const [homePreset, setHomePreset] = useState('luxuryDark');
+  const [fadeOpacity, setFadeOpacity] = useState(1);
 
   useEffect(() => {
-    loadData();
-    const interval = setInterval(() => {
-      setCurrentTip(prev => (prev + 1) % (settings?.tips?.length || 5));
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [settings?.tips?.length]);
-
-  const loadData = async () => {
     try {
-      const settingsRes = await axios.get(`${API_URL}/api/settings/public/rewards`);
-      setSettings(settingsRes.data);
-
-      const token = localStorage.getItem('user_token');
-      
-      if (token) {
-        // Fetch daily challenges from challenges API
-        try {
-          const challengesRes = await axios.get(`${API_URL}/api/challenges/daily`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          setDailyChallenges(challengesRes.data.challenges || []);
-          setChallengeStats({
-            earned_today: challengesRes.data.earned_today || 0,
-            max_daily_points: challengesRes.data.max_daily_points || 69
-          });
-        } catch (e) {
-          console.log('Challenges not available');
-        }
-
-        // Fetch user analytics
-        try {
-          const analyticsRes = await axios.get(`${API_URL}/api/users/analytics`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          setUserAnalytics(analyticsRes.data);
-        } catch (e) {
-          console.log('Analytics not available');
-        }
+      const saved = localStorage.getItem(PRESET_STORAGE_KEY);
+      if (saved === 'luxuryDark' || saved === 'brightModern') {
+        setHomePreset(saved);
       }
-    } catch (error) {
-      console.error('Failed to load settings:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    } catch (_) { /* ignore */ }
+  }, []);
 
-  const userPoints = user?.points || 0;
-  const pointsPerDollar = settings?.points_per_dollar || 500;
-  const userBalance = (userPoints / pointsPerDollar).toFixed(2);
-  const watchedToday = user?.watched_today || userAnalytics?.today_watches || 0;
-  const dailyLimit = settings?.daily_limit || 50;
+  const bg = HOME_CARD_BACKGROUND_PRESETS[homePreset] || HOME_CARD_BACKGROUND_PRESETS.luxuryDark;
 
-  // Get icon component for challenge
-  const getChallengeIcon = (iconName) => {
-    const icons = {
-      'play-circle': PlayCircle,
-      'film': Film,
-      'log-in': LogIn,
-      'rocket': Rocket,
-      'timer': Timer,
-    };
-    return icons[iconName] || Trophy;
-  };
+  const copy = useMemo(
+    () => ({
+      defaultPlayer: isArabic ? 'لاعب' : 'Player',
+      welcomePrefix: isArabic ? 'أهلاً' : 'Welcome',
+      welcomeSub: isArabic ? 'مرحباً بك في صقر' : 'Welcome to Saqr',
+      fortunes: isArabic ? 'ثروات صقر' : 'Saqr Fortunes',
+      newLabel: isArabic ? 'جديد' : 'NEW',
+      fortunesSubtitle: isArabic
+        ? 'اربح جواهر صقر للاستبدال بالمال الحقيقي!'
+        : 'Earn Saqr gems and exchange them for real cash!',
+      exchangeBadge: isArabic ? '500 جوهرة = 3 ريال' : '500 gems = 3 SAR',
+      fortunesDesc: isArabic
+        ? 'إعلانات AdMob مكتملة • مكافأة ثابتة 5 جواهر • سحب مرن'
+        : 'Completed AdMob ads • Fixed 5 gems reward • Flexible cashout',
+      watchAndEarn: isArabic ? 'شاهد واربح' : 'Watch & Earn',
+      watchAndEarnSubtitle: isArabic
+        ? 'إعلانات AdMob كاملة الشاشة + إعلانات المعلنين'
+        : 'Full-screen AdMob + advertiser ads',
+      clips: isArabic ? 'ريلز المجتمع' : 'Community Reels',
+      clipsSub: isArabic ? 'مقاطع 15 ثانية من المستخدمين' : '15-second clips by users',
+      chat: isArabic ? 'الدردشة' : 'Chat',
+      chatSub: isArabic ? 'تواصل مع اللاعبين' : 'Connect with players',
+      friends: isArabic ? 'الأصدقاء' : 'Friends',
+      friendsSub: isArabic ? 'أضف أصدقاء جدد' : 'Add new friends',
+      chatCostBadge: isArabic ? 'مجاني' : 'Free',
+      tip: isArabic
+        ? 'ادعُ أصدقاءك واربح جواهر صقر مضاعفة!'
+        : 'Invite friends and earn boosted Saqr gems!',
+      adsPill: isArabic ? 'صفحة الإعلانات' : 'Ads Feed',
+      adsPillSub: isArabic ? 'AdMob + المعلنين' : 'AdMob + advertisers',
+      reelsPill: isArabic ? 'صفحة الريلز' : 'Reels Feed',
+      reelsPillSub: isArabic ? '15 ثانية لكل فيديو' : '15s per reel',
+      chatPill: isArabic ? 'الدردشة العامة' : 'Global Chat',
+      chatPillSub: isArabic ? 'مجانية بالكامل' : 'Always free',
+      fortunesPill: isArabic ? 'ثروات صقر' : 'Saqr Fortunes',
+      fortunesPillSub: isArabic ? '500 = 3 ريال' : '500 = 3 SAR',
+      styleLuxury: isArabic ? 'فاخر داكن' : 'Luxury Dark',
+      styleBright: isArabic ? 'مشرق عصري' : 'Bright Modern',
+      gemsLabel: isArabic ? 'جواهر' : 'Gems',
+      reelsLabel: isArabic ? 'ريلز' : 'Reels',
+      chatLabel: isArabic ? 'دردشة' : 'Chat',
+    }),
+    [isArabic]
+  );
 
-  const tips = settings?.tips || [
-    { icon: 'bulb', text: t('watchAdsEarnPoints'), enabled: true },
-  ];
+  const userName = user?.name || copy.defaultPlayer;
 
-  // Dynamic theme classes
-  const bgClass = isDark ? 'bg-[#0a0a0f]' : 'bg-gray-50';
-  const cardClass = isDark ? 'bg-[#111118]/80 backdrop-blur-xl border-white/10' : 'bg-white border-gray-200 shadow-sm';
-  const textClass = isDark ? 'text-white' : 'text-gray-900';
-  const textMutedClass = isDark ? 'text-gray-400' : 'text-gray-600';
-  const textDimClass = isDark ? 'text-gray-500' : 'text-gray-500';
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+      if (typeof window !== 'undefined') window.location.reload();
+    }, 600);
+  }, []);
 
-  if (isLoading) {
-    return (
-      <div className={`min-h-screen ${bgClass} flex flex-col items-center justify-center relative overflow-hidden`}>
-        {isDark && <div className="absolute top-[-200px] left-[-200px] w-[500px] h-[500px] rounded-full bg-[#3b82f6]/20 blur-3xl"></div>}
-        {isDark && <div className="absolute bottom-[-150px] right-[-150px] w-[400px] h-[400px] rounded-full bg-[#3b82f6]/15 blur-3xl"></div>}
-        <div className={`w-24 h-24 rounded-full ${isDark ? 'bg-[#0a0a0f] border-[#3b82f6]/30' : 'bg-white border-blue-200'} border-2 flex items-center justify-center overflow-hidden mb-4 animate-pulse shadow-lg ${isDark ? 'shadow-[#3b82f6]/20' : 'shadow-blue-100'}`}>
-          <img src="/logo_saqr.png" alt={t('appName')} className="w-20 h-20 object-contain" />
-        </div>
-        <div className={`${textClass} text-lg`}>{t('loading')}</div>
-      </div>
-    );
-  }
+  const handleQuickPresetToggle = useCallback(() => {
+    const next = homePreset === 'brightModern' ? 'luxuryDark' : 'brightModern';
+    // Fade animation like mobile
+    setFadeOpacity(0.35);
+    setTimeout(() => {
+      setHomePreset(next);
+      try {
+        localStorage.setItem(PRESET_STORAGE_KEY, next);
+      } catch (_) { /* ignore */ }
+      setTimeout(() => setFadeOpacity(1), 60);
+    }, 140);
+  }, [homePreset]);
+
+  const goAds = onNavigateToAds || (() => onNavigate && onNavigate('ads'));
+  const goClips = () => onNavigate && onNavigate('clips');
+  const goChat = () => onNavigate && onNavigate('chat');
+  const goFortunes = () => onNavigate && onNavigate('fortunes');
+  const goFriends = () => onNavigate && onNavigate('friends');
 
   return (
-    <div className={`min-h-screen ${bgClass} pb-28 relative overflow-y-auto overflow-x-hidden`} dir={isRTL ? 'rtl' : 'ltr'}>
-      {isDark && <div className="fixed top-[-200px] left-[-200px] w-[500px] h-[500px] rounded-full bg-[#3b82f6]/20 blur-3xl pointer-events-none"></div>}
-      {isDark && <div className="fixed bottom-[-150px] right-[-150px] w-[400px] h-[400px] rounded-full bg-[#3b82f6]/15 blur-3xl pointer-events-none"></div>}
-      
-      {/* Language Switcher - Fixed Position */}
-      <div className="fixed top-4 left-4 z-50">
-        <LanguageSwitcher />
-      </div>
-      
-      <div className="relative z-10 pt-8 px-5 pb-6">
-        {/* Logo */}
-        <div className="flex items-center justify-center mb-6">
+    <div
+      className="min-h-screen relative pb-28"
+      data-testid="home-page"
+      dir={isArabic ? 'rtl' : 'ltr'}
+    >
+      {/* Fixed background */}
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          backgroundImage: `url(${APP_BACKGROUND_IMAGE})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      />
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          background:
+            'linear-gradient(to bottom, rgba(15,23,42,0.26) 0%, rgba(30,41,59,0.68) 50%, rgba(30,27,75,0.88) 100%)',
+        }}
+      />
+
+      <div
+        className="max-w-2xl mx-auto px-4 pt-6 pb-4 space-y-5 transition-opacity duration-200"
+        style={{ opacity: fadeOpacity }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <div className={`w-14 h-14 rounded-full ${isDark ? 'bg-[#0a0a0f] border-[#3b82f6]/30' : 'bg-white border-blue-200'} border-2 flex items-center justify-center overflow-hidden shadow-lg ${isDark ? 'shadow-[#3b82f6]/20' : 'shadow-blue-100'}`}>
-              <img src="/logo_saqr.png" alt={t('appName')} className="w-11 h-11 object-contain" />
+            <LanguageSwitcher />
+            <div className="text-right">
+              <div className="text-white text-lg font-bold leading-tight">
+                {copy.welcomePrefix} {userName}
+              </div>
+              <div className="text-white/65 text-[12px] leading-tight">
+                {copy.welcomeSub}
+              </div>
             </div>
-            <h1 className={`text-3xl font-bold ${isDark ? 'text-[#60a5fa]' : 'text-blue-600'}`}>{t('appName')}</h1>
-          </div>
-        </div>
-        
-        {/* Welcome */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className={`text-xl font-bold ${textClass}`}>{t('welcome')} {user?.name || ''}</h2>
-            <p className={`${textMutedClass} text-sm mt-1`}>{t('watchAdsEarnPoints')}</p>
           </div>
           <div className="flex items-center gap-2">
-            <div className="bg-[#3b82f6]/20 border border-[#3b82f6]/30 rounded-full px-4 py-2 flex items-center gap-1">
-              <Star className="w-4 h-4 text-[#60a5fa]" />
-              <span className="text-[#60a5fa] font-bold">{userPoints}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Balance Card - New Image Design */}
-        <div className="rounded-3xl mb-6 shadow-xl relative overflow-hidden h-32 group">
-          <img 
-            src="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/80a9b958945b14e3f85f8b8e2b49544963122866ce9cdc8af6f2ab70c5c8bb31.png"
-            alt="الرصيد"
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/30" />
-          <div className="absolute inset-0 flex items-center justify-center p-6">
-            <div className="text-center">
-              <p className="text-white/80 text-sm mb-2">{t('currentBalance')}</p>
-              <div className="flex items-center justify-center gap-8">
-                <div className="flex items-center gap-2">
-                  <Star className="w-6 h-6 text-yellow-400" />
-                  <span className="text-3xl font-bold text-white drop-shadow-lg">{userPoints}</span>
-                  <span className="text-white/70 text-sm">نقاط</span>
-                </div>
-                <div className="w-px h-10 bg-white/30" />
-                <div className="flex items-center gap-2">
-                  <Gift className="w-6 h-6 text-blue-400" />
-                  <span className="text-3xl font-bold text-white drop-shadow-lg">{user?.diamonds || 0}</span>
-                  <span className="text-white/70 text-sm">ألماسة</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Watch Button - New Image Design */}
-        <button
-          onClick={onNavigateToAds}
-          className="w-full rounded-2xl mb-4 shadow-xl transform transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden h-32 group"
-          data-testid="start-watching-btn"
-        >
-          <img 
-            src="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e14c91a9e40e8d29b6f8d3bf567a4fcb7020c985b1a9d3e96e2035b06f9921e6.png"
-            alt="شاهد واربح"
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 group-hover:from-black/80 transition-all" />
-          <div className="absolute inset-0 flex items-end p-5">
-            <div className="flex items-center justify-between w-full">
-              <div className={isRTL ? 'text-right' : 'text-left'}>
-                <p className="text-white font-bold text-xl drop-shadow-lg mb-1">{t('startWatching')}</p>
-                <p className="text-white/90 text-sm">{t('earnPerAd')}</p>
-              </div>
-              <div className="bg-gradient-to-r from-red-500 to-pink-500 px-5 py-3 rounded-xl flex items-center gap-2">
-                <Play className="w-5 h-5 text-white fill-white" />
-                <span className="text-white font-bold">{t('start')}</span>
-              </div>
-            </div>
-          </div>
-        </button>
-
-        {/* Saqr Fortunes Button - New Image Design */}
-        <button
-          onClick={() => onNavigate('fortunes')}
-          className="w-full rounded-2xl mb-4 shadow-xl transform transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden h-36 group"
-          data-testid="saqr-fortunes-btn"
-        >
-          <img 
-            src="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png"
-            alt={t('saqrFortunes')}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 group-hover:from-black/80 transition-all" />
-          <div className="absolute inset-0 flex items-end p-5">
-            <div className="flex items-center justify-between w-full">
-              <div className={isRTL ? 'text-right' : 'text-left'}>
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-white font-bold text-xl drop-shadow-lg">{t('saqrFortunes')}</p>
-                  <span className="bg-green-500 text-white text-xs px-2.5 py-1 rounded-full font-bold">{t('new')}</span>
-                </div>
-                <p className="text-white/90 text-sm">{t('saqrFortunesDesc')}</p>
-              </div>
-              <div className="bg-pink-500 px-4 py-2.5 rounded-xl flex items-center gap-2">
-                <span className="text-white font-bold text-sm">{t('start')}</span>
-                <ChevronRight className={`w-5 h-5 text-white ${isRTL ? 'rotate-180' : ''}`} />
-              </div>
-            </div>
-          </div>
-        </button>
-
-        {/* Global Chat Button - New Image Design */}
-        <button
-          onClick={() => onNavigate('chat')}
-          className="w-full rounded-2xl mb-4 shadow-xl transform transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden h-32 group"
-          data-testid="global-chat-btn"
-        >
-          <img 
-            src="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/bcdacd75d090c4626f5432d13b9b6c4c4560cc34282e9424de1cbc6732f06abf.png"
-            alt={t('globalChat')}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 group-hover:from-black/80 transition-all" />
-          <div className="absolute inset-0 flex items-end p-5">
-            <div className="flex items-center justify-between w-full">
-              <div className={isRTL ? 'text-right' : 'text-left'}>
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-white font-bold text-lg drop-shadow-lg">{t('globalChat')}</p>
-                  <span className="bg-blue-500/60 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <Gift className="w-3 h-3" />5
-                  </span>
-                </div>
-                <p className="text-white/90 text-sm">{t('globalChatDesc')}</p>
-              </div>
-              <div className="bg-blue-500 px-4 py-2.5 rounded-xl flex items-center gap-2">
-                <span className="text-white font-bold text-sm">{isRTL ? 'انضم' : 'Join'}</span>
-                <MessageCircle className="w-4 h-4 text-white" />
-              </div>
-            </div>
-          </div>
-        </button>
-
-        {/* Friends Button - New Image Design */}
-        <button
-          onClick={() => onNavigate('friends')}
-          className="w-full rounded-2xl mb-6 shadow-xl transform transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden h-28 group"
-          data-testid="friends-btn"
-        >
-          <img 
-            src="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/7f2948052c933ae7604200fd2c98d91f4504fce293deb36ce108cba1d36f062a.png"
-            alt={t('friends')}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 group-hover:from-black/80 transition-all" />
-          <div className="absolute inset-0 flex items-end p-5">
-            <div className="flex items-center justify-between w-full">
-              <div className={isRTL ? 'text-right' : 'text-left'}>
-                <p className="text-white font-bold text-lg drop-shadow-lg mb-1">{t('friends')}</p>
-                <p className="text-white/90 text-sm">{t('friendsDesc')}</p>
-              </div>
-              <div className="bg-green-500 p-3 rounded-xl">
-                <Users className="w-5 h-5 text-white" />
-              </div>
-            </div>
-          </div>
-        </button>
-
-        {/* Stats - New Professional Design */}
-        <div className="rounded-2xl mb-6 overflow-hidden shadow-xl" style={{ background: isDark ? 'linear-gradient(135deg, #1a1a2e, #16213e)' : 'linear-gradient(135deg, #f8fafc, #e2e8f0)' }}>
-          <div className="p-5">
-            <div className="flex items-center gap-2 mb-5">
-              <BarChart3 className={`w-5 h-5 ${isDark ? 'text-[#60a5fa]' : 'text-blue-600'}`} />
-              <h3 className={`font-bold ${textClass}`}>{t('yourStats')}</h3>
-            </div>
-            
-            {/* Stats Row */}
-            <div className="flex items-center justify-around mb-5">
-              {/* Games Played */}
-              <div className="text-center">
-                <div className={`w-11 h-11 rounded-full ${isDark ? 'bg-blue-500/20' : 'bg-blue-100'} flex items-center justify-center mx-auto mb-2`}>
-                  <Gamepad2 className="w-5 h-5 text-blue-400" />
-                </div>
-                <p className={`text-2xl font-bold ${textClass}`}>{user?.games_played || 0}</p>
-                <p className={`text-xs ${textMutedClass}`}>{isRTL ? 'مباراة لُعبت' : 'Games Played'}</p>
-              </div>
-              
-              {/* Divider */}
-              <div className={`w-px h-12 ${isDark ? 'bg-white/10' : 'bg-gray-200'}`} />
-              
-              {/* Wins */}
-              <div className="text-center">
-                <div className={`w-11 h-11 rounded-full ${isDark ? 'bg-yellow-500/20' : 'bg-yellow-100'} flex items-center justify-center mx-auto mb-2`}>
-                  <Trophy className="w-5 h-5 text-yellow-400" />
-                </div>
-                <p className={`text-2xl font-bold ${textClass}`}>{user?.games_won || 0}</p>
-                <p className={`text-xs ${textMutedClass}`}>{isRTL ? 'انتصار' : 'Wins'}</p>
-              </div>
-              
-              {/* Divider */}
-              <div className={`w-px h-12 ${isDark ? 'bg-white/10' : 'bg-gray-200'}`} />
-              
-              {/* Win Rate */}
-              <div className="text-center">
-                <div className={`w-11 h-11 rounded-full ${isDark ? 'bg-green-500/20' : 'bg-green-100'} flex items-center justify-center mx-auto mb-2`}>
-                  <TrendingUp className="w-5 h-5 text-green-400" />
-                </div>
-                <p className={`text-2xl font-bold ${textClass}`}>
-                  {(user?.games_played || 0) > 0 ? Math.round(((user?.games_won || 0) / (user?.games_played || 1)) * 100) : 0}%
-                </p>
-                <p className={`text-xs ${textMutedClass}`}>{isRTL ? 'نسبة الفوز' : 'Win Rate'}</p>
-              </div>
-            </div>
-            
-            {/* Progress Bar */}
-            <div className={`${isDark ? 'bg-black/20' : 'bg-gray-100'} rounded-xl p-3`}>
-              <div className="flex justify-between items-center mb-2">
-                <span className={`text-xs ${textMutedClass}`}>{isRTL ? 'تقدمك نحو المستوى التالي' : 'Progress to next level'}</span>
-                <span className="text-xs text-blue-400 font-semibold">{Math.min(userPoints % 100, 100)}/100</span>
-              </div>
-              <div className={`h-1.5 ${isDark ? 'bg-white/10' : 'bg-gray-200'} rounded-full overflow-hidden`}>
-                <div 
-                  className="h-full bg-blue-500 rounded-full transition-all"
-                  style={{ width: `${Math.min(userPoints % 100, 100)}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Daily Challenges - New Image Design */}
-        <button className="w-full rounded-2xl mb-4 shadow-xl transform transition-all hover:scale-[1.02] relative overflow-hidden h-24 group">
-          <img 
-            src="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/9571396ba276f9f9cf70ce0622c4303850d05054256c99581ef235eec62d9760.png"
-            alt={t('dailyChallenge')}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 group-hover:from-black/80 transition-all" />
-          <div className="absolute inset-0 flex items-end p-4">
-            <div className="flex items-center justify-between w-full">
-              <div className={isRTL ? 'text-right' : 'text-left'}>
-                <p className="text-white font-bold text-lg drop-shadow-lg">{t('dailyChallenge')}</p>
-                <p className="text-white/90 text-sm">{t('dailyChallengeDesc')}</p>
-              </div>
-              <div className="bg-amber-500 p-3 rounded-xl">
-                <Flame className="w-5 h-5 text-white" />
-              </div>
-            </div>
-          </div>
-        </button>
-
-        {/* Multiplayer - New Image Design */}
-        <button 
-          onClick={() => onNavigate('games')}
-          className="w-full rounded-2xl mb-6 shadow-xl transform transition-all hover:scale-[1.02] relative overflow-hidden h-28 group"
-        >
-          <img 
-            src="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/45a8a3fbd10c46b785a5178ca02ae00c0c4aa43973b95689ebf41e18eb5cbada.png"
-            alt={t('games')}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 group-hover:from-black/80 transition-all" />
-          <div className="absolute inset-0 flex items-end p-4">
-            <div className="flex items-center justify-between w-full">
-              <div className={isRTL ? 'text-right' : 'text-left'}>
-                <p className="text-white font-bold text-lg drop-shadow-lg">{isRTL ? 'اللعب الجماعي' : 'Multiplayer'}</p>
-                <p className="text-white/90 text-sm">{language === 'ar' ? 'تحدى لاعبين من حول العالم!' : 'Challenge players worldwide!'}</p>
-              </div>
-              <div className="bg-purple-500 px-4 py-2.5 rounded-xl flex items-center gap-2">
-                <span className="text-white font-bold text-sm">{language === 'ar' ? 'ابدأ' : 'Start'}</span>
-                <ChevronRight className={`w-4 h-4 text-white ${isRTL ? 'rotate-180' : ''}`} />
-              </div>
-            </div>
-          </div>
-        </button>
-
-        {/* Daily Challenges from API */}
-        {dailyChallenges.length > 0 && (
-          <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-2xl p-5 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
-                  <Trophy className="w-5 h-5 text-amber-400" />
-                </div>
-                <div>
-                  <p className="text-amber-400 font-bold">{language === 'ar' ? 'التحديات اليومية' : 'Daily Challenges'}</p>
-                  <p className={`${textMutedClass} text-sm`}>{challengeStats.earned_today}/{challengeStats.max_daily_points} {language === 'ar' ? 'نقطة' : 'points'}</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => onNavigate && onNavigate('challenges')}
-                className="text-amber-400 text-sm flex items-center gap-1 hover:text-amber-300 transition-colors"
+            <button
+              onClick={handleQuickPresetToggle}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/15 border border-white/15 transition"
+              data-testid="home-preset-toggle"
+            >
+              <svg
+                className="w-3.5 h-3.5 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.5}
               >
-                {language === 'ar' ? 'عرض الكل' : 'View All'}
-                <ChevronRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
-              </button>
-            </div>
-            
-            <div className="space-y-3">
-              {dailyChallenges.slice(0, 3).map((challenge) => {
-                const Icon = getChallengeIcon(challenge.icon);
-                const progress = (challenge.current / challenge.target) * 100;
-                
-                return (
-                  <div key={challenge.id} className="bg-black/20 rounded-xl p-3">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
-                        challenge.completed ? 'bg-green-500/20' : 'bg-white/5'
-                      }`}>
-                        <Icon className={`w-4 h-4 ${challenge.completed ? 'text-green-400' : 'text-gray-400'}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <p className={`${textClass} text-sm font-medium truncate`}>{challenge.title}</p>
-                          <div className="flex items-center gap-1 ml-2">
-                            <Star className="w-3 h-3 text-amber-400" />
-                            <span className="text-amber-400 text-xs font-bold">{challenge.points}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="flex-1 bg-white/10 rounded-full h-1.5">
-                            <div 
-                              className={`h-1.5 rounded-full transition-all ${challenge.completed ? 'bg-green-400' : 'bg-amber-400'}`}
-                              style={{ width: `${Math.min(progress, 100)}%` }}
-                            />
-                          </div>
-                          <span className={`${textDimClass} text-xs`}>
-                            {challenge.claimed ? (
-                              <span className="text-green-400 flex items-center gap-1">
-                                <CheckCircle className="w-3 h-3" />
-                              </span>
-                            ) : challenge.can_claim ? (
-                              <span className="text-green-400 flex items-center gap-1">
-                                <Gift className="w-3 h-3" />
-                              </span>
-                            ) : (
-                              `${challenge.current}/${challenge.target}`
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8 7h12m0 0l-4-4m4 4l-4 4m-4 6H4m0 0l4 4m-4-4l4-4"
+                />
+              </svg>
+              <span className="text-white text-[11px] font-semibold whitespace-nowrap">
+                {homePreset === 'brightModern' ? copy.styleBright : copy.styleLuxury}
+              </span>
+            </button>
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/15 transition flex items-center justify-center disabled:opacity-50"
+              data-testid="home-refresh"
+              aria-label="Refresh"
+            >
+              <svg
+                className={`w-3.5 h-3.5 text-white ${refreshing ? 'animate-spin' : ''}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4 4v5h5m11 11v-5h-5M5.5 9A7 7 0 0118 6.5M18.5 15A7 7 0 016 17.5"
+                />
+              </svg>
+            </button>
           </div>
-        )}
+        </div>
 
-        {/* Tips */}
-        {tips.length > 0 && (
-          <div className={`${cardClass} rounded-2xl p-4 border`}>
-            <div className="flex items-center gap-3">
-              <Lightbulb className="w-5 h-5 text-amber-400 animate-pulse" />
-              <p className={`${textMutedClass} text-sm`}>{tips[currentTip % tips.length]?.text || t('watchAdsEarnPoints')}</p>
-            </div>
+        {/* Quick Stats Row with backgrounds */}
+        <div className="grid grid-cols-3 gap-2">
+          <QuickStatSticker
+            iconSource={ICON_ASSETS.gems}
+            value={user?.saqr_gems || 0}
+            label={copy.gemsLabel}
+            valueColor="#fbbf24"
+            backgroundImage={bg.statGems}
+          />
+          <QuickStatSticker
+            iconSource={ICON_ASSETS.clips}
+            value={user?.clips_count || 0}
+            label={copy.reelsLabel}
+            valueColor="#a5f3fc"
+            backgroundImage={bg.statReels}
+          />
+          <QuickStatSticker
+            iconSource={ICON_ASSETS.chat}
+            value="24/7"
+            label={copy.chatLabel}
+            valueColor="#93c5fd"
+            backgroundImage={bg.statChat}
+          />
+        </div>
+
+        {/* Quick Actions - Pills with backgrounds */}
+        <div className="grid grid-cols-2 gap-2">
+          <QuickActionPill
+            iconSource={ICON_ASSETS.watch}
+            title={copy.adsPill}
+            subtitle={copy.adsPillSub}
+            gradient="linear-gradient(135deg, rgba(245,158,11,0.55), rgba(180,83,9,0.65))"
+            backgroundImage={bg.quickAds}
+            onClick={goAds}
+            testId="home-pill-ads"
+          />
+          <QuickActionPill
+            iconSource={ICON_ASSETS.clips}
+            title={copy.reelsPill}
+            subtitle={copy.reelsPillSub}
+            gradient="linear-gradient(135deg, rgba(99,102,241,0.55), rgba(79,70,229,0.65))"
+            backgroundImage={bg.quickReels}
+            onClick={goClips}
+            testId="home-pill-clips"
+          />
+          <QuickActionPill
+            iconSource={ICON_ASSETS.chat}
+            title={copy.chatPill}
+            subtitle={copy.chatPillSub}
+            gradient="linear-gradient(135deg, rgba(14,165,233,0.55), rgba(3,105,161,0.65))"
+            backgroundImage={bg.quickChat}
+            onClick={goChat}
+            testId="home-pill-chat"
+          />
+          <QuickActionPill
+            iconSource={ICON_ASSETS.fortunes}
+            title={copy.fortunesPill}
+            subtitle={copy.fortunesPillSub}
+            gradient="linear-gradient(135deg, rgba(236,72,153,0.54), rgba(124,58,237,0.64))"
+            backgroundImage={bg.quickFortunes}
+            onClick={goFortunes}
+            testId="home-pill-fortunes"
+          />
+        </div>
+
+        {/* Saqr Fortunes Section */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <AppIcon uri={ICON_ASSETS.fortunes} size={18} />
+            <h2 className="text-white text-base font-bold flex-1 text-right">
+              {copy.fortunes}
+            </h2>
+            <span className="bg-pink-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+              {copy.newLabel}
+            </span>
           </div>
-        )}
+
+          <FeaturedCard
+            title={copy.fortunes}
+            subtitle={copy.fortunesSubtitle}
+            image={bg.featuredFortunes}
+            color="#ec4899"
+            iconSource={ICON_ASSETS.fortunes}
+            onClick={goFortunes}
+            badge={copy.exchangeBadge}
+            testId="home-featured-fortunes"
+          />
+
+          <p className="text-white/65 text-xs mt-2.5 text-right">
+            {copy.fortunesDesc}
+          </p>
+        </div>
+
+        {/* Primary Actions Row with backgrounds */}
+        <div className="grid grid-cols-2 gap-2.5">
+          <PrimaryActionCard
+            iconSource={ICON_ASSETS.watch}
+            title={copy.watchAndEarn}
+            subtitle={copy.watchAndEarnSubtitle}
+            gradient="linear-gradient(135deg, rgba(245,158,11,0.50), rgba(194,65,12,0.55))"
+            backgroundImage={bg.primaryWatch}
+            onClick={goAds}
+            testId="home-primary-ads"
+          />
+          <PrimaryActionCard
+            iconSource={ICON_ASSETS.fortunes}
+            title={copy.fortunes}
+            subtitle={copy.exchangeBadge}
+            gradient="linear-gradient(135deg, rgba(236,72,153,0.52), rgba(99,102,241,0.56))"
+            backgroundImage={bg.primaryFortunes}
+            onClick={goFortunes}
+            testId="home-primary-fortunes"
+          />
+        </div>
+
+        {/* Dual Cards: Reels + Friends */}
+        <div className="grid grid-cols-2 gap-2.5">
+          <FeatureCard
+            title={copy.clips}
+            subtitle={copy.clipsSub}
+            image={bg.reels}
+            color="#8b5cf6"
+            iconSource={ICON_ASSETS.clips}
+            onClick={goClips}
+            testId="home-card-clips"
+          />
+          <FeatureCard
+            title={copy.friends}
+            subtitle={copy.friendsSub}
+            image={bg.friends}
+            color="#22c55e"
+            iconSource={ICON_ASSETS.friends}
+            onClick={goFriends}
+            testId="home-card-friends"
+          />
+        </div>
+
+        {/* Chat Card (single row like mobile) */}
+        <div className="grid grid-cols-2 gap-2.5">
+          <FeatureCard
+            title={copy.chat}
+            subtitle={copy.chatSub}
+            image={bg.chat}
+            color="#3b82f6"
+            iconSource={ICON_ASSETS.chat}
+            onClick={goChat}
+            badge={copy.chatCostBadge}
+            testId="home-card-chat"
+          />
+          <div />
+        </div>
+
+        {/* Tip Card with background */}
+        <div className="relative rounded-2xl overflow-hidden border border-amber-500/20 shadow-lg">
+          <img src={bg.tip} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
+          <div
+            className="relative px-4 py-3 flex items-center gap-3"
+            style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(0,0,0,0.55))' }}
+          >
+            <AppIcon uri={ICON_ASSETS.home} size={18} />
+            <p className="text-white/90 text-[12px] flex-1 text-right leading-snug drop-shadow">
+              {copy.tip}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
