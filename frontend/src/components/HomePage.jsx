@@ -43,7 +43,7 @@ const HOME_CARD_BACKGROUND_PRESETS = {
     quickFortunes: 'https://images.unsplash.com/photo-1559526324-593bc073d938?auto=format&fit=crop&w=1200&q=80',
     primaryWatch: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=80',
     primaryFortunes: 'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1200&q=80',
-    reels: 'https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=1400&q=80',
+    reels: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=1400&q=80',
     friends: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1400&q=80',
     chat: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1400&q=80',
     tip: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1400&q=80',
@@ -59,7 +59,7 @@ const HOME_CARD_BACKGROUND_PRESETS = {
     quickFortunes: 'https://images.unsplash.com/photo-1553729459-efe14ef6055d?auto=format&fit=crop&w=1200&q=80',
     primaryWatch: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
     primaryFortunes: 'https://images.unsplash.com/photo-1462899006636-339e08d1844e?auto=format&fit=crop&w=1200&q=80',
-    reels: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1400&q=80',
+    reels: 'https://images.unsplash.com/photo-1611162618758-2a29a995354b?auto=format&fit=crop&w=1400&q=80',
     friends: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1400&q=80',
     chat: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=1400&q=80',
     tip: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1400&q=80',
@@ -101,16 +101,23 @@ const QuickActionPill = ({ iconName, title, subtitle, backgroundImage, onClick, 
     data-testid={testId}
   >
     <img src={backgroundImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
-    <div
-      className="relative flex items-center gap-2 px-3 py-[11px] border border-white/15 rounded-[14px] min-h-[64px]"
-      style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.42), rgba(15,23,42,0.68))' }}
-    >
-      <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0">
-        <AppIcon name={iconName} size={17} />
+    <div className="relative flex items-center gap-2 px-3 py-[11px] min-h-[64px]">
+      <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/20">
+        <AppIcon name={iconName} size={17} strokeWidth={2.5} />
       </div>
       <div className="flex-1 text-right min-w-0">
-        <div className="text-white text-[12px] font-extrabold leading-[16px] truncate">{title}</div>
-        <div className="text-white/75 text-[10px] leading-[13px] mt-0.5 truncate">{subtitle}</div>
+        <div
+          className="text-white text-[12px] font-extrabold leading-[16px] truncate"
+          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 6px rgba(0,0,0,0.7)' }}
+        >
+          {title}
+        </div>
+        <div
+          className="text-white/95 text-[10px] leading-[13px] mt-0.5 truncate"
+          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}
+        >
+          {subtitle}
+        </div>
       </div>
     </div>
   </button>
@@ -123,16 +130,23 @@ const PrimaryActionCard = ({ iconName, title, subtitle, backgroundImage, onClick
     data-testid={testId}
   >
     <img src={backgroundImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
-    <div
-      className="relative min-h-[86px] p-[13px] border border-white/15 rounded-[14px]"
-      style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.48), rgba(15,23,42,0.72))' }}
-    >
-      <div className="w-[34px] h-[34px] rounded-full bg-white/10 flex items-center justify-center mb-2">
-        <AppIcon name={iconName} size={18} />
+    <div className="relative min-h-[86px] p-[13px]">
+      <div className="w-[34px] h-[34px] rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center mb-2">
+        <AppIcon name={iconName} size={18} strokeWidth={2.5} />
       </div>
       <div className="space-y-[3px] text-right">
-        <div className="text-white text-[13px] font-extrabold leading-[17px]">{title}</div>
-        <div className="text-white/75 text-[10px] leading-[14px]">{subtitle}</div>
+        <div
+          className="text-white text-[13px] font-extrabold leading-[17px]"
+          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 6px rgba(0,0,0,0.7)' }}
+        >
+          {title}
+        </div>
+        <div
+          className="text-white/95 text-[10px] leading-[14px]"
+          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}
+        >
+          {subtitle}
+        </div>
       </div>
     </div>
   </button>
@@ -142,7 +156,7 @@ const FeaturedCard = ({ title, subtitle, image, iconName, onClick, badge, testId
   <button
     onClick={onClick}
     className="w-full rounded-2xl overflow-hidden relative shadow-xl group text-right"
-    style={{ boxShadow: '0 4px 8px rgba(236,72,153,0.3)' }}
+    style={{ boxShadow: '0 4px 12px rgba(236,72,153,0.35)' }}
     data-testid={testId}
   >
     <img
@@ -150,27 +164,34 @@ const FeaturedCard = ({ title, subtitle, image, iconName, onClick, badge, testId
       alt={title}
       className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
     />
-    <div
-      className="relative h-[164px] p-4 flex flex-col justify-between"
-      style={{ background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.8))' }}
-    >
+    <div className="relative h-[164px] p-4 flex flex-col justify-between">
       {badge && (
-        <div className="self-start bg-emerald-500 px-3 py-1 rounded-xl">
-          <span className="text-white text-[11px] font-bold">{badge}</span>
+        <div className="self-start bg-emerald-500 px-3 py-1 rounded-xl shadow-md">
+          <span
+            className="text-white text-[11px] font-bold"
+            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+          >
+            {badge}
+          </span>
         </div>
       )}
       <div className="flex items-end justify-between">
         <div className="text-right flex-1">
           <h3
             className="text-white text-[21px] font-extrabold"
-            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}
+            style={{ textShadow: '0 2px 6px rgba(0,0,0,0.95), 0 0 12px rgba(0,0,0,0.8)' }}
           >
             {title}
           </h3>
-          <p className="text-white/90 text-[12px] mt-1 leading-[16px]">{subtitle}</p>
+          <p
+            className="text-white/95 text-[12px] mt-1 leading-[16px]"
+            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
+          >
+            {subtitle}
+          </p>
         </div>
         <div className="p-2">
-          <AppIcon name={iconName} size={18} color="#fff" />
+          <AppIcon name={iconName} size={20} color="#fff" strokeWidth={2.5} />
         </div>
       </div>
     </div>
@@ -188,30 +209,37 @@ const FeatureCard = ({ title, subtitle, image, iconName, onClick, badge, testId 
       alt={title}
       className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
     />
-    <div
-      className="relative h-[110px] p-3 flex flex-col justify-between"
-      style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.75))' }}
-    >
+    <div className="relative h-[110px] p-3 flex flex-col justify-between">
       {badge && (
         <div
-          className="self-start px-2 py-[3px] rounded-lg"
-          style={{ backgroundColor: 'rgba(96,165,250,0.8)' }}
+          className="self-start px-2 py-[3px] rounded-lg shadow-md"
+          style={{ backgroundColor: 'rgba(96,165,250,0.95)' }}
         >
-          <span className="text-white text-[9px] font-bold">{badge}</span>
+          <span
+            className="text-white text-[9px] font-bold"
+            style={{ textShadow: '0 1px 1px rgba(0,0,0,0.5)' }}
+          >
+            {badge}
+          </span>
         </div>
       )}
       <div className="flex items-end justify-between">
         <div className="text-right flex-1">
           <h4
             className="text-white text-[14px] font-extrabold"
-            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+            style={{ textShadow: '0 2px 4px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.75)' }}
           >
             {title}
           </h4>
-          <p className="text-white/85 text-[10px] mt-0.5 leading-[13px]">{subtitle}</p>
+          <p
+            className="text-white/95 text-[10px] mt-0.5 leading-[13px]"
+            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}
+          >
+            {subtitle}
+          </p>
         </div>
         <div className="p-1.5">
-          <AppIcon name={iconName} size={16} color="#fff" />
+          <AppIcon name={iconName} size={16} color="#fff" strokeWidth={2.5} />
         </div>
       </div>
     </div>
@@ -509,21 +537,17 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
           />
         </div>
 
-        {/* Tip Card with background */}
-        <div
-          className="relative rounded-xl overflow-hidden mt-1.5 border"
-          style={{ borderColor: 'rgba(251,191,36,0.26)' }}
-        >
+        {/* Tip Card - no overlay, only image */}
+        <div className="relative rounded-xl overflow-hidden mt-1.5 shadow-lg">
           <img src={bg.tip} alt="" className="absolute inset-0 w-full h-full object-cover" />
-          <div
-            className="relative flex items-center gap-2.5 p-3.5"
-            style={{
-              background:
-                'linear-gradient(135deg, rgba(251,191,36,0.14), rgba(15,23,42,0.74))',
-            }}
-          >
-            <Lightbulb size={18} color="#fbbf24" className="shrink-0" />
-            <p className="text-white/85 text-[12px] leading-[17px] flex-1 text-right">
+          <div className="relative flex items-center gap-2.5 p-3.5">
+            <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm border border-amber-400/40 flex items-center justify-center shrink-0">
+              <Lightbulb size={18} color="#fbbf24" strokeWidth={2.5} />
+            </div>
+            <p
+              className="text-white text-[12px] leading-[17px] flex-1 text-right font-semibold"
+              style={{ textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.75)' }}
+            >
               {copy.tip}
             </p>
           </div>
