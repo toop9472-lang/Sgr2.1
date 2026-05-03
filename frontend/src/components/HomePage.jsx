@@ -1,18 +1,34 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import {
+  Home as HomeIcon,
+  Film,
+  PlayCircle,
+  Gem,
+  MessageCircle,
+  Users,
+  RefreshCw,
+  ArrowLeftRight,
+  Lightbulb,
+} from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import LanguageSwitcher from './LanguageSwitcher';
 
 const APP_BACKGROUND_IMAGE =
   'https://static.prod-images.emergentagent.com/jobs/40eca190-5242-4463-8c95-bc5f66df29cb/images/e35d59ccd161791b6e9cbecdfa426302685267afa2c8e806fa233976816403de.png';
 
-const ICON_ASSETS = {
-  home: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/80a9b958945b14e3f85f8b8e2b49544963122866ce9cdc8af6f2ab70c5c8bb31.png',
-  clips: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e02071f57750c77c0db321a70a51ed7bceb6eeb4df5f78e29d834466fcf3f354.png',
-  watch: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e14c91a9e40e8d29b6f8d3bf567a4fcb7020c985b1a9d3e96e2035b06f9921e6.png',
-  gems: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png',
-  chat: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/bcdacd75d090c4626f5432d13b9b6c4c4560cc34282e9424de1cbc6732f06abf.png',
-  friends: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/7f2948052c933ae7604200fd2c98d91f4504fce293deb36ce108cba1d36f062a.png',
-  fortunes: 'https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png',
+const ICONS = {
+  home: HomeIcon,
+  clips: Film,
+  watch: PlayCircle,
+  gems: Gem,
+  chat: MessageCircle,
+  friends: Users,
+  fortunes: Gem,
+};
+
+const AppIcon = ({ name, size = 18, color = '#fff', strokeWidth = 2.25 }) => {
+  const Comp = ICONS[name] || HomeIcon;
+  return <Comp size={size} color={color} strokeWidth={strokeWidth} className="shrink-0" />;
 };
 
 const HOME_CARD_BACKGROUND_PRESETS = {
@@ -50,26 +66,7 @@ const HOME_CARD_BACKGROUND_PRESETS = {
   },
 };
 
-const AppIcon = ({ uri, size = 18, tint = '#fff' }) => (
-  <img
-    src={uri}
-    alt=""
-    className="object-contain shrink-0"
-    style={{
-      width: size,
-      height: size,
-      filter: `brightness(0) saturate(100%) ${tint === '#fff'
-        ? 'invert(100%)'
-        : tint === '#fbbf24'
-        ? 'invert(79%) sepia(66%) saturate(475%) hue-rotate(348deg) brightness(100%) contrast(98%)'
-        : tint === '#ec4899'
-        ? 'invert(50%) sepia(92%) saturate(2614%) hue-rotate(307deg) brightness(98%) contrast(95%)'
-        : 'invert(100%)'}`,
-    }}
-  />
-);
-
-const QuickStatSticker = ({ iconSource, value, label, tintColor, backgroundImage }) => (
+const QuickStatSticker = ({ iconName, value, label, tintColor, backgroundImage }) => (
   <div
     className="flex-1 relative rounded-[14px] overflow-hidden border border-white/15 min-h-[82px]"
     style={{
@@ -82,14 +79,14 @@ const QuickStatSticker = ({ iconSource, value, label, tintColor, backgroundImage
       className="h-full w-full px-2 py-2.5 flex flex-col items-center justify-center gap-[3px]"
       style={{ background: 'linear-gradient(to bottom, rgba(15,23,42,0.24), rgba(15,23,42,0.76))' }}
     >
-      <AppIcon uri={iconSource} size={16} tint={tintColor} />
+      <AppIcon name={iconName} size={16} color={tintColor} />
       <div className="text-white text-[15px] font-extrabold leading-none">{value}</div>
       <div className="text-white/65 text-[10px] font-semibold">{label}</div>
     </div>
   </div>
 );
 
-const QuickActionPill = ({ iconSource, title, subtitle, backgroundImage, onClick, testId }) => (
+const QuickActionPill = ({ iconName, title, subtitle, backgroundImage, onClick, testId }) => (
   <button
     onClick={onClick}
     className="relative rounded-[14px] overflow-hidden text-right"
@@ -101,8 +98,8 @@ const QuickActionPill = ({ iconSource, title, subtitle, backgroundImage, onClick
       className="relative flex items-center gap-2 px-3 py-[11px] border border-white/15 rounded-[14px] min-h-[64px]"
       style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.42), rgba(15,23,42,0.68))' }}
     >
-      <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0">
-        <AppIcon uri={iconSource} size={17} />
+      <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+        <AppIcon name={iconName} size={17} />
       </div>
       <div className="flex-1 text-right min-w-0">
         <div className="text-white text-[12px] font-extrabold leading-[16px] truncate">{title}</div>
@@ -112,7 +109,7 @@ const QuickActionPill = ({ iconSource, title, subtitle, backgroundImage, onClick
   </button>
 );
 
-const PrimaryActionCard = ({ iconSource, title, subtitle, backgroundImage, onClick, testId }) => (
+const PrimaryActionCard = ({ iconName, title, subtitle, backgroundImage, onClick, testId }) => (
   <button
     onClick={onClick}
     className="flex-1 rounded-[14px] overflow-hidden relative text-right"
@@ -123,8 +120,8 @@ const PrimaryActionCard = ({ iconSource, title, subtitle, backgroundImage, onCli
       className="relative min-h-[86px] p-[13px] border border-white/15 rounded-[14px]"
       style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.48), rgba(15,23,42,0.72))' }}
     >
-      <div className="w-[34px] h-[34px] rounded-full flex items-center justify-center mb-2">
-        <AppIcon uri={iconSource} size={18} />
+      <div className="w-[34px] h-[34px] rounded-full bg-white/10 flex items-center justify-center mb-2">
+        <AppIcon name={iconName} size={18} />
       </div>
       <div className="space-y-[3px] text-right">
         <div className="text-white text-[13px] font-extrabold leading-[17px]">{title}</div>
@@ -134,7 +131,7 @@ const PrimaryActionCard = ({ iconSource, title, subtitle, backgroundImage, onCli
   </button>
 );
 
-const FeaturedCard = ({ title, subtitle, image, iconSource, onClick, badge, testId }) => (
+const FeaturedCard = ({ title, subtitle, image, iconName, onClick, badge, testId }) => (
   <button
     onClick={onClick}
     className="w-full rounded-2xl overflow-hidden relative shadow-xl group text-right"
@@ -166,14 +163,14 @@ const FeaturedCard = ({ title, subtitle, image, iconSource, onClick, badge, test
           <p className="text-white/90 text-[12px] mt-1 leading-[16px]">{subtitle}</p>
         </div>
         <div className="p-2">
-          <AppIcon uri={iconSource} size={16} />
+          <AppIcon name={iconName} size={18} color="#fff" />
         </div>
       </div>
     </div>
   </button>
 );
 
-const FeatureCard = ({ title, subtitle, image, iconSource, onClick, badge, testId }) => (
+const FeatureCard = ({ title, subtitle, image, iconName, onClick, badge, testId }) => (
   <button
     onClick={onClick}
     className="flex-1 rounded-[14px] overflow-hidden relative group text-right"
@@ -207,7 +204,7 @@ const FeatureCard = ({ title, subtitle, image, iconSource, onClick, badge, testI
           <p className="text-white/85 text-[10px] mt-0.5 leading-[13px]">{subtitle}</p>
         </div>
         <div className="p-1.5">
-          <AppIcon uri={iconSource} size={14} />
+          <AppIcon name={iconName} size={16} color="#fff" />
         </div>
       </div>
     </div>
@@ -298,7 +295,7 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
       id: 'ads',
       title: copy.adsPill,
       subtitle: copy.adsPillSub,
-      iconSource: ICON_ASSETS.watch,
+      iconName: 'watch',
       onClick: goAds,
       backgroundImage: bg.quickAds,
     },
@@ -306,7 +303,7 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
       id: 'reels',
       title: copy.reelsPill,
       subtitle: copy.reelsPillSub,
-      iconSource: ICON_ASSETS.clips,
+      iconName: 'clips',
       onClick: goClips,
       backgroundImage: bg.quickReels,
     },
@@ -314,7 +311,7 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
       id: 'fortunes',
       title: copy.fortunesPill,
       subtitle: copy.fortunesPillSub,
-      iconSource: ICON_ASSETS.fortunes,
+      iconName: 'fortunes',
       onClick: goFortunes,
       backgroundImage: bg.quickFortunes,
     },
@@ -384,20 +381,7 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
               }}
               data-testid="home-preset-toggle"
             >
-              <svg
-                className="w-[14px] h-[14px]"
-                style={{ color: '#e2e8f0' }}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M8 7h12m0 0l-4-4m4 4l-4 4m-4 6H4m0 0l4 4m-4-4l4-4"
-                />
-              </svg>
+              <ArrowLeftRight size={14} color="#e2e8f0" className="shrink-0" />
               <span
                 className="text-[9px] font-bold whitespace-nowrap"
                 style={{ color: '#e2e8f0' }}
@@ -411,21 +395,21 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
         {/* Quick Stats Row */}
         <div className="flex gap-2 mb-3">
           <QuickStatSticker
-            iconSource={ICON_ASSETS.gems}
+            iconName="gems"
             value={user?.saqr_gems || 0}
             label={copy.gemsLabel}
             tintColor="#fbbf24"
             backgroundImage={bg.statGems}
           />
           <QuickStatSticker
-            iconSource={ICON_ASSETS.clips}
+            iconName="clips"
             value={user?.clips_count || 0}
             label={copy.reelsLabel}
             tintColor="#a5f3fc"
             backgroundImage={bg.statReels}
           />
           <QuickStatSticker
-            iconSource={ICON_ASSETS.chat}
+            iconName="chat"
             value="24/7"
             label={copy.chatLabel}
             tintColor="#93c5fd"
@@ -438,7 +422,7 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
           {quickPrimaryCards.map((card) => (
             <QuickActionPill
               key={card.id}
-              iconSource={card.iconSource}
+              iconName={card.iconName}
               title={card.title}
               subtitle={card.subtitle}
               backgroundImage={card.backgroundImage}
@@ -451,7 +435,7 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
         {/* Saqr Fortunes Section */}
         <div className="mb-[18px]">
           <div className="flex items-center gap-2 mb-2.5">
-            <AppIcon uri={ICON_ASSETS.fortunes} size={18} tint="#ec4899" />
+            <AppIcon name="fortunes" size={18} color="#ec4899" />
             <h2 className="text-white text-[17px] font-extrabold flex-1 text-right">
               {copy.fortunes}
             </h2>
@@ -467,7 +451,7 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
             title={copy.fortunes}
             subtitle={copy.fortunesSubtitle}
             image={bg.featuredFortunes}
-            iconSource={ICON_ASSETS.fortunes}
+            iconName="fortunes"
             onClick={goFortunes}
             badge={copy.exchangeBadge}
             testId="home-featured-fortunes"
@@ -481,7 +465,7 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
         {/* Primary Actions Row */}
         <div className="flex gap-2.5 mb-[14px]">
           <PrimaryActionCard
-            iconSource={ICON_ASSETS.watch}
+            iconName="watch"
             title={copy.watchAndEarn}
             subtitle={copy.watchAndEarnSubtitle}
             backgroundImage={bg.primaryWatch}
@@ -489,7 +473,7 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
             testId="home-primary-ads"
           />
           <PrimaryActionCard
-            iconSource={ICON_ASSETS.fortunes}
+            iconName="fortunes"
             title={copy.fortunes}
             subtitle={copy.exchangeBadge}
             backgroundImage={bg.primaryFortunes}
@@ -504,7 +488,7 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
             title={copy.clips}
             subtitle={copy.clipsSub}
             image={bg.reels}
-            iconSource={ICON_ASSETS.clips}
+            iconName="clips"
             onClick={goClips}
             testId="home-card-clips"
           />
@@ -512,7 +496,7 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
             title={copy.friends}
             subtitle={copy.friendsSub}
             image={bg.friends}
-            iconSource={ICON_ASSETS.friends}
+            iconName="friends"
             onClick={goFriends}
             testId="home-card-friends"
           />
@@ -531,7 +515,7 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
                 'linear-gradient(135deg, rgba(251,191,36,0.14), rgba(15,23,42,0.74))',
             }}
           >
-            <AppIcon uri={ICON_ASSETS.home} size={18} tint="#fbbf24" />
+            <Lightbulb size={18} color="#fbbf24" className="shrink-0" />
             <p className="text-white/85 text-[12px] leading-[17px] flex-1 text-right">
               {copy.tip}
             </p>
