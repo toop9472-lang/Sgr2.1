@@ -15,11 +15,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import storage from '../services/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 
-const SettingsScreen = ({ onBack, onLogout, currentTheme = 'dark', onThemeChange }) => {
+const SettingsScreen = ({
+  onBack,
+  onLogout,
+  currentTheme = 'dark',
+  onThemeChange,
+  currentHomePreset = 'luxuryDark',
+  onHomePresetChange,
+}) => {
   const [theme, setTheme] = useState(currentTheme);
+  const [homePreset, setHomePreset] = useState(currentHomePreset);
   const { language, setLanguage, supportedLanguages, t } = useLanguage();
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [showHomePresetModal, setShowHomePresetModal] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
@@ -30,6 +39,10 @@ const SettingsScreen = ({ onBack, onLogout, currentTheme = 'dark', onThemeChange
   useEffect(() => {
     setTheme(currentTheme);
   }, [currentTheme]);
+
+  useEffect(() => {
+    setHomePreset(currentHomePreset);
+  }, [currentHomePreset]);
 
   const loadSettings = async () => {
     try {
@@ -69,6 +82,21 @@ const SettingsScreen = ({ onBack, onLogout, currentTheme = 'dark', onThemeChange
     }
   };
 
+  const saveHomePreset = async (nextPreset) => {
+    try {
+      await AsyncStorage.setItem('saqr_home_preset', nextPreset);
+      setHomePreset(nextPreset);
+      if (onHomePresetChange) onHomePresetChange(nextPreset);
+      setShowHomePresetModal(false);
+      Alert.alert(
+        t('success'),
+        language === 'ar' ? 'تم تغيير نمط الصفحة الرئيسية بنجاح' : 'Home style updated successfully',
+      );
+    } catch (error) {
+      console.log('Error saving home preset:', error);
+    }
+  };
+
   const toggleTwoFactor = async () => {
     const next = !twoFactorEnabled;
     try {
@@ -103,8 +131,24 @@ const SettingsScreen = ({ onBack, onLogout, currentTheme = 'dark', onThemeChange
     icon: 'globe',
   }));
 
+  const homePresets = [
+    {
+      id: 'luxuryDark',
+      name: language === 'ar' ? 'فاخر داكن' : 'Luxury Dark',
+      icon: 'moon',
+    },
+    {
+      id: 'brightModern',
+      name: language === 'ar' ? 'مشرق حديث' : 'Bright Modern',
+      icon: 'sunny',
+    },
+  ];
+
   const getThemeName = () => themes.find(tItem => tItem.id === theme)?.name || (language === 'ar' ? 'داكن' : 'Dark');
   const getLanguageName = () => languages.find(l => l.code === language)?.name || (language === 'ar' ? 'العربية' : 'Arabic');
+  const getHomePresetName = () =>
+    homePresets.find((item) => item.id === homePreset)?.name ||
+    (language === 'ar' ? 'فاخر داكن' : 'Luxury Dark');
 
   // Handle logout
   const handleLogout = () => {
@@ -150,6 +194,14 @@ const SettingsScreen = ({ onBack, onLogout, currentTheme = 'dark', onThemeChange
       value: getThemeName(),
       action: () => setShowThemeModal(true),
       color: '#a855f7',
+    },
+    {
+      id: 'home-style',
+      icon: 'images-outline',
+      label: language === 'ar' ? 'نمط الصفحة الرئيسية' : 'Home Style',
+      value: getHomePresetName(),
+      action: () => setShowHomePresetModal(true),
+      color: '#0ea5e9',
     },
     {
       id: '2fa',
@@ -283,6 +335,45 @@ const SettingsScreen = ({ onBack, onLogout, currentTheme = 'dark', onThemeChange
                 </View>
                 <Text style={styles.optionText}>{themeOption.name}</Text>
                 {theme === themeOption.id && (
+                  <Ionicons name="checkmark" size={20} color="#3b82f6" />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Home preset modal */}
+      <Modal
+        visible={showHomePresetModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowHomePresetModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {language === 'ar' ? 'اختر نمط الصفحة الرئيسية' : 'Select Home Style'}
+              </Text>
+              <TouchableOpacity onPress={() => setShowHomePresetModal(false)}>
+                <Ionicons name="close" size={24} color="#FFF" />
+              </TouchableOpacity>
+            </View>
+            {homePresets.map((preset) => (
+              <TouchableOpacity
+                key={preset.id}
+                style={[
+                  styles.optionItem,
+                  homePreset === preset.id && styles.optionItemSelected
+                ]}
+                onPress={() => saveHomePreset(preset.id)}
+              >
+                <View style={styles.themeIconContainer}>
+                  <Ionicons name={preset.icon} size={22} color="#FFF" />
+                </View>
+                <Text style={styles.optionText}>{preset.name}</Text>
+                {homePreset === preset.id && (
                   <Ionicons name="checkmark" size={20} color="#3b82f6" />
                 )}
               </TouchableOpacity>

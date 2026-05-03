@@ -22,7 +22,6 @@ import {
 } from "../constants/uiAssets";
 
 const { width } = Dimensions.get("window");
-const HOME_CARD_BACKGROUNDS = getHomeCardBackgrounds();
 
 const AppIcon = ({ uri, size = 18, tintColor = "#fff", style }) => (
   <Image
@@ -172,11 +171,16 @@ const HomeScreen = ({
   onNavigateToFortunes,
   onNavigateToFriends,
   settings,
+  homePreset,
   onRefresh,
 }) => {
   const { language } = useLanguage();
   const isArabic = language === "ar";
   const [refreshing, setRefreshing] = useState(false);
+  const homeCardBackgrounds = useMemo(
+    () => getHomeCardBackgrounds(homePreset),
+    [homePreset],
+  );
   const copy = useMemo(
     () => ({
       defaultPlayer: isArabic ? "لاعب" : "Player",
@@ -273,21 +277,21 @@ const HomeScreen = ({
             value={user?.saqr_gems || 0}
             label="جواهر"
             tintColor="#fbbf24"
-            backgroundImage={HOME_CARD_BACKGROUNDS.statGems}
+            backgroundImage={homeCardBackgrounds.statGems}
           />
           <QuickStatSticker
             iconSource={ICON_ASSETS.clips}
             value={user?.clips_count || 0}
             label="ريلز"
             tintColor="#a5f3fc"
-            backgroundImage={HOME_CARD_BACKGROUNDS.statReels}
+            backgroundImage={homeCardBackgrounds.statReels}
           />
           <QuickStatSticker
             iconSource={ICON_ASSETS.chat}
             value="24/7"
             label="دردشة"
             tintColor="#93c5fd"
-            backgroundImage={HOME_CARD_BACKGROUNDS.statChat}
+            backgroundImage={homeCardBackgrounds.statChat}
           />
         </View>
 
@@ -298,7 +302,7 @@ const HomeScreen = ({
             subtitle={copy.adsPillSub}
             colors={["rgba(245,158,11,0.30)", "rgba(120,53,15,0.60)"]}
             onPress={onNavigateToAds}
-            backgroundImage={HOME_CARD_BACKGROUNDS.quickAds}
+            backgroundImage={homeCardBackgrounds.quickAds}
           />
           <QuickActionPill
             iconSource={ICON_ASSETS.clips}
@@ -306,7 +310,7 @@ const HomeScreen = ({
             subtitle={copy.reelsPillSub}
             colors={["rgba(99,102,241,0.30)", "rgba(49,46,129,0.62)"]}
             onPress={onNavigateToClips}
-            backgroundImage={HOME_CARD_BACKGROUNDS.quickReels}
+            backgroundImage={homeCardBackgrounds.quickReels}
           />
           <QuickActionPill
             iconSource={ICON_ASSETS.chat}
@@ -314,7 +318,7 @@ const HomeScreen = ({
             subtitle={copy.chatPillSub}
             colors={["rgba(14,165,233,0.30)", "rgba(8,47,73,0.62)"]}
             onPress={onNavigateToChat}
-            backgroundImage={HOME_CARD_BACKGROUNDS.quickChat}
+            backgroundImage={homeCardBackgrounds.quickChat}
           />
           <QuickActionPill
             iconSource={ICON_ASSETS.fortunes}
@@ -322,7 +326,7 @@ const HomeScreen = ({
             subtitle={copy.fortunesPillSub}
             colors={["rgba(236,72,153,0.32)", "rgba(88,28,135,0.62)"]}
             onPress={onNavigateToFortunes}
-            backgroundImage={HOME_CARD_BACKGROUNDS.quickFortunes}
+            backgroundImage={homeCardBackgrounds.quickFortunes}
           />
         </View>
 
@@ -339,7 +343,7 @@ const HomeScreen = ({
           <FeaturedCard
             title={copy.fortunes}
             subtitle={copy.fortunesSubtitle}
-            image={HOME_CARD_BACKGROUNDS.featuredFortunes}
+            image={homeCardBackgrounds.featuredFortunes}
             colors={["#ec4899", "#be185d"]}
             iconSource={ICON_ASSETS.fortunes}
             onPress={onNavigateToFortunes}
@@ -356,7 +360,7 @@ const HomeScreen = ({
             subtitle={copy.watchAndEarnSubtitle}
             colors={["rgba(245,158,11,0.25)", "rgba(120,53,15,0.66)"]}
             onPress={onNavigateToAds}
-            backgroundImage={HOME_CARD_BACKGROUNDS.primaryWatch}
+            backgroundImage={homeCardBackgrounds.primaryWatch}
           />
           <PrimaryActionCard
             iconSource={ICON_ASSETS.fortunes}
@@ -364,7 +368,7 @@ const HomeScreen = ({
             subtitle={copy.exchangeBadge}
             colors={["rgba(236,72,153,0.25)", "rgba(67,56,202,0.66)"]}
             onPress={onNavigateToFortunes}
-            backgroundImage={HOME_CARD_BACKGROUNDS.primaryFortunes}
+            backgroundImage={homeCardBackgrounds.primaryFortunes}
           />
         </View>
 
@@ -373,7 +377,7 @@ const HomeScreen = ({
           <FeatureCard
             title={copy.clips}
             subtitle={copy.clipsSub}
-            image={HOME_CARD_BACKGROUNDS.reels}
+            image={homeCardBackgrounds.reels}
             color="#8b5cf6"
             iconSource={ICON_ASSETS.clips}
             onPress={onNavigateToClips}
@@ -381,7 +385,7 @@ const HomeScreen = ({
           <FeatureCard
             title={copy.friends}
             subtitle={copy.friendsSub}
-            image={HOME_CARD_BACKGROUNDS.friends}
+            image={homeCardBackgrounds.friends}
             color="#22c55e"
             iconSource={ICON_ASSETS.friends}
             onPress={onNavigateToFriends}
@@ -393,7 +397,7 @@ const HomeScreen = ({
           <FeatureCard
             title={copy.chat}
             subtitle={copy.chatSub}
-            image={HOME_CARD_BACKGROUNDS.chat}
+            image={homeCardBackgrounds.chat}
             color="#3b82f6"
             iconSource={ICON_ASSETS.chat}
             onPress={onNavigateToChat}
@@ -404,7 +408,7 @@ const HomeScreen = ({
 
         {/* نصيحة */}
         <ImageBackground
-          source={{ uri: HOME_CARD_BACKGROUNDS.tip }}
+          source={{ uri: homeCardBackgrounds.tip }}
           style={styles.tipCard}
           imageStyle={styles.tipImage}
         >

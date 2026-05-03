@@ -96,6 +96,7 @@ function AppContent() {
   const [balanceRefresh, setBalanceRefresh] = useState(0);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [themeMode, setThemeMode] = useState("dark");
+  const [homePreset, setHomePreset] = useState("luxuryDark");
   const [systemColorScheme, setSystemColorScheme] = useState(
     Appearance.getColorScheme() || "dark",
   );
@@ -312,8 +313,12 @@ function AppContent() {
       // Load settings
       await loadSettings();
       const storedTheme = await AsyncStorage.getItem("saqr_theme");
+      const storedHomePreset = await AsyncStorage.getItem("saqr_home_preset");
       if (storedTheme) {
         setThemeMode(storedTheme);
+      }
+      if (storedHomePreset) {
+        setHomePreset(storedHomePreset);
       }
     } catch (error) {
       console.error("Init error:", error);
@@ -447,6 +452,16 @@ function AppContent() {
     setThemeMode(nextTheme || "dark");
   };
 
+  const handleHomePresetChange = useCallback(async (nextPreset) => {
+    const safePreset = nextPreset || "luxuryDark";
+    setHomePreset(safePreset);
+    try {
+      await AsyncStorage.setItem("saqr_home_preset", safePreset);
+    } catch (_) {
+      // Ignore local persistence failure and keep in-memory selection.
+    }
+  }, []);
+
   const effectiveTheme =
     themeMode === "system"
       ? systemColorScheme === "light"
@@ -528,6 +543,7 @@ function AppContent() {
             <HomeScreen
               user={user}
               settings={settings}
+              homePreset={homePreset}
               onNavigateToAds={() => setShowAdsViewer(true)}
               onNavigateToClips={() => setCurrentPage("clips")}
               onNavigateToChat={() => setCurrentPage("chat")}
@@ -556,6 +572,8 @@ function AppContent() {
               onLogout={handleLogout}
               currentTheme={themeMode}
               onThemeChange={handleThemeChange}
+              currentHomePreset={homePreset}
+              onHomePresetChange={handleHomePresetChange}
             />
           )}
           {currentPage === "advertiser" && <AdvertiserScreen />}
