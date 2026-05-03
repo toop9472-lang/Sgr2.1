@@ -1,9 +1,12 @@
 from datetime import datetime, timezone
 import os
+from pathlib import Path
 from typing import Dict, Optional, Set, Tuple
+from urllib.parse import urlparse
 import uuid
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi.responses import FileResponse
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 
@@ -15,6 +18,8 @@ db = client[os.environ.get("DB_NAME", "saqr_db")]
 
 DEFAULT_CLIP_VISUAL = "https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e14c91a9e40e8d29b6f8d3bf567a4fcb7020c985b1a9d3e96e2035b06f9921e6.png"
 MAX_UPLOAD_MB = 60
+MEDIA_CLIPS_DIR = (Path(__file__).resolve().parent.parent / "static" / "media" / "clips")
+MEDIA_CLIPS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def _user_filter(user_id: str):
@@ -77,7 +82,43 @@ def _is_video_filename(filename: str) -> bool:
 
 def _is_valid_media_url(value: str) -> bool:
     normalized = (value or "").strip()
-    return normalized.startswith("http") or normalized.startswith("/media/")
+    return (
+        normalized.startswith("http")
+        or normalized.startswith("/media/")
+        or normalized.startswith("/backend/media/")
+        or normalized.startswith("/api/clips/media/")
+    )
+
+
+def _normalize_clip_media_url(value: str) -> str:
+    normalized = (value or "").strip()
+    if not normalized:
+        return ""
+
+    if normalized.startswith("/media/clips/"):
+        filename = normalized.split("/media/clips/", 1)[1].lstrip("/")
+        return f"/api/clips/media/{filename}" if filename else normalized
+
+    if normalized.startswith("/backend/media/clips/"):
+        filename = normalized.split("/backend/media/clips/", 1)[1].lstrip("/")
+        return f"/api/clips/media/{filename}" if filename else normalized
+
+    if normalized.startswith("http"):
+        try:
+            parsed = urlparse(normalized)
+            path = parsed.path or ""
+            if path.startswith("/media/clips/"):
+                filename = path.split("/media/clips/", 1)[1].lstrip("/")
+                if filename and parsed.scheme and parsed.netloc:
+                    return f"{parsed.scheme}://{parsed.netloc}/api/clips/media/{filename}"
+            if path.startswith("/backend/media/clips/"):
+                filename = path.split("/backend/media/clips/", 1)[1].lstrip("/")
+                if filename and parsed.scheme and parsed.netloc:
+                    return f"{parsed.scheme}://{parsed.netloc}/api/clips/media/{filename}"
+        except Exception:
+            return normalized
+
+    return normalized
 
 
 def _normalize_comment(comment: dict) -> dict:
@@ -173,6 +214,8 @@ async def get_clips_feed(limit: int = 30, viewer_id: Optional[str] = None):
             "title": (clip.get("title") or clip.get("caption") or "مقطع").strip()[:80],
             "content": (clip.get("content") or clip.get("caption") or "").strip()[:220],
             "caption": (clip.get("caption") or clip.get("content") or "").strip()[:180],
+            "video_url": _normalize_clip_media_url(clip.get("video_url") or ""),
+            "thumbnail_url": _normalize_clip_media_url(clip.get("thumbnail_url") or ""),
             "likes_count": int(clip.get("likes_count", len(liked_by)) or 0),
             "liked_by_me": bool(viewer_id and viewer_id in liked_by),
             "comments": comments,
@@ -203,10 +246,12 @@ async def create_clip_post(request: CreateClipRequest):
         or (request.image_url or "").strip()
         or DEFAULT_CLIP_VISUAL
     )
+    visual_source = _normalize_clip_media_url(visual_source)
     if not _is_valid_media_url(visual_source):
         visual_source = DEFAULT_CLIP_VISUAL
 
     thumb = (request.thumbnail_url or "").strip() or visual_source
+    thumb = _normalize_clip_media_url(thumb)
     if not _is_valid_media_url(thumb):
         thumb = DEFAULT_CLIP_VISUAL
 
@@ -278,24 +323,27 @@ async def upload_clip_video(
     file_id = str(uuid.uuid4())
     ext = filename.split(".")[-1].lower()
     safe_ext = ext if ext in {"mp4", "mov", "m4v", "webm"} else "mp4"
-    media_clips_dir = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "static",
-        "media",
-        "clips",
-    )
-    os.makedirs(media_clips_dir, exist_ok=True)
-    absolute_path = os.path.join(media_clips_dir, f"{file_id}.{safe_ext}")
+    absolute_path = MEDIA_CLIPS_DIR / f"{file_id}.{safe_ext}"
     with open(absolute_path, "wb") as output:
         output.write(content)
 
-    video_url = f"/media/clips/{file_id}.{safe_ext}"
+    video_url = f"/api/clips/media/{file_id}.{safe_ext}"
     return {
         "success": True,
         "video_url": video_url,
         "thumbnail_url": DEFAULT_CLIP_VISUAL,
     }
+
+
+@router.get("/media/{filename}")
+async def get_clip_media(filename: str):
+    safe_name = os.path.basename(filename or "")
+    if safe_name != filename or not _is_video_filename(safe_name):
+        raise HTTPException(status_code=400, detail="اسم ملف الفيديو غير صالح")
+    absolute_path = MEDIA_CLIPS_DIR / safe_name
+    if not absolute_path.exists():
+        raise HTTPException(status_code=404, detail="ملف الفيديو غير موجود")
+    return FileResponse(path=str(absolute_path))
 
 
 @router.post("/{clip_id}/toggle-like")
