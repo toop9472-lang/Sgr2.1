@@ -826,15 +826,17 @@ export const api = {
     const headers = {};
     if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
 
-    const baseCandidates = Array.from(
-      new Set(
-        [this.baseUrl, activeApiBase, ...API_BASE_CANDIDATES].filter(Boolean),
-      ),
+    const preferredBaseCandidates = Array.from(
+      new Set([activeApiBase, this.baseUrl, ...API_BASE_CANDIDATES].filter(Boolean)),
     );
+    const apiHostCandidates = preferredBaseCandidates.filter(
+      (baseUrl) => typeof baseUrl === "string" && /\/\//.test(baseUrl) && !/\/backend$/i.test(baseUrl),
+    );
+    const baseCandidates = apiHostCandidates.length
+      ? apiHostCandidates
+      : preferredBaseCandidates;
     const endpointCandidates = [
       "/api/clips/upload",
-      "/backend/api/clips/upload",
-      "/clips/upload",
     ];
     let lastError = null;
     let lastResponse = null;

@@ -97,7 +97,7 @@ def _looks_test_content(text: str) -> bool:
     normalized = (text or "").strip().lower()
     if not normalized:
         return False
-    blocked_tokens = {"test", "demo", "dummy", "sample", "placeholder", "تجريبي", "تجربة"}
+    blocked_tokens = {"test", "demo", "dummy", "sample", "placeholder", "تجريبي", "تجربة", "وهمي"}
     return any(token in normalized for token in blocked_tokens)
 
 

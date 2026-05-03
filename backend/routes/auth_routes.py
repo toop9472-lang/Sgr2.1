@@ -1075,9 +1075,9 @@ async def get_session(session_id: str):
 
 class AppleNativeLogin(BaseModel):
     user_id: str
-    email: str = None
-    name: str = None
-    identity_token: str = None
+    email: Optional[str] = None
+    name: Optional[str] = None
+    identity_token: Optional[str] = None
 
 @router.post('/apple/native')
 async def apple_native_sign_in(data: AppleNativeLogin):

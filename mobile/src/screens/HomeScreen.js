@@ -279,7 +279,7 @@ const HomeScreen = ({
           <FeaturedCard
             title={copy.fortunes}
             subtitle={copy.fortunesSubtitle}
-            image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png"
+            image="https://images.unsplash.com/photo-1624958723474-47f19f5e2ce2?auto=format&fit=crop&w=1200&q=80"
             colors={["#ec4899", "#be185d"]}
             iconSource={ICON_ASSETS.fortunes}
             onPress={onNavigateToFortunes}
@@ -329,7 +329,7 @@ const HomeScreen = ({
           <FeatureCard
             title={copy.clips}
             subtitle={copy.clipsSub}
-            image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e02071f57750c77c0db321a70a51ed7bceb6eeb4df5f78e29d834466fcf3f354.png"
+            image="https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=1200&q=80"
             color="#8b5cf6"
             iconSource={ICON_ASSETS.clips}
             onPress={onNavigateToClips}
@@ -337,7 +337,7 @@ const HomeScreen = ({
           <FeatureCard
             title={copy.friends}
             subtitle={copy.friendsSub}
-            image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/7f2948052c933ae7604200fd2c98d91f4504fce293deb36ce108cba1d36f062a.png"
+            image="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=80"
             color="#22c55e"
             iconSource={ICON_ASSETS.friends}
             onPress={onNavigateToFriends}

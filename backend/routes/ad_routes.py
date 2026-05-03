@@ -29,7 +29,7 @@ async def get_ads(ad_type: Optional[str] = Query(None, description="Filter by ty
         normalized = (value or "").strip().lower()
         if not normalized:
             return False
-        markers = ("test", "demo", "dummy", "sample", "placeholder", "تجريبي", "اختبار")
+        markers = ("test", "demo", "dummy", "sample", "placeholder", "تجريبي", "اختبار", "وهمي")
         return any(marker in normalized for marker in markers)
 
     def _is_demo_ad(ad_doc: dict) -> bool:

@@ -120,9 +120,20 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds }) => {
         const normalized = list.map((clip) => normalizeClip(clip));
         setClips(normalized);
         setFilteredClips(normalized);
+      } else {
+        const message = await parseApiErrorMessage(
+          response,
+          "تعذر تحميل المقاطع حالياً.",
+        );
+        Alert.alert("تنبيه", message);
       }
     } catch (e) {
       console.log("Clips load error:", e?.message);
+      const isNetworkError =
+        e?.message === "NO_CONNECTION" || e?.message === "CONNECTION_TIMEOUT";
+      if (isNetworkError) {
+        Alert.alert("خطأ", "تعذر الاتصال بالخادم أثناء تحميل المقاطع.");
+      }
     } finally {
       setLoading(false);
     }
@@ -515,11 +526,11 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds }) => {
 
       // سحب يمين: خروج. سحب يسار: انتقال لصفحة الإعلانات.
       if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy) * 1.2) {
-        if (dx > 0) {
+        if (dx < 0) {
           onClose?.();
           return;
         }
-        if (dx < 0 && onNavigateToAds) {
+        if (dx > 0 && onNavigateToAds) {
           onNavigateToAds();
           return;
         }
