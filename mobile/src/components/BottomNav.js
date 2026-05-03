@@ -7,40 +7,34 @@ import {
   StyleSheet,
   Platform,
   Dimensions,
-  Image,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
+import { Ionicons } from "@expo/vector-icons";
 import { useLanguage } from "../i18n/LanguageContext";
-import { ICON_ASSETS } from "../constants/uiAssets";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const hasNotch = Platform.OS === "ios" && SCREEN_HEIGHT >= 812;
-const NAV_ICONS = {
-  home: ICON_ASSETS.home,
-  clips: ICON_ASSETS.clips,
-  watch: ICON_ASSETS.watch,
-  advertiser: ICON_ASSETS.advertise,
-  profile: ICON_ASSETS.profile,
-};
-
 const BottomNav = ({ currentPage, onNavigate, onAdsPress, onClipsPress }) => {
   const { language } = useLanguage();
   const navItems = [
     {
       id: "home",
       label: language === "ar" ? "الرئيسية" : "Home",
-      icon: NAV_ICONS.home,
+      icon: "home-outline",
+      activeIcon: "home",
     },
     {
       id: "advertiser",
       label: language === "ar" ? "أعلن" : "Advertise",
-      icon: NAV_ICONS.advertiser,
+      icon: "megaphone-outline",
+      activeIcon: "megaphone",
     },
     {
       id: "profile",
       label: language === "ar" ? "حسابي" : "Profile",
-      icon: NAV_ICONS.profile,
+      icon: "person-outline",
+      activeIcon: "person",
     },
   ];
 
@@ -59,13 +53,10 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress, onClipsPress }) => {
             isActive && styles.navIconWrapperActive,
           ]}
         >
-          <Image
-            source={{ uri: item.icon }}
-            style={[
-              styles.navIcon,
-              { opacity: isActive ? 1 : 0.68 },
-              isActive ? styles.navIconActive : null,
-            ]}
+          <Ionicons
+            name={isActive ? item.activeIcon : item.icon}
+            size={20}
+            color={isActive ? "#dbeafe" : "rgba(255,255,255,0.72)"}
           />
         </View>
         <Text style={[styles.navLabel, isActive && styles.navLabelActive]}>
@@ -97,7 +88,7 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress, onClipsPress }) => {
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <Image source={{ uri: NAV_ICONS.clips }} style={styles.centerIcon} />
+              <Ionicons name="film-outline" size={18} color="#fff" />
               <Text style={styles.centerButtonText}>
                 {language === "ar" ? "مقاطع" : "Clips"}
               </Text>
@@ -122,7 +113,7 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress, onClipsPress }) => {
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <Image source={{ uri: NAV_ICONS.watch }} style={styles.centerIcon} />
+              <Ionicons name="play-circle-outline" size={18} color="#fff" />
               <Text style={styles.centerButtonText}>
                 {language === "ar" ? "شاهد" : "Watch"}
               </Text>
@@ -176,14 +167,6 @@ const styles = StyleSheet.create({
   navIconWrapperActive: {
     backgroundColor: "rgba(96, 165, 250, 0.15)",
   },
-  navIcon: {
-    width: 20,
-    height: 20,
-    resizeMode: "contain",
-  },
-  navIconActive: {
-    tintColor: "#dbeafe",
-  },
   navLabel: {
     fontSize: 10,
     color: "rgba(255,255,255,0.5)",
@@ -231,12 +214,6 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 13,
     fontWeight: "700",
-  },
-  centerIcon: {
-    width: 18,
-    height: 18,
-    resizeMode: "contain",
-    tintColor: "#fff",
   },
 });
 

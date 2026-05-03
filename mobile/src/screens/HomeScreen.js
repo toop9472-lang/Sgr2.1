@@ -17,20 +17,34 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import { useLanguage } from "../i18n/LanguageContext";
-import {
-  APP_BACKGROUND_IMAGE,
-  ICON_ASSETS,
-  getHomeCardBackgrounds,
-} from "../constants/uiAssets";
+import { APP_BACKGROUND_IMAGE, ICON_ASSETS, getHomeCardBackgrounds } from "../constants/uiAssets";
 
 const { width } = Dimensions.get("window");
 
-const AppIcon = ({ uri, size = 18, tintColor = "#fff", style }) => (
-  <Image
-    source={{ uri }}
-    style={[{ width: size, height: size, tintColor, resizeMode: "contain" }, style]}
-  />
-);
+const ICON_NAME_BY_ASSET = {
+  [ICON_ASSETS.home]: "home-outline",
+  [ICON_ASSETS.clips]: "play-circle-outline",
+  [ICON_ASSETS.watch]: "eye-outline",
+  [ICON_ASSETS.advertise]: "megaphone-outline",
+  [ICON_ASSETS.profile]: "person-outline",
+  [ICON_ASSETS.gems]: "diamond-outline",
+  [ICON_ASSETS.chat]: "chatbubble-ellipses-outline",
+  [ICON_ASSETS.friends]: "people-outline",
+  [ICON_ASSETS.fortunes]: "sparkles-outline",
+};
+
+const AppIcon = ({ uri, size = 18, tintColor = "#fff", style }) => {
+  const mappedIcon = ICON_NAME_BY_ASSET[uri];
+  if (mappedIcon) {
+    return <Ionicons name={mappedIcon} size={size} color={tintColor} style={style} />;
+  }
+  return (
+    <Image
+      source={{ uri }}
+      style={[{ width: size, height: size, resizeMode: "contain" }, style]}
+    />
+  );
+};
 
 const QuickStatSticker = memo(({ iconSource, value, label, tintColor, backgroundImage }) => (
   <ImageBackground
@@ -49,14 +63,17 @@ const QuickStatSticker = memo(({ iconSource, value, label, tintColor, background
   </ImageBackground>
 ));
 
-const QuickActionPill = memo(({ iconSource, title, subtitle, colors, onPress, backgroundImage }) => (
+const QuickActionPill = memo(({ iconSource, title, subtitle, onPress, backgroundImage }) => (
   <TouchableOpacity style={styles.quickActionPill} onPress={onPress} activeOpacity={0.85}>
     <ImageBackground
       source={{ uri: backgroundImage }}
       style={styles.quickActionPillBg}
       imageStyle={styles.quickActionPillImage}
     >
-      <LinearGradient colors={colors} style={styles.quickActionPillGradient}>
+      <LinearGradient
+        colors={["rgba(2,6,23,0.24)", "rgba(2,6,23,0.62)"]}
+        style={styles.quickActionPillGradient}
+      >
         <View style={styles.quickActionPillIcon}>
           <AppIcon uri={iconSource} size={17} />
         </View>
@@ -70,14 +87,17 @@ const QuickActionPill = memo(({ iconSource, title, subtitle, colors, onPress, ba
 ));
 
 const PrimaryActionCard = memo(
-  ({ iconSource, title, subtitle, colors, onPress, backgroundImage }) => (
+  ({ iconSource, title, subtitle, onPress, backgroundImage }) => (
     <TouchableOpacity style={styles.primaryAction} onPress={onPress} activeOpacity={0.9}>
       <ImageBackground
         source={{ uri: backgroundImage }}
         style={styles.primaryActionBg}
         imageStyle={styles.primaryActionImage}
       >
-        <LinearGradient colors={colors} style={styles.primaryActionGradient}>
+        <LinearGradient
+          colors={["rgba(2,6,23,0.24)", "rgba(2,6,23,0.66)"]}
+          style={styles.primaryActionGradient}
+        >
           <View style={styles.primaryActionIcon}>
             <AppIcon uri={iconSource} size={18} />
           </View>
@@ -118,7 +138,7 @@ const FeaturedCard = memo(
               <Text style={styles.featuredTitle}>{title}</Text>
               <Text style={styles.featuredSubtitle}>{subtitle}</Text>
             </View>
-            <View style={[styles.playBtn, { backgroundColor: colors[0] }]}>
+            <View style={styles.playBtn}>
               <AppIcon uri={iconSource || ICON_ASSETS.watch} size={16} />
             </View>
           </View>
@@ -155,7 +175,7 @@ const FeatureCard = memo(
               <Text style={styles.featureTitle}>{title}</Text>
               <Text style={styles.featureSubtitle}>{subtitle}</Text>
             </View>
-            <View style={[styles.featureBtn, { backgroundColor: color }]}>
+            <View style={styles.featureBtn}>
               <AppIcon uri={iconSource || ICON_ASSETS.watch} size={14} />
             </View>
           </View>
@@ -247,6 +267,49 @@ const HomeScreen = ({
     onHomePresetChange(nextPreset);
   }, [homePreset, onHomePresetChange]);
 
+  const quickPrimaryCards = useMemo(
+    () => [
+      {
+        id: "ads",
+        title: copy.adsPill,
+        subtitle: copy.adsPillSub,
+        iconName: "play-circle-outline",
+        onPress: onNavigateToAds,
+        backgroundImage: homeCardBackgrounds.quickAds,
+      },
+      {
+        id: "reels",
+        title: copy.reelsPill,
+        subtitle: copy.reelsPillSub,
+        iconName: "videocam-outline",
+        onPress: onNavigateToClips,
+        backgroundImage: homeCardBackgrounds.quickReels,
+      },
+      {
+        id: "fortunes",
+        title: copy.fortunesPill,
+        subtitle: copy.fortunesPillSub,
+        iconName: "diamond-outline",
+        onPress: onNavigateToFortunes,
+        backgroundImage: homeCardBackgrounds.quickFortunes,
+      },
+    ],
+    [
+      copy.adsPill,
+      copy.adsPillSub,
+      copy.fortunesPill,
+      copy.fortunesPillSub,
+      copy.reelsPill,
+      copy.reelsPillSub,
+      homeCardBackgrounds.quickAds,
+      homeCardBackgrounds.quickFortunes,
+      homeCardBackgrounds.quickReels,
+      onNavigateToAds,
+      onNavigateToClips,
+      onNavigateToFortunes,
+    ],
+  );
+
   useEffect(() => {
     // Smoothly fade home content when switching background presets.
     Animated.sequence([
@@ -334,38 +397,16 @@ const HomeScreen = ({
         </View>
 
         <View style={styles.quickActionsWrap}>
-          <QuickActionPill
-            iconSource={ICON_ASSETS.watch}
-            title={copy.adsPill}
-            subtitle={copy.adsPillSub}
-            colors={["rgba(245,158,11,0.30)", "rgba(120,53,15,0.60)"]}
-            onPress={onNavigateToAds}
-            backgroundImage={homeCardBackgrounds.quickAds}
-          />
-          <QuickActionPill
-            iconSource={ICON_ASSETS.clips}
-            title={copy.reelsPill}
-            subtitle={copy.reelsPillSub}
-            colors={["rgba(99,102,241,0.30)", "rgba(49,46,129,0.62)"]}
-            onPress={onNavigateToClips}
-            backgroundImage={homeCardBackgrounds.quickReels}
-          />
-          <QuickActionPill
-            iconSource={ICON_ASSETS.chat}
-            title={copy.chatPill}
-            subtitle={copy.chatPillSub}
-            colors={["rgba(14,165,233,0.30)", "rgba(8,47,73,0.62)"]}
-            onPress={onNavigateToChat}
-            backgroundImage={homeCardBackgrounds.quickChat}
-          />
-          <QuickActionPill
-            iconSource={ICON_ASSETS.fortunes}
-            title={copy.fortunesPill}
-            subtitle={copy.fortunesPillSub}
-            colors={["rgba(236,72,153,0.32)", "rgba(88,28,135,0.62)"]}
-            onPress={onNavigateToFortunes}
-            backgroundImage={homeCardBackgrounds.quickFortunes}
-          />
+          {quickPrimaryCards.map((card) => (
+            <QuickActionPill
+              key={card.id}
+              iconSource={card.iconName}
+              title={card.title}
+              subtitle={card.subtitle}
+              backgroundImage={card.backgroundImage}
+              onPress={card.onPress}
+            />
+          ))}
         </View>
 
         {/* ثروات صقر - القسم الرئيسي */}
@@ -396,7 +437,6 @@ const HomeScreen = ({
             iconSource={ICON_ASSETS.watch}
             title={copy.watchAndEarn}
             subtitle={copy.watchAndEarnSubtitle}
-            colors={["rgba(245,158,11,0.25)", "rgba(120,53,15,0.66)"]}
             onPress={onNavigateToAds}
             backgroundImage={homeCardBackgrounds.primaryWatch}
           />
@@ -404,7 +444,6 @@ const HomeScreen = ({
             iconSource={ICON_ASSETS.fortunes}
             title={copy.fortunes}
             subtitle={copy.exchangeBadge}
-            colors={["rgba(236,72,153,0.25)", "rgba(67,56,202,0.66)"]}
             onPress={onNavigateToFortunes}
             backgroundImage={homeCardBackgrounds.primaryFortunes}
           />
@@ -428,20 +467,6 @@ const HomeScreen = ({
             iconSource={ICON_ASSETS.friends}
             onPress={onNavigateToFriends}
           />
-        </View>
-
-        {/* بطاقات إضافية */}
-        <View style={styles.dualCards}>
-          <FeatureCard
-            title={copy.chat}
-            subtitle={copy.chatSub}
-            image={homeCardBackgrounds.chat}
-            color="#3b82f6"
-            iconSource={ICON_ASSETS.chat}
-            onPress={onNavigateToChat}
-            badge={copy.chatCostBadge}
-          />
-          <View style={{ flex: 1 }} />
         </View>
 
         {/* نصيحة */}
@@ -545,7 +570,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.16)",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 8,
@@ -662,7 +686,6 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: "rgba(255,255,255,0.18)",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
@@ -734,8 +757,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   playBtn: {
-    padding: 12,
-    borderRadius: 14,
+    padding: 8,
   },
 
   // البطاقات الثنائية
@@ -792,8 +814,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   featureBtn: {
-    padding: 8,
-    borderRadius: 10,
+    padding: 6,
   },
 
   // نصيحة
