@@ -15,7 +15,11 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import { useLanguage } from "../i18n/LanguageContext";
-import { APP_BACKGROUND_IMAGE, ICON_ASSETS } from "../constants/uiAssets";
+import {
+  APP_BACKGROUND_IMAGE,
+  ICON_ASSETS,
+  HOME_CARD_BACKGROUNDS,
+} from "../constants/uiAssets";
 
 const { width } = Dimensions.get("window");
 
@@ -26,19 +30,64 @@ const AppIcon = ({ uri, size = 18, tintColor = "#fff", style }) => (
   />
 );
 
-const QuickActionPill = memo(({ iconSource, title, subtitle, colors, onPress }) => (
-  <TouchableOpacity style={styles.quickActionPill} onPress={onPress} activeOpacity={0.85}>
-    <LinearGradient colors={colors} style={styles.quickActionPillGradient}>
-      <View style={styles.quickActionPillIcon}>
-        <AppIcon uri={iconSource} size={17} />
-      </View>
-      <View style={styles.quickActionPillTextWrap}>
-        <Text style={styles.quickActionPillTitle}>{title}</Text>
-        <Text style={styles.quickActionPillSub}>{subtitle}</Text>
-      </View>
+const QuickStatSticker = memo(({ iconSource, value, label, tintColor, backgroundImage }) => (
+  <ImageBackground
+    source={{ uri: backgroundImage }}
+    style={styles.quickStatCard}
+    imageStyle={styles.quickStatImage}
+  >
+    <LinearGradient
+      colors={["rgba(15,23,42,0.24)", "rgba(15,23,42,0.76)"]}
+      style={styles.quickStatOverlay}
+    >
+      <AppIcon uri={iconSource} size={16} tintColor={tintColor} />
+      <Text style={styles.quickStatValue}>{value}</Text>
+      <Text style={styles.quickStatLabel}>{label}</Text>
     </LinearGradient>
+  </ImageBackground>
+));
+
+const QuickActionPill = memo(({ iconSource, title, subtitle, colors, onPress, backgroundImage }) => (
+  <TouchableOpacity style={styles.quickActionPill} onPress={onPress} activeOpacity={0.85}>
+    <ImageBackground
+      source={{ uri: backgroundImage }}
+      style={styles.quickActionPillBg}
+      imageStyle={styles.quickActionPillImage}
+    >
+      <LinearGradient colors={colors} style={styles.quickActionPillGradient}>
+        <View style={styles.quickActionPillIcon}>
+          <AppIcon uri={iconSource} size={17} />
+        </View>
+        <View style={styles.quickActionPillTextWrap}>
+          <Text style={styles.quickActionPillTitle}>{title}</Text>
+          <Text style={styles.quickActionPillSub}>{subtitle}</Text>
+        </View>
+      </LinearGradient>
+    </ImageBackground>
   </TouchableOpacity>
 ));
+
+const PrimaryActionCard = memo(
+  ({ iconSource, title, subtitle, colors, onPress, backgroundImage }) => (
+    <TouchableOpacity style={styles.primaryAction} onPress={onPress} activeOpacity={0.9}>
+      <ImageBackground
+        source={{ uri: backgroundImage }}
+        style={styles.primaryActionBg}
+        imageStyle={styles.primaryActionImage}
+      >
+        <LinearGradient colors={colors} style={styles.primaryActionGradient}>
+          <View style={styles.primaryActionIcon}>
+            <AppIcon uri={iconSource} size={18} />
+          </View>
+          <View style={styles.primaryActionTextWrap}>
+            <Text style={styles.primaryActionTitle}>{title}</Text>
+            <Text style={styles.primaryActionSub}>{subtitle}</Text>
+          </View>
+        </LinearGradient>
+      </ImageBackground>
+    </TouchableOpacity>
+  ),
+);
 
 // بطاقة مميزة كبيرة
 const FeaturedCard = memo(
@@ -218,21 +267,27 @@ const HomeScreen = ({
         </View>
 
         <View style={styles.quickStatsRow}>
-          <View style={styles.quickStatCard}>
-            <AppIcon uri={ICON_ASSETS.gems} size={16} tintColor="#fbbf24" />
-            <Text style={styles.quickStatValue}>{user?.saqr_gems || 0}</Text>
-            <Text style={styles.quickStatLabel}>جواهر</Text>
-          </View>
-          <View style={styles.quickStatCard}>
-            <AppIcon uri={ICON_ASSETS.clips} size={16} tintColor="#a5f3fc" />
-            <Text style={styles.quickStatValue}>{user?.clips_count || 0}</Text>
-            <Text style={styles.quickStatLabel}>ريلز</Text>
-          </View>
-          <View style={styles.quickStatCard}>
-            <AppIcon uri={ICON_ASSETS.chat} size={16} tintColor="#93c5fd" />
-            <Text style={styles.quickStatValue}>24/7</Text>
-            <Text style={styles.quickStatLabel}>دردشة</Text>
-          </View>
+          <QuickStatSticker
+            iconSource={ICON_ASSETS.gems}
+            value={user?.saqr_gems || 0}
+            label="جواهر"
+            tintColor="#fbbf24"
+            backgroundImage={HOME_CARD_BACKGROUNDS.statGems}
+          />
+          <QuickStatSticker
+            iconSource={ICON_ASSETS.clips}
+            value={user?.clips_count || 0}
+            label="ريلز"
+            tintColor="#a5f3fc"
+            backgroundImage={HOME_CARD_BACKGROUNDS.statReels}
+          />
+          <QuickStatSticker
+            iconSource={ICON_ASSETS.chat}
+            value="24/7"
+            label="دردشة"
+            tintColor="#93c5fd"
+            backgroundImage={HOME_CARD_BACKGROUNDS.statChat}
+          />
         </View>
 
         <View style={styles.quickActionsWrap}>
@@ -240,29 +295,33 @@ const HomeScreen = ({
             iconSource={ICON_ASSETS.watch}
             title={copy.adsPill}
             subtitle={copy.adsPillSub}
-            colors={["rgba(245,158,11,0.35)", "rgba(180,83,9,0.45)"]}
+            colors={["rgba(245,158,11,0.30)", "rgba(120,53,15,0.60)"]}
             onPress={onNavigateToAds}
+            backgroundImage={HOME_CARD_BACKGROUNDS.quickAds}
           />
           <QuickActionPill
             iconSource={ICON_ASSETS.clips}
             title={copy.reelsPill}
             subtitle={copy.reelsPillSub}
-            colors={["rgba(99,102,241,0.35)", "rgba(79,70,229,0.45)"]}
+            colors={["rgba(99,102,241,0.30)", "rgba(49,46,129,0.62)"]}
             onPress={onNavigateToClips}
+            backgroundImage={HOME_CARD_BACKGROUNDS.quickReels}
           />
           <QuickActionPill
             iconSource={ICON_ASSETS.chat}
             title={copy.chatPill}
             subtitle={copy.chatPillSub}
-            colors={["rgba(14,165,233,0.35)", "rgba(3,105,161,0.45)"]}
+            colors={["rgba(14,165,233,0.30)", "rgba(8,47,73,0.62)"]}
             onPress={onNavigateToChat}
+            backgroundImage={HOME_CARD_BACKGROUNDS.quickChat}
           />
           <QuickActionPill
             iconSource={ICON_ASSETS.fortunes}
             title={copy.fortunesPill}
             subtitle={copy.fortunesPillSub}
-            colors={["rgba(236,72,153,0.34)", "rgba(124,58,237,0.44)"]}
+            colors={["rgba(236,72,153,0.32)", "rgba(88,28,135,0.62)"]}
             onPress={onNavigateToFortunes}
+            backgroundImage={HOME_CARD_BACKGROUNDS.quickFortunes}
           />
         </View>
 
@@ -279,7 +338,7 @@ const HomeScreen = ({
           <FeaturedCard
             title={copy.fortunes}
             subtitle={copy.fortunesSubtitle}
-            image="https://images.unsplash.com/photo-1624958723474-47f19f5e2ce2?auto=format&fit=crop&w=1200&q=80"
+            image={HOME_CARD_BACKGROUNDS.featuredFortunes}
             colors={["#ec4899", "#be185d"]}
             iconSource={ICON_ASSETS.fortunes}
             onPress={onNavigateToFortunes}
@@ -290,38 +349,22 @@ const HomeScreen = ({
         </View>
 
         <View style={styles.primaryActionsRow}>
-          <TouchableOpacity style={styles.primaryAction} onPress={onNavigateToAds}>
-            <LinearGradient
-              colors={["rgba(245,158,11,0.30)", "rgba(194,65,12,0.35)"]}
-              style={styles.primaryActionGradient}
-            >
-              <View style={styles.primaryActionIcon}>
-                <AppIcon uri={ICON_ASSETS.watch} size={18} />
-              </View>
-              <View style={styles.primaryActionTextWrap}>
-                <Text style={styles.primaryActionTitle}>{copy.watchAndEarn}</Text>
-                <Text style={styles.primaryActionSub}>{copy.watchAndEarnSubtitle}</Text>
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.primaryAction}
+          <PrimaryActionCard
+            iconSource={ICON_ASSETS.watch}
+            title={copy.watchAndEarn}
+            subtitle={copy.watchAndEarnSubtitle}
+            colors={["rgba(245,158,11,0.25)", "rgba(120,53,15,0.66)"]}
+            onPress={onNavigateToAds}
+            backgroundImage={HOME_CARD_BACKGROUNDS.primaryWatch}
+          />
+          <PrimaryActionCard
+            iconSource={ICON_ASSETS.fortunes}
+            title={copy.fortunes}
+            subtitle={copy.exchangeBadge}
+            colors={["rgba(236,72,153,0.25)", "rgba(67,56,202,0.66)"]}
             onPress={onNavigateToFortunes}
-          >
-            <LinearGradient
-              colors={["rgba(236,72,153,0.32)", "rgba(99,102,241,0.36)"]}
-              style={styles.primaryActionGradient}
-            >
-              <View style={styles.primaryActionIcon}>
-                <AppIcon uri={ICON_ASSETS.fortunes} size={18} />
-              </View>
-              <View style={styles.primaryActionTextWrap}>
-                <Text style={styles.primaryActionTitle}>{copy.fortunes}</Text>
-                <Text style={styles.primaryActionSub}>{copy.exchangeBadge}</Text>
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
+            backgroundImage={HOME_CARD_BACKGROUNDS.primaryFortunes}
+          />
         </View>
 
         {/* البطاقات الثنائية */}
@@ -329,7 +372,7 @@ const HomeScreen = ({
           <FeatureCard
             title={copy.clips}
             subtitle={copy.clipsSub}
-            image="https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=1200&q=80"
+            image={HOME_CARD_BACKGROUNDS.reels}
             color="#8b5cf6"
             iconSource={ICON_ASSETS.clips}
             onPress={onNavigateToClips}
@@ -337,7 +380,7 @@ const HomeScreen = ({
           <FeatureCard
             title={copy.friends}
             subtitle={copy.friendsSub}
-            image="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=80"
+            image={HOME_CARD_BACKGROUNDS.friends}
             color="#22c55e"
             iconSource={ICON_ASSETS.friends}
             onPress={onNavigateToFriends}
@@ -349,7 +392,7 @@ const HomeScreen = ({
           <FeatureCard
             title={copy.chat}
             subtitle={copy.chatSub}
-            image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/bcdacd75d090c4626f5432d13b9b6c4c4560cc34282e9424de1cbc6732f06abf.png"
+            image={HOME_CARD_BACKGROUNDS.chat}
             color="#3b82f6"
             iconSource={ICON_ASSETS.chat}
             onPress={onNavigateToChat}
@@ -359,10 +402,19 @@ const HomeScreen = ({
         </View>
 
         {/* نصيحة */}
-        <View style={styles.tipCard}>
-          <AppIcon uri={ICON_ASSETS.home} size={18} tintColor="#fbbf24" />
-          <Text style={styles.tipText}>{copy.tip}</Text>
-        </View>
+        <ImageBackground
+          source={{ uri: HOME_CARD_BACKGROUNDS.tip }}
+          style={styles.tipCard}
+          imageStyle={styles.tipImage}
+        >
+          <LinearGradient
+            colors={["rgba(251,191,36,0.14)", "rgba(15,23,42,0.74)"]}
+            style={styles.tipOverlay}
+          >
+            <AppIcon uri={ICON_ASSETS.home} size={18} tintColor="#fbbf24" />
+            <Text style={styles.tipText}>{copy.tip}</Text>
+          </LinearGradient>
+        </ImageBackground>
           </View>
         </ScrollView>
       </LinearGradient>
@@ -394,11 +446,20 @@ const styles = StyleSheet.create({
   quickStatCard: {
     flex: 1,
     borderRadius: 14,
+    overflow: "hidden",
+    minHeight: 82,
+  },
+  quickStatImage: {
+    borderRadius: 14,
+  },
+  quickStatOverlay: {
+    flex: 1,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.16)",
-    backgroundColor: "rgba(10,14,30,0.38)",
+    borderRadius: 14,
     paddingVertical: 10,
     alignItems: "center",
+    justifyContent: "center",
     gap: 3,
   },
   quickStatValue: {
@@ -420,6 +481,12 @@ const styles = StyleSheet.create({
     width: (width - 48) / 2,
     borderRadius: 14,
     overflow: "hidden",
+  },
+  quickActionPillBg: {
+    minHeight: 64,
+  },
+  quickActionPillImage: {
+    borderRadius: 14,
   },
   quickActionPillGradient: {
     flexDirection: "row",
@@ -518,6 +585,12 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 14,
     overflow: "hidden",
+  },
+  primaryActionBg: {
+    minHeight: 86,
+  },
+  primaryActionImage: {
+    borderRadius: 14,
   },
   primaryActionGradient: {
     minHeight: 86,
@@ -666,18 +739,24 @@ const styles = StyleSheet.create({
 
   // نصيحة
   tipCard: {
+    borderRadius: 12,
+    overflow: "hidden",
+    marginTop: 4,
+  },
+  tipImage: {
+    borderRadius: 12,
+  },
+  tipOverlay: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(251,191,36,0.1)",
     padding: 14,
-    borderRadius: 12,
     gap: 10,
-    marginTop: 4,
     borderWidth: 1,
-    borderColor: "rgba(251,191,36,0.2)",
+    borderColor: "rgba(251,191,36,0.26)",
+    backgroundColor: "rgba(15,23,42,0.34)",
   },
   tipText: {
-    color: "rgba(255,255,255,0.8)",
+    color: "rgba(255,255,255,0.86)",
     fontSize: 12,
     flex: 1,
   },
