@@ -52,14 +52,11 @@ const QuickStatSticker = memo(({ iconSource, value, label, tintColor, background
     style={styles.quickStatCard}
     imageStyle={styles.quickStatImage}
   >
-    <LinearGradient
-      colors={["rgba(15,23,42,0.24)", "rgba(15,23,42,0.76)"]}
-      style={styles.quickStatOverlay}
-    >
+    <View style={styles.quickStatOverlay}>
       <AppIcon uri={iconSource} size={16} tintColor={tintColor} />
       <Text style={styles.quickStatValue}>{value}</Text>
       <Text style={styles.quickStatLabel}>{label}</Text>
-    </LinearGradient>
+    </View>
   </ImageBackground>
 ));
 
@@ -70,10 +67,7 @@ const QuickActionPill = memo(({ iconSource, title, subtitle, onPress, background
       style={styles.quickActionPillBg}
       imageStyle={styles.quickActionPillImage}
     >
-      <LinearGradient
-        colors={["rgba(2,6,23,0.24)", "rgba(2,6,23,0.62)"]}
-        style={styles.quickActionPillGradient}
-      >
+      <View style={styles.quickActionPillGradient}>
         <View style={styles.quickActionPillIcon}>
           <AppIcon uri={iconSource} size={17} />
         </View>
@@ -81,7 +75,7 @@ const QuickActionPill = memo(({ iconSource, title, subtitle, onPress, background
           <Text style={styles.quickActionPillTitle}>{title}</Text>
           <Text style={styles.quickActionPillSub}>{subtitle}</Text>
         </View>
-      </LinearGradient>
+      </View>
     </ImageBackground>
   </TouchableOpacity>
 ));
@@ -94,10 +88,7 @@ const PrimaryActionCard = memo(
         style={styles.primaryActionBg}
         imageStyle={styles.primaryActionImage}
       >
-        <LinearGradient
-          colors={["rgba(2,6,23,0.24)", "rgba(2,6,23,0.66)"]}
-          style={styles.primaryActionGradient}
-        >
+        <View style={styles.primaryActionGradient}>
           <View style={styles.primaryActionIcon}>
             <AppIcon uri={iconSource} size={18} />
           </View>
@@ -105,7 +96,7 @@ const PrimaryActionCard = memo(
             <Text style={styles.primaryActionTitle}>{title}</Text>
             <Text style={styles.primaryActionSub}>{subtitle}</Text>
           </View>
-        </LinearGradient>
+        </View>
       </ImageBackground>
     </TouchableOpacity>
   ),
@@ -124,10 +115,7 @@ const FeaturedCard = memo(
         style={styles.featuredBg}
         imageStyle={styles.featuredImage}
       >
-        <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.8)"]}
-          style={styles.featuredOverlay}
-        >
+        <View style={styles.featuredOverlay}>
           {badge && (
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{badge}</Text>
@@ -142,7 +130,7 @@ const FeaturedCard = memo(
               <AppIcon uri={iconSource || ICON_ASSETS.watch} size={16} />
             </View>
           </View>
-        </LinearGradient>
+        </View>
       </ImageBackground>
     </TouchableOpacity>
   ),
@@ -161,10 +149,7 @@ const FeatureCard = memo(
         style={styles.featureBg}
         imageStyle={styles.featureImage}
       >
-        <LinearGradient
-          colors={["rgba(0,0,0,0.2)", "rgba(0,0,0,0.75)"]}
-          style={styles.featureOverlay}
-        >
+        <View style={styles.featureOverlay}>
           {badge && (
             <View style={styles.featureBadge}>
               <Text style={styles.featureBadgeText}>{badge}</Text>
@@ -179,7 +164,7 @@ const FeatureCard = memo(
               <AppIcon uri={iconSource || ICON_ASSETS.watch} size={14} />
             </View>
           </View>
-        </LinearGradient>
+        </View>
       </ImageBackground>
     </TouchableOpacity>
   ),
@@ -477,13 +462,12 @@ const HomeScreen = ({
           style={styles.tipCard}
           imageStyle={styles.tipImage}
         >
-          <LinearGradient
-            colors={["rgba(251,191,36,0.14)", "rgba(15,23,42,0.74)"]}
-            style={styles.tipOverlay}
-          >
-            <AppIcon uri={ICON_ASSETS.home} size={18} tintColor="#fbbf24" />
+          <View style={styles.tipOverlay}>
+            <View style={styles.tipIconWrap}>
+              <AppIcon uri={ICON_ASSETS.home} size={18} tintColor="#fbbf24" />
+            </View>
             <Text style={styles.tipText}>{copy.tip}</Text>
-          </LinearGradient>
+          </View>
         </ImageBackground>
           </Animated.View>
         </ScrollView>
@@ -524,8 +508,6 @@ const styles = StyleSheet.create({
   },
   quickStatOverlay: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.16)",
     borderRadius: 14,
     paddingVertical: 10,
     alignItems: "center",
@@ -536,11 +518,17 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 15,
     fontWeight: "800",
+    textShadowColor: "rgba(0,0,0,0.95)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   quickStatLabel: {
-    color: "rgba(255,255,255,0.66)",
+    color: "rgba(255,255,255,0.95)",
     fontSize: 10,
-    fontWeight: "600",
+    fontWeight: "700",
+    textShadowColor: "rgba(0,0,0,0.95)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   quickActionsWrap: {
     flexDirection: "row",
@@ -563,8 +551,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     minHeight: 64,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.16)",
     borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 11,
@@ -575,6 +561,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.4)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
     marginRight: 8,
   },
   quickActionPillTextWrap: {
@@ -585,12 +574,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "800",
     lineHeight: 16,
+    textShadowColor: "rgba(0,0,0,0.95)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   quickActionPillSub: {
     marginTop: 2,
-    color: "rgba(255,255,255,0.74)",
+    color: "rgba(255,255,255,0.95)",
     fontSize: 10,
     lineHeight: 13,
+    textShadowColor: "rgba(0,0,0,0.9)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
 
   // الترويسة
@@ -702,8 +697,6 @@ const styles = StyleSheet.create({
   primaryActionGradient: {
     minHeight: 86,
     padding: 13,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
     borderRadius: 14,
   },
   primaryActionIcon: {
@@ -712,6 +705,9 @@ const styles = StyleSheet.create({
     borderRadius: 17,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.4)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
     marginBottom: 8,
   },
   primaryActionTextWrap: {
@@ -722,11 +718,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "800",
     lineHeight: 17,
+    textShadowColor: "rgba(0,0,0,0.95)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   primaryActionSub: {
-    color: "rgba(255,255,255,0.76)",
+    color: "rgba(255,255,255,0.95)",
     fontSize: 10,
     lineHeight: 14,
+    textShadowColor: "rgba(0,0,0,0.9)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
 
   // البطاقة المميزة
@@ -736,8 +738,8 @@ const styles = StyleSheet.create({
     elevation: 8,
     shadowColor: "#ec4899",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
   },
   featuredBg: {
     height: 164,
@@ -756,11 +758,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 3,
   },
   badgeText: {
     color: "#FFF",
     fontSize: 11,
     fontWeight: "bold",
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   featuredContent: {
     flexDirection: "row",
@@ -772,15 +782,18 @@ const styles = StyleSheet.create({
     fontSize: 21,
     fontWeight: "800",
     color: "#FFF",
-    textShadowColor: "rgba(0,0,0,0.5)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    textShadowColor: "rgba(0,0,0,0.95)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
   },
   featuredSubtitle: {
     fontSize: 12,
-    color: "rgba(255,255,255,0.9)",
+    color: "rgba(255,255,255,0.95)",
     marginTop: 4,
     lineHeight: 16,
+    textShadowColor: "rgba(0,0,0,0.9)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   playBtn: {
     padding: 8,
@@ -810,15 +823,23 @@ const styles = StyleSheet.create({
   },
   featureBadge: {
     alignSelf: "flex-start",
-    backgroundColor: "rgba(96,165,250,0.8)",
+    backgroundColor: "rgba(96,165,250,0.95)",
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 3,
   },
   featureBadgeText: {
     color: "#FFF",
     fontSize: 9,
     fontWeight: "bold",
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 1,
   },
   featureBottom: {
     flexDirection: "row",
@@ -830,15 +851,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "800",
     color: "#FFF",
-    textShadowColor: "rgba(0,0,0,0.5)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadowColor: "rgba(0,0,0,0.95)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   featureSubtitle: {
     fontSize: 10,
-    color: "rgba(255,255,255,0.85)",
+    color: "rgba(255,255,255,0.95)",
     marginTop: 2,
     lineHeight: 13,
+    textShadowColor: "rgba(0,0,0,0.9)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   featureBtn: {
     padding: 6,
@@ -849,6 +873,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: "hidden",
     marginTop: 6,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
   },
   tipImage: {
     borderRadius: 12,
@@ -858,15 +887,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 14,
     gap: 10,
+  },
+  tipIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.4)",
     borderWidth: 1,
-    borderColor: "rgba(251,191,36,0.26)",
-    backgroundColor: "rgba(15,23,42,0.34)",
+    borderColor: "rgba(251,191,36,0.4)",
   },
   tipText: {
-    color: "rgba(255,255,255,0.86)",
+    color: "#fff",
     fontSize: 12,
     lineHeight: 17,
     flex: 1,
+    fontWeight: "600",
+    textShadowColor: "rgba(0,0,0,0.95)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
 });
 

@@ -45,7 +45,7 @@ export const HOME_CARD_BACKGROUND_PRESETS = {
     primaryFortunes:
       "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1200&q=80",
     reels:
-      "https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=1400&q=80",
+      "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1400&q=80",
     friends:
       "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1400&q=80",
     chat:
@@ -75,7 +75,7 @@ export const HOME_CARD_BACKGROUND_PRESETS = {
     primaryFortunes:
       "https://images.unsplash.com/photo-1462899006636-339e08d1844e?auto=format&fit=crop&w=1200&q=80",
     reels:
-      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1400&q=80",
+      "https://images.unsplash.com/photo-1496559249665-c7e2874707ea?auto=format&fit=crop&w=1400&q=80",
     friends:
       "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1400&q=80",
     chat:
