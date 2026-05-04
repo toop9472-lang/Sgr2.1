@@ -222,6 +222,9 @@ async def register_with_phone(data: RegisterWithPhoneRequest, request: Request):
     }
     
     await db.users.insert_one(user_doc)
+
+    
+    user_doc.pop("_id", None)
     
     # Create tokens
     access_token, refresh_token = create_token_pair(user_id)

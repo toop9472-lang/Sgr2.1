@@ -57,6 +57,9 @@ async def create_comment(data: CommentCreate, user_id: str = Depends(get_current
     }
     
     await db.comments.insert_one(comment)
+
+    
+    comment.pop("_id", None)
     
     # Update ad comments count
     await db.ads.update_one(

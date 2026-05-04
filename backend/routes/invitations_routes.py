@@ -387,6 +387,9 @@ async def create_invitation(
     }
     
     await db.invitations.insert_one(invitation)
+
+    
+    invitation.pop("_id", None)
     
     # Create shareable link
     share_link = f"saqr://invite/{code}"

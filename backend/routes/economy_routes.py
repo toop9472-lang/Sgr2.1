@@ -542,6 +542,7 @@ async def send_chat_message(request: SendChatMessageRequest):
         "timestamp": timestamp,
     }
     await db.chat_messages.insert_one(chat_message)
+    chat_message.pop("_id", None)
     return {
         "success": True,
         "message_id": message_id,

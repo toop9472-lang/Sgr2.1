@@ -531,6 +531,8 @@ async def accept_game_invite(invite_id: str, user_id: str):
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.game_sessions.insert_one(game_session)
+
+    game_session.pop("_id", None)
     
     return {
         "success": True,
@@ -603,6 +605,9 @@ async def submit_report(request: ReportRequest):
     }
     
     await db.reports.insert_one(report)
+
+    
+    report.pop("_id", None)
     
     # تحديث عداد البلاغات للمستخدم المبلغ عنه
     await db.users.update_one(

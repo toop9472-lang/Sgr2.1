@@ -461,6 +461,8 @@ async def start_ad_session(
         'status': 'started'
     }
     await db.ad_sessions.insert_one(session)
+
+    session.pop("_id", None)
     
     return {
         'session_id': session_id,

@@ -54,6 +54,7 @@ async def create_ticket(data: TicketCreate, user_id: str = Depends(get_current_u
     }
     
     result = await db.support_tickets.insert_one(ticket)
+    ticket.pop("_id", None)
     
     return {
         'success': True,

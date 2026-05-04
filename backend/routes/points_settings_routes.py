@@ -202,6 +202,9 @@ async def create_promotion(
     promo_doc['created_by'] = user_id
     
     await db.promotions.insert_one(promo_doc)
+
+    
+    promo_doc.pop("_id", None)
     
     return {'message': 'تم إنشاء العرض الترويجي بنجاح', 'id': promo_doc['id']}
 

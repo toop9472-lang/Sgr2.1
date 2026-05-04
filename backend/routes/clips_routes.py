@@ -292,6 +292,7 @@ async def create_clip_post(request: CreateClipRequest):
     }
 
     await db.clips_posts.insert_one(clip_doc)
+    clip_doc.pop("_id", None)
     return {
         "success": True,
         "clip": clip_doc,

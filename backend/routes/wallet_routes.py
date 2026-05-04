@@ -79,6 +79,8 @@ async def get_wallet_balance(user_id: str = Depends(get_current_user_id)):
             'updated_at': datetime.utcnow()
         }
         await db.app_wallet.insert_one(wallet)
+
+        wallet.pop("_id", None)
     
     # Get pending withdrawals amount
     pending_pipeline = [
