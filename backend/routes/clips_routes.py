@@ -291,7 +291,9 @@ async def create_clip_post(request: CreateClipRequest):
         "created_at": created_at,
     }
 
-    await db.clips_posts.insert_one(clip_doc)
+    # pymongo may mutate the inserted dict by injecting "_id" (ObjectId),
+    # which can break JSON serialization when returning the payload.
+    await db.clips_posts.insert_one({**clip_doc})
     return {
         "success": True,
         "clip": clip_doc,
