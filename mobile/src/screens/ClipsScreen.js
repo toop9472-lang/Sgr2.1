@@ -865,7 +865,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 14,
     paddingTop: 14,
-    paddingBottom: 16,
+    paddingBottom: Platform.OS === "ios" ? 40 : 24,
   },
   reelTopRow: {
     flexDirection: "row",
