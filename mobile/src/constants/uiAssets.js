@@ -23,5 +23,5 @@ export const ICON_ASSETS = {
 };
 
 export const LOCAL_ICON_FALLBACKS = {
-  clips: require("../../assets/adaptive-icon.png"),
+  clips: require("../../assets/logo_saqr.png"),
 };
