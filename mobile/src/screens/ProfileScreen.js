@@ -68,19 +68,24 @@ const ProfileScreen = ({
   const { recordAppShared } = useAchievements();
 
   const userGems = economy?.saqr_gems ?? user?.saqr_gems ?? 0;
+  const GEMS_PER_PACKAGE = 500;
+  const SAR_PER_PACKAGE = 3;
+  const GEMS_PER_SAR = GEMS_PER_PACKAGE / SAR_PER_PACKAGE;
   const userIdentifier = user?.id || user?.user_id || "N/A";
   const watchedAds = user?.ads_watched || 0;
   const referralCode =
     user?.referral_code ||
     "SAQR" + (user?.id?.slice(-6) || "123456").toUpperCase();
   const referrals = user?.referrals_count || 0;
-  const redeemableRiyals = Math.floor(userGems / 500);
+  const redeemableRiyals = Math.floor(userGems / GEMS_PER_SAR);
   const MIN_WITHDRAWAL_SAR = 30;
-  const MIN_WITHDRAWAL_GEMS = MIN_WITHDRAWAL_SAR * 500;
+  const MIN_WITHDRAWAL_GEMS = Math.ceil(MIN_WITHDRAWAL_SAR * GEMS_PER_SAR);
   const riyalValue = redeemableRiyals.toFixed(0);
-  const gemsRemainder = userGems % 500;
-  const gemsProgress = (gemsRemainder / 500) * 100;
-  const gemsToNextRiyal = gemsRemainder === 0 ? 500 : 500 - gemsRemainder;
+  const nextRiyalTargetGems = Math.ceil((redeemableRiyals + 1) * GEMS_PER_SAR);
+  const gemsToNextRiyal = Math.max(0, nextRiyalTargetGems - userGems);
+  const progressGoalGems =
+    userGems < MIN_WITHDRAWAL_GEMS ? MIN_WITHDRAWAL_GEMS : nextRiyalTargetGems;
+  const gemsProgress = (userGems / progressGoalGems) * 100;
   const gemsToMinWithdrawal = Math.max(0, MIN_WITHDRAWAL_GEMS - userGems);
 
   useEffect(() => {
@@ -150,7 +155,7 @@ const ProfileScreen = ({
     } else {
       Alert.alert(
         "طلب سحب",
-        `هل تريد سحب ${redeemableRiyals} ر.س؟\nسيتم خصم ${redeemableRiyals * 500} جوهرة صقر (الحد الأدنى ${MIN_WITHDRAWAL_SAR} ريال) ومراجعة الطلب خلال 24 ساعة.`,
+        `هل تريد سحب ${redeemableRiyals} ر.س؟\nسيتم خصم ${Math.ceil(redeemableRiyals * GEMS_PER_SAR)} جوهرة صقر (الحد الأدنى ${MIN_WITHDRAWAL_SAR} ريال) ومراجعة الطلب خلال 24 ساعة.`,
         [
           { text: "إلغاء", style: "cancel" },
           { text: "تأكيد السحب", onPress: submitWithdrawal },
