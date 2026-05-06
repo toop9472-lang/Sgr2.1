@@ -480,6 +480,23 @@ logger = logging.getLogger(__name__)
 # Set database for games routes
 games_routes.set_database(db)
 
+
+@app.on_event("startup")
+async def cleanup_dummy_ads_on_startup():
+    """Remove dummy/sample ads that were previously seeded. Runs once per start."""
+    try:
+        dummy_advertisers = ["Samsung", "Amazon", "Gourmet Restaurant"]
+        result1 = await db.ads.delete_many({"advertiser": {"$in": dummy_advertisers}})
+        result2 = await db.ads.delete_many(
+            {"video_url": {"$regex": "commondatastorage.googleapis.com"}}
+        )
+        total = result1.deleted_count + result2.deleted_count
+        if total > 0:
+            logger.info(f"Cleaned up {total} dummy ads on startup")
+    except Exception as e:
+        logger.warning(f"cleanup_dummy_ads_on_startup failed: {e}")
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()

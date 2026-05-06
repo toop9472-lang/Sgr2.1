@@ -396,12 +396,16 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds }) => {
         CLIP_PLACEHOLDERS[index % CLIP_PLACEHOLDERS.length];
       const hasVideo =
         typeof item.video_url === "string" &&
-        (item.video_url.includes("/media/clips/") || item.video_url.endsWith(".mp4"));
+        (item.video_url.includes("/clips/media/") ||
+          item.video_url.includes("/media/clips/") ||
+          item.video_url.endsWith(".mp4") ||
+          item.video_url.endsWith(".mov") ||
+          item.video_url.endsWith(".webm"));
       return (
         <View style={[styles.reelCard, { height: screenHeight }]}>
           {hasVideo ? (
             <Video
-              source={{ uri: item.video_url }}
+              source={{ uri: toAbsoluteMediaUrl(item.video_url) }}
               style={styles.reelVideo}
               resizeMode={ResizeMode.COVER}
               isLooping
