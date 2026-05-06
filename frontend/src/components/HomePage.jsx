@@ -497,36 +497,8 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
           </p>
         </div>
 
-        {/* Primary Actions Row */}
-        <div className="flex gap-2.5 mb-[14px]">
-          <PrimaryActionCard
-            iconName="watch"
-            title={copy.watchAndEarn}
-            subtitle={copy.watchAndEarnSubtitle}
-            backgroundImage={bg.primaryWatch}
-            onClick={goAds}
-            testId="home-primary-ads"
-          />
-          <PrimaryActionCard
-            iconName="fortunes"
-            title={copy.fortunes}
-            subtitle={copy.exchangeBadge}
-            backgroundImage={bg.primaryFortunes}
-            onClick={goFortunes}
-            testId="home-primary-fortunes"
-          />
-        </div>
-
-        {/* Dual Cards: Reels + Friends (no chat card, removed) */}
+        {/* Dual Cards: Friends + Chat (no duplicates) */}
         <div className="flex gap-2.5 mb-2.5">
-          <FeatureCard
-            title={copy.clips}
-            subtitle={copy.clipsSub}
-            image={bg.reels}
-            iconName="clips"
-            onClick={goClips}
-            testId="home-card-clips"
-          />
           <FeatureCard
             title={copy.friends}
             subtitle={copy.friendsSub}
@@ -534,6 +506,15 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
             iconName="friends"
             onClick={goFriends}
             testId="home-card-friends"
+          />
+          <FeatureCard
+            title={copy.chat || (isArabic ? 'الدردشة' : 'Chat')}
+            subtitle={isArabic ? 'تواصل مع اللاعبين' : 'Connect with players'}
+            image={bg.chat}
+            iconName="chat"
+            onClick={goChat}
+            badge={isArabic ? 'مجاني' : 'Free'}
+            testId="home-card-chat"
           />
         </div>
 

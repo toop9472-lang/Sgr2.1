@@ -165,8 +165,9 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds }) => {
       }
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-        quality: 0.8,
+        quality: 1.0,
         videoMaxDuration: MAX_CLIP_DURATION,
+        videoExportPreset: ImagePicker.VideoExportPreset?.HighestQuality,
         allowsEditing: true,
       });
       if (result.canceled || !result.assets?.length) return;
@@ -401,6 +402,7 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds }) => {
           item.video_url.endsWith(".mp4") ||
           item.video_url.endsWith(".mov") ||
           item.video_url.endsWith(".webm"));
+      const isActive = index === activeIndex;
       return (
         <View style={[styles.reelCard, { height: screenHeight }]}>
           {hasVideo ? (
@@ -409,8 +411,14 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds }) => {
               style={styles.reelVideo}
               resizeMode={ResizeMode.COVER}
               isLooping
-              shouldPlay={index === activeIndex}
+              shouldPlay={isActive}
               useNativeControls={false}
+              isMuted={false}
+              volume={1.0}
+              progressUpdateIntervalMillis={250}
+              posterSource={{ uri: image }}
+              posterStyle={styles.reelVideo}
+              usePoster={true}
             />
           ) : (
             <ImageBackground source={{ uri: image }} style={styles.reelVideo}>
@@ -422,7 +430,8 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds }) => {
           )}
 
           <LinearGradient
-            colors={["rgba(0,0,0,0.06)", "rgba(0,0,0,0.86)"]}
+            colors={["rgba(0,0,0,0.3)", "transparent", "rgba(0,0,0,0.85)"]}
+            locations={[0, 0.35, 1]}
             style={styles.reelOverlay}
           >
             <View style={styles.reelTopRow}>
@@ -610,14 +619,26 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds }) => {
             contentContainerStyle={styles.reelsListContent}
             showsVerticalScrollIndicator={false}
             pagingEnabled
-            scrollEnabled={false}
+            scrollEnabled={true}
             decelerationRate="fast"
             snapToAlignment="start"
             snapToInterval={screenHeight}
-            onMomentumScrollEnd={(event) => {
-              const offsetY = event.nativeEvent.contentOffset.y;
-              const index = Math.max(0, Math.round(offsetY / screenHeight));
-              setActiveIndex(index);
+            disableIntervalMomentum
+            windowSize={3}
+            maxToRenderPerBatch={2}
+            initialNumToRender={1}
+            removeClippedSubviews={Platform.OS === "android"}
+            onViewableItemsChanged={({ viewableItems }) => {
+              if (viewableItems && viewableItems.length > 0) {
+                const firstVisible = viewableItems[0];
+                if (typeof firstVisible.index === "number") {
+                  setActiveIndex(firstVisible.index);
+                }
+              }
+            }}
+            viewabilityConfig={{
+              itemVisiblePercentThreshold: 60,
+              minimumViewTime: 200,
             }}
             refreshControl={
               <RefreshControl

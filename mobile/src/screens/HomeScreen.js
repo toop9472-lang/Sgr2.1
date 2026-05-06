@@ -419,33 +419,8 @@ const HomeScreen = ({
           <Text style={styles.fortunesDesc}>{copy.fortunesDesc}</Text>
         </View>
 
-        <View style={styles.primaryActionsRow}>
-          <PrimaryActionCard
-            iconSource={ICON_ASSETS.watch}
-            title={copy.watchAndEarn}
-            subtitle={copy.watchAndEarnSubtitle}
-            onPress={onNavigateToAds}
-            backgroundImage={homeCardBackgrounds.primaryWatch}
-          />
-          <PrimaryActionCard
-            iconSource={ICON_ASSETS.fortunes}
-            title={copy.fortunes}
-            subtitle={copy.exchangeBadge}
-            onPress={onNavigateToFortunes}
-            backgroundImage={homeCardBackgrounds.primaryFortunes}
-          />
-        </View>
-
-        {/* البطاقات الثنائية */}
+        {/* البطاقات الثنائية: الأصدقاء + الدردشة */}
         <View style={styles.dualCards}>
-          <FeatureCard
-            title={copy.clips}
-            subtitle={copy.clipsSub}
-            image={homeCardBackgrounds.reels}
-            color="#8b5cf6"
-            iconSource={ICON_ASSETS.clips}
-            onPress={onNavigateToClips}
-          />
           <FeatureCard
             title={copy.friends}
             subtitle={copy.friendsSub}
@@ -453,6 +428,15 @@ const HomeScreen = ({
             color="#22c55e"
             iconSource={ICON_ASSETS.friends}
             onPress={onNavigateToFriends}
+          />
+          <FeatureCard
+            title={copy.chat}
+            subtitle={copy.chatSub}
+            image={homeCardBackgrounds.chat}
+            color="#3b82f6"
+            iconSource={ICON_ASSETS.chat}
+            onPress={onNavigateToChat}
+            badge={copy.chatCostBadge}
           />
         </View>
 
