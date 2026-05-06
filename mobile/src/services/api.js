@@ -842,14 +842,19 @@ export const api = {
     let lastResponse = null;
     let receivedHtmlInsteadOfApi = false;
 
+    // Video uploads can take significantly longer than regular API calls.
+    // Use a much larger timeout (3 minutes) to accommodate slower networks.
+    const UPLOAD_TIMEOUT = 180000;
+
     for (const baseUrl of baseCandidates) {
       for (const endpoint of endpointCandidates) {
         try {
           const controller = new AbortController();
           const timeoutId = setTimeout(
             () => controller.abort(),
-            CONNECTION_TIMEOUT,
+            UPLOAD_TIMEOUT,
           );
+          console.log(`[uploadClipVideo] attempting ${baseUrl}${endpoint}`);
           const response = await fetch(`${baseUrl}${endpoint}`, {
             method: "POST",
             headers,
@@ -858,6 +863,9 @@ export const api = {
           });
           clearTimeout(timeoutId);
           const contentType = response.headers?.get?.("content-type") || "";
+          console.log(
+            `[uploadClipVideo] ${baseUrl}${endpoint} status=${response.status} ct=${contentType}`,
+          );
           if (response.ok && isHtmlContentType(contentType)) {
             // Misconfigured target serving SPA HTML instead of API JSON.
             receivedHtmlInsteadOfApi = true;
@@ -872,6 +880,9 @@ export const api = {
           this.BASE_URL = baseUrl;
           return response;
         } catch (error) {
+          console.log(
+            `[uploadClipVideo] error on ${baseUrl}: ${error?.name} ${error?.message}`,
+          );
           lastError = error;
         }
       }

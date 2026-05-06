@@ -171,6 +171,19 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds }) => {
       });
       if (result.canceled || !result.assets?.length) return;
       const videoAsset = result.assets[0];
+
+      // Check file size before uploading (60 MB limit matches backend)
+      const fileSizeMB = videoAsset.fileSize
+        ? videoAsset.fileSize / (1024 * 1024)
+        : 0;
+      if (fileSizeMB > 60) {
+        Alert.alert(
+          "حجم كبير",
+          `حجم الفيديو ${fileSizeMB.toFixed(1)} ميجابايت. الحد الأقصى هو 60 ميجابايت. اختر مقطعاً أقصر أو أصغر.`,
+        );
+        return;
+      }
+
       setUploadingVideo(true);
       const uploadResponse = await api.uploadClipVideo(videoAsset.uri, userId);
       if (!uploadResponse.ok) {
@@ -178,21 +191,29 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds }) => {
           uploadResponse,
           "تعذر رفع الفيديو حالياً.",
         );
-        Alert.alert("خطأ", message);
+        Alert.alert("خطأ", `${message}\n(HTTP ${uploadResponse.status})`);
         return;
       }
       const uploadData = await uploadResponse.json();
-      setNewClipVideoUrl(toAbsoluteMediaUrl(uploadData?.video_url || ""));
+      if (!uploadData?.video_url) {
+        Alert.alert("خطأ", "لم يتم إرجاع رابط الفيديو من الخادم.");
+        return;
+      }
+      setNewClipVideoUrl(toAbsoluteMediaUrl(uploadData.video_url));
       setNewClipThumb(uploadData?.thumbnail_url || "");
       Alert.alert("تم", "تم رفع الفيديو بنجاح.");
     } catch (e) {
+      console.log("[pickAndUploadVideo] error:", e?.name, e?.message);
       const isNetworkError =
         e?.message === "NO_CONNECTION" || e?.message === "CONNECTION_TIMEOUT";
+      const isAborted = e?.name === "AbortError";
       Alert.alert(
         "خطأ",
-        isNetworkError
+        isAborted
+          ? "استغرق رفع الفيديو وقتاً طويلاً وتم إلغاؤه. تحقق من سرعة الإنترنت وحاول بمقطع أقصر."
+          : isNetworkError
           ? "تعذر الاتصال بالخادم الآن. تحقق من الشبكة ثم حاول مجدداً."
-          : "حدث خطأ أثناء اختيار أو رفع الفيديو.",
+          : `حدث خطأ أثناء اختيار أو رفع الفيديو.\n${e?.message || ""}`,
       );
     } finally {
       setUploadingVideo(false);
