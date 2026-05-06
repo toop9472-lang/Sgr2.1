@@ -75,10 +75,13 @@ const ProfileScreen = ({
     "SAQR" + (user?.id?.slice(-6) || "123456").toUpperCase();
   const referrals = user?.referrals_count || 0;
   const redeemableRiyals = Math.floor(userGems / 500);
+  const MIN_WITHDRAWAL_SAR = 30;
+  const MIN_WITHDRAWAL_GEMS = MIN_WITHDRAWAL_SAR * 500;
   const riyalValue = redeemableRiyals.toFixed(0);
   const gemsRemainder = userGems % 500;
   const gemsProgress = (gemsRemainder / 500) * 100;
   const gemsToNextRiyal = gemsRemainder === 0 ? 500 : 500 - gemsRemainder;
+  const gemsToMinWithdrawal = Math.max(0, MIN_WITHDRAWAL_GEMS - userGems);
 
   useEffect(() => {
     const loadProfileAppearance = async () => {
@@ -138,16 +141,16 @@ const ProfileScreen = ({
   }, [user?.id, user?.user_id]);
 
   const handleWithdraw = () => {
-    if (redeemableRiyals < 1) {
+    if (redeemableRiyals < MIN_WITHDRAWAL_SAR) {
       Alert.alert(
         "رصيد غير كافٍ",
-        `تحتاج 500 جوهرة صقر على الأقل للسحب. لديك حالياً ${userGems} جوهرة.`,
+        `الحد الأدنى للسحب هو ${MIN_WITHDRAWAL_SAR} ريال.\nتحتاج ${MIN_WITHDRAWAL_GEMS} جوهرة صقر على الأقل، ولديك حالياً ${userGems} جوهرة.`,
         [{ text: "حسناً" }],
       );
     } else {
       Alert.alert(
         "طلب سحب",
-        `هل تريد سحب ${redeemableRiyals} ر.س؟\nسيتم خصم ${redeemableRiyals * 500} جوهرة صقر ومراجعة الطلب خلال 24 ساعة.`,
+        `هل تريد سحب ${redeemableRiyals} ر.س؟\nسيتم خصم ${redeemableRiyals * 500} جوهرة صقر (الحد الأدنى ${MIN_WITHDRAWAL_SAR} ريال) ومراجعة الطلب خلال 24 ساعة.`,
         [
           { text: "إلغاء", style: "cancel" },
           { text: "تأكيد السحب", onPress: submitWithdrawal },
@@ -157,6 +160,13 @@ const ProfileScreen = ({
   };
 
   const submitWithdrawal = async () => {
+    if (redeemableRiyals < MIN_WITHDRAWAL_SAR) {
+      Alert.alert(
+        "غير متاح",
+        `لا يمكن إرسال طلب سحب أقل من ${MIN_WITHDRAWAL_SAR} ريال.`,
+      );
+      return;
+    }
     setIsLoading(true);
     try {
       const token = await storage.getToken();
@@ -170,7 +180,27 @@ const ProfileScreen = ({
           "تم إرسال طلب السحب بنجاح. سيتم مراجعته خلال 24 ساعة.",
         );
       } else {
-        Alert.alert("خطأ", "فشل في إرسال الطلب. حاول مرة أخرى.");
+        let serverMessage = "فشل في إرسال الطلب. حاول مرة أخرى.";
+        try {
+          const payload = await response.json().catch(() => ({}));
+          if (typeof payload?.detail === "string" && payload.detail.trim()) {
+            serverMessage = payload.detail;
+          } else if (
+            payload?.detail &&
+            typeof payload.detail?.message === "string" &&
+            payload.detail.message.trim()
+          ) {
+            serverMessage = payload.detail.message;
+          } else if (
+            typeof payload?.message === "string" &&
+            payload.message.trim()
+          ) {
+            serverMessage = payload.message;
+          }
+        } catch (_) {
+          // Keep default fallback
+        }
+        Alert.alert("خطأ", serverMessage);
       }
     } catch (error) {
       Alert.alert("خطأ", "حدث خطأ في الاتصال.");
@@ -598,7 +628,9 @@ const ProfileScreen = ({
             />
           </View>
           <Text style={styles.progressText}>
-            {gemsToNextRiyal} جوهرة للريال التالي
+            {gemsToMinWithdrawal > 0
+              ? `${gemsToMinWithdrawal} جوهرة للوصول إلى الحد الأدنى (${MIN_WITHDRAWAL_SAR} ريال)`
+              : `${gemsToNextRiyal} جوهرة للريال التالي`}
           </Text>
         </View>
 

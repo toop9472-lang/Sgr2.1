@@ -764,7 +764,7 @@ export const api = {
 
   // Request withdrawal
   async requestWithdrawal(data, token) {
-    return this.fetch("/api/withdrawals/request", {
+    return this.fetchWithFallback(["/api/withdrawals/request", "/api/withdrawals"], {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(data),

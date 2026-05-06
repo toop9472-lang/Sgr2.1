@@ -7,7 +7,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Dimensions,
   RefreshControl,
   ImageBackground,
   Image,
@@ -20,8 +19,6 @@ import {
   ICON_ASSETS,
   LOCAL_ICON_FALLBACKS,
 } from "../constants/uiAssets";
-
-const { width } = Dimensions.get("window");
 
 const AppIcon = ({ uri, assetKey = null, size = 18, tintColor = "#fff", style }) => {
   const fallback = assetKey ? LOCAL_ICON_FALLBACKS?.[assetKey] : null;
@@ -38,99 +35,27 @@ const AppIcon = ({ uri, assetKey = null, size = 18, tintColor = "#fff", style })
   );
 };
 
-const QuickActionPill = memo(({ iconSource, title, subtitle, colors, onPress }) => (
-  <TouchableOpacity style={styles.quickActionPill} onPress={onPress} activeOpacity={0.85}>
-    <LinearGradient colors={colors} style={styles.quickActionPillGradient}>
-      <View style={styles.quickActionPillIcon}>
-        <AppIcon
-          uri={iconSource}
-          assetKey={iconSource === ICON_ASSETS.clips ? "clips" : null}
-          size={17}
-        />
-      </View>
-      <View style={styles.quickActionPillTextWrap}>
-        <Text style={styles.quickActionPillTitle}>{title}</Text>
-        <Text style={styles.quickActionPillSub}>{subtitle}</Text>
-      </View>
-    </LinearGradient>
-  </TouchableOpacity>
-));
-
-// بطاقة مميزة كبيرة
-const FeaturedCard = memo(
-  ({ title, subtitle, image, colors, iconSource, onPress, badge }) => (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.9}
-      style={styles.featuredCard}
-    >
-      <ImageBackground
-        source={{ uri: image }}
-        style={styles.featuredBg}
-        imageStyle={styles.featuredImage}
-      >
+const HeroCard = memo(
+  ({ title, subtitle, image, iconSource, iconAssetKey, badge, onPress }) => (
+    <TouchableOpacity style={styles.heroCard} onPress={onPress} activeOpacity={0.9}>
+      <ImageBackground source={{ uri: image }} style={styles.heroBg} imageStyle={styles.heroImage}>
         <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.8)"]}
-          style={styles.featuredOverlay}
+          colors={["rgba(2,6,23,0.18)", "rgba(2,6,23,0.82)"]}
+          style={styles.heroOverlay}
         >
-          {badge && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{badge}</Text>
+          <View style={styles.heroTopRow}>
+            <View style={styles.heroIconWrap}>
+              <AppIcon uri={iconSource} assetKey={iconAssetKey} size={20} />
             </View>
-          )}
-          <View style={styles.featuredContent}>
-            <View style={styles.featuredInfo}>
-              <Text style={styles.featuredTitle}>{title}</Text>
-              <Text style={styles.featuredSubtitle}>{subtitle}</Text>
-            </View>
-            <View style={[styles.playBtn, { backgroundColor: colors[0] }]}>
-              <AppIcon
-                uri={iconSource || ICON_ASSETS.watch}
-                assetKey={iconSource === ICON_ASSETS.clips ? "clips" : null}
-                size={16}
-              />
-            </View>
+            {!!badge && (
+              <View style={styles.heroBadge}>
+                <Text style={styles.heroBadgeText}>{badge}</Text>
+              </View>
+            )}
           </View>
-        </LinearGradient>
-      </ImageBackground>
-    </TouchableOpacity>
-  ),
-);
-
-// بطاقة ميزة
-const FeatureCard = memo(
-  ({ title, subtitle, image, color, iconSource, onPress, badge }) => (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.9}
-      style={styles.featureCard}
-    >
-      <ImageBackground
-        source={{ uri: image }}
-        style={styles.featureBg}
-        imageStyle={styles.featureImage}
-      >
-        <LinearGradient
-          colors={["rgba(0,0,0,0.2)", "rgba(0,0,0,0.75)"]}
-          style={styles.featureOverlay}
-        >
-          {badge && (
-            <View style={styles.featureBadge}>
-              <Text style={styles.featureBadgeText}>{badge}</Text>
-            </View>
-          )}
-          <View style={styles.featureBottom}>
-            <View style={styles.featureContent}>
-              <Text style={styles.featureTitle}>{title}</Text>
-              <Text style={styles.featureSubtitle}>{subtitle}</Text>
-            </View>
-            <View style={[styles.featureBtn, { backgroundColor: color }]}>
-              <AppIcon
-                uri={iconSource || ICON_ASSETS.watch}
-                assetKey={iconSource === ICON_ASSETS.clips ? "clips" : null}
-                size={14}
-              />
-            </View>
+          <View>
+            <Text style={styles.heroTitle}>{title}</Text>
+            <Text style={styles.heroSubtitle}>{subtitle}</Text>
           </View>
         </LinearGradient>
       </ImageBackground>
@@ -189,8 +114,92 @@ const HomeScreen = ({
       chatPillSub: isArabic ? "مجانية بالكامل" : "Always free",
       fortunesPill: isArabic ? "ثروات صقر" : "Saqr Fortunes",
       fortunesPillSub: isArabic ? "500 = 3 ريال" : "500 = 3 SAR",
+      sectionMain: isArabic ? "المزايا الرئيسية" : "Main Features",
+      sectionMainSub: isArabic
+        ? "واجهة منظمة بدون تكرار: كل ميزة مرة واحدة"
+        : "Clean single-entry cards, no duplicates",
     }),
     [isArabic],
+  );
+
+  const primaryCards = useMemo(
+    () => [
+      {
+        key: "fortunes",
+        title: copy.fortunes,
+        subtitle: copy.fortunesSubtitle,
+        image:
+          "https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png",
+        iconSource: ICON_ASSETS.fortunes,
+        iconAssetKey: null,
+        badge: copy.exchangeBadge,
+        onPress: onNavigateToFortunes,
+      },
+      {
+        key: "clips",
+        title: copy.clips,
+        subtitle: copy.clipsSub,
+        image:
+          "https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e02071f57750c77c0db321a70a51ed7bceb6eeb4df5f78e29d834466fcf3f354.png",
+        iconSource: ICON_ASSETS.clips,
+        iconAssetKey: "clips",
+        badge: null,
+        onPress: onNavigateToClips,
+      },
+      {
+        key: "watch",
+        title: copy.watchAndEarn,
+        subtitle: copy.watchAndEarnSubtitle,
+        image:
+          "https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e14c91a9e40e8d29b6f8d3bf567a4fcb7020c985b1a9d3e96e2035b06f9921e6.png",
+        iconSource: ICON_ASSETS.watch,
+        iconAssetKey: null,
+        badge: isArabic ? "AdMob" : "AdMob",
+        onPress: onNavigateToAds,
+      },
+      {
+        key: "friends",
+        title: copy.friends,
+        subtitle: copy.friendsSub,
+        image:
+          "https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/7f2948052c933ae7604200fd2c98d91f4504fce293deb36ce108cba1d36f062a.png",
+        iconSource: ICON_ASSETS.friends,
+        iconAssetKey: null,
+        badge: null,
+        onPress: onNavigateToFriends,
+      },
+      {
+        key: "chat",
+        title: copy.chat,
+        subtitle: copy.chatSub,
+        image:
+          "https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/bcdacd75d090c4626f5432d13b9b6c4c4560cc34282e9424de1cbc6732f06abf.png",
+        iconSource: ICON_ASSETS.chat,
+        iconAssetKey: null,
+        badge: copy.chatCostBadge,
+        onPress: onNavigateToChat,
+      },
+    ],
+    [
+      copy.chat,
+      copy.chatCostBadge,
+      copy.chatSub,
+      copy.clips,
+      copy.clipsSub,
+      copy.exchangeBadge,
+      copy.fortunes,
+      copy.fortunesSubtitle,
+      copy.friends,
+      copy.friendsSub,
+      copy.watchAndEarn,
+      copy.watchAndEarnSubtitle,
+      isArabic,
+      onNavigateToAds,
+      onNavigateToChat,
+      onNavigateToClips,
+      onNavigateToFortunes,
+      onNavigateToFriends,
+    ],
   );
 
   // بيانات المستخدم
@@ -264,127 +273,27 @@ const HomeScreen = ({
           </View>
         </View>
 
-        <View style={styles.quickActionsWrap}>
-          <QuickActionPill
-            iconSource={ICON_ASSETS.watch}
-            title={copy.adsPill}
-            subtitle={copy.adsPillSub}
-            colors={["rgba(245,158,11,0.35)", "rgba(180,83,9,0.45)"]}
-            onPress={onNavigateToAds}
-          />
-          <QuickActionPill
-            iconSource={ICON_ASSETS.clips}
-            title={copy.reelsPill}
-            subtitle={copy.reelsPillSub}
-            colors={["rgba(99,102,241,0.35)", "rgba(79,70,229,0.45)"]}
-            onPress={onNavigateToClips}
-          />
-          <QuickActionPill
-            iconSource={ICON_ASSETS.chat}
-            title={copy.chatPill}
-            subtitle={copy.chatPillSub}
-            colors={["rgba(14,165,233,0.35)", "rgba(3,105,161,0.45)"]}
-            onPress={onNavigateToChat}
-          />
-          <QuickActionPill
-            iconSource={ICON_ASSETS.fortunes}
-            title={copy.fortunesPill}
-            subtitle={copy.fortunesPillSub}
-            colors={["rgba(236,72,153,0.34)", "rgba(124,58,237,0.44)"]}
-            onPress={onNavigateToFortunes}
-          />
-        </View>
-
-        {/* ثروات صقر - القسم الرئيسي */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <AppIcon uri={ICON_ASSETS.fortunes} size={18} tintColor="#ec4899" />
-            <Text style={styles.sectionTitle}>{copy.fortunes}</Text>
-            <View style={styles.newTag}>
-              <Text style={styles.newTagText}>{copy.newLabel}</Text>
-            </View>
+            <AppIcon uri={ICON_ASSETS.home} size={18} tintColor="#60a5fa" />
+            <Text style={styles.sectionTitle}>{copy.sectionMain}</Text>
           </View>
-
-          <FeaturedCard
-            title={copy.fortunes}
-            subtitle={copy.fortunesSubtitle}
-            image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png"
-            colors={["#ec4899", "#be185d"]}
-            iconSource={ICON_ASSETS.fortunes}
-            onPress={onNavigateToFortunes}
-            badge={copy.exchangeBadge}
-          />
-
-          <Text style={styles.fortunesDesc}>{copy.fortunesDesc}</Text>
+          <Text style={styles.sectionSub}>{copy.sectionMainSub}</Text>
         </View>
 
-        <View style={styles.primaryActionsRow}>
-          <TouchableOpacity style={styles.primaryAction} onPress={onNavigateToAds}>
-            <LinearGradient
-              colors={["rgba(245,158,11,0.30)", "rgba(194,65,12,0.35)"]}
-              style={styles.primaryActionGradient}
-            >
-              <View style={styles.primaryActionIcon}>
-                <AppIcon uri={ICON_ASSETS.watch} size={18} />
-              </View>
-              <View style={styles.primaryActionTextWrap}>
-                <Text style={styles.primaryActionTitle}>{copy.watchAndEarn}</Text>
-                <Text style={styles.primaryActionSub}>{copy.watchAndEarnSubtitle}</Text>
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.primaryAction}
-            onPress={onNavigateToFortunes}
-          >
-            <LinearGradient
-              colors={["rgba(236,72,153,0.32)", "rgba(99,102,241,0.36)"]}
-              style={styles.primaryActionGradient}
-            >
-              <View style={styles.primaryActionIcon}>
-                <AppIcon uri={ICON_ASSETS.fortunes} size={18} />
-              </View>
-              <View style={styles.primaryActionTextWrap}>
-                <Text style={styles.primaryActionTitle}>{copy.fortunes}</Text>
-                <Text style={styles.primaryActionSub}>{copy.exchangeBadge}</Text>
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-
-        {/* البطاقات الثنائية */}
-        <View style={styles.dualCards}>
-          <FeatureCard
-            title={copy.clips}
-            subtitle={copy.clipsSub}
-            image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e02071f57750c77c0db321a70a51ed7bceb6eeb4df5f78e29d834466fcf3f354.png"
-            color="#8b5cf6"
-            iconSource={ICON_ASSETS.clips}
-            onPress={onNavigateToClips}
-          />
-          <FeatureCard
-            title={copy.friends}
-            subtitle={copy.friendsSub}
-            image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/7f2948052c933ae7604200fd2c98d91f4504fce293deb36ce108cba1d36f062a.png"
-            color="#22c55e"
-            iconSource={ICON_ASSETS.friends}
-            onPress={onNavigateToFriends}
-          />
-        </View>
-
-        {/* بطاقات إضافية */}
-        <View style={styles.dualCards}>
-          <FeatureCard
-            title={copy.chat}
-            subtitle={copy.chatSub}
-            image="https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/bcdacd75d090c4626f5432d13b9b6c4c4560cc34282e9424de1cbc6732f06abf.png"
-            color="#3b82f6"
-            iconSource={ICON_ASSETS.chat}
-            onPress={onNavigateToChat}
-            badge={copy.chatCostBadge}
-          />
-          <View style={{ flex: 1 }} />
+        <View style={styles.heroGrid}>
+          {primaryCards.map((card) => (
+            <HeroCard
+              key={card.key}
+              title={card.title}
+              subtitle={card.subtitle}
+              image={card.image}
+              iconSource={card.iconSource}
+              iconAssetKey={card.iconAssetKey}
+              badge={card.badge}
+              onPress={card.onPress}
+            />
+          ))}
         </View>
 
         {/* نصيحة */}
@@ -439,50 +348,6 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.66)",
     fontSize: 10,
   },
-  quickActionsWrap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 16,
-  },
-  quickActionPill: {
-    width: (width - 48) / 2,
-    borderRadius: 14,
-    overflow: "hidden",
-  },
-  quickActionPillGradient: {
-    flexDirection: "row",
-    alignItems: "center",
-    minHeight: 64,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.16)",
-    borderRadius: 14,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-  },
-  quickActionPillIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.16)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 8,
-  },
-  quickActionPillTextWrap: {
-    flex: 1,
-  },
-  quickActionPillTitle: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  quickActionPillSub: {
-    marginTop: 2,
-    color: "rgba(255,255,255,0.74)",
-    fontSize: 10,
-  },
-
   // الترويسة
   header: {
     flexDirection: "row",
@@ -521,176 +386,71 @@ const styles = StyleSheet.create({
     color: "#FFF",
     flex: 1,
   },
-  newTag: {
-    backgroundColor: "#22c55e",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  newTagText: {
-    color: "#FFF",
-    fontSize: 10,
-    fontWeight: "bold",
-  },
-  fortunesDesc: {
-    color: "rgba(255,255,255,0.6)",
-    fontSize: 12,
-    textAlign: "center",
-    marginTop: 8,
-  },
-  primaryActionsRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 16,
-  },
-  primaryAction: {
-    flex: 1,
-    borderRadius: 14,
-    overflow: "hidden",
-  },
-  primaryActionGradient: {
-    minHeight: 86,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
-    borderRadius: 14,
-  },
-  primaryActionIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: "rgba(255,255,255,0.18)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 8,
-  },
-  primaryActionTextWrap: {
-    gap: 3,
-  },
-  primaryActionTitle: {
-    color: "#fff",
-    fontSize: 13,
-    fontWeight: "800",
-  },
-  primaryActionSub: {
-    color: "rgba(255,255,255,0.76)",
-    fontSize: 10,
-    lineHeight: 14,
-  },
-
-  // البطاقة المميزة
-  featuredCard: {
-    borderRadius: 16,
-    overflow: "hidden",
-    elevation: 8,
-    shadowColor: "#ec4899",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  featuredBg: {
-    height: 160,
-  },
-  featuredImage: {
-    borderRadius: 16,
-  },
-  featuredOverlay: {
-    flex: 1,
-    padding: 16,
-    justifyContent: "space-between",
-  },
-  badge: {
-    alignSelf: "flex-start",
-    backgroundColor: "#22c55e",
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 12,
-  },
-  badgeText: {
-    color: "#FFF",
-    fontSize: 11,
-    fontWeight: "bold",
-  },
-  featuredContent: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-  },
-  featuredInfo: {},
-  featuredTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: "#FFF",
-    textShadowColor: "rgba(0,0,0,0.5)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-  },
-  featuredSubtitle: {
-    fontSize: 12,
-    color: "rgba(255,255,255,0.9)",
+  sectionSub: {
     marginTop: 4,
-  },
-  playBtn: {
-    padding: 12,
-    borderRadius: 14,
+    marginBottom: 2,
+    color: "rgba(255,255,255,0.72)",
+    fontSize: 11,
   },
 
-  // البطاقات الثنائية
-  dualCards: {
-    flexDirection: "row",
+  heroGrid: {
     gap: 10,
     marginBottom: 12,
   },
-  featureCard: {
-    flex: 1,
-    borderRadius: 14,
+  heroCard: {
+    borderRadius: 16,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.14)",
   },
-  featureBg: {
-    height: 110,
+  heroBg: {
+    height: 112,
   },
-  featureImage: {
-    borderRadius: 14,
+  heroImage: {
+    borderRadius: 16,
   },
-  featureOverlay: {
+  heroOverlay: {
     flex: 1,
+    justifyContent: "space-between",
     padding: 12,
+  },
+  heroTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
   },
-  featureBadge: {
-    alignSelf: "flex-start",
-    backgroundColor: "rgba(96,165,250,0.8)",
+  heroIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  heroBadge: {
+    backgroundColor: "rgba(34,197,94,0.92)",
+    borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 8,
   },
-  featureBadgeText: {
-    color: "#FFF",
-    fontSize: 9,
-    fontWeight: "bold",
-  },
-  featureBottom: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-  },
-  featureContent: {},
-  featureTitle: {
-    fontSize: 14,
+  heroBadgeText: {
+    color: "#fff",
+    fontSize: 10,
     fontWeight: "700",
-    color: "#FFF",
+  },
+  heroTitle: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "800",
     textShadowColor: "rgba(0,0,0,0.5)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
-  featureSubtitle: {
-    fontSize: 10,
-    color: "rgba(255,255,255,0.85)",
+  heroSubtitle: {
     marginTop: 2,
-  },
-  featureBtn: {
-    padding: 8,
-    borderRadius: 10,
+    color: "rgba(255,255,255,0.86)",
+    fontSize: 12,
+    lineHeight: 16,
   },
 
   // نصيحة

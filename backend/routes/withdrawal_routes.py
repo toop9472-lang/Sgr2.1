@@ -10,6 +10,9 @@ router = APIRouter(prefix='/withdrawals', tags=['Withdrawals'])
 
 # Threshold for manual approval (in points)
 MANUAL_APPROVAL_THRESHOLD = 10
+MIN_WITHDRAWAL_AMOUNT_SAR = 30.0
+SAQR_GEMS_PER_3_SAR = 500
+SAQR_GEMS_PER_SAR = SAQR_GEMS_PER_3_SAR / 3.0
 
 def get_db():
     """Get database connection"""
@@ -60,21 +63,21 @@ async def create_withdrawal(
             detail='User not found'
         )
     
-    # Calculate points needed (500 points = $1)
-    points_needed = int(withdrawal_data.amount * 500)
+    # Enforce minimum withdrawal threshold in SAR.
+    if float(withdrawal_data.amount) < MIN_WITHDRAWAL_AMOUNT_SAR:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f'الحد الأدنى للسحب هو {int(MIN_WITHDRAWAL_AMOUNT_SAR)} ريال سعودي',
+        )
+
+    # Convert SAR amount to Saqr gems using app exchange rate (500 gems = 3 SAR).
+    points_needed = int(round(float(withdrawal_data.amount) * SAQR_GEMS_PER_SAR))
     
     # Check if user has enough points
     if user['points'] < points_needed:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f'Insufficient points. You need {points_needed} points but only have {user["points"]}'
-        )
-    
-    # Check minimum amount
-    if withdrawal_data.amount < 1:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Minimum withdrawal amount is $1 (500 points)'
         )
     
     # Determine status based on points threshold
@@ -129,6 +132,31 @@ async def create_withdrawal(
         'requires_approval': points_needed >= MANUAL_APPROVAL_THRESHOLD,
         'message': message
     }
+
+
+@router.post('/request', response_model=dict)
+async def create_withdrawal_legacy_request(
+    payload: dict,
+    user_id: str = Depends(get_current_user_id)
+):
+    """
+    Backward-compatible endpoint used by mobile clients.
+    Accepts minimal body (amount only) and fills defaults for method metadata.
+    """
+    amount = float((payload or {}).get("amount") or 0)
+    method = str((payload or {}).get("method") or "bank")
+    method_name = str((payload or {}).get("method_name") or "تحويل بنكي")
+    details = (payload or {}).get("details")
+    if not isinstance(details, dict):
+        details = {}
+
+    normalized_request = WithdrawalCreate(
+        amount=amount,
+        method=method,
+        method_name=method_name,
+        details=details,
+    )
+    return await create_withdrawal(normalized_request, user_id)
 
 @router.get('/{withdrawal_id}', response_model=WithdrawalResponse)
 async def get_withdrawal(

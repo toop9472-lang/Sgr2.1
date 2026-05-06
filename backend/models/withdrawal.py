@@ -30,9 +30,9 @@ class Withdrawal(BaseModel):
 
 class WithdrawalCreate(BaseModel):
     amount: float
-    method: str
-    method_name: str
-    details: Dict[str, Any]
+    method: str = "bank"
+    method_name: str = "تحويل بنكي"
+    details: Dict[str, Any] = Field(default_factory=dict)
 
 class WithdrawalResponse(BaseModel):
     id: str
