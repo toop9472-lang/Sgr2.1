@@ -21,3 +21,7 @@ export const ICON_ASSETS = {
   fortunes:
     "https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/8cdadba2892459ff5914f65842239cb7d223d973dca3d9c0e02dc176bdacf78d.png",
 };
+
+export const LOCAL_ICON_FALLBACKS = {
+  clips: require("../../assets/adaptive-icon.png"),
+};

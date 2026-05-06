@@ -15,22 +15,38 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import { useLanguage } from "../i18n/LanguageContext";
-import { APP_BACKGROUND_IMAGE, ICON_ASSETS } from "../constants/uiAssets";
+import {
+  APP_BACKGROUND_IMAGE,
+  ICON_ASSETS,
+  LOCAL_ICON_FALLBACKS,
+} from "../constants/uiAssets";
 
 const { width } = Dimensions.get("window");
 
-const AppIcon = ({ uri, size = 18, tintColor = "#fff", style }) => (
-  <Image
-    source={{ uri }}
-    style={[{ width: size, height: size, tintColor, resizeMode: "contain" }, style]}
-  />
-);
+const AppIcon = ({ uri, assetKey = null, size = 18, tintColor = "#fff", style }) => {
+  const fallback = assetKey ? LOCAL_ICON_FALLBACKS?.[assetKey] : null;
+  const source = fallback || { uri };
+  const effectiveTintColor = assetKey === "clips" ? undefined : tintColor;
+  return (
+    <Image
+      source={source}
+      style={[
+        { width: size, height: size, tintColor: effectiveTintColor, resizeMode: "contain" },
+        style,
+      ]}
+    />
+  );
+};
 
 const QuickActionPill = memo(({ iconSource, title, subtitle, colors, onPress }) => (
   <TouchableOpacity style={styles.quickActionPill} onPress={onPress} activeOpacity={0.85}>
     <LinearGradient colors={colors} style={styles.quickActionPillGradient}>
       <View style={styles.quickActionPillIcon}>
-        <AppIcon uri={iconSource} size={17} />
+        <AppIcon
+          uri={iconSource}
+          assetKey={iconSource === ICON_ASSETS.clips ? "clips" : null}
+          size={17}
+        />
       </View>
       <View style={styles.quickActionPillTextWrap}>
         <Text style={styles.quickActionPillTitle}>{title}</Text>
@@ -68,7 +84,11 @@ const FeaturedCard = memo(
               <Text style={styles.featuredSubtitle}>{subtitle}</Text>
             </View>
             <View style={[styles.playBtn, { backgroundColor: colors[0] }]}>
-              <AppIcon uri={iconSource || ICON_ASSETS.watch} size={16} />
+              <AppIcon
+                uri={iconSource || ICON_ASSETS.watch}
+                assetKey={iconSource === ICON_ASSETS.clips ? "clips" : null}
+                size={16}
+              />
             </View>
           </View>
         </LinearGradient>
@@ -105,7 +125,11 @@ const FeatureCard = memo(
               <Text style={styles.featureSubtitle}>{subtitle}</Text>
             </View>
             <View style={[styles.featureBtn, { backgroundColor: color }]}>
-              <AppIcon uri={iconSource || ICON_ASSETS.watch} size={14} />
+              <AppIcon
+                uri={iconSource || ICON_ASSETS.watch}
+                assetKey={iconSource === ICON_ASSETS.clips ? "clips" : null}
+                size={14}
+              />
             </View>
           </View>
         </LinearGradient>
@@ -224,7 +248,12 @@ const HomeScreen = ({
             <Text style={styles.quickStatLabel}>جواهر</Text>
           </View>
           <View style={styles.quickStatCard}>
-            <AppIcon uri={ICON_ASSETS.clips} size={16} tintColor="#a5f3fc" />
+            <AppIcon
+              uri={ICON_ASSETS.clips}
+              assetKey="clips"
+              size={16}
+              tintColor="#a5f3fc"
+            />
             <Text style={styles.quickStatValue}>{user?.clips_count || 0}</Text>
             <Text style={styles.quickStatLabel}>ريلز</Text>
           </View>

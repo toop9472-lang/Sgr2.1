@@ -26,8 +26,8 @@ const { width } = Dimensions.get("window");
 // ==================== ثوابت النظام ====================
 const GEMS_PER_RIYAL = 500; // 500 جوهرة = 3 ريال سعودي
 const SAR_PER_EXCHANGE = 3;
-const DEFAULT_DAILY_GOAL_GEMS = 30;
-const DEFAULT_DAILY_GOAL_ADS = 6;
+const DEFAULT_DAILY_GOAL_GEMS = 130;
+const DEFAULT_DAILY_GOAL_ADS = 30;
 
 const FIXED_AD_REWARD_GEMS = 5;
 
@@ -307,8 +307,12 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
         throw new Error(`ad_stats_${response.status}`);
       }
       const data = await response.json().catch(() => ({}));
-      const todayAds = Number(data?.today_ads_watched ?? 0) || 0;
-      const todayGems = Number(data?.today_gems_earned ?? 0) || 0;
+      const todayAds =
+        Number(data?.today_admob_ads_watched ?? data?.today_ads_watched ?? 0) || 0;
+      const todayGems =
+        Number(
+          data?.today_challenge_gems_earned ?? data?.today_gems_earned ?? 0,
+        ) || 0;
       const totalGems = Number(data?.total_ad_gems ?? 0) || 0;
       const dailyGoalAds =
         Number(data?.daily_goal_ads ?? DEFAULT_DAILY_GOAL_ADS) || DEFAULT_DAILY_GOAL_ADS;
@@ -414,7 +418,10 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
         onBalanceUpdate({
           saqr_gems: nextBalance,
           today_ads_watched: data?.today_ads_watched,
+          today_admob_ads_watched: data?.today_admob_ads_watched,
+          today_user_ads_watched: data?.today_user_ads_watched,
           today_gems_earned: data?.today_gems_earned,
+          today_challenge_gems_earned: data?.today_challenge_gems_earned,
           remaining_ads_today: data?.remaining_ads_today,
           remaining_gems_today: data?.remaining_gems_today,
           daily_goal_gems: data?.daily_goal_gems,
@@ -528,8 +535,8 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
                         : adGateLoading
                         ? "انتظر قليلاً"
                         : stats.challengeCompleted
-                          ? "ممتاز! أكملت 30 جوهرة اليوم ويمكنك الاستمرار بلا حد"
-                          : `المتبقي اليوم: ${stats.remainingGems} جوهرة`}
+                          ? "ممتاز! أكملت تحدي 30 إعلان AdMob (130 جوهرة متدرجة)"
+                          : `المتبقي اليوم: ${stats.remainingAds} إعلان AdMob • ${stats.remainingGems} جوهرة`}
                     </Text>
                   </View>
                   <View style={styles.watchAdBadge}>
@@ -549,7 +556,7 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
               <View style={styles.tipsCard}>
                 <Ionicons name="bulb" size={18} color="#fbbf24" />
                 <Text style={styles.tipsText}>
-                  كل إعلان مكتمل يمنحك 5 جواهر صقر باحتساب فعلي. هدف اليوم 30 جوهرة كتحدي، ويمكنك الاستمرار بالكسب بعده بلا حد.
+                  إعلان AdMob المكتمل يمنح 5 جواهر، وإعلان المعلن يمنح 1 جوهرة. التحدي اليومي: 30 إعلان AdMob بمجموع 130 جوهرة متدرجة.
                 </Text>
               </View>
 
@@ -576,7 +583,7 @@ const AdRewardsCenter = ({ visible, onClose, userId, onBalanceUpdate }) => {
                 </View>
                 <Text style={styles.progressMetaText}>
                   {stats.challengeCompleted
-                    ? "اكتمل التحدي اليومي 30 جوهرة - بإمكانك متابعة كسب 5 جواهر لكل إعلان بدون حد."
+                    ? "اكتمل تحدي اليوم: 30 إعلان AdMob = 130 جوهرة متدرجة."
                     : `المتبقي: ${stats.remainingAds} إعلان • ${stats.remainingGems} جوهرة`}
                 </Text>
               </View>

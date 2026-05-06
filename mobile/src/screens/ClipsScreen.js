@@ -40,6 +40,27 @@ const toAbsoluteMediaUrl = (value) => {
   return normalized;
 };
 
+const extractMediaPath = (value = "") => {
+  try {
+    if (!value) return "";
+    if (value.startsWith("/")) return value;
+    const parsed = new URL(value);
+    return parsed.pathname || "";
+  } catch (_) {
+    return value || "";
+  }
+};
+
+const looksLikeVideoUrl = (value = "") => {
+  const normalized = (value || "").toLowerCase();
+  if (!normalized) return false;
+  const path = extractMediaPath(normalized);
+  if (path.includes("/api/clips/media/") || path.includes("/media/clips/")) {
+    return true;
+  }
+  return [".mp4", ".mov", ".m4v", ".webm"].some((ext) => path.endsWith(ext));
+};
+
 const normalizeClip = (clip = {}) => {
   const safeComments = Array.isArray(clip?.comments)
     ? clip.comments.map((c) => ({
@@ -373,8 +394,7 @@ const ClipsScreen = ({ user, onClose }) => {
         item.thumbnail_url ||
         CLIP_PLACEHOLDERS[index % CLIP_PLACEHOLDERS.length];
       const hasVideo =
-        typeof item.video_url === "string" &&
-        (item.video_url.includes("/media/clips/") || item.video_url.endsWith(".mp4"));
+        typeof item.video_url === "string" && looksLikeVideoUrl(item.video_url);
       return (
         <View style={[styles.reelCard, { height: screenHeight - 92 }]}>
           {hasVideo ? (

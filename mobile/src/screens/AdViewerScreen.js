@@ -175,7 +175,7 @@ const AdViewerScreen = ({
       // ignore
     }
     if (response?.status === 429) {
-      return "أنهيت تحديات إعلانات اليوم (30 جوهرة). عد غداً.";
+      return "يرجى الانتظار قليلاً قبل احتساب مكافأة إعلان جديد.";
     }
     return "تعذر احتساب مكافأة الإعلان حالياً.";
   }, []);
@@ -535,10 +535,37 @@ const AdViewerScreen = ({
     }
     try {
       await Linking.openURL(externalUrl);
+      const persisted = await persistReward({
+        watchDuration: 20,
+        adType: "advertiser_rewarded_user_ad",
+      });
+      if (!persisted?.ok) {
+        Alert.alert("تنبيه", persisted?.message || "تعذر احتساب مكافأة الإعلان حالياً.");
+        return;
+      }
+      const gems =
+        Number(
+          persisted?.payload?.saqr_gems_earned ??
+            persisted?.payload?.gems_earned ??
+            persisted?.payload?.points_earned ??
+            0,
+        ) || 0;
+      if (gems > 0) {
+        setEarnedGems(gems);
+        setShowPointsAnimation(true);
+        Vibration.vibrate(80);
+        setTimeout(() => setShowPointsAnimation(false), 2500);
+        if (onRewardsEarned) {
+          onRewardsEarned({ gems });
+        }
+        if (recordAdWatched) {
+          recordAdWatched();
+        }
+      }
     } catch (e) {
       Alert.alert("خطأ", "تعذر فتح رابط الإعلان.");
     }
-  }, [currentAd]);
+  }, [currentAd, onRewardsEarned, persistReward, recordAdWatched]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -615,7 +642,7 @@ const AdViewerScreen = ({
               <Ionicons name="sparkles" size={28} color="#fbbf24" />
               <Text style={styles.pointsAnimValue}>+{earnedGems}</Text>
             </View>
-            <Text style={styles.pointsAnimSubtext}>+5 جواهر صقر لكل إعلان مكتمل</Text>
+            <Text style={styles.pointsAnimSubtext}>المكافأة أضيفت لحسابك مباشرة</Text>
           </View>
         </View>
       )}
@@ -705,7 +732,7 @@ const AdViewerScreen = ({
             <Text style={styles.watchPrimaryHint}>
               {isAdMobSlot
                 ? "بعد إكمال إعلان Google تنتقل تلقائياً للعنصر التالي"
-                : "يمكنك الانتقال بين الإعلانات الشخصية وAdMob من أزرار السابق/التالي"}
+                : "إعلان المعلن يمنح 1 جوهرة عند الفتح، وAdMob يمنح 5 جواهر"}
             </Text>
             <View style={styles.watchPrimaryNavRow}>
               <TouchableOpacity

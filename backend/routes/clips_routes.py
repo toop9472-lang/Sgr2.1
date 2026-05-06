@@ -1,9 +1,12 @@
 from datetime import datetime, timezone
+import mimetypes
 import os
+import re
 from typing import Dict, Optional, Set, Tuple
 import uuid
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi.responses import FileResponse
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 
@@ -15,6 +18,17 @@ db = client[os.environ.get("DB_NAME", "saqr_db")]
 
 DEFAULT_CLIP_VISUAL = "https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e14c91a9e40e8d29b6f8d3bf567a4fcb7020c985b1a9d3e96e2035b06f9921e6.png"
 MAX_UPLOAD_MB = 60
+DEMO_TEXT_MARKERS = (
+    "test",
+    "demo",
+    "dummy",
+    "sample",
+    "placeholder",
+    "تجريبي",
+    "تجريب",
+    "وهمي",
+    "اختبار",
+)
 
 
 class CreateClipRequest(BaseModel):
@@ -59,6 +73,17 @@ class ToggleFollowRequest(BaseModel):
     target_user_id: str
 
 
+def _user_filter(user_id: str):
+    return {"$or": [{"id": user_id}, {"user_id": user_id}]}
+
+
+async def _fetch_user(user_id: str, projection=None):
+    user = await db.users.find_one(_user_filter(user_id), projection)
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    return user
+
+
 def _is_video_filename(filename: str) -> bool:
     lowered = (filename or "").lower()
     return lowered.endswith((".mp4", ".mov", ".m4v", ".webm"))
@@ -66,7 +91,49 @@ def _is_video_filename(filename: str) -> bool:
 
 def _is_valid_media_url(value: str) -> bool:
     normalized = (value or "").strip()
-    return normalized.startswith("http") or normalized.startswith("/media/")
+    return (
+        normalized.startswith("http")
+        or normalized.startswith("/media/")
+        or normalized.startswith("/api/clips/media/")
+    )
+
+
+def _is_demo_like_text(value: str) -> bool:
+    normalized = re.sub(r"\s+", " ", (value or "").strip().lower())
+    if not normalized:
+        return False
+    return any(marker in normalized for marker in DEMO_TEXT_MARKERS)
+
+
+def _looks_test_clip(clip: dict) -> bool:
+    text_blob = " ".join(
+        [
+            str(clip.get("title") or ""),
+            str(clip.get("caption") or ""),
+            str(clip.get("content") or ""),
+            str(clip.get("user_name") or ""),
+        ]
+    ).strip()
+    if _is_demo_like_text(text_blob):
+        return True
+
+    for key in ("video_url", "thumbnail_url"):
+        media_value = str(clip.get(key) or "").lower()
+        if any(marker in media_value for marker in ("dummy", "test", "sample", "placeholder")):
+            return True
+    return False
+
+
+def _normalize_clip_media_url(value: str) -> str:
+    normalized = (value or "").strip()
+    if not normalized:
+        return normalized
+    if normalized.startswith("/api/clips/media/"):
+        return normalized
+    if normalized.startswith("/media/clips/"):
+        filename = os.path.basename(normalized)
+        return f"/api/clips/media/{filename}" if filename else normalized
+    return normalized
 
 
 def _normalize_comment(comment: dict) -> dict:
@@ -116,10 +183,18 @@ async def _build_follow_maps(
 @router.get("/feed")
 async def get_clips_feed(limit: int = 30, viewer_id: Optional[str] = None):
     normalized_limit = max(1, min(80, int(limit or 30)))
-    clips = await db.clips_posts.find(
+    raw_clips = await db.clips_posts.find(
         {},
         {"_id": 0},
     ).sort("created_at", -1).limit(normalized_limit).to_list(normalized_limit)
+    clips = []
+    for clip in raw_clips:
+        if _looks_test_clip(clip):
+            clip_id = clip.get("clip_id")
+            if clip_id:
+                await db.clips_posts.delete_one({"clip_id": clip_id})
+            continue
+        clips.append(clip)
 
     owner_ids = {str((clip or {}).get("user_id")) for clip in clips if (clip or {}).get("user_id")}
     followers_count_map, following_count_map, viewer_following_set = await _build_follow_maps(
@@ -137,6 +212,8 @@ async def get_clips_feed(limit: int = 30, viewer_id: Optional[str] = None):
             "title": (clip.get("title") or clip.get("caption") or "مقطع").strip()[:80],
             "content": (clip.get("content") or clip.get("caption") or "").strip()[:220],
             "caption": (clip.get("caption") or clip.get("content") or "").strip()[:180],
+            "video_url": _normalize_clip_media_url(clip.get("video_url") or ""),
+            "thumbnail_url": _normalize_clip_media_url(clip.get("thumbnail_url") or ""),
             "likes_count": int(clip.get("likes_count", len(liked_by)) or 0),
             "liked_by_me": bool(viewer_id and viewer_id in liked_by),
             "comments": comments,
@@ -167,10 +244,11 @@ async def create_clip_post(request: CreateClipRequest):
         or (request.image_url or "").strip()
         or DEFAULT_CLIP_VISUAL
     )
+    visual_source = _normalize_clip_media_url(visual_source)
     if not _is_valid_media_url(visual_source):
         visual_source = DEFAULT_CLIP_VISUAL
 
-    thumb = (request.thumbnail_url or "").strip() or visual_source
+    thumb = _normalize_clip_media_url((request.thumbnail_url or "").strip() or visual_source)
     if not _is_valid_media_url(thumb):
         thumb = DEFAULT_CLIP_VISUAL
 
@@ -210,10 +288,14 @@ async def create_clip_post(request: CreateClipRequest):
         "created_at": created_at,
     }
 
-    await db.clips_posts.insert_one(clip_doc)
+    await db.clips_posts.insert_one({**clip_doc})
     return {
         "success": True,
-        "clip": clip_doc,
+        "clip": {
+            **clip_doc,
+            "video_url": _normalize_clip_media_url(clip_doc.get("video_url") or ""),
+            "thumbnail_url": _normalize_clip_media_url(clip_doc.get("thumbnail_url") or ""),
+        },
     }
 
 
@@ -254,12 +336,33 @@ async def upload_clip_video(
     with open(absolute_path, "wb") as output:
         output.write(content)
 
-    video_url = f"/media/clips/{file_id}.{safe_ext}"
+    video_url = f"/api/clips/media/{file_id}.{safe_ext}"
     return {
         "success": True,
         "video_url": video_url,
         "thumbnail_url": DEFAULT_CLIP_VISUAL,
     }
+
+
+@router.get("/media/{filename}")
+async def get_clip_media(filename: str):
+    safe_filename = os.path.basename(filename or "")
+    if not safe_filename:
+        raise HTTPException(status_code=404, detail="الملف غير موجود")
+
+    media_clips_dir = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "static",
+        "media",
+        "clips",
+    )
+    absolute_path = os.path.join(media_clips_dir, safe_filename)
+    if not os.path.isfile(absolute_path):
+        raise HTTPException(status_code=404, detail="ملف الفيديو غير موجود")
+
+    media_type = mimetypes.guess_type(absolute_path)[0] or "application/octet-stream"
+    return FileResponse(path=absolute_path, media_type=media_type, filename=safe_filename)
 
 
 @router.post("/{clip_id}/toggle-like")

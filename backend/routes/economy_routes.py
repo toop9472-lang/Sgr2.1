@@ -1,12 +1,11 @@
 from datetime import datetime, timedelta, timezone
 import os
 import uuid
-from typing import Optional
+from typing import Optional, Set
 
 from fastapi import APIRouter, HTTPException
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
-from pymongo import ReturnDocument
 
 router = APIRouter(prefix="/economy", tags=["Economy"])
 
@@ -16,13 +15,28 @@ db = client[os.environ.get("DB_NAME", "saqr_db")]
 
 EXCHANGE_GEMS = 500
 EXCHANGE_SAR = 3
-AD_REWARD_GEMS = 5
-AD_COOLDOWN_SECONDS = 45
-AD_DAILY_GEMS_LIMIT = 30
-AD_DAILY_ADS_LIMIT = max(1, AD_DAILY_GEMS_LIMIT // AD_REWARD_GEMS)
-MIN_AD_WATCH_SECONDS = 40
+AD_REWARD_GEMS_ADMOB = 5
+AD_REWARD_GEMS_USER_AD = 1
+AD_COOLDOWN_SECONDS = 5
+MIN_AD_WATCH_SECONDS_ADMOB = 40
+MIN_AD_WATCH_SECONDS_USER_AD = 20
+AD_DAILY_ADS_LIMIT = 30
+AD_DAILY_CHALLENGE_GEMS_LIMIT = 130
+AD_CHALLENGE_TIERS = (
+    {"ads_required": 5, "bonus_gems": 10},
+    {"ads_required": 10, "bonus_gems": 15},
+    {"ads_required": 15, "bonus_gems": 20},
+    {"ads_required": 20, "bonus_gems": 25},
+    {"ads_required": 25, "bonus_gems": 30},
+    {"ads_required": 30, "bonus_gems": 30},
+)
 CHAT_MESSAGE_COST = 0
 EMPTY_DIAMONDS = 0
+
+# Backward-compatible aliases used by old payload fields and tests.
+AD_REWARD_GEMS = AD_REWARD_GEMS_ADMOB
+AD_DAILY_GEMS_LIMIT = AD_DAILY_CHALLENGE_GEMS_LIMIT
+MIN_AD_WATCH_SECONDS = MIN_AD_WATCH_SECONDS_ADMOB
 
 
 def _user_filter(user_id: str):
@@ -55,15 +69,50 @@ def _is_allowed_ad_source(source: str) -> bool:
         "rewarded_ad",
         "adwatch",
         "admob",
+        "advertiser",
+        "user_ad",
+        "local_ad",
     )
     return normalized.startswith(allowed_prefixes)
 
 
-async def _get_today_ad_progress(user_id: str):
+def _normalize_ad_source(ad_type: Optional[str]) -> str:
+    normalized = (ad_type or "").strip().lower()
+    if "admob" in normalized or normalized.startswith("rewarded_ad"):
+        return "admob"
+    if "advertiser" in normalized or "user" in normalized or "local" in normalized:
+        return "user_ad"
+    if normalized.startswith("ad_") or normalized.startswith("watch_ad"):
+        return "admob"
+    return "admob"
+
+
+def _reward_gems_for_source(ad_source: str) -> int:
+    if ad_source == "user_ad":
+        return AD_REWARD_GEMS_USER_AD
+    return AD_REWARD_GEMS_ADMOB
+
+
+def _required_watch_seconds(ad_source: str) -> int:
+    if ad_source == "user_ad":
+        return MIN_AD_WATCH_SECONDS_USER_AD
+    return MIN_AD_WATCH_SECONDS_ADMOB
+
+
+async def _get_today_ad_progress(
+    user_id: str,
+    ad_source: Optional[str] = None,
+    reward_type: Optional[str] = None,
+):
     today_prefix = datetime.now(timezone.utc).date().isoformat()
+    match_filter = {"user_id": user_id, "timestamp": {"$regex": f"^{today_prefix}"}}
+    if ad_source:
+        match_filter["ad_source"] = ad_source
+    if reward_type:
+        match_filter["reward_type"] = reward_type
     today_stats = await db.ad_watch_history.aggregate(
         [
-            {"$match": {"user_id": user_id, "timestamp": {"$regex": f"^{today_prefix}"}}},
+            {"$match": match_filter},
             {"$group": {"_id": None, "count": {"$sum": 1}, "gems": {"$sum": "$gems_earned"}}},
         ]
     ).to_list(1)
@@ -72,13 +121,61 @@ async def _get_today_ad_progress(user_id: str):
     return today_count, today_gems
 
 
-def _build_daily_challenge_payload(today_count: int, today_gems: int):
+async def _get_today_claimed_tier_ads(user_id: str) -> Set[int]:
+    today_prefix = datetime.now(timezone.utc).date().isoformat()
+    claimed_docs = await db.ad_challenge_claims.find(
+        {"user_id": user_id, "date": today_prefix},
+        {"_id": 0, "tier_ads_required": 1},
+    ).to_list(30)
+    return {
+        int(doc.get("tier_ads_required"))
+        for doc in claimed_docs
+        if int(doc.get("tier_ads_required", 0)) > 0
+    }
+
+
+def _get_newly_unlocked_tiers(admob_ads_watched: int, claimed_tiers: Set[int]):
+    unlocked = []
+    for tier in AD_CHALLENGE_TIERS:
+        ads_required = int(tier["ads_required"])
+        if admob_ads_watched >= ads_required and ads_required not in claimed_tiers:
+            unlocked.append(tier)
+    return unlocked
+
+
+def _build_daily_challenge_payload(
+    today_admob_count: int,
+    today_challenge_gems: int,
+    claimed_tiers: Optional[Set[int]] = None,
+):
+    claimed_set = claimed_tiers or set()
+    tiers_payload = []
+    for tier in AD_CHALLENGE_TIERS:
+        ads_required = int(tier["ads_required"])
+        bonus = int(tier["bonus_gems"])
+        tiers_payload.append(
+            {
+                "ads_required": ads_required,
+                "bonus_gems": bonus,
+                "claimed": ads_required in claimed_set,
+                "unlocked": today_admob_count >= ads_required,
+            }
+        )
+
     return {
         "daily_goal_ads": AD_DAILY_ADS_LIMIT,
-        "daily_goal_gems": AD_DAILY_GEMS_LIMIT,
-        "remaining_ads_today": max(0, AD_DAILY_ADS_LIMIT - today_count),
-        "remaining_gems_today": max(0, AD_DAILY_GEMS_LIMIT - today_gems),
-        "challenge_completed": today_gems >= AD_DAILY_GEMS_LIMIT,
+        "daily_goal_gems": AD_DAILY_CHALLENGE_GEMS_LIMIT,
+        "today_admob_ads_watched": today_admob_count,
+        "today_challenge_gems_earned": today_challenge_gems,
+        "remaining_ads_today": max(0, AD_DAILY_ADS_LIMIT - today_admob_count),
+        "remaining_gems_today": max(0, AD_DAILY_CHALLENGE_GEMS_LIMIT - today_challenge_gems),
+        "challenge_completed": (
+            today_admob_count >= AD_DAILY_ADS_LIMIT
+            and today_challenge_gems >= AD_DAILY_CHALLENGE_GEMS_LIMIT
+        ),
+        "reward_per_admob_gems": AD_REWARD_GEMS_ADMOB,
+        "reward_per_user_ad_gems": AD_REWARD_GEMS_USER_AD,
+        "challenge_tiers": tiers_payload,
     }
 
 
@@ -152,9 +249,35 @@ class SendChatMessageRequest(BaseModel):
 async def get_user_balance(user_id: str):
     user = await _fetch_user(
         user_id,
-        {"_id": 0, "saqr_points": 1, "saqr_gems": 1, "points": 1},
+        {
+            "_id": 0,
+            "saqr_points": 1,
+            "saqr_gems": 1,
+            "points": 1,
+            "total_ads_watched": 1,
+            "total_ad_gems": 1,
+            "total_admob_ads_watched": 1,
+            "total_user_ads_watched": 1,
+        },
     )
     today_count, today_gems = await _get_today_ad_progress(user_id)
+    today_admob_count, _ = await _get_today_ad_progress(
+        user_id,
+        ad_source="admob",
+        reward_type="base_watch",
+    )
+    today_user_count, _ = await _get_today_ad_progress(
+        user_id,
+        ad_source="user_ad",
+        reward_type="base_watch",
+    )
+    _, today_challenge_gems = await _get_today_ad_progress(
+        user_id,
+        ad_source="admob",
+        reward_type="challenge_bonus",
+    )
+    claimed_tiers = await _get_today_claimed_tier_ads(user_id)
+
     saqr_gems = int(
         user.get("saqr_gems", user.get("saqr_points", user.get("points", 0))) or 0
     )
@@ -164,13 +287,21 @@ async def get_user_balance(user_id: str):
         "saqr_gems": saqr_gems,
         "saqr_gems_value_sar": _gems_to_sar(saqr_gems),
         "daily_points_earned": today_gems,
-        "daily_points_remaining": max(0, AD_DAILY_GEMS_LIMIT - today_gems),
-        "daily_limit": AD_DAILY_GEMS_LIMIT,
+        "daily_points_remaining": max(0, AD_DAILY_CHALLENGE_GEMS_LIMIT - today_challenge_gems),
+        "daily_limit": AD_DAILY_CHALLENGE_GEMS_LIMIT,
         "today_ads_watched": today_count,
-        "daily_goal_ads": AD_DAILY_ADS_LIMIT,
+        "today_admob_ads_watched": today_admob_count,
+        "today_user_ads_watched": today_user_count,
+        "today_challenge_gems_earned": today_challenge_gems,
+        **_build_daily_challenge_payload(today_admob_count, today_challenge_gems, claimed_tiers),
+        "total_ads_watched": int(user.get("total_ads_watched", 0) or 0),
+        "total_ad_gems": int(user.get("total_ad_gems", 0) or 0),
+        "total_admob_ads_watched": int(user.get("total_admob_ads_watched", 0) or 0),
+        "total_user_ads_watched": int(user.get("total_user_ads_watched", 0) or 0),
         "chat_message_cost": CHAT_MESSAGE_COST,
         "exchange_rate": f"{EXCHANGE_GEMS} جوهرة صقر = {EXCHANGE_SAR} ريال سعودي",
     }
+
 
 
 @router.get("/packages")
@@ -317,20 +448,30 @@ async def spend_diamonds(request: SpendDiamondsDirectRequest):
 
 @router.post("/ad-watch-reward")
 async def claim_ad_watch_reward(request: AdWatchRewardRequest):
-    if int(request.watch_duration_seconds or 0) < MIN_AD_WATCH_SECONDS:
+    ad_source = _normalize_ad_source(request.ad_type)
+    required_seconds = _required_watch_seconds(ad_source)
+    if int(request.watch_duration_seconds or 0) < required_seconds:
         raise HTTPException(
             status_code=400,
             detail={
                 "error": "watch_duration_too_short",
                 "message": "مدة مشاهدة الإعلان غير كافية لاحتساب المكافأة.",
-                "required_seconds": MIN_AD_WATCH_SECONDS,
+                "required_seconds": required_seconds,
             },
         )
 
     user = await _fetch_user(
         request.user_id,
-        {"_id": 0, "saqr_gems": 1, "ad_last_claim_at": 1, "total_ads_watched": 1},
+        {
+            "_id": 0,
+            "saqr_gems": 1,
+            "ad_last_claim_at": 1,
+            "total_ads_watched": 1,
+            "total_admob_ads_watched": 1,
+            "total_user_ads_watched": 1,
+        },
     )
+
     now_dt = datetime.now(timezone.utc)
     last_claim_raw = user.get("ad_last_claim_at")
     if last_claim_raw:
@@ -348,77 +489,233 @@ async def claim_ad_watch_reward(request: AdWatchRewardRequest):
         except Exception:
             pass
 
+    base_reward_gems = _reward_gems_for_source(ad_source)
+    challenge_bonus_gems = 0
+
     today_count, today_gems = await _get_today_ad_progress(request.user_id)
-    new_gems = int(user.get("saqr_gems", 0) or 0) + AD_REWARD_GEMS
-    updated_total_ads = int(user.get("total_ads_watched", 0) or 0) + 1
-    updated_today_count = today_count + 1
-    updated_today_gems = today_gems + AD_REWARD_GEMS
+    today_admob_count, _ = await _get_today_ad_progress(
+        request.user_id,
+        ad_source="admob",
+        reward_type="base_watch",
+    )
+    today_user_count, _ = await _get_today_ad_progress(
+        request.user_id,
+        ad_source="user_ad",
+        reward_type="base_watch",
+    )
+    _, today_challenge_gems = await _get_today_ad_progress(
+        request.user_id,
+        ad_source="admob",
+        reward_type="challenge_bonus",
+    )
+
+    claimed_tiers = await _get_today_claimed_tier_ads(request.user_id)
+    claimed_tiers_after = set(claimed_tiers)
+    newly_unlocked_tiers = []
+
+    if ad_source == "admob":
+        updated_today_admob_count_for_tiers = today_admob_count + 1
+        newly_unlocked_tiers = _get_newly_unlocked_tiers(
+            updated_today_admob_count_for_tiers,
+            claimed_tiers,
+        )
+        if newly_unlocked_tiers:
+            challenge_bonus_gems = int(
+                sum(int(tier.get("bonus_gems", 0) or 0) for tier in newly_unlocked_tiers)
+            )
+            today_prefix = now_dt.date().isoformat()
+            for tier in newly_unlocked_tiers:
+                ads_required = int(tier.get("ads_required", 0) or 0)
+                bonus_gems = int(tier.get("bonus_gems", 0) or 0)
+                if ads_required <= 0:
+                    continue
+                await db.ad_challenge_claims.update_one(
+                    {
+                        "user_id": request.user_id,
+                        "date": today_prefix,
+                        "tier_ads_required": ads_required,
+                    },
+                    {
+                        "$setOnInsert": {
+                            "user_id": request.user_id,
+                            "date": today_prefix,
+                            "tier_ads_required": ads_required,
+                            "bonus_gems": bonus_gems,
+                            "created_at": now_dt.isoformat(),
+                        }
+                    },
+                    upsert=True,
+                )
+                claimed_tiers_after.add(ads_required)
+
+    total_gems_earned = base_reward_gems + challenge_bonus_gems
+    new_gems = int(user.get("saqr_gems", 0) or 0) + total_gems_earned
+
+    inc_payload = {
+        "saqr_points": total_gems_earned,
+        "points": total_gems_earned,
+        "total_ads_watched": 1,
+        "total_ad_gems": total_gems_earned,
+    }
+    if ad_source == "admob":
+        inc_payload["total_admob_ads_watched"] = 1
+    else:
+        inc_payload["total_user_ads_watched"] = 1
+
+    transactions = [
+        {
+            "type": f"ad_watch_{ad_source}",
+            "amount": base_reward_gems,
+            "duration_seconds": request.watch_duration_seconds,
+            "ad_type": request.ad_type,
+            "ad_source": ad_source,
+            "reward_type": "base_watch",
+            "timestamp": now_dt.isoformat(),
+            "balance_after": new_gems,
+        }
+    ]
+    if challenge_bonus_gems > 0:
+        transactions.append(
+            {
+                "type": "admob_challenge_bonus",
+                "amount": challenge_bonus_gems,
+                "ad_source": "admob",
+                "reward_type": "challenge_bonus",
+                "timestamp": now_dt.isoformat(),
+                "balance_after": new_gems,
+            }
+        )
+
     await db.users.update_one(
         _user_filter(request.user_id),
         {
-            "$set": {"saqr_gems": new_gems, "ad_last_claim_at": now_dt.isoformat(), "diamonds": EMPTY_DIAMONDS},
-            "$inc": {
-                "saqr_points": AD_REWARD_GEMS,
-                "points": AD_REWARD_GEMS,
-                "total_ads_watched": 1,
-                "total_ad_gems": AD_REWARD_GEMS,
+            "$set": {
+                "saqr_gems": new_gems,
+                "ad_last_claim_at": now_dt.isoformat(),
+                "diamonds": EMPTY_DIAMONDS,
             },
-            "$push": {
-                "saqr_gems_transactions": {
-                    "type": "ad_watch",
-                    "amount": AD_REWARD_GEMS,
-                    "duration_seconds": request.watch_duration_seconds,
-                    "ad_type": request.ad_type,
-                    "timestamp": now_dt.isoformat(),
-                    "balance_after": new_gems,
-                }
-            },
+            "$inc": inc_payload,
+            "$push": {"saqr_gems_transactions": {"$each": transactions, "$slice": -200}},
         },
     )
+
     await db.ad_watch_history.insert_one(
         {
             "user_id": request.user_id,
-            "gems_earned": AD_REWARD_GEMS,
+            "gems_earned": base_reward_gems,
             "diamonds_earned": 0,
             "duration_seconds": request.watch_duration_seconds,
             "ad_type": request.ad_type,
+            "ad_source": ad_source,
+            "reward_type": "base_watch",
             "timestamp": now_dt.isoformat(),
         }
     )
+    if challenge_bonus_gems > 0:
+        await db.ad_watch_history.insert_one(
+            {
+                "user_id": request.user_id,
+                "gems_earned": challenge_bonus_gems,
+                "diamonds_earned": 0,
+                "duration_seconds": 0,
+                "ad_type": "admob_challenge_bonus",
+                "ad_source": "admob",
+                "reward_type": "challenge_bonus",
+                "timestamp": now_dt.isoformat(),
+            }
+        )
+
+    updated_total_ads = int(user.get("total_ads_watched", 0) or 0) + 1
+    updated_today_count = today_count + 1
+    updated_today_gems = today_gems + total_gems_earned
+    updated_today_admob_count = today_admob_count + (1 if ad_source == "admob" else 0)
+    updated_today_user_count = today_user_count + (1 if ad_source == "user_ad" else 0)
+    updated_today_challenge_gems = today_challenge_gems + challenge_bonus_gems
+
+    message = f"حصلت على {base_reward_gems} جوهرة صقر."
+    if challenge_bonus_gems > 0:
+        message += f" مكافأة تحدي إضافية: +{challenge_bonus_gems} جوهرة."
+
     return {
         "success": True,
-        "saqr_gems_earned": AD_REWARD_GEMS,
+        "ad_source": ad_source,
+        "saqr_gems_earned": base_reward_gems,
+        "gems_earned": base_reward_gems,
+        "challenge_bonus_gems": challenge_bonus_gems,
+        "total_gems_earned": total_gems_earned,
         "diamonds_earned": 0,
         "new_gems_balance": new_gems,
+        "new_balance": new_gems,
         "new_diamonds_balance": EMPTY_DIAMONDS,
         "total_ads_watched": updated_total_ads,
         "today_ads_watched": updated_today_count,
+        "today_admob_ads_watched": updated_today_admob_count,
+        "today_user_ads_watched": updated_today_user_count,
         "today_gems_earned": updated_today_gems,
-        **_build_daily_challenge_payload(updated_today_count, updated_today_gems),
+        "today_challenge_gems_earned": updated_today_challenge_gems,
+        **_build_daily_challenge_payload(
+            updated_today_admob_count,
+            updated_today_challenge_gems,
+            claimed_tiers_after,
+        ),
         "carry_seconds": 0,
         "saqr_gems_value_sar": _gems_to_sar(new_gems),
         "exchange_rate": f"{EXCHANGE_GEMS} جوهرة صقر = {EXCHANGE_SAR} ريال سعودي",
-        "message": f"حصلت على {AD_REWARD_GEMS} جوهرة صقر.",
+        "message": message,
     }
+
 
 
 @router.get("/ad-stats/{user_id}")
 async def get_ad_stats(user_id: str):
     user = await _fetch_user(
         user_id,
-        {"_id": 0, "total_ads_watched": 1, "total_ad_gems": 1, "saqr_gems": 1},
+        {
+            "_id": 0,
+            "total_ads_watched": 1,
+            "total_ad_gems": 1,
+            "total_admob_ads_watched": 1,
+            "total_user_ads_watched": 1,
+            "saqr_gems": 1,
+        },
     )
+
     today_count, today_gems = await _get_today_ad_progress(user_id)
+    today_admob_count, _ = await _get_today_ad_progress(
+        user_id,
+        ad_source="admob",
+        reward_type="base_watch",
+    )
+    today_user_count, _ = await _get_today_ad_progress(
+        user_id,
+        ad_source="user_ad",
+        reward_type="base_watch",
+    )
+    _, today_challenge_gems = await _get_today_ad_progress(
+        user_id,
+        ad_source="admob",
+        reward_type="challenge_bonus",
+    )
+    claimed_tiers = await _get_today_claimed_tier_ads(user_id)
+
     return {
         "total_ads_watched": int(user.get("total_ads_watched", 0) or 0),
         "total_ad_gems": int(user.get("total_ad_gems", 0) or 0),
+        "total_admob_ads_watched": int(user.get("total_admob_ads_watched", 0) or 0),
+        "total_user_ads_watched": int(user.get("total_user_ads_watched", 0) or 0),
         "today_ads_watched": today_count,
+        "today_admob_ads_watched": today_admob_count,
+        "today_user_ads_watched": today_user_count,
         "today_gems_earned": today_gems,
-        **_build_daily_challenge_payload(today_count, today_gems),
+        "today_challenge_gems_earned": today_challenge_gems,
+        **_build_daily_challenge_payload(today_admob_count, today_challenge_gems, claimed_tiers),
         "current_saqr_gems": int(user.get("saqr_gems", 0) or 0),
         "current_diamonds": EMPTY_DIAMONDS,
+        "reward_per_admob_gems": AD_REWARD_GEMS_ADMOB,
+        "reward_per_user_ad_gems": AD_REWARD_GEMS_USER_AD,
         "exchange_rate": f"{EXCHANGE_GEMS} جوهرة صقر = {EXCHANGE_SAR} ريال سعودي",
     }
+
 
 
 @router.post("/claim-chest-reward")
@@ -431,83 +728,71 @@ async def claim_chest_reward():
 
 @router.post("/add-saqr-gems")
 async def add_saqr_gems(request: AddSaqrGemsRequest):
-    if request.amount != AD_REWARD_GEMS:
-        raise HTTPException(status_code=400, detail=f"قيمة المكافأة يجب أن تكون {AD_REWARD_GEMS} جواهر.")
     if not _is_allowed_ad_source(request.source):
         raise HTTPException(status_code=400, detail="مصدر الجواهر يجب أن يكون إعلاناً.")
-    user = await _fetch_user(
-        request.user_id,
-        {"_id": 0, "id": 1, "saqr_gems": 1, "total_ads_watched": 1},
+
+    # Keep this endpoint backward-compatible by delegating to the main reward flow.
+    # Source decides reward value: AdMob=5, user ads=1.
+    delegated_request = AdWatchRewardRequest(
+        user_id=request.user_id,
+        watch_duration_seconds=60,
+        ad_type=request.source,
     )
-    today_count, today_gems = await _get_today_ad_progress(request.user_id)
-    now_iso = datetime.now(timezone.utc).isoformat()
-    result = await db.users.find_one_and_update(
-        _user_filter(request.user_id),
-        {
-            "$inc": {
-                "saqr_gems": AD_REWARD_GEMS,
-                "saqr_points": AD_REWARD_GEMS,
-                "points": AD_REWARD_GEMS,
-                "total_ad_gems": AD_REWARD_GEMS,
-                "total_ads_watched": 1,
-            },
-            "$set": {"diamonds": EMPTY_DIAMONDS},
-            "$push": {
-                "saqr_gems_transactions": {
-                    "type": request.source,
-                    "amount": AD_REWARD_GEMS,
-                    "timestamp": now_iso,
-                }
-            },
-        },
-        projection={"_id": 0, "saqr_gems": 1},
-        return_document=ReturnDocument.AFTER,
-    )
-    await db.ad_watch_history.insert_one(
-        {
-            "user_id": request.user_id,
-            "gems_earned": AD_REWARD_GEMS,
-            "diamonds_earned": 0,
-            "duration_seconds": 60,
-            "ad_type": request.source,
-            "timestamp": now_iso,
-        }
-    )
-    new_balance = int((result or {}).get("saqr_gems", 0) or 0)
-    updated_today_count = today_count + 1
-    updated_total_ads = int(user.get("total_ads_watched", 0) or 0) + 1
-    updated_today_gems = today_gems + AD_REWARD_GEMS
-    return {
-        "success": True,
-        "gems_earned": AD_REWARD_GEMS,
-        "saqr_gems_earned": AD_REWARD_GEMS,
-        "total_ads_watched": updated_total_ads,
-        "today_ads_watched": updated_today_count,
-        "today_gems_earned": updated_today_gems,
-        **_build_daily_challenge_payload(updated_today_count, updated_today_gems),
-        "new_balance": new_balance,
-        "saqr_gems_value_sar": _gems_to_sar(new_balance),
-        "message": f"حصلت على {AD_REWARD_GEMS} جوهرة صقر.",
-    }
+    return await claim_ad_watch_reward(delegated_request)
+
+
 
 @router.get("/ad-challenge/{user_id}")
 async def get_ad_challenge_status(user_id: str):
     user = await _fetch_user(
         user_id,
-        {"_id": 0, "total_ads_watched": 1, "total_ad_gems": 1, "saqr_gems": 1},
+        {
+            "_id": 0,
+            "total_ads_watched": 1,
+            "total_ad_gems": 1,
+            "total_admob_ads_watched": 1,
+            "total_user_ads_watched": 1,
+            "saqr_gems": 1,
+        },
     )
+
     today_count, today_gems = await _get_today_ad_progress(user_id)
+    today_admob_count, _ = await _get_today_ad_progress(
+        user_id,
+        ad_source="admob",
+        reward_type="base_watch",
+    )
+    today_user_count, _ = await _get_today_ad_progress(
+        user_id,
+        ad_source="user_ad",
+        reward_type="base_watch",
+    )
+    _, today_challenge_gems = await _get_today_ad_progress(
+        user_id,
+        ad_source="admob",
+        reward_type="challenge_bonus",
+    )
+    claimed_tiers = await _get_today_claimed_tier_ads(user_id)
+
     return {
-        "challenge_type": "admob_daily",
-        "reward_per_ad_gems": AD_REWARD_GEMS,
+        "challenge_type": "admob_daily_30_ads",
+        "reward_per_ad_gems": AD_REWARD_GEMS_ADMOB,
+        "reward_per_admob_gems": AD_REWARD_GEMS_ADMOB,
+        "reward_per_user_ad_gems": AD_REWARD_GEMS_USER_AD,
         "today_ads_watched": today_count,
+        "today_admob_ads_watched": today_admob_count,
+        "today_user_ads_watched": today_user_count,
         "today_gems_earned": today_gems,
-        **_build_daily_challenge_payload(today_count, today_gems),
+        "today_challenge_gems_earned": today_challenge_gems,
+        **_build_daily_challenge_payload(today_admob_count, today_challenge_gems, claimed_tiers),
         "total_ads_watched": int(user.get("total_ads_watched", 0) or 0),
         "total_ad_gems": int(user.get("total_ad_gems", 0) or 0),
+        "total_admob_ads_watched": int(user.get("total_admob_ads_watched", 0) or 0),
+        "total_user_ads_watched": int(user.get("total_user_ads_watched", 0) or 0),
         "current_saqr_gems": int(user.get("saqr_gems", 0) or 0),
         "exchange_rate": f"{EXCHANGE_GEMS} جوهرة صقر = {EXCHANGE_SAR} ريال سعودي",
     }
+
 
 
 @router.get("/saqr-gems/{user_id}")

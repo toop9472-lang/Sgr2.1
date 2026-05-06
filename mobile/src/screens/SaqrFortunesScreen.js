@@ -213,7 +213,11 @@ const SaqrFortunesScreen = ({ user, onClose, onBalanceUpdate }) => {
         userId={userId}
         onBalanceUpdate={async (rewardData = {}) => {
           const nextToday =
-            Number(rewardData?.today_ads_watched ?? todayAds + 1) || todayAds + 1;
+            Number(
+              rewardData?.today_admob_ads_watched ??
+                rewardData?.today_ads_watched ??
+                todayAds + 1,
+            ) || todayAds + 1;
           const nextTotal = totalAds + 1;
           const nextBalance =
             Number(rewardData?.saqr_gems ?? saqrGems + AD_REWARD_GEMS) ||

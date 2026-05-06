@@ -6,8 +6,51 @@ from auth.dependencies import get_current_user_id
 from typing import List, Optional
 from datetime import datetime, timezone
 import os
+import re
 
 router = APIRouter(prefix='/ads', tags=['Advertisements'])
+DEMO_TEXT_MARKERS = (
+    "test",
+    "demo",
+    "dummy",
+    "sample",
+    "placeholder",
+    "تجريبي",
+    "تجريب",
+    "وهمي",
+    "اختبار",
+)
+
+
+def _is_demo_like_text(value: str) -> bool:
+    normalized = re.sub(r"\s+", " ", (value or "").strip().lower())
+    if not normalized:
+        return False
+    return any(marker in normalized for marker in DEMO_TEXT_MARKERS)
+
+
+def _is_demo_ad(ad: dict) -> bool:
+    text_blob = " ".join(
+        [
+            str(ad.get("title") or ""),
+            str(ad.get("description") or ""),
+            str(ad.get("advertiser") or ad.get("advertiser_name") or ""),
+            str(ad.get("id") or ""),
+        ]
+    )
+    if _is_demo_like_text(text_blob):
+        return True
+
+    media_blob = " ".join(
+        [
+            str(ad.get("video_url") or ""),
+            str(ad.get("thumbnail_url") or ""),
+            str(ad.get("website_url") or ""),
+        ]
+    ).lower()
+    if any(marker in media_blob for marker in ("dummy", "test", "sample", "placeholder")):
+        return True
+    return False
 
 def get_db():
     """Get database connection"""
@@ -48,6 +91,14 @@ async def get_ads(ad_type: Optional[str] = Query(None, description="Filter by ty
     
     # Process main ads
     for ad in main_ads:
+        if _is_demo_ad(ad):
+            ad_id = ad.get('id')
+            if ad_id:
+                await db.ads.update_one(
+                    {'id': ad_id},
+                    {'$set': {'is_active': False}}
+                )
+            continue
         all_ads.append(AdResponse(
             id=ad['id'],
             title=ad['title'],
@@ -61,8 +112,17 @@ async def get_ads(ad_type: Optional[str] = Query(None, description="Filter by ty
             ad_type=ad.get('ad_type', 'global')
         ))
     
-    # Process advertiser ads - check expiration
+    # Process advertiser ads - check expiration and remove demo-like entries
     for ad in advertiser_ads:
+        if _is_demo_ad(ad):
+            ad_id = ad.get('id')
+            if ad_id:
+                await db.advertiser_ads.update_one(
+                    {'id': ad_id},
+                    {'$set': {'status': 'removed', 'is_active': False}}
+                )
+            continue
+
         expires_at = ad.get('expires_at')
         if expires_at:
             # Parse expiration time

@@ -12,7 +12,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { useLanguage } from "../i18n/LanguageContext";
-import { ICON_ASSETS } from "../constants/uiAssets";
+import { ICON_ASSETS, LOCAL_ICON_FALLBACKS } from "../constants/uiAssets";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const hasNotch = Platform.OS === "ios" && SCREEN_HEIGHT >= 812;
@@ -47,6 +47,7 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress, onClipsPress }) => {
   const NavButton = ({ item }) => {
     const isActive = currentPage === item.id;
 
+    const useLocalClipsIcon = item.id === "clips" && Boolean(LOCAL_ICON_FALLBACKS?.clips);
     return (
       <TouchableOpacity
         style={styles.navItem}
@@ -60,11 +61,15 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress, onClipsPress }) => {
           ]}
         >
           <Image
-            source={{ uri: item.icon }}
+            source={
+              useLocalClipsIcon
+                ? LOCAL_ICON_FALLBACKS.clips
+                : { uri: item.icon }
+            }
             style={[
-              styles.navIcon,
+              useLocalClipsIcon ? styles.navIconPlain : styles.navIcon,
               { opacity: isActive ? 1 : 0.68 },
-              isActive ? styles.navIconActive : null,
+              isActive && !useLocalClipsIcon ? styles.navIconActive : null,
             ]}
           />
         </View>
@@ -97,7 +102,12 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress, onClipsPress }) => {
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <Image source={{ uri: NAV_ICONS.clips }} style={styles.centerIcon} />
+              <Image
+                source={LOCAL_ICON_FALLBACKS?.clips || { uri: NAV_ICONS.clips }}
+                style={[
+                  LOCAL_ICON_FALLBACKS?.clips ? styles.centerIconPlain : styles.centerIcon,
+                ]}
+              />
               <Text style={styles.centerButtonText}>
                 {language === "ar" ? "مقاطع" : "Clips"}
               </Text>
@@ -181,6 +191,11 @@ const styles = StyleSheet.create({
     height: 20,
     resizeMode: "contain",
   },
+  navIconPlain: {
+    width: 20,
+    height: 20,
+    resizeMode: "contain",
+  },
   navIconActive: {
     tintColor: "#dbeafe",
   },
@@ -237,6 +252,11 @@ const styles = StyleSheet.create({
     height: 18,
     resizeMode: "contain",
     tintColor: "#fff",
+  },
+  centerIconPlain: {
+    width: 18,
+    height: 18,
+    resizeMode: "contain",
   },
 });
 

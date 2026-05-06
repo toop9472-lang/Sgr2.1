@@ -6,6 +6,7 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 import os
 import uuid
+import re
 
 router = APIRouter(prefix='/advertiser', tags=['Advertiser'])
 MAX_VIDEO_UPLOAD_MB = 80
@@ -20,6 +21,18 @@ HOURLY_PACKAGES = {
     48: 399.0,  # 48 hours (2 days)
     168: 999.0  # 7 days
 }
+
+DEMO_TEXT_MARKERS = (
+    "test",
+    "demo",
+    "dummy",
+    "sample",
+    "placeholder",
+    "تجريبي",
+    "تجريب",
+    "وهمي",
+    "اختبار",
+)
 
 def get_db():
     """Get database connection"""
@@ -36,6 +49,13 @@ def _is_video_filename(filename: str) -> bool:
 def _is_valid_video_url(value: str) -> bool:
     normalized = (value or "").strip()
     return normalized.startswith("http") or normalized.startswith("/media/ads/")
+
+
+def _is_demo_like_text(value: str) -> bool:
+    normalized = re.sub(r"\s+", " ", (value or "").strip().lower())
+    if not normalized:
+        return False
+    return any(marker in normalized for marker in DEMO_TEXT_MARKERS)
 
 
 @router.post('/upload-video', response_model=dict)
@@ -91,6 +111,20 @@ async def create_advertiser_ad(ad_data: AdvertiserAdCreate):
     db = get_db()
     
     try:
+        content_blob = " ".join(
+            [
+                ad_data.advertiser_name or "",
+                ad_data.title or "",
+                ad_data.description or "",
+                ad_data.advertiser_email or "",
+            ]
+        )
+        if _is_demo_like_text(content_blob):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='يرجى إدخال إعلان حقيقي. لا يمكن نشر إعلان تجريبي/وهمي.',
+            )
+
         video_url = (ad_data.video_url or "").strip()
         if not video_url or not _is_valid_video_url(video_url):
             raise HTTPException(
