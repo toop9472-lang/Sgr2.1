@@ -34,9 +34,22 @@ const ClipsPage = ({ user, onBack }) => {
   const [uploadCaption, setUploadCaption] = useState('');
   const [uploadFile, setUploadFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [mutedVideos, setMutedVideos] = useState(true);
   const fileInputRef = useRef(null);
+  const videoRefs = useRef(new Map());
 
   const tt = (ar, en) => (language === 'ar' ? ar : en);
+
+  const isPlayableVideo = (url) => {
+    const v = (url || '').toLowerCase();
+    if (!v) return false;
+    return (
+      /\.(mp4|mov|webm|m4v)(\?|$)/.test(v) ||
+      v.includes('/clips/media/') ||
+      v.includes('/media/clips/') ||
+      v.includes('/media/ads/')
+    );
+  };
 
   const loadClips = useCallback(async () => {
     try {
@@ -61,6 +74,26 @@ const ClipsPage = ({ user, onBack }) => {
   useEffect(() => {
     loadClips();
   }, [loadClips]);
+
+  // Instagram-style autoplay: play video when in viewport, pause when out
+  useEffect(() => {
+    if (!clips.length) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const video = entry.target;
+          if (entry.intersectionRatio >= 0.6) {
+            video.play().catch(() => {});
+          } else {
+            video.pause();
+          }
+        });
+      },
+      { threshold: [0, 0.6, 1] }
+    );
+    videoRefs.current.forEach((v) => v && observer.observe(v));
+    return () => observer.disconnect();
+  }, [clips]);
 
   const handleToggleLike = async (clip) => {
     if (!user) return;
@@ -219,7 +252,7 @@ const ClipsPage = ({ user, onBack }) => {
         {clips.map((clip, idx) => {
           const placeholder = CLIP_PLACEHOLDERS[idx % CLIP_PLACEHOLDERS.length];
           const mediaSrc = clip.video_url || clip.thumbnail_url || placeholder;
-          const isVideo = (clip.video_url || '').match(/\.(mp4|mov|webm|m4v)(\?|$)/i);
+          const isVideo = isPlayableVideo(clip.video_url);
           const isOwn = (user?.id || user?._id) === clip.user_id;
           return (
             <article
@@ -266,16 +299,50 @@ const ClipsPage = ({ user, onBack }) => {
               </div>
 
               {/* Media */}
-              <div className="relative bg-black aspect-[9/16] max-h-[600px] flex items-center justify-center">
+              <div className="relative bg-black aspect-[9/16] max-h-[600px] flex items-center justify-center overflow-hidden">
                 {isVideo ? (
-                  <video
-                    src={mediaSrc}
-                    poster={clip.thumbnail_url || placeholder}
-                    controls
-                    playsInline
-                    className="w-full h-full object-contain"
-                    data-testid={`clip-video-${clip.clip_id}`}
-                  />
+                  <>
+                    <video
+                      ref={(el) => {
+                        if (el) videoRefs.current.set(clip.clip_id, el);
+                        else videoRefs.current.delete(clip.clip_id);
+                      }}
+                      src={mediaSrc}
+                      poster={clip.thumbnail_url || placeholder}
+                      playsInline
+                      loop
+                      muted={mutedVideos}
+                      preload="metadata"
+                      onClick={(e) => {
+                        const v = e.currentTarget;
+                        if (v.paused) v.play().catch(() => {});
+                        else v.pause();
+                      }}
+                      className="w-full h-full object-cover cursor-pointer"
+                      data-testid={`clip-video-${clip.clip_id}`}
+                    />
+                    {/* Mute toggle */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMutedVideos((m) => !m);
+                      }}
+                      className="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-black/60 backdrop-blur text-white flex items-center justify-center hover:bg-black/75 transition"
+                      data-testid={`clip-mute-btn-${clip.clip_id}`}
+                      aria-label="toggle sound"
+                    >
+                      {mutedVideos ? (
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072M17.95 6.05a8 8 0 010 11.9M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                        </svg>
+                      )}
+                    </button>
+                  </>
                 ) : (
                   <img
                     src={mediaSrc}
