@@ -1,113 +1,46 @@
-# صقر - Saqr App PRD
+# Saqr (صقر) — Reels & Chat Social App
 
-## حالة التطبيق: ✅ تم إصلاح جميع الأخطاء - جاهز للبناء
+## Original Problem Statement
+Mobile-first social app (Reels/Clips + Chat) with rewards economy ("Saqr Gems") earned via AdMob. Web frontend must mirror the mobile UI 1:1. Goal: pass Apple App Store review and ship live.
 
----
+User language: العربية (Arabic).
 
-## الإصلاحات المنجزة (4 مارس 2026)
+## Architecture
+- **Backend**: FastAPI + MongoDB (motor). Routes under `/app/backend/routes/`.
+- **Web**: React (`/app/frontend`).
+- **Mobile**: React Native + Expo SDK 53 (`/app/mobile`).
+- **Build**: EAS Build, profile `production`, ASC API key at `mobile/certificates/AuthKey_L598DUD53L.p8`.
 
-### 1. مشكلة تسجيل الدخول ✅
-- إصلاح مشكلة قراءة الـ response مرتين باستخدام `response.clone()`
-- إضافة تتبع مفصل للأخطاء
-- تحسين رسائل الخطأ للمستخدم
+## Implemented (CHANGELOG)
+### 2026-05-06 — iOS Build 105 / v7.2.14 submitted to App Store Connect ✅
+- Bumped `app.json` version → `7.2.14`, `ios.buildNumber` → `105`.
+- Triggered `eas build --platform ios --profile production --auto-submit`. Build `cd5d0b99-08c5-4cef-b865-c92599f2c2fd`, submission `8a8bf8d6-d06d-4104-b0de-0d09e6d345e8` finished at 23:56 UTC.
+- Earlier attempt at build 104 failed in submission step (`Build number 104 already used`); resolved by incrementing to 105.
 
-### 2. مشكلة Apple Sign-In ✅
-- إضافة `usesAppleSignIn: true` في app.json
-- إضافة `expo-apple-authentication` للـ plugins
-- تحسين معالجة خطأ `ERR_REQUEST_UNKNOWN`
+### Earlier this session
+- Synced web UI to mobile (lucide-react icons, removed dark overlays).
+- Fixed 11 backend routes for MongoDB ObjectId serialization (clips, chat, etc.).
+- Reels/FYP: Instagram-style autoplay, snap-to-interval, fullscreen hides BottomNav, mobile upload timeout 180s.
+- Apple Auth `[object Object]` parsing fixed via `extractErrorMessage`.
+- Dummy ads cleared + startup auto-cleanup hook in `server.py`.
 
-### 3. مشكلة الدردشة والألماس ✅
-- إصلاح Backend ليرجع `diamonds` في user object عند تسجيل الدخول
-- قيمة افتراضية 300 ألماسة للمستخدمين الجدد
-- تحسين loadBalance في GlobalChatScreen
+### Reels/FYP backend verified (curl)
+- `GET /api/clips/feed?limit=N&viewer_id=...` → 200, returns enriched clips (likes_count, comments_count, liked_by_me, followers_count, followed_by_me).
+- `POST /api/clips/create` → 200, persists clip.
+- `POST /api/clips/{id}/toggle-like` and legacy `/api/clips/like` → both work.
+- `POST /api/clips/{id}/comment` → works.
+- Frontend `ClipsScreen.js` uses `pagingEnabled`, `snapToInterval={screenHeight}`, `shouldPlay={isActive}`, `onViewableItemsChanged` → correct FYP behavior.
 
-### 4. صور المتجر ✅
-- توليد صور AI للأفتارات (5 صور):
-  - الصقر الذهبي
-  - الماسة الزرقاء
-  - اللهب الناري
-  - التاج الملكي
-  - النجم اللامع
-- توليد صور AI للإطارات (3 صور):
-  - الإطار الذهبي
-  - الإطار النيون
-  - الإطار الملكي
-- توليد صور AI لباقات الألماس (6 صور)
+## Pending / Roadmap
+- **P0** Wait for Apple App Review on build 105 → user must complete metadata/screenshots in ASC if not already done.
+- **P1** In-App Purchases (backend + mobile).
+- **P1** Achievements system logic.
+- **P2** iPad-specific layout fixes for stability.
+- **P2** Privacy Manifest / App Tracking Transparency final compliance.
 
-### 5. صور لعبة البازل ✅
-- توليد 4 صور AI جديدة:
-  - غروب الشمس
-  - الجبال
-  - القطة
-  - الزهور
+## Test Credentials
+See `/app/memory/test_credentials.md` (none modified this session).
 
-### 6. نظام الإنجازات ✅
-- إعادة كتابة النظام بالكامل ليكون مبني على:
-  - مشاهدة الإعلانات (ads_watched)
-  - مشاركة التطبيق (app_shares)
-  - الإحالات الناجحة (successful_referrals)
-- 12 إنجاز جديد
-
-### 7. الإعدادات ✅
-- إضافة زر تسجيل الخروج
-- تحسين ErrorBoundary مع زر "إعادة المحاولة"
-
-### 8. شاشة الإعلانات ✅
-- إصلاح موضع الـ navContainer لتظهر بشكل صحيح على الأجهزة الحديثة
-- زيادة bottom من 40 إلى 60
-- إضافة paddingBottom لـ iOS
-
-### 9. تحديث الحزم ✅
-- تصحيح 6 حزم للتوافق مع Expo SDK 53
-
----
-
-## الملفات المعدلة
-
-### Mobile
-- `/app/mobile/App.js` - ErrorBoundary, handlers
-- `/app/mobile/app.json` - Apple Sign-In config
-- `/app/mobile/src/screens/AuthScreen.js` - login flow
-- `/app/mobile/src/screens/ShopScreen.js` - AI images
-- `/app/mobile/src/screens/GamesScreen.js` - puzzle images
-- `/app/mobile/src/screens/GlobalChatScreen.js` - balance loading
-- `/app/mobile/src/screens/AdViewerScreen.js` - UI fix
-- `/app/mobile/src/screens/AchievementsScreen.js` - new stats
-- `/app/mobile/src/screens/SettingsScreen.js` - logout button
-- `/app/mobile/src/services/api.js` - response cloning
-- `/app/mobile/src/services/authProviders.js` - error handling
-- `/app/mobile/src/services/AchievementsContext.js` - new achievements
-
-### Backend
-- `/app/backend/routes/auth_routes.py` - return diamonds in user object
-
----
-
-## المهام القادمة
-
-### P0 - عند طلب المستخدم
-- بناء نسخة جديدة: `eas build --platform all`
-- رفع للمتاجر: `eas submit`
-
-### P1 - أولوية عالية
-- إصلاح مشاكل iPad (crashes, UI glitches)
-- الحصول على Google Client IDs
-
-### P2 - أولوية متوسطة
-- توليد المزيد من صور AI للعناصر المتبقية
-- البحث عن ألعاب طرف ثالث احترافية
-
----
-
-## بيانات الاختبار
-- Email: `demo@saqr.app`
-- Password: `Demo123456`
-
----
-
-## الإصدار الحالي
-- Version: 7.2.4
-- Build: 76
-
-## آخر تحديث
-4 مارس 2026
+## Known Pitfalls
+- `git pull` from `toop9472-lang/Sgr2.1` has previously overwritten backend ObjectId fixes — re-verify after each pull.
+- EAS auto-increment is OFF (`appVersionSource: local`); always bump `ios.buildNumber` in `app.json` before each iOS build.
