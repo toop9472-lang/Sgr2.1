@@ -323,6 +323,7 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
   const goClips = () => onNavigate && onNavigate('clips');
   const goFortunes = () => onNavigate && onNavigate('fortunes');
   const goFriends = () => onNavigate && onNavigate('friends');
+  const goChat = () => onNavigate && onNavigate('chat');
 
   // Quick pills - 3 items like the latest mobile (ads, reels, fortunes)
   const quickPrimaryCards = [
