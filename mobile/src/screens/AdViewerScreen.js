@@ -17,6 +17,7 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Video, ResizeMode } from "expo-av";
 import api from "../services/api";
 import storage from "../services/storage";
 import admobService from "../services/admobService";
@@ -107,6 +108,32 @@ const AdViewerScreen = ({
 
   const currentAd = ads[currentIndex];
   const isAdMobSlot = currentAd?.ad_source === "admob";
+  const toAbsoluteMediaUrl = (value) => {
+    const normalized = (value || "").trim();
+    if (!normalized) return "";
+    if (normalized.startsWith("http")) return normalized;
+    if (normalized.startsWith("/")) {
+      return `${api.getActiveBaseUrl()}${normalized}`;
+    }
+    return normalized;
+  };
+  const isPlayableVideoUrl = (value) => {
+    const v = (value || "").toLowerCase();
+    if (!v) return false;
+    return (
+      v.endsWith(".mp4") ||
+      v.endsWith(".mov") ||
+      v.endsWith(".m4v") ||
+      v.endsWith(".webm") ||
+      v.includes("/media/ads/") ||
+      v.includes("/api/clips/media/") ||
+      v.includes("/clips/media/")
+    );
+  };
+  const rawVideoUrl = !isAdMobSlot ? currentAd?.video_url : null;
+  const currentVideoUri = isPlayableVideoUrl(rawVideoUrl)
+    ? toAbsoluteMediaUrl(rawVideoUrl)
+    : null;
   const currentVisualUri =
     currentAd?.image_url || currentAd?.thumbnail_url || null;
   const advertiserLabel = isAdMobSlot
@@ -579,7 +606,24 @@ const AdViewerScreen = ({
       onTouchEnd={handleTouchEnd}
     >
       {/* Full-screen background for current feed item */}
-      {currentVisualUri ? (
+      {currentVideoUri ? (
+        <Video
+          ref={videoRef}
+          source={{ uri: currentVideoUri }}
+          style={styles.video}
+          resizeMode={ResizeMode.COVER}
+          shouldPlay={isPlaying}
+          isLooping
+          isMuted={isMuted}
+          volume={isMuted ? 0 : 1.0}
+          useNativeControls={false}
+          onLoadStart={() => setVideoLoading(true)}
+          onLoad={() => setVideoLoading(false)}
+          onError={() => setVideoLoading(false)}
+          posterSource={currentVisualUri ? { uri: currentVisualUri } : undefined}
+          usePoster={Boolean(currentVisualUri)}
+        />
+      ) : currentVisualUri ? (
         <ImageBackground
           source={{ uri: currentVisualUri }}
           style={styles.video}
