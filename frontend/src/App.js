@@ -159,6 +159,30 @@ function MainApp() {
     return () => clearInterval(interval);
   }, [isAuthenticated, user]);
 
+  // Sync gems balance from backend (every 30s + on user change)
+  useEffect(() => {
+    const userId = user?.id || user?._id;
+    if (!isAuthenticated || !userId || user?.isGuest) return;
+
+    const syncBalance = async () => {
+      try {
+        const r = await fetch(`${API_URL}/api/economy/balance/${userId}`);
+        if (!r.ok) return;
+        const d = await r.json();
+        const gems = Number(d?.saqr_gems ?? d?.saqr_points ?? 0) || 0;
+        setUser((prev) =>
+          prev ? { ...prev, saqr_gems: gems, saqr_points: gems, points: gems } : prev,
+        );
+      } catch (e) {
+        // silent
+      }
+    };
+
+    syncBalance();
+    const interval = setInterval(syncBalance, 30000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, user?.id, user?._id, user?.isGuest]);
+
   const handleLogin = async (userData) => {
     try {
       setIsLoading(true);

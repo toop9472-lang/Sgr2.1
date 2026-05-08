@@ -432,7 +432,7 @@ const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
         <div className="flex gap-2 mb-3">
           <QuickStatSticker
             iconName="gems"
-            value={user?.saqr_gems || 0}
+            value={Number(user?.saqr_gems ?? user?.saqr_points ?? user?.points ?? 0) || 0}
             label={copy.gemsLabel}
             tintColor="#fbbf24"
             backgroundImage={bg.statGems}

@@ -1,8 +1,11 @@
 from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorClient
 from models.dashboard import DashboardStats
 from auth.dependencies import get_current_user_id
 from datetime import datetime, timedelta
+import csv
+import io
 import os
 
 router = APIRouter(prefix='/admin/dashboard', tags=['Admin Dashboard'])
@@ -784,3 +787,113 @@ async def ai_process_ad(
             'issues': issues,
             'message': 'لم يتم الموافقة على الإعلان للأسباب التالية'
         }
+
+
+# ====================== CSV Export endpoints ======================
+
+def _csv_response(rows, headers, filename):
+    buf = io.StringIO()
+    # UTF-8 BOM for Excel Arabic compatibility
+    buf.write("\ufeff")
+    writer = csv.writer(buf)
+    writer.writerow(headers)
+    for row in rows:
+        writer.writerow(row)
+    buf.seek(0)
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+        },
+    )
+
+
+@router.get('/export/users.csv')
+async def export_users_csv(admin=Depends(verify_admin)):
+    db = get_db()
+    rows = []
+    cursor = db.users.find({}, {"_id": 0})
+    async for u in cursor:
+        rows.append([
+            u.get('id') or u.get('user_id') or '',
+            u.get('name') or '',
+            u.get('email') or '',
+            u.get('saqr_gems', u.get('points', 0)) or 0,
+            u.get('total_ads_watched', 0) or 0,
+            u.get('total_earned', 0) or 0,
+            'banned' if u.get('is_banned') else 'active',
+            u.get('created_at') or u.get('joined_date') or '',
+        ])
+    return _csv_response(
+        rows,
+        ['user_id', 'name', 'email', 'saqr_gems', 'ads_watched', 'total_earned', 'status', 'created_at'],
+        f'saqr_users_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}.csv',
+    )
+
+
+@router.get('/export/ads.csv')
+async def export_ads_csv(admin=Depends(verify_admin)):
+    db = get_db()
+    rows = []
+    async for a in db.advertiser_ads.find({}, {"_id": 0}):
+        rows.append([
+            a.get('id') or '',
+            a.get('advertiser_id') or '',
+            a.get('title') or '',
+            a.get('status') or '',
+            a.get('budget', 0) or 0,
+            a.get('total_views', 0) or 0,
+            a.get('package_id') or '',
+            a.get('created_at') or '',
+        ])
+    return _csv_response(
+        rows,
+        ['ad_id', 'advertiser_id', 'title', 'status', 'budget_sar', 'total_views', 'package', 'created_at'],
+        f'saqr_ads_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}.csv',
+    )
+
+
+@router.get('/export/withdrawals.csv')
+async def export_withdrawals_csv(admin=Depends(verify_admin)):
+    db = get_db()
+    rows = []
+    async for w in db.withdrawals.find({}, {"_id": 0}):
+        rows.append([
+            w.get('id') or '',
+            w.get('user_id') or '',
+            w.get('user_name') or '',
+            w.get('amount_sar', 0) or w.get('amount', 0) or 0,
+            w.get('amount_gems', 0) or 0,
+            w.get('method') or '',
+            w.get('status') or '',
+            w.get('created_at') or '',
+            w.get('completed_at') or '',
+        ])
+    return _csv_response(
+        rows,
+        ['withdrawal_id', 'user_id', 'user_name', 'amount_sar', 'amount_gems', 'method', 'status', 'created_at', 'completed_at'],
+        f'saqr_withdrawals_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}.csv',
+    )
+
+
+@router.get('/export/clips.csv')
+async def export_clips_csv(admin=Depends(verify_admin)):
+    db = get_db()
+    rows = []
+    async for c in db.clips_posts.find({}, {"_id": 0}):
+        rows.append([
+            c.get('clip_id') or '',
+            c.get('user_id') or '',
+            c.get('user_name') or '',
+            c.get('title') or '',
+            c.get('likes_count', 0) or 0,
+            c.get('comments_count', 0) or 0,
+            c.get('views_count', 0) or 0,
+            c.get('created_at') or '',
+        ])
+    return _csv_response(
+        rows,
+        ['clip_id', 'user_id', 'user_name', 'title', 'likes', 'comments', 'views', 'created_at'],
+        f'saqr_clips_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}.csv',
+    )

@@ -878,8 +878,106 @@ const AnalyticsContent = () => {
     return <div className="text-center py-8 text-gray-400">جاري التحميل...</div>;
   }
 
+  const downloadCsv = async (path, filename) => {
+    try {
+      const token = localStorage.getItem('admin_token');
+      const res = await fetch(`${API}/admin/dashboard/${path}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        toast({
+          title: '❌ فشل التنزيل',
+          description: `HTTP ${res.status}`,
+          variant: 'destructive',
+        });
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast({ title: '✓ تم التنزيل', description: filename });
+    } catch (e) {
+      toast({
+        title: '❌ خطأ',
+        description: String(e?.message || e),
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <div className="space-y-4">
+      {/* Download Reports */}
+      <Card className="bg-[#111118] border-white/10">
+        <CardHeader>
+          <CardTitle className="text-lg text-white flex items-center gap-2">
+            <FileText size={18} className="text-cyan-400" />
+            تقارير قابلة للتنزيل (CSV)
+          </CardTitle>
+          <CardDescription className="text-gray-400 text-xs">
+            ملفات Excel متوافقة مع UTF-8 لكامل البيانات
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <Button
+              onClick={() =>
+                downloadCsv(
+                  'export/users.csv',
+                  `saqr_users_${new Date().toISOString().slice(0, 10)}.csv`,
+                )
+              }
+              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1"
+              data-testid="download-users-csv"
+            >
+              <FileText size={14} /> المستخدمون
+            </Button>
+            <Button
+              onClick={() =>
+                downloadCsv(
+                  'export/ads.csv',
+                  `saqr_ads_${new Date().toISOString().slice(0, 10)}.csv`,
+                )
+              }
+              className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-1"
+              data-testid="download-ads-csv"
+            >
+              <FileText size={14} /> الإعلانات
+            </Button>
+            <Button
+              onClick={() =>
+                downloadCsv(
+                  'export/withdrawals.csv',
+                  `saqr_withdrawals_${new Date().toISOString().slice(0, 10)}.csv`,
+                )
+              }
+              className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-1"
+              data-testid="download-withdrawals-csv"
+            >
+              <FileText size={14} /> السحوبات
+            </Button>
+            <Button
+              onClick={() =>
+                downloadCsv(
+                  'export/clips.csv',
+                  `saqr_clips_${new Date().toISOString().slice(0, 10)}.csv`,
+                )
+              }
+              className="bg-rose-600 hover:bg-rose-700 text-white flex items-center gap-1"
+              data-testid="download-clips-csv"
+            >
+              <FileText size={14} /> الريلز
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card className="bg-[#111118] border-white/10">

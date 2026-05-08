@@ -1,12 +1,13 @@
 from datetime import datetime, timezone
 import os
+import re
 from pathlib import Path
 from typing import Dict, Optional, Set, Tuple
 from urllib.parse import urlparse
 import uuid
 
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Request
+from fastapi.responses import FileResponse, StreamingResponse, Response
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 
@@ -17,9 +18,16 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ.get("DB_NAME", "saqr_db")]
 
 DEFAULT_CLIP_VISUAL = "https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/e14c91a9e40e8d29b6f8d3bf567a4fcb7020c985b1a9d3e96e2035b06f9921e6.png"
-MAX_UPLOAD_MB = 60
+MAX_UPLOAD_MB = 200
 MEDIA_CLIPS_DIR = (Path(__file__).resolve().parent.parent / "static" / "media" / "clips")
 MEDIA_CLIPS_DIR.mkdir(parents=True, exist_ok=True)
+
+VIDEO_MIME_TYPES = {
+    "mp4": "video/mp4",
+    "m4v": "video/mp4",
+    "mov": "video/quicktime",
+    "webm": "video/webm",
+}
 
 
 def _user_filter(user_id: str):
@@ -338,14 +346,67 @@ async def upload_clip_video(
 
 
 @router.get("/media/{filename}")
-async def get_clip_media(filename: str):
+async def get_clip_media(filename: str, request: Request):
+    """Serve uploaded clip media with byte-range support so iOS / expo-av can stream the video."""
     safe_name = os.path.basename(filename or "")
     if safe_name != filename or not _is_video_filename(safe_name):
         raise HTTPException(status_code=400, detail="اسم ملف الفيديو غير صالح")
     absolute_path = MEDIA_CLIPS_DIR / safe_name
     if not absolute_path.exists():
         raise HTTPException(status_code=404, detail="ملف الفيديو غير موجود")
-    return FileResponse(path=str(absolute_path))
+
+    ext = safe_name.rsplit(".", 1)[-1].lower()
+    media_type = VIDEO_MIME_TYPES.get(ext, "video/mp4")
+    file_size = absolute_path.stat().st_size
+
+    range_header = request.headers.get("range") or request.headers.get("Range")
+    common_headers = {
+        "Accept-Ranges": "bytes",
+        "Content-Type": media_type,
+        "Cache-Control": "public, max-age=3600",
+    }
+
+    if not range_header:
+        # No range requested – return the whole file with proper headers.
+        return FileResponse(
+            path=str(absolute_path),
+            media_type=media_type,
+            headers=common_headers,
+        )
+
+    # Parse `bytes=START-END`
+    match = re.match(r"bytes=(\d+)-(\d+)?", range_header.strip())
+    if not match:
+        raise HTTPException(status_code=416, detail="Invalid Range header")
+    start = int(match.group(1))
+    end = int(match.group(2)) if match.group(2) else file_size - 1
+    end = min(end, file_size - 1)
+    if start > end or start >= file_size:
+        return Response(
+            status_code=416,
+            headers={**common_headers, "Content-Range": f"bytes */{file_size}"},
+        )
+
+    chunk_size = end - start + 1
+
+    def iter_file():
+        with open(absolute_path, "rb") as f:
+            f.seek(start)
+            remaining = chunk_size
+            while remaining > 0:
+                read_size = min(64 * 1024, remaining)
+                data = f.read(read_size)
+                if not data:
+                    break
+                remaining -= len(data)
+                yield data
+
+    headers = {
+        **common_headers,
+        "Content-Range": f"bytes {start}-{end}/{file_size}",
+        "Content-Length": str(chunk_size),
+    }
+    return StreamingResponse(iter_file(), status_code=206, headers=headers, media_type=media_type)
 
 
 @router.post("/{clip_id}/toggle-like")
@@ -516,3 +577,73 @@ async def get_profile_follow_stats(user_id: str, viewer_id: Optional[str] = None
         "following_count": following_count,
         "followed_by_me": followed_by_me,
     }
+
+
+# ====================== Delete clip / comment ======================
+
+async def _is_admin(user_id: str) -> bool:
+    if not user_id:
+        return False
+    admin = await db.admins.find_one(
+        {"$or": [{"id": user_id}, {"email": user_id}]}, {"_id": 0, "id": 1}
+    )
+    return bool(admin)
+
+
+class DeleteClipRequest(BaseModel):
+    user_id: str  # current user requesting deletion
+
+
+@router.delete("/{clip_id}")
+async def delete_clip(clip_id: str, user_id: str):
+    """Delete a clip. Allowed for the clip owner or any admin."""
+    clip = await db.clips_posts.find_one({"clip_id": clip_id}, {"_id": 0})
+    if not clip:
+        raise HTTPException(status_code=404, detail="المقطع غير موجود")
+
+    is_owner = clip.get("user_id") == user_id
+    is_admin = await _is_admin(user_id)
+    if not is_owner and not is_admin:
+        raise HTTPException(status_code=403, detail="غير مصرح بحذف هذا المقطع")
+
+    # Try to delete the local video file too (best-effort)
+    try:
+        video_url = (clip.get("video_url") or "").strip()
+        if "/clips/media/" in video_url:
+            filename = video_url.rsplit("/", 1)[-1]
+            local = MEDIA_CLIPS_DIR / filename
+            if local.exists():
+                local.unlink()
+    except Exception:
+        pass
+
+    await db.clips_posts.delete_one({"clip_id": clip_id})
+    return {"success": True, "deleted": clip_id, "by_admin": is_admin}
+
+
+@router.delete("/{clip_id}/comment/{comment_id}")
+async def delete_clip_comment(clip_id: str, comment_id: str, user_id: str):
+    """Delete a comment. Allowed for the comment owner, clip owner, or any admin."""
+    clip = await db.clips_posts.find_one({"clip_id": clip_id}, {"_id": 0})
+    if not clip:
+        raise HTTPException(status_code=404, detail="المقطع غير موجود")
+
+    comments = clip.get("comments") or []
+    target = next((c for c in comments if c.get("comment_id") == comment_id), None)
+    if not target:
+        raise HTTPException(status_code=404, detail="التعليق غير موجود")
+
+    is_admin = await _is_admin(user_id)
+    is_clip_owner = clip.get("user_id") == user_id
+    is_comment_owner = target.get("user_id") == user_id
+    if not (is_admin or is_clip_owner or is_comment_owner):
+        raise HTTPException(status_code=403, detail="غير مصرح بحذف هذا التعليق")
+
+    await db.clips_posts.update_one(
+        {"clip_id": clip_id},
+        {
+            "$pull": {"comments": {"comment_id": comment_id}},
+            "$inc": {"comments_count": -1},
+        },
+    )
+    return {"success": True, "deleted": comment_id, "by_admin": is_admin}

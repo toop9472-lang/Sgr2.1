@@ -570,6 +570,23 @@ async def get_chat_messages(server_id: str, limit: int = 50, before: Optional[st
     }
 
 
+@router.delete("/chat/messages/{message_id}")
+async def delete_chat_message(message_id: str, user_id: str):
+    """Delete a chat message. Allowed for the message author or any admin."""
+    message = await db.chat_messages.find_one({"id": message_id}, {"_id": 0})
+    if not message:
+        raise HTTPException(status_code=404, detail="الرسالة غير موجودة")
+    is_owner = message.get("user_id") == user_id
+    admin = await db.admins.find_one(
+        {"$or": [{"id": user_id}, {"email": user_id}]}, {"_id": 0, "id": 1}
+    )
+    is_admin = bool(admin)
+    if not is_owner and not is_admin:
+        raise HTTPException(status_code=403, detail="غير مصرح بحذف هذه الرسالة")
+    await db.chat_messages.delete_one({"id": message_id})
+    return {"success": True, "deleted": message_id, "by_admin": is_admin}
+
+
 @router.get("/chat/servers")
 async def get_chat_servers():
     servers = [

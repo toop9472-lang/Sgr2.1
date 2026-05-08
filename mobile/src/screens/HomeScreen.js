@@ -246,6 +246,14 @@ const HomeScreen = ({
     setRefreshing(false);
   }, [onRefresh]);
 
+  // Auto-refresh balance every time HomeScreen becomes visible
+  useEffect(() => {
+    if (onRefresh) {
+      onRefresh();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleQuickPresetToggle = useCallback(() => {
     if (!onHomePresetChange) return;
     const nextPreset = homePreset === "brightModern" ? "luxuryDark" : "brightModern";
@@ -362,7 +370,7 @@ const HomeScreen = ({
         <View style={styles.quickStatsRow}>
           <QuickStatSticker
             iconSource={ICON_ASSETS.gems}
-            value={user?.saqr_gems || 0}
+            value={Number(user?.saqr_gems ?? user?.saqr_points ?? user?.points ?? 0) || 0}
             label="جواهر"
             tintColor="#fbbf24"
             backgroundImage={homeCardBackgrounds.statGems}

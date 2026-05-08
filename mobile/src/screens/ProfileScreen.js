@@ -23,6 +23,7 @@ import {
   requestTrackingPermissionsAsync,
 } from "expo-tracking-transparency";
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import api from "../services/api";
 import storage from "../services/storage";
 import { useAchievements } from "../services/AchievementsContext";
@@ -858,17 +859,79 @@ const ProfileScreen = ({
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>
-                رابط الصورة الشخصية (اختياري)
-              </Text>
-              <TextInput
-                style={styles.input}
-                placeholder="https://example.com/avatar.png"
-                placeholderTextColor="rgba(255,255,255,0.3)"
-                value={editAvatarUrl}
-                autoCapitalize="none"
-                onChangeText={setEditAvatarUrl}
-              />
+              <Text style={styles.inputLabel}>الصورة الشخصية</Text>
+              <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
+                {!!editAvatarUrl && (
+                  <Image
+                    source={{ uri: editAvatarUrl }}
+                    style={{ width: 64, height: 64, borderRadius: 32, borderWidth: 2, borderColor: "rgba(96,165,250,0.4)" }}
+                  />
+                )}
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "rgba(96,165,250,0.18)",
+                    borderColor: "rgba(96,165,250,0.45)",
+                    borderWidth: 1,
+                    paddingVertical: 14,
+                    paddingHorizontal: 12,
+                    borderRadius: 14,
+                    gap: 8,
+                  }}
+                  onPress={async () => {
+                    try {
+                      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                      if (!perm.granted) {
+                        Alert.alert("الإذن مطلوب", "يحتاج التطبيق إذن الوصول إلى الصور.");
+                        return;
+                      }
+                      const result = await ImagePicker.launchImageLibraryAsync({
+                        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                        allowsEditing: true,
+                        aspect: [1, 1],
+                        quality: 0.85,
+                      });
+                      if (result.canceled || !result.assets?.length) return;
+                      const asset = result.assets[0];
+                      // Upload to backend (advertiser upload-video accepts images too via multipart)
+                      const formData = new FormData();
+                      formData.append("file", {
+                        uri: asset.uri,
+                        name: `avatar_${Date.now()}.jpg`,
+                        type: "image/jpeg",
+                      });
+                      const uploadResponse = await api.fetch(
+                        `/api/users/upload-avatar?user_id=${encodeURIComponent(user?.id || user?.user_id || "")}`,
+                        { method: "POST", body: formData },
+                      );
+                      if (uploadResponse.ok) {
+                        const data = await uploadResponse.json();
+                        const url = data?.avatar_url || data?.url;
+                        if (url) {
+                          const fullUrl = url.startsWith("http")
+                            ? url
+                            : `${api.getActiveBaseUrl()}${url}`;
+                          setEditAvatarUrl(fullUrl);
+                          Alert.alert("✓", "تم تحديث الصورة. اضغط حفظ للتأكيد.");
+                          return;
+                        }
+                      }
+                      // Fallback: store local URI
+                      setEditAvatarUrl(asset.uri);
+                    } catch (e) {
+                      Alert.alert("خطأ", String(e?.message || e));
+                    }
+                  }}
+                >
+                  <Ionicons name="image-outline" size={20} color="#bfdbfe" />
+                  <Text style={{ color: "#bfdbfe", fontWeight: "600" }}>
+                    اختر صورة من الاستديو
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             <TouchableOpacity

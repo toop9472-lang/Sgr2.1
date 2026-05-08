@@ -92,6 +92,12 @@ const parseApiErrorMessage = async (
 
 const ClipsScreen = ({ user, onClose, onNavigateToAds }) => {
   const userId = user?.id || user?.user_id;
+  const isAdmin = Boolean(
+    user?.is_admin ||
+      user?.role === "admin" ||
+      user?.role === "super_admin" ||
+      (user?.email && user?.email.toLowerCase() === "sky-321@hotmail.com"),
+  );
   const [clips, setClips] = useState([]);
   const [filteredClips, setFilteredClips] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -173,14 +179,14 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds }) => {
       if (result.canceled || !result.assets?.length) return;
       const videoAsset = result.assets[0];
 
-      // Check file size before uploading (60 MB limit matches backend)
+      // Check file size before uploading (200 MB limit matches backend, supports high-quality clips)
       const fileSizeMB = videoAsset.fileSize
         ? videoAsset.fileSize / (1024 * 1024)
         : 0;
-      if (fileSizeMB > 60) {
+      if (fileSizeMB > 200) {
         Alert.alert(
           "حجم كبير",
-          `حجم الفيديو ${fileSizeMB.toFixed(1)} ميجابايت. الحد الأقصى هو 60 ميجابايت. اختر مقطعاً أقصر أو أصغر.`,
+          `حجم الفيديو ${fileSizeMB.toFixed(1)} ميجابايت. الحد الأقصى 200 ميجابايت. اختر مقطعاً أقصر.`,
         );
         return;
       }
@@ -390,24 +396,68 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds }) => {
     [ensureSignedIn, userId],
   );
 
+  const deleteClip = useCallback(
+    (clip) => {
+      if (!ensureSignedIn()) return;
+      const isOwner = clip?.user_id === userId;
+      if (!isOwner && !isAdmin) {
+        Alert.alert("غير مصرح", "ليس لديك صلاحية حذف هذا المقطع.");
+        return;
+      }
+      Alert.alert(
+        "حذف المقطع",
+        isAdmin && !isOwner
+          ? "سيتم حذف هذا المقطع نهائياً (إجراء إداري)."
+          : "هل أنت متأكد من حذف مقطعك نهائياً؟",
+        [
+          { text: "إلغاء", style: "cancel" },
+          {
+            text: "حذف",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                const response = await api.fetch(
+                  `/api/clips/${clip.clip_id}?user_id=${encodeURIComponent(userId)}`,
+                  { method: "DELETE" },
+                );
+                if (!response.ok) {
+                  const data = await response.json().catch(() => ({}));
+                  throw new Error(data?.detail || "فشل الحذف");
+                }
+                setClips((prev) =>
+                  prev.filter((c) => c.clip_id !== clip.clip_id),
+                );
+                Alert.alert("✓", "تم حذف المقطع.");
+              } catch (e) {
+                Alert.alert("خطأ", String(e?.message || e));
+              }
+            },
+          },
+        ],
+      );
+    },
+    [ensureSignedIn, isAdmin, userId],
+  );
+
   const renderClip = useCallback(
     ({ item, index }) => {
       const image =
         item.thumbnail_url ||
         CLIP_PLACEHOLDERS[index % CLIP_PLACEHOLDERS.length];
+      const rawUrl = typeof item.video_url === "string" ? item.video_url : "";
+      const lower = rawUrl.toLowerCase();
       const hasVideo =
-        typeof item.video_url === "string" &&
-        (item.video_url.includes("/clips/media/") ||
-          item.video_url.includes("/media/clips/") ||
-          item.video_url.endsWith(".mp4") ||
-          item.video_url.endsWith(".mov") ||
-          item.video_url.endsWith(".webm"));
+        rawUrl.length > 0 &&
+        (lower.includes("/clips/media/") ||
+          lower.includes("/media/clips/") ||
+          lower.includes("/media/ads/") ||
+          /\.(mp4|mov|m4v|webm)(\?|#|$)/.test(lower));
       const isActive = index === activeIndex;
       return (
         <View style={[styles.reelCard, { height: screenHeight }]}>
           {hasVideo ? (
             <Video
-              source={{ uri: toAbsoluteMediaUrl(item.video_url) }}
+              source={{ uri: toAbsoluteMediaUrl(rawUrl) }}
               style={styles.reelVideo}
               resizeMode={ResizeMode.COVER}
               isLooping
@@ -415,10 +465,15 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds }) => {
               useNativeControls={false}
               isMuted={false}
               volume={1.0}
-              progressUpdateIntervalMillis={250}
+              progressUpdateIntervalMillis={500}
               posterSource={{ uri: image }}
               posterStyle={styles.reelVideo}
-              usePoster={true}
+              usePoster={false}
+              onError={(err) => {
+                if (__DEV__) {
+                  console.warn("Reel video failed to load", rawUrl, err);
+                }
+              }}
             />
           ) : (
             <ImageBackground source={{ uri: image }} style={styles.reelVideo}>
@@ -483,6 +538,20 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds }) => {
                   <Text style={styles.actionText}>{item.comments_count || 0}</Text>
                 </TouchableOpacity>
 
+                {(item.user_id === userId || isAdmin) && (
+                  <TouchableOpacity
+                    style={styles.reelActionBtn}
+                    onPress={() => deleteClip(item)}
+                  >
+                    <Ionicons
+                      name="trash-outline"
+                      size={22}
+                      color={isAdmin && item.user_id !== userId ? "#fbbf24" : "#fca5a5"}
+                    />
+                    <Text style={styles.actionText}>حذف</Text>
+                  </TouchableOpacity>
+                )}
+
                 {item.user_id && item.user_id !== userId && (
                   <TouchableOpacity
                     style={[
@@ -508,7 +577,7 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds }) => {
         </View>
       );
     },
-    [activeIndex, followLoadingUserId, screenHeight, toggleFollow, toggleLike, userId],
+    [activeIndex, deleteClip, followLoadingUserId, isAdmin, screenHeight, toggleFollow, toggleLike, userId],
   );
 
   const emptyState = useMemo(

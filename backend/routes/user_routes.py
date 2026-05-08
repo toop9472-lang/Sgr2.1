@@ -1,10 +1,17 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, UploadFile, File
 from motor.motor_asyncio import AsyncIOMotorClient
 from auth.dependencies import get_current_user_id
 from datetime import datetime
+from pathlib import Path
 import os
+import uuid
 
 router = APIRouter(prefix='/users', tags=['Users'])
+
+MEDIA_AVATARS_DIR = (Path(__file__).resolve().parent.parent / "static" / "media" / "avatars")
+MEDIA_AVATARS_DIR.mkdir(parents=True, exist_ok=True)
+ALLOWED_AVATAR_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".heic"}
+MAX_AVATAR_MB = 8
 
 def get_db():
     """Get database connection"""
@@ -150,3 +157,30 @@ async def get_user_analytics(user_id: str = Depends(get_current_user_id)):
         'current_points': user.get('points', 0),
         'streak_days': user.get('streak_days', 0)
     }
+
+
+@router.post('/upload-avatar')
+async def upload_avatar(user_id: str, file: UploadFile = File(...)):
+    """Upload a profile picture from device gallery and persist its public URL on the user document."""
+    if not user_id:
+        raise HTTPException(status_code=400, detail='user_id required')
+    raw = await file.read()
+    if not raw:
+        raise HTTPException(status_code=400, detail='Empty file')
+    size_mb = len(raw) / (1024 * 1024)
+    if size_mb > MAX_AVATAR_MB:
+        raise HTTPException(status_code=413, detail=f'Avatar too large (>{MAX_AVATAR_MB}MB)')
+    suffix = Path(file.filename or '').suffix.lower() or '.jpg'
+    if suffix not in ALLOWED_AVATAR_EXTS:
+        suffix = '.jpg'
+    filename = f"{uuid.uuid4()}{suffix}"
+    target = MEDIA_AVATARS_DIR / filename
+    target.write_bytes(raw)
+    avatar_url = f"/media/avatars/{filename}"
+
+    db = get_db()
+    await db.users.update_one(
+        {'$or': [{'id': user_id}, {'user_id': user_id}]},
+        {'$set': {'avatar': avatar_url, 'avatar_updated_at': datetime.utcnow().isoformat()}},
+    )
+    return {'success': True, 'avatar_url': avatar_url, 'url': avatar_url}
