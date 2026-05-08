@@ -11,6 +11,8 @@ from fastapi.responses import FileResponse, StreamingResponse, Response
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 
+from services.r2_storage import r2
+
 router = APIRouter(prefix="/clips", tags=["Clips"])
 
 mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
@@ -333,11 +335,27 @@ async def upload_clip_video(
     file_id = str(uuid.uuid4())
     ext = filename.split(".")[-1].lower()
     safe_ext = ext if ext in {"mp4", "mov", "m4v", "webm"} else "mp4"
-    absolute_path = MEDIA_CLIPS_DIR / f"{file_id}.{safe_ext}"
-    with open(absolute_path, "wb") as output:
-        output.write(content)
+    object_key = f"clips/{file_id}.{safe_ext}"
+    media_type = VIDEO_MIME_TYPES.get(safe_ext, "video/mp4")
 
-    video_url = f"/api/clips/media/{file_id}.{safe_ext}"
+    # Prefer Cloudflare R2 (persistent across deployments). Fall back to local
+    # disk only if R2 is not configured.
+    video_url: Optional[str] = None
+    if r2.is_configured:
+        try:
+            video_url = r2.upload_bytes(
+                object_key, content, content_type=media_type
+            )
+        except Exception as exc:  # pragma: no cover - cloud failures
+            print(f"[clips_upload] R2 upload failed, falling back to local disk: {exc}")
+            video_url = None
+
+    if not video_url:
+        absolute_path = MEDIA_CLIPS_DIR / f"{file_id}.{safe_ext}"
+        with open(absolute_path, "wb") as output:
+            output.write(content)
+        video_url = f"/api/clips/media/{file_id}.{safe_ext}"
+
     return {
         "success": True,
         "video_url": video_url,
