@@ -212,7 +212,7 @@ const MessageContent = memo(({ text, isOwn }) => {
 });
 
 // مكون الرسالة الاحترافي
-const ChatMessageItem = memo(({ message, isOwn, chatFrameColor }) => {
+const ChatMessageItem = memo(({ message, isOwn, isAdmin, chatFrameColor, onLongPress }) => {
   const scaleAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -273,7 +273,10 @@ const ChatMessageItem = memo(({ message, isOwn, chatFrameColor }) => {
         </View>
       )}
 
-      <View
+      <TouchableOpacity
+        activeOpacity={isOwn || isAdmin ? 0.7 : 1}
+        onLongPress={isOwn || isAdmin ? onLongPress : undefined}
+        delayLongPress={350}
         style={[
           styles.messageBubble,
           isOwn && styles.ownMessageBubble,
@@ -295,8 +298,16 @@ const ChatMessageItem = memo(({ message, isOwn, chatFrameColor }) => {
               color="rgba(255,255,255,0.6)"
             />
           )}
+          {isAdmin && !isOwn && (
+            <Ionicons
+              name="trash-outline"
+              size={12}
+              color="rgba(252,165,165,0.7)"
+              style={{ marginLeft: 4 }}
+            />
+          )}
         </View>
-      </View>
+      </TouchableOpacity>
     </Animated.View>
   );
 });
@@ -579,6 +590,54 @@ const GlobalChatScreen = ({
   const balanceInterval = useRef(null);
   const headerAnim = useRef(new Animated.Value(0)).current;
   const userId = user?.id || user?.user_id;
+  const isAdmin = Boolean(
+    user?.is_admin ||
+      user?.role === "admin" ||
+      user?.role === "super_admin" ||
+      (user?.email && user?.email.toLowerCase() === "sky-321@hotmail.com"),
+  );
+
+  const deleteMessage = useCallback(
+    (msg) => {
+      const isOwner = msg?.user_id === userId;
+      if (!isOwner && !isAdmin) return;
+      Alert.alert(
+        "حذف الرسالة",
+        isAdmin && !isOwner
+          ? "حذف هذه الرسالة (إجراء إداري)؟"
+          : "هل تريد حذف رسالتك؟",
+        [
+          { text: "إلغاء", style: "cancel" },
+          {
+            text: "حذف",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                const id = msg.id || msg.message_id;
+                if (!id) return;
+                const r = await api.fetch(
+                  `/api/economy/chat/messages/${id}?user_id=${encodeURIComponent(userId)}`,
+                  { method: "DELETE" },
+                );
+                if (!r.ok) {
+                  const d = await r.json().catch(() => ({}));
+                  throw new Error(d?.detail || "فشل الحذف");
+                }
+                setMessages((prev) =>
+                  (prev || []).filter(
+                    (m) => (m.id || m.message_id) !== id,
+                  ),
+                );
+              } catch (e) {
+                Alert.alert("خطأ", String(e?.message || e));
+              }
+            },
+          },
+        ],
+      );
+    },
+    [isAdmin, userId],
+  );
   const applyGems = useCallback(
     (value) => {
       const normalized = toSafeNumber(value, 0);
@@ -918,6 +977,8 @@ const GlobalChatScreen = ({
       <ChatMessageItem
         message={item}
         isOwn={item.user_id === userId}
+        isAdmin={isAdmin}
+        onLongPress={() => deleteMessage(item)}
         chatFrameColor={chatFrameColor}
       />
     ),

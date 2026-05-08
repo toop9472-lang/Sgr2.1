@@ -34,6 +34,10 @@ const ICON_NAME_BY_ASSET = {
 };
 
 const AppIcon = ({ uri, size = 18, tintColor = "#fff", style }) => {
+  // Allow passing an Ionicons name directly (e.g. "play-circle-outline").
+  if (typeof uri === "string" && !uri.startsWith("http") && !uri.startsWith("/")) {
+    return <Ionicons name={uri} size={size} color={tintColor} style={style} />;
+  }
   const mappedIcon = ICON_NAME_BY_ASSET[uri];
   if (mappedIcon) {
     return <Ionicons name={mappedIcon} size={size} color={tintColor} style={style} />;
@@ -69,7 +73,7 @@ const QuickActionPill = memo(({ iconSource, title, subtitle, onPress, background
     >
       <View style={styles.quickActionPillGradient}>
         <View style={styles.quickActionPillIcon}>
-          <AppIcon uri={iconSource} size={17} />
+          <AppIcon uri={iconSource} size={20} tintColor="#fff" />
         </View>
         <View style={styles.quickActionPillTextWrap}>
           <Text style={styles.quickActionPillTitle}>{title}</Text>
