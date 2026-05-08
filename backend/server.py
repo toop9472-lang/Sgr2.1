@@ -13,6 +13,11 @@ from typing import List
 import uuid
 from datetime import datetime, timezone
 
+# Load .env BEFORE importing route modules so they pick up env vars
+# (e.g. R2 storage credentials read at import time).
+ROOT_DIR = Path(__file__).parent
+load_dotenv(ROOT_DIR / ".env")
+
 # Import routes
 from routes.oauth_routes import router as oauth_router
 from routes.auth_routes import router as auth_router

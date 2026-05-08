@@ -205,46 +205,52 @@ const AdminSettings = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div
+      className="space-y-4 rounded-lg p-4"
+      style={{
+        background: '#f8fafc',
+        color: '#0f172a',
+      }}
+    >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="flex flex-wrap gap-2 h-auto p-2 bg-gray-100 rounded-lg mb-4">
-          <TabsTrigger value="dashboard" className="flex items-center gap-1 text-xs">
+        <TabsList className="flex flex-wrap gap-2 h-auto p-2 bg-white border border-slate-200 rounded-lg mb-4 shadow-sm">
+          <TabsTrigger value="dashboard" className="flex items-center gap-1 text-xs text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
             <TrendingUp className="w-3 h-3" /> لوحة البيانات
           </TabsTrigger>
-          <TabsTrigger value="wallet" className="flex items-center gap-1 text-xs">
+          <TabsTrigger value="wallet" className="flex items-center gap-1 text-xs text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
             <Wallet className="w-3 h-3" /> المحفظة
           </TabsTrigger>
-          <TabsTrigger value="points" className="flex items-center gap-1 text-xs">
+          <TabsTrigger value="points" className="flex items-center gap-1 text-xs text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
             <DollarSign className="w-3 h-3" /> نظام النقاط
           </TabsTrigger>
-          <TabsTrigger value="rewarded" className="flex items-center gap-1 text-xs">
+          <TabsTrigger value="rewarded" className="flex items-center gap-1 text-xs text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
             <Gift className="w-3 h-3" /> إعلانات المكافآت
           </TabsTrigger>
-          <TabsTrigger value="admob" className="flex items-center gap-1 text-xs">
+          <TabsTrigger value="admob" className="flex items-center gap-1 text-xs text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
             <Tv className="w-3 h-3" /> AdMob
           </TabsTrigger>
-          <TabsTrigger value="ai" className="flex items-center gap-1 text-xs">
+          <TabsTrigger value="ai" className="flex items-center gap-1 text-xs text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
             <Bot className="w-3 h-3" /> الذكاء الاصطناعي
           </TabsTrigger>
-          <TabsTrigger value="reports" className="flex items-center gap-1 text-xs">
+          <TabsTrigger value="reports" className="flex items-center gap-1 text-xs text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
             <FileText className="w-3 h-3" /> التقارير والإشعارات
           </TabsTrigger>
-          <TabsTrigger value="maintenance" className="flex items-center gap-1 text-xs">
+          <TabsTrigger value="maintenance" className="flex items-center gap-1 text-xs text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
             <Wrench className="w-3 h-3" /> الصيانة
           </TabsTrigger>
-          <TabsTrigger value="payments" className="flex items-center gap-1 text-xs">
+          <TabsTrigger value="payments" className="flex items-center gap-1 text-xs text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
             <CreditCard className="w-3 h-3" /> بوابات الدفع
           </TabsTrigger>
-          <TabsTrigger value="email" className="flex items-center gap-1 text-xs">
+          <TabsTrigger value="email" className="flex items-center gap-1 text-xs text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
             <Mail className="w-3 h-3" /> البريد
           </TabsTrigger>
-          <TabsTrigger value="auth" className="flex items-center gap-1 text-xs">
+          <TabsTrigger value="auth" className="flex items-center gap-1 text-xs text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
             <Shield className="w-3 h-3" /> تسجيل الدخول
           </TabsTrigger>
-          <TabsTrigger value="app" className="flex items-center gap-1 text-xs">
+          <TabsTrigger value="app" className="flex items-center gap-1 text-xs text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
             <Settings className="w-3 h-3" /> إعدادات التطبيق
           </TabsTrigger>
-          <TabsTrigger value="emergency" className="flex items-center gap-1 text-xs">
+          <TabsTrigger value="emergency" className="flex items-center gap-1 text-xs text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
             <AlertTriangle className="w-3 h-3" /> الطوارئ
           </TabsTrigger>
         </TabsList>

@@ -6,6 +6,8 @@ from pathlib import Path
 import os
 import uuid
 
+from services.r2_storage import r2
+
 router = APIRouter(prefix='/users', tags=['Users'])
 
 MEDIA_AVATARS_DIR = (Path(__file__).resolve().parent.parent / "static" / "media" / "avatars")
@@ -174,9 +176,21 @@ async def upload_avatar(user_id: str, file: UploadFile = File(...)):
     if suffix not in ALLOWED_AVATAR_EXTS:
         suffix = '.jpg'
     filename = f"{uuid.uuid4()}{suffix}"
-    target = MEDIA_AVATARS_DIR / filename
-    target.write_bytes(raw)
-    avatar_url = f"/media/avatars/{filename}"
+    content_type_map = {'.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.heic': 'image/heic'}
+    content_type = content_type_map.get(suffix, 'image/jpeg')
+
+    avatar_url = None
+    if r2.is_configured:
+        try:
+            avatar_url = r2.upload_bytes(f"avatars/{filename}", raw, content_type=content_type)
+        except Exception as exc:
+            print(f"[upload_avatar] R2 failed, fallback to local disk: {exc}")
+            avatar_url = None
+
+    if not avatar_url:
+        target = MEDIA_AVATARS_DIR / filename
+        target.write_bytes(raw)
+        avatar_url = f"/media/avatars/{filename}"
 
     db = get_db()
     await db.users.update_one(

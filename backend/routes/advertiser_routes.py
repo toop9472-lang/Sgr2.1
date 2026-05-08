@@ -7,8 +7,17 @@ from datetime import datetime, timedelta
 import os
 import uuid
 
+from services.r2_storage import r2
+
 router = APIRouter(prefix='/advertiser', tags=['Advertiser'])
-MAX_VIDEO_UPLOAD_MB = 80
+MAX_VIDEO_UPLOAD_MB = 200
+
+VIDEO_MIME_TYPES = {
+    "mp4": "video/mp4",
+    "m4v": "video/mp4",
+    "mov": "video/quicktime",
+    "webm": "video/webm",
+}
 
 # Hourly pricing packages
 HOURLY_PACKAGES = {
@@ -35,7 +44,11 @@ def _is_video_filename(filename: str) -> bool:
 
 def _is_valid_video_url(value: str) -> bool:
     normalized = (value or "").strip()
-    return normalized.startswith("http") or normalized.startswith("/media/ads/")
+    return (
+        normalized.startswith("http")
+        or normalized.startswith("/media/ads/")
+        or normalized.startswith("/api/clips/media/")
+    )
 
 
 def _looks_demo_content(*values: str) -> bool:
@@ -72,20 +85,32 @@ async def upload_advertiser_video(file: UploadFile = File(...)):
     file_id = str(uuid.uuid4())
     ext = filename.split(".")[-1].lower()
     safe_ext = ext if ext in {"mp4", "mov", "m4v", "webm"} else "mp4"
+    media_type = VIDEO_MIME_TYPES.get(safe_ext, "video/mp4")
 
-    media_ads_dir = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "static",
-        "media",
-        "ads",
-    )
-    os.makedirs(media_ads_dir, exist_ok=True)
-    output_path = os.path.join(media_ads_dir, f"{file_id}.{safe_ext}")
-    with open(output_path, "wb") as output:
-        output.write(content)
+    video_url = None
+    if r2.is_configured:
+        try:
+            video_url = r2.upload_bytes(
+                f"ads/{file_id}.{safe_ext}", content, content_type=media_type
+            )
+        except Exception as exc:
+            print(f"[advertiser upload-video] R2 failed, fallback to local: {exc}")
+            video_url = None
 
-    video_url = f"/media/ads/{file_id}.{safe_ext}"
+    if not video_url:
+        media_ads_dir = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "static",
+            "media",
+            "ads",
+        )
+        os.makedirs(media_ads_dir, exist_ok=True)
+        output_path = os.path.join(media_ads_dir, f"{file_id}.{safe_ext}")
+        with open(output_path, "wb") as output:
+            output.write(content)
+        video_url = f"/media/ads/{file_id}.{safe_ext}"
+
     return {
         "success": True,
         "video_url": video_url,
