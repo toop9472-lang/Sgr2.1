@@ -515,6 +515,23 @@ function MainApp() {
                 <SettingsPage 
                   onBack={() => setCurrentPage('profile')}
                   onNavigate={handleNavigate}
+                  user={user}
+                  onLogout={handleLogout}
+                  onUpdateProfile={(updates) => setUser((prev) => prev ? { ...prev, ...(updates || {}) } : prev)}
+                />
+              )}
+              {currentPage === 'user-profile' && viewingUserId && !showFullScreenAds && (
+                <UserProfilePage
+                  user={user}
+                  targetUserId={viewingUserId}
+                  onClose={() => {
+                    setViewingUserId(null);
+                    setCurrentPage('clips');
+                  }}
+                  onOpenChat={() => {
+                    setViewingUserId(null);
+                    setCurrentPage('friends');
+                  }}
                 />
               )}
               {currentPage === 'support' && !showFullScreenAds && (

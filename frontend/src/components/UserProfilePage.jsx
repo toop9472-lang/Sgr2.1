@@ -153,23 +153,23 @@ const UserProfilePage = ({ user, targetUserId, onClose, onOpenChat }) => {
       <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#0f172a] pointer-events-none" />
 
       <div className="relative z-10">
-        {/* Header bar */}
-        <div className="flex items-center justify-between px-4 pt-6 pb-3">
+        {/* Header bar — small icon */}
+        <div className="flex items-center justify-between px-4 pt-5 pb-2">
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-full bg-white/8 hover:bg-white/12 flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-full bg-white/8 hover:bg-white/12 flex items-center justify-center transition-colors"
             data-testid="user-profile-back-btn"
           >
-            <ChevronBack className="text-white" size={22} />
+            <ChevronBack className="text-white" size={16} />
           </button>
-          <h1 className="text-white text-lg font-bold flex-1 text-center truncate px-3">
+          <h1 className="text-white text-sm font-semibold flex-1 text-center truncate px-3">
             {profile.name}
           </h1>
-          <div className="w-10" />
+          <div className="w-8" />
         </div>
 
-        {/* Avatar + name */}
-        <div className="flex flex-col items-center px-6 py-3">
+        {/* Avatar + name (kept generous) */}
+        <div className="flex flex-col items-center px-6 pt-2 pb-3">
           <div className="p-1 rounded-full border-2 border-blue-400/40 mb-3">
             {profile.avatar ? (
               <img
@@ -185,128 +185,146 @@ const UserProfilePage = ({ user, targetUserId, onClose, onOpenChat }) => {
               </div>
             )}
           </div>
-          <h2 className="text-white text-xl font-bold mb-1">{profile.name}</h2>
+          <h2 className="text-white text-lg font-bold mb-1">{profile.name}</h2>
           {profile.is_private && (
-            <div className="flex items-center gap-1 bg-amber-500/18 border border-amber-500/40 rounded-full px-2.5 py-0.5 mt-1">
-              <Lock className="text-amber-400" size={11} />
-              <span className="text-amber-400 text-xs font-semibold">
-                {isRTL ? 'حساب خاص' : 'Private account'}
+            <div className="flex items-center gap-1 bg-amber-500/18 border border-amber-500/40 rounded-full px-2 py-0.5 mt-0.5">
+              <Lock className="text-amber-400" size={9} />
+              <span className="text-amber-400 text-[10px] font-semibold">
+                {isRTL ? 'حساب خاص' : 'Private'}
               </span>
             </div>
           )}
           {!!profile.bio && (
-            <p className="text-slate-300/80 text-sm text-center mt-2 leading-relaxed max-w-md">
+            <p className="text-slate-300/80 text-xs text-center mt-2 leading-relaxed max-w-md">
               {profile.bio}
             </p>
           )}
         </div>
 
-        {/* Stats */}
-        <div className={`mx-5 my-4 rounded-2xl border py-3 flex items-center ${cardBg}`}>
+        {/* Stats — compact */}
+        <div className={`mx-5 my-3 rounded-2xl border py-2.5 flex items-center ${cardBg}`}>
           <div className="flex-1 flex flex-col items-center">
-            <span className="text-white text-lg font-bold">{profile.clips_count || 0}</span>
-            <span className="text-slate-400 text-xs mt-0.5">{isRTL ? 'ريلز' : 'Reels'}</span>
+            <span className="text-white text-base font-bold leading-tight">{profile.clips_count || 0}</span>
+            <span className="text-slate-400 text-[10px] mt-0.5">{isRTL ? 'ريلز' : 'Reels'}</span>
           </div>
-          <div className="w-px h-7 bg-white/8" />
+          <div className="w-px h-6 bg-white/8" />
           <div className="flex-1 flex flex-col items-center">
-            <span className="text-white text-lg font-bold">{profile.followers_count || 0}</span>
-            <span className="text-slate-400 text-xs mt-0.5">{isRTL ? 'متابعون' : 'Followers'}</span>
+            <span className="text-white text-base font-bold leading-tight">{profile.followers_count || 0}</span>
+            <span className="text-slate-400 text-[10px] mt-0.5">{isRTL ? 'متابعون' : 'Followers'}</span>
           </div>
-          <div className="w-px h-7 bg-white/8" />
+          <div className="w-px h-6 bg-white/8" />
           <div className="flex-1 flex flex-col items-center">
-            <span className="text-white text-lg font-bold">{profile.following_count || 0}</span>
-            <span className="text-slate-400 text-xs mt-0.5">{isRTL ? 'يتابع' : 'Following'}</span>
+            <span className="text-white text-base font-bold leading-tight">{profile.following_count || 0}</span>
+            <span className="text-slate-400 text-[10px] mt-0.5">{isRTL ? 'يتابع' : 'Following'}</span>
           </div>
         </div>
 
-        {/* Action buttons */}
+        {/* Action buttons — single toggle Follow/Unfollow + Message, small icons */}
         {!isSelf && (
-          <div className="flex gap-2.5 mx-5 mb-5">
+          <div className="flex gap-2 mx-5 mb-4">
             <button
               disabled={followBusy}
               onClick={handleToggleFollow}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl border text-sm font-semibold transition-colors ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border text-xs font-semibold transition-all duration-200 ${
                 profile.followed_by_me
-                  ? 'bg-white/6 border-white/16 text-slate-300 hover:bg-white/10'
-                  : 'bg-blue-500 border-blue-500 text-white hover:bg-blue-600'
-              } ${followBusy ? 'opacity-60' : ''}`}
+                  ? 'bg-white/6 border-white/16 text-slate-300 hover:bg-white/10 hover:border-white/25'
+                  : 'bg-gradient-to-r from-blue-500 to-indigo-500 border-blue-500/0 text-white hover:from-blue-600 hover:to-indigo-600 shadow-lg shadow-blue-500/15'
+              } ${followBusy ? 'opacity-60 cursor-not-allowed' : ''}`}
               data-testid="user-profile-follow-btn"
             >
               {profile.followed_by_me ? (
                 <>
-                  <UserMinus size={16} />
-                  {isRTL ? 'إلغاء المتابعة' : 'Unfollow'}
+                  <UserMinus size={13} />
+                  {isRTL ? 'إلغاء الإضافة' : 'Unfollow'}
                 </>
               ) : (
                 <>
-                  <UserPlus size={16} />
-                  {isRTL ? 'متابعة' : 'Follow'}
+                  <UserPlus size={13} />
+                  {isRTL ? 'إضافة' : 'Follow'}
                 </>
               )}
             </button>
             <button
               onClick={handleMessage}
-              className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl border border-indigo-500/40 bg-indigo-500/16 text-blue-200 hover:bg-indigo-500/25 text-sm font-semibold transition-colors"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-indigo-500/40 bg-indigo-500/12 text-blue-200 hover:bg-indigo-500/22 text-xs font-semibold transition-colors"
               data-testid="user-profile-message-btn"
             >
-              <Send size={16} />
-              {isRTL ? 'رسالة خاصة' : 'Message'}
+              <Send size={13} />
+              {isRTL ? 'رسالة' : 'Message'}
             </button>
           </div>
         )}
 
-        {/* Clips grid header */}
-        <div className="flex items-center gap-1.5 mx-5 mb-2">
-          <Grid3x3 size={15} className="text-slate-400" />
-          <span className="text-slate-400 text-xs font-semibold">
-            {isRTL ? `ريلز (${profile.clips_count || 0})` : `Reels (${profile.clips_count || 0})`}
-          </span>
+        {/* Tab strip — Reels indicator */}
+        <div className="flex items-center justify-center border-t border-white/6 px-4">
+          <div className="flex items-center gap-1.5 px-3 py-2.5 border-b-2 border-blue-400">
+            <Grid3x3 size={13} className="text-blue-300" />
+            <span className="text-blue-200 text-[11px] font-semibold tracking-wider uppercase">
+              {isRTL ? 'الريلز' : 'Reels'}
+            </span>
+            <span className="text-blue-400/70 text-[11px] font-semibold">
+              ({profile.clips_count || 0})
+            </span>
+          </div>
         </div>
 
+        {/* Reels content area */}
         {!profile.can_view_clips ? (
-          <div className="flex flex-col items-center justify-center py-10 px-6">
-            <Lock className="text-amber-400" size={28} />
-            <p className="text-slate-200 font-semibold mt-2.5">
+          <div className="flex flex-col items-center justify-center py-12 px-6">
+            <div className="w-14 h-14 rounded-2xl bg-amber-500/12 border border-amber-500/25 flex items-center justify-center mb-3">
+              <Lock className="text-amber-400" size={22} />
+            </div>
+            <p className="text-slate-200 text-sm font-semibold mb-1">
               {isRTL ? 'هذا الحساب خاص' : 'This account is private'}
             </p>
-            <p className="text-slate-400 text-xs mt-1 text-center">
+            <p className="text-slate-400 text-xs text-center max-w-xs">
               {isRTL ? 'تابع المستخدم لعرض مقاطعه.' : 'Follow this user to view their reels.'}
             </p>
           </div>
         ) : clips.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-10 px-6">
-            <Film className="text-slate-500" size={28} />
-            <p className="text-slate-200 font-semibold mt-2.5">
+          <div className="flex flex-col items-center justify-center py-12 px-6">
+            <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center mb-3">
+              <Film className="text-slate-500" size={22} />
+            </div>
+            <p className="text-slate-300 text-sm font-medium">
               {isRTL ? 'لم ينشر أي ريلز بعد' : 'No reels yet'}
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-0.5 px-0.5">
-            {clips.map((clip) => (
-              <div
-                key={clip.clip_id}
-                className="relative aspect-[2/3] bg-slate-800/70 overflow-hidden cursor-pointer group"
-                data-testid={`user-profile-clip-${clip.clip_id}`}
-              >
-                {clip.thumbnail_url ? (
-                  <img
-                    src={clip.thumbnail_url}
-                    alt=""
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-slate-700/60">
-                    <Play className="text-white/70" size={24} />
+          <div className="grid grid-cols-3 gap-1 px-1 pt-1">
+            {clips.map((clip) => {
+              const thumb = clip.thumbnail_url || clip.video_url || '';
+              return (
+                <button
+                  key={clip.clip_id}
+                  className="relative aspect-[2/3] bg-slate-800/70 rounded-md overflow-hidden cursor-pointer group focus:outline-none focus:ring-2 focus:ring-blue-400/60"
+                  data-testid={`user-profile-clip-${clip.clip_id}`}
+                  type="button"
+                >
+                  {thumb ? (
+                    <img
+                      src={thumb}
+                      alt=""
+                      loading="lazy"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-slate-700/60">
+                      <Play className="text-white/70" size={18} />
+                    </div>
+                  )}
+                  {/* gradient overlay for readability */}
+                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/65 via-black/15 to-transparent pointer-events-none" />
+                  <div className="absolute bottom-1 left-1 flex items-center gap-0.5 bg-black/55 backdrop-blur-sm rounded-full px-1.5 py-0.5">
+                    <Heart className="text-rose-400" size={9} fill="currentColor" />
+                    <span className="text-white text-[9px] font-semibold">
+                      {clip.likes_count || 0}
+                    </span>
                   </div>
-                )}
-                <div className="absolute bottom-1.5 left-1.5 flex items-center gap-0.5 bg-black/55 rounded-full px-1.5 py-0.5">
-                  <Heart className="text-white" size={11} fill="currentColor" />
-                  <span className="text-white text-[10px] font-semibold">
-                    {clip.likes_count || 0}
-                  </span>
-                </div>
-              </div>
-            ))}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

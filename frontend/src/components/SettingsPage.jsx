@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Moon, Sun, Monitor, Globe, Shield, Bell, Palette, ChevronRight, Check, Lock, LockOpen, Share2, Eye, EyeOff, Copy } from 'lucide-react';
+import { ArrowLeft, Moon, Sun, Monitor, Globe, Shield, Bell, Palette, ChevronRight, ChevronLeft, Check, Lock, LockOpen, Share2, Eye, EyeOff, Copy, Wallet, History, HelpCircle, FileText, LogOut, KeyRound } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 
-const SettingsPage = ({ onBack, onNavigate, user, onUpdateProfile }) => {
+const SettingsPage = ({ onBack, onNavigate, user, onUpdateProfile, onLogout }) => {
   const { t, isRTL, language, setLanguage } = useLanguage();
   const { theme, setThemeMode, isDark } = useTheme();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
@@ -17,8 +19,16 @@ const SettingsPage = ({ onBack, onNavigate, user, onUpdateProfile }) => {
   const [isPrivate, setIsPrivate] = useState(Boolean(user?.is_private));
   const [privacyBusy, setPrivacyBusy] = useState(false);
   const [showReferralCode, setShowReferralCode] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [passwordBusy, setPasswordBusy] = useState(false);
+  const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
 
-  const referralCode = user?.referral_code || ('SAQR' + ((user?.id || user?._id || '123456').slice(-6)).toUpperCase());
+  const watchedAdsCount = user?.watchedAds?.length || user?.watched_ads?.length || 0;
+  const totalEarned = user?.totalEarned || user?.total_earned || 0;
+  const isGuest = user?.isGuest || false;
+  const userId = user?.id || user?._id || '123456';
+  const referralCode = user?.referral_code || ('SAQR' + userId.slice(-6).toUpperCase());
 
   const handleShareReferral = async () => {
     const shareData = {
@@ -35,6 +45,93 @@ const SettingsPage = ({ onBack, onNavigate, user, onUpdateProfile }) => {
       toast.success(isRTL ? 'تم نسخ رابط المشاركة' : 'Share link copied');
     }
   };
+
+  const handleShareApp = async () => {
+    const shareData = {
+      title: 'تطبيق صقر',
+      text: isRTL
+        ? 'جرب تطبيق صقر واكسب المال من مشاهدة الإعلانات!'
+        : 'Try Saqr — earn from watching ads!',
+      url: window.location.origin,
+    };
+    if (navigator.share) {
+      try { await navigator.share(shareData); } catch (_) { /* cancelled */ }
+    } else {
+      navigator.clipboard.writeText(shareData.text);
+      toast.success(isRTL ? 'تم نسخ الرابط' : 'Link copied');
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!passwords.current || !passwords.new || !passwords.confirm) {
+      toast.error(isRTL ? 'يرجى ملء جميع الحقول' : 'Please fill all fields');
+      return;
+    }
+    if (passwords.new !== passwords.confirm) {
+      toast.error(isRTL ? 'كلمة المرور الجديدة غير متطابقة' : 'New passwords do not match');
+      return;
+    }
+    if (passwords.new.length < 8) {
+      toast.error(isRTL ? 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' : 'Password must be at least 8 characters');
+      return;
+    }
+    setPasswordBusy(true);
+    try {
+      const token = localStorage.getItem('saqr_token');
+      const response = await fetch(`${API_URL}/api/auth/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          current_password: passwords.current,
+          new_password: passwords.new,
+        }),
+      });
+      if (response.ok) {
+        toast.success(isRTL ? 'تم تغيير كلمة المرور بنجاح' : 'Password changed');
+        setShowChangePassword(false);
+        setPasswords({ current: '', new: '', confirm: '' });
+      } else {
+        const data = await response.json().catch(() => ({}));
+        toast.error(data.detail || (isRTL ? 'فشل في تغيير كلمة المرور' : 'Failed to change password'));
+      }
+    } catch (_) {
+      toast.error(isRTL ? 'حدث خطأ في الاتصال' : 'Connection error');
+    } finally {
+      setPasswordBusy(false);
+    }
+  };
+
+  const menuGroups = [
+    {
+      id: 'wallet',
+      title: isRTL ? 'المحفظة والأرباح' : 'Wallet & Earnings',
+      items: [
+        { id: 'withdraw', icon: Wallet, label: t('withdrawBalance'), action: () => onNavigate && onNavigate('withdraw'), color: 'text-emerald-400', bgColor: 'bg-emerald-500/10' },
+        { id: 'history', icon: History, label: t('transactionHistory'), action: () => setShowHistory(true), color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
+      ],
+    },
+    {
+      id: 'account',
+      title: isRTL ? 'الحساب' : 'Account',
+      items: [
+        { id: 'password', icon: KeyRound, label: t('changePassword'), action: () => setShowChangePassword(true), color: 'text-purple-400', bgColor: 'bg-purple-500/10' },
+        { id: 'share', icon: Share2, label: t('shareApp'), action: handleShareApp, color: 'text-pink-400', bgColor: 'bg-pink-500/10' },
+      ],
+    },
+    {
+      id: 'help',
+      title: isRTL ? 'المساعدة والقانونية' : 'Help & Legal',
+      items: [
+        { id: 'support', icon: HelpCircle, label: t('helpSupport'), action: () => window.open('/support', '_self'), color: 'text-yellow-400', bgColor: 'bg-yellow-500/10' },
+        { id: 'privacy', icon: Shield, label: t('privacyPolicy'), action: () => window.open('/privacy', '_blank'), color: 'text-indigo-400', bgColor: 'bg-indigo-500/10' },
+        { id: 'terms', icon: FileText, label: t('termsConditions'), action: () => window.open('/terms', '_blank'), color: 'text-cyan-400', bgColor: 'bg-cyan-500/10' },
+      ],
+    },
+  ];
 
   useEffect(() => {
     setIsPrivate(Boolean(user?.is_private));
@@ -245,6 +342,72 @@ const SettingsPage = ({ onBack, onNavigate, user, onUpdateProfile }) => {
             ))}
           </CardContent>
         </Card>
+
+        {/* Menu Groups — moved from Profile (Wallet / Account / Help & Legal) */}
+        {!isGuest && menuGroups.map((group) => {
+          const ArrowIcon = isRTL ? ChevronLeft : ChevronRight;
+          return (
+            <div key={group.id} className="space-y-2">
+              <p className={`text-[11px] font-semibold uppercase tracking-wider px-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                {group.title}
+              </p>
+              <Card className={`shadow-xl border overflow-hidden ${isDark ? 'border-white/8 bg-[#111118]/80' : 'border-gray-200 bg-white'} backdrop-blur-xl`}>
+                <CardContent className="p-0">
+                  {group.items.map((item, idx) => (
+                    <button
+                      key={item.id}
+                      onClick={item.action}
+                      className={`w-full flex items-center gap-3 px-4 py-3.5 transition-colors ${isDark ? 'hover:bg-white/5 active:bg-white/8' : 'hover:bg-gray-50 active:bg-gray-100'} ${
+                        idx !== group.items.length - 1 ? (isDark ? 'border-b border-white/5' : 'border-b border-gray-100') : ''
+                      }`}
+                      data-testid={`menu-${item.id}`}
+                    >
+                      <div className={`w-9 h-9 rounded-lg ${item.bgColor} flex items-center justify-center flex-shrink-0`}>
+                        <item.icon className={item.color} size={18} />
+                      </div>
+                      <span className={`text-sm flex-1 text-start ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.label}</span>
+                      <ArrowIcon className={isDark ? 'text-gray-600' : 'text-gray-400'} size={16} />
+                    </button>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          );
+        })}
+
+        {/* Logout — Standalone prominent button */}
+        {!isGuest && onLogout && (
+          <Card className="shadow-xl border border-red-500/20 bg-red-500/5 backdrop-blur-xl overflow-hidden">
+            <CardContent className="p-0">
+              <button
+                onClick={onLogout}
+                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-red-500/15 active:bg-red-500/20 transition-colors"
+                data-testid="settings-logout-btn"
+              >
+                <div className="w-9 h-9 rounded-lg bg-red-500/15 flex items-center justify-center flex-shrink-0">
+                  <LogOut className="text-red-400" size={18} />
+                </div>
+                <span className="text-red-400 text-sm font-semibold flex-1 text-start">
+                  {isRTL ? 'تسجيل الخروج' : 'Logout'}
+                </span>
+              </button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Version Footer */}
+        <div className="flex flex-col items-center gap-1 py-6">
+          <div className="flex items-center gap-1.5">
+            <div className={`w-1 h-1 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-300'}`} />
+            <p className={`text-[11px] font-medium ${isDark ? 'text-gray-600' : 'text-gray-500'}`}>
+              {isRTL ? 'الإصدار 4.8.1' : 'Version 4.8.1'}
+            </p>
+            <div className={`w-1 h-1 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-300'}`} />
+          </div>
+          <p className={`text-[10px] ${isDark ? 'text-gray-700' : 'text-gray-400'}`}>
+            {isRTL ? 'صُنع بحب لمستخدمي صقر' : 'Made with care for Saqr users'}
+          </p>
+        </div>
       </div>
 
       {/* Language Modal */}
@@ -307,6 +470,79 @@ const SettingsPage = ({ onBack, onNavigate, user, onUpdateProfile }) => {
               );
             })}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Password Dialog */}
+      <Dialog open={showChangePassword} onOpenChange={setShowChangePassword}>
+        <DialogContent className="bg-[#111118] border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Lock className="text-purple-400" size={20} />
+              {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              {isRTL ? 'أدخل كلمة المرور الحالية والجديدة' : 'Enter current and new password'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="current" className="text-gray-300">{isRTL ? 'كلمة المرور الحالية' : 'Current Password'}</Label>
+              <Input id="current" type="password" value={passwords.current} onChange={(e) => setPasswords({ ...passwords, current: e.target.value })} className="bg-white/5 border-white/10 text-white" placeholder="••••••••" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new" className="text-gray-300">{isRTL ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
+              <Input id="new" type="password" value={passwords.new} onChange={(e) => setPasswords({ ...passwords, new: e.target.value })} className="bg-white/5 border-white/10 text-white" placeholder="••••••••" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm" className="text-gray-300">{isRTL ? 'تأكيد كلمة المرور' : 'Confirm Password'}</Label>
+              <Input id="confirm" type="password" value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} className="bg-white/5 border-white/10 text-white" placeholder="••••••••" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowChangePassword(false)} className="border-white/10 text-gray-300 hover:bg-white/5">
+              {isRTL ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button onClick={handleChangePassword} disabled={passwordBusy} className="bg-purple-600 hover:bg-purple-700">
+              {passwordBusy ? (isRTL ? 'جاري التغيير...' : 'Changing...') : (isRTL ? 'تغيير' : 'Change')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Transaction History Dialog */}
+      <Dialog open={showHistory} onOpenChange={setShowHistory}>
+        <DialogContent className="bg-[#111118] border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="text-blue-400" size={20} />
+              {isRTL ? 'سجل المعاملات' : 'Transaction History'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="bg-white/5 rounded-lg p-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-gray-400 text-sm">{isRTL ? 'إجمالي الإعلانات' : 'Total Ads Watched'}</span>
+                <span className="text-white font-bold">{watchedAdsCount}</span>
+              </div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-gray-400 text-sm">{isRTL ? 'إجمالي النقاط المكتسبة' : 'Total Points Earned'}</span>
+                <span className="text-white font-bold">{totalEarned}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400 text-sm">{isRTL ? 'الرصيد الحالي' : 'Current Balance'}</span>
+                <span className="text-[#60a5fa] font-bold">{user?.points || 0}</span>
+              </div>
+            </div>
+            <p className="text-center text-gray-500 text-sm">
+              {isRTL ? 'لا توجد عمليات سحب سابقة' : 'No withdrawal history yet'}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowHistory(false)} className="w-full bg-blue-600 hover:bg-blue-700">
+              {isRTL ? 'إغلاق' : 'Close'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

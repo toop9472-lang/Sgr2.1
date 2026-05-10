@@ -1,15 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { User, Award, TrendingUp, Clock, LogOut, Lock, History, Share2, Shield, MessageCircle, LockKeyhole, Settings, Wallet, HelpCircle, FileText, ChevronLeft, ChevronRight, Film, Play, Heart, Plus } from 'lucide-react';
+import { User, Award, TrendingUp, Clock, LogOut, LockKeyhole, Settings, Film, Play, Heart, Plus } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Progress } from './ui/progress';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 
@@ -19,11 +15,7 @@ const ProfilePage = ({ user, onLogout, onNavigate }) => {
   const pointsToNextDollar = 500 - (user.points % 500);
   const progressToNextDollar = ((user.points % 500) / 500) * 100;
   const isGuest = user?.isGuest || false;
-  
-  const [showChangePassword, setShowChangePassword] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
+
   const [myClips, setMyClips] = useState([]);
   const [myClipsLoading, setMyClipsLoading] = useState(false);
 
@@ -53,103 +45,6 @@ const ProfilePage = ({ user, onLogout, onNavigate }) => {
     return () => { cancelled = true; };
   }, [user?.id, user?._id, isGuest]);
 
-  const handleChangePassword = async () => {
-    if (!passwords.current || !passwords.new || !passwords.confirm) {
-      toast.error(isRTL ? 'يرجى ملء جميع الحقول' : 'Please fill all fields');
-      return;
-    }
-    if (passwords.new !== passwords.confirm) {
-      toast.error(isRTL ? 'كلمة المرور الجديدة غير متطابقة' : 'New passwords do not match');
-      return;
-    }
-    if (passwords.new.length < 8) {
-      toast.error(isRTL ? 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' : 'Password must be at least 8 characters');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const token = localStorage.getItem('saqr_token');
-      const response = await fetch(`${API_URL}/api/auth/change-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          current_password: passwords.current,
-          new_password: passwords.new
-        })
-      });
-
-      if (response.ok) {
-        toast.success(isRTL ? 'تم تغيير كلمة المرور بنجاح' : 'Password changed successfully');
-        setShowChangePassword(false);
-        setPasswords({ current: '', new: '', confirm: '' });
-      } else {
-        const data = await response.json();
-        toast.error(data.detail || (isRTL ? 'فشل في تغيير كلمة المرور' : 'Failed to change password'));
-      }
-    } catch (error) {
-      toast.error(isRTL ? 'حدث خطأ في الاتصال' : 'Connection error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleShare = async () => {
-    const shareData = {
-      title: 'تطبيق صقر',
-      text: isRTL 
-        ? `جرب تطبيق صقر واكسب المال من مشاهدة الإعلانات! استخدم كود الإحالة: SAQR${user?.id?.slice(-6) || '123456'}`
-        : `Try Saqr app and earn money from watching ads! Use referral code: SAQR${user?.id?.slice(-6) || '123456'}`,
-      url: window.location.origin
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-      } catch (err) {
-        console.log('Share cancelled');
-      }
-    } else {
-      navigator.clipboard.writeText(shareData.text);
-      toast.success(isRTL ? 'تم نسخ رابط المشاركة' : 'Share link copied');
-    }
-  };
-
-  const menuGroups = [
-    {
-      id: 'wallet',
-      title: isRTL ? 'المحفظة والأرباح' : 'Wallet & Earnings',
-      items: [
-        { id: 'withdraw', icon: Wallet, label: t('withdrawBalance'), action: () => onNavigate('withdraw'), color: 'text-emerald-400', bgColor: 'bg-emerald-500/10' },
-        { id: 'history', icon: History, label: t('transactionHistory'), action: () => setShowHistory(true), color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
-      ],
-    },
-    {
-      id: 'account',
-      title: isRTL ? 'الحساب' : 'Account',
-      items: [
-        { id: 'settings', icon: Settings, label: t('settings'), action: () => onNavigate('settings'), color: 'text-slate-300', bgColor: 'bg-slate-500/15' },
-        { id: 'password', icon: Lock, label: t('changePassword'), action: () => setShowChangePassword(true), color: 'text-purple-400', bgColor: 'bg-purple-500/10' },
-        { id: 'share', icon: Share2, label: t('shareApp'), action: handleShare, color: 'text-pink-400', bgColor: 'bg-pink-500/10' },
-      ],
-    },
-    {
-      id: 'help',
-      title: isRTL ? 'المساعدة والقانونية' : 'Help & Legal',
-      items: [
-        { id: 'support', icon: HelpCircle, label: t('helpSupport'), action: () => window.open('/support', '_self'), color: 'text-yellow-400', bgColor: 'bg-yellow-500/10' },
-        { id: 'privacy', icon: Shield, label: t('privacyPolicy'), action: () => window.open('/privacy', '_blank'), color: 'text-indigo-400', bgColor: 'bg-indigo-500/10' },
-        { id: 'terms', icon: FileText, label: t('termsConditions'), action: () => window.open('/terms', '_blank'), color: 'text-cyan-400', bgColor: 'bg-cyan-500/10' },
-      ],
-    },
-  ];
-
-  // Legacy flat list kept for backward compat (not rendered)
-  const menuItems = menuGroups.flatMap((g) => g.items);
-
   const watchedAds = user?.watchedAds || user?.watched_ads || [];
   const totalEarned = user?.totalEarned || user?.total_earned || 0;
   const referralCode = 'SAQR' + (user?.id?.slice(-6) || '123456').toUpperCase();
@@ -169,16 +64,28 @@ const ProfilePage = ({ user, onLogout, onNavigate }) => {
       <div className="relative z-10 bg-gradient-to-r from-[#3b82f6] to-[#6366f1] px-4 pt-8 pb-24 rounded-b-3xl shadow-lg shadow-[#3b82f6]/20">
         <div className="flex justify-between items-start mb-6">
           <h1 className="text-white text-2xl font-bold">{t('profile')}</h1>
-          <Button
-            onClick={onLogout}
-            variant="ghost"
-            size="icon"
-            className="text-white hover:bg-white/20"
-            title={t('logout')}
-            data-testid="logout-btn"
-          >
-            <LogOut size={20} />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              onClick={() => onNavigate && onNavigate('settings')}
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/20"
+              title={isRTL ? 'الإعدادات' : 'Settings'}
+              data-testid="profile-settings-gear-btn"
+            >
+              <Settings size={20} />
+            </Button>
+            <Button
+              onClick={onLogout}
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/20"
+              title={t('logout')}
+              data-testid="logout-btn"
+            >
+              <LogOut size={20} />
+            </Button>
+          </div>
         </div>
 
         <div className="flex items-center gap-4">
@@ -407,190 +314,7 @@ const ProfilePage = ({ user, onLogout, onNavigate }) => {
           </Card>
         )}
 
-        {/* Menu Groups - Professional Sectioned Layout */}
-        {!isGuest && menuGroups.map((group) => {
-          const ArrowIcon = isRTL ? ChevronLeft : ChevronRight;
-          return (
-            <div key={group.id} className="space-y-2">
-              <p className="text-gray-500 text-[11px] font-semibold uppercase tracking-wider px-1">
-                {group.title}
-              </p>
-              <Card className="shadow-xl border border-white/8 bg-[#111118]/80 backdrop-blur-xl overflow-hidden">
-                <CardContent className="p-0">
-                  {group.items.map((item, idx) => (
-                    <button
-                      key={item.id}
-                      onClick={item.action}
-                      className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-white/5 active:bg-white/8 transition-colors ${
-                        idx !== group.items.length - 1 ? 'border-b border-white/5' : ''
-                      }`}
-                      data-testid={`menu-${item.id}`}
-                    >
-                      <div className={`w-9 h-9 rounded-lg ${item.bgColor} flex items-center justify-center flex-shrink-0`}>
-                        <item.icon className={item.color} size={18} />
-                      </div>
-                      <span className="text-white text-sm flex-1 text-start">{item.label}</span>
-                      <ArrowIcon className="text-gray-600" size={16} />
-                    </button>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
-          );
-        })}
-
-        {/* Logout - Standalone prominent button */}
-        {!isGuest && (
-          <Card className="shadow-xl border border-red-500/20 bg-red-500/5 backdrop-blur-xl overflow-hidden">
-            <CardContent className="p-0">
-              <button
-                onClick={onLogout}
-                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-red-500/15 active:bg-red-500/20 transition-colors"
-                data-testid="menu-logout"
-              >
-                <div className="w-9 h-9 rounded-lg bg-red-500/15 flex items-center justify-center flex-shrink-0">
-                  <LogOut className="text-red-400" size={18} />
-                </div>
-                <span className="text-red-400 text-sm font-semibold flex-1 text-start">
-                  {isRTL ? 'تسجيل الخروج' : 'Logout'}
-                </span>
-              </button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Version - Clean centered footer */}
-        <div className="flex flex-col items-center gap-1 py-6">
-          <div className="flex items-center gap-1.5">
-            <div className="w-1 h-1 rounded-full bg-gray-700" />
-            <p className="text-gray-600 text-[11px] font-medium">
-              {isRTL ? 'الإصدار 4.8.1' : 'Version 4.8.1'}
-            </p>
-            <div className="w-1 h-1 rounded-full bg-gray-700" />
-          </div>
-          <p className="text-gray-700 text-[10px]">
-            {isRTL ? 'صُنع بحب لمستخدمي صقر' : 'Made with care for Saqr users'}
-          </p>
-        </div>
       </div>
-
-      {/* Change Password Dialog */}
-      <Dialog open={showChangePassword} onOpenChange={setShowChangePassword}>
-        <DialogContent className="bg-[#111118] border-white/10 text-white">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Lock className="text-purple-400" size={20} />
-              {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
-            </DialogTitle>
-            <DialogDescription className="text-gray-400">
-              {isRTL ? 'أدخل كلمة المرور الحالية والجديدة' : 'Enter your current and new password'}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="current" className="text-gray-300">
-                {isRTL ? 'كلمة المرور الحالية' : 'Current Password'}
-              </Label>
-              <Input
-                id="current"
-                type="password"
-                value={passwords.current}
-                onChange={(e) => setPasswords({...passwords, current: e.target.value})}
-                className="bg-white/5 border-white/10 text-white"
-                placeholder="••••••••"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="new" className="text-gray-300">
-                {isRTL ? 'كلمة المرور الجديدة' : 'New Password'}
-              </Label>
-              <Input
-                id="new"
-                type="password"
-                value={passwords.new}
-                onChange={(e) => setPasswords({...passwords, new: e.target.value})}
-                className="bg-white/5 border-white/10 text-white"
-                placeholder="••••••••"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="confirm" className="text-gray-300">
-                {isRTL ? 'تأكيد كلمة المرور' : 'Confirm Password'}
-              </Label>
-              <Input
-                id="confirm"
-                type="password"
-                value={passwords.confirm}
-                onChange={(e) => setPasswords({...passwords, confirm: e.target.value})}
-                className="bg-white/5 border-white/10 text-white"
-                placeholder="••••••••"
-              />
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowChangePassword(false)}
-              className="border-white/10 text-gray-300 hover:bg-white/5"
-            >
-              {isRTL ? 'إلغاء' : 'Cancel'}
-            </Button>
-            <Button
-              onClick={handleChangePassword}
-              disabled={isLoading}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              {isLoading ? (isRTL ? 'جاري التغيير...' : 'Changing...') : (isRTL ? 'تغيير' : 'Change')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Transaction History Dialog */}
-      <Dialog open={showHistory} onOpenChange={setShowHistory}>
-        <DialogContent className="bg-[#111118] border-white/10 text-white">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <History className="text-blue-400" size={20} />
-              {isRTL ? 'سجل المعاملات' : 'Transaction History'}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="py-4 space-y-4">
-            <div className="bg-white/5 rounded-lg p-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-gray-400 text-sm">{isRTL ? 'إجمالي الإعلانات' : 'Total Ads Watched'}</span>
-                <span className="text-white font-bold">{watchedAds.length}</span>
-              </div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-gray-400 text-sm">{isRTL ? 'إجمالي النقاط المكتسبة' : 'Total Points Earned'}</span>
-                <span className="text-white font-bold">{totalEarned}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400 text-sm">{isRTL ? 'الرصيد الحالي' : 'Current Balance'}</span>
-                <span className="text-[#60a5fa] font-bold">{user.points}</span>
-              </div>
-            </div>
-            
-            <p className="text-center text-gray-500 text-sm">
-              {isRTL ? 'لا توجد عمليات سحب سابقة' : 'No withdrawal history yet'}
-            </p>
-          </div>
-          
-          <DialogFooter>
-            <Button
-              onClick={() => setShowHistory(false)}
-              className="w-full bg-blue-600 hover:bg-blue-700"
-            >
-              {isRTL ? 'إغلاق' : 'Close'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
