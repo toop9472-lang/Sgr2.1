@@ -18,10 +18,12 @@ import { useLanguage } from '../i18n/LanguageContext';
 const SettingsScreen = ({
   onBack,
   onLogout,
+  user,
   currentTheme = 'dark',
   onThemeChange,
   currentHomePreset = 'luxuryDark',
   onHomePresetChange,
+  onUpdateProfile,
 }) => {
   const [theme, setTheme] = useState(currentTheme);
   const [homePreset, setHomePreset] = useState(currentHomePreset);
@@ -31,6 +33,8 @@ const SettingsScreen = ({
   const [showHomePresetModal, setShowHomePresetModal] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [isPrivate, setIsPrivate] = useState(Boolean(user?.is_private));
+  const [privacyBusy, setPrivacyBusy] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -178,6 +182,43 @@ const SettingsScreen = ({
     );
   };
 
+  useEffect(() => {
+    setIsPrivate(Boolean(user?.is_private));
+  }, [user?.is_private]);
+
+  const togglePrivacy = async () => {
+    if (privacyBusy) return;
+    const userId = user?.id || user?.user_id;
+    if (!userId) {
+      Alert.alert(language === 'ar' ? 'خطأ' : 'Error', language === 'ar' ? 'يجب تسجيل الدخول' : 'Sign in required');
+      return;
+    }
+    const next = !isPrivate;
+    setPrivacyBusy(true);
+    try {
+      const api = (await import('../services/api')).default;
+      const r = await api.fetch(`/api/users/privacy/${encodeURIComponent(userId)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_private: next }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data?.detail || 'فشلت العملية');
+      setIsPrivate(next);
+      if (onUpdateProfile) onUpdateProfile({ is_private: next });
+      Alert.alert(
+        '✓',
+        next
+          ? (language === 'ar' ? 'تم تفعيل الحساب الخاص. مقاطعك ستكون مرئية للمتابعين فقط.' : 'Private account enabled.')
+          : (language === 'ar' ? 'الحساب عام الآن.' : 'Account is now public.'),
+      );
+    } catch (e) {
+      Alert.alert(language === 'ar' ? 'خطأ' : 'Error', String(e?.message || e));
+    } finally {
+      setPrivacyBusy(false);
+    }
+  };
+
   const settingsItems = [
     {
       id: 'language',
@@ -218,6 +259,18 @@ const SettingsScreen = ({
       value: notificationsEnabled ? (language === 'ar' ? 'مفعّلة' : 'Enabled') : (language === 'ar' ? 'متوقفة' : 'Disabled'),
       action: toggleNotifications,
       color: '#fbbf24',
+    },
+    {
+      id: 'account_privacy',
+      icon: isPrivate ? 'lock-closed' : 'lock-open-outline',
+      label: language === 'ar' ? 'خصوصية الحساب' : 'Account Privacy',
+      value: privacyBusy
+        ? (language === 'ar' ? 'جاري...' : 'Updating...')
+        : isPrivate
+          ? (language === 'ar' ? 'حساب خاص' : 'Private')
+          : (language === 'ar' ? 'حساب عام' : 'Public'),
+      action: togglePrivacy,
+      color: '#a855f7',
     },
     {
       id: 'logout',

@@ -15,6 +15,7 @@ import {
   ActivityIndicator,
   Image,
   Platform,
+  Dimensions,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Clipboard from "expo-clipboard";
@@ -35,6 +36,7 @@ const ProfileScreen = ({
   onOpenAchievements,
   onOpenAdminPanel,
   onUpdateProfile,
+  onOpenSettings,
 }) => {
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -64,6 +66,8 @@ const ProfileScreen = ({
     followers_count: 0,
     following_count: 0,
   });
+  const [myClips, setMyClips] = useState([]);
+  const [myClipsLoading, setMyClipsLoading] = useState(false);
 
   // Achievements context
   const { recordAppShared } = useAchievements();
@@ -133,9 +137,28 @@ const ProfileScreen = ({
       }
     };
 
+    const loadMyClips = async () => {
+      try {
+        const uid = user?.id || user?.user_id;
+        if (!uid) return;
+        setMyClipsLoading(true);
+        const r = await api.fetch(
+          `/api/users/clips/${encodeURIComponent(uid)}?viewer_id=${encodeURIComponent(uid)}`,
+        );
+        if (!r.ok) return;
+        const d = await r.json().catch(() => ({}));
+        setMyClips(Array.isArray(d?.clips) ? d.clips : []);
+      } catch (e) {
+        console.log("loadMyClips error:", e);
+      } finally {
+        setMyClipsLoading(false);
+      }
+    };
+
     loadProfileAppearance();
     loadBalance();
     loadFollowStats();
+    loadMyClips();
   }, [user?.id, user?.user_id]);
 
   const handleWithdraw = () => {
@@ -533,6 +556,18 @@ const ProfileScreen = ({
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.content}>
+        {/* Top bar with Settings gear (top-right) */}
+        <View style={styles.topBar}>
+          <TouchableOpacity
+            onPress={onOpenSettings}
+            style={styles.settingsBtn}
+            activeOpacity={0.7}
+            accessibilityLabel="الإعدادات"
+          >
+            <Ionicons name="settings-outline" size={22} color="#fff" />
+          </TouchableOpacity>
+        </View>
+
         {/* Profile Header */}
         <View style={styles.profileHeader}>
           <TouchableOpacity
@@ -632,75 +667,70 @@ const ProfileScreen = ({
           </View>
         </View>
 
-        {/* Referral Code */}
-        <View style={styles.referralCard}>
+        {/* My Reels Grid */}
+        <View style={styles.myReelsCard}>
           <View style={styles.referralHeader}>
-            <Ionicons name="gift" size={20} color="#ec4899" />
-            <Text style={styles.referralTitle}>كود الإحالة</Text>
+            <Ionicons name="film-outline" size={20} color="#60a5fa" />
+            <Text style={styles.referralTitle}>ريلزي ({myClips.length})</Text>
           </View>
-          <TouchableOpacity
-            style={styles.referralCodeBox}
-            onPress={copyReferralCode}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.referralCode}>{referralCode}</Text>
-            <Ionicons name="copy-outline" size={18} color="#60a5fa" />
-          </TouchableOpacity>
-          <Text style={styles.referralDesc}>
-            شارك الكود واحصل على 50 جوهرة صقر لكل صديق يسجل!
-          </Text>
-        </View>
-
-        {/* Menu */}
-        <View style={styles.menuSection}>
-          {menuItems.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.menuItem}
-              onPress={item.action}
-              activeOpacity={0.6}
-            >
-              <View
-                style={[
-                  styles.menuIconContainer,
-                  { backgroundColor: `${item.color}15` },
-                ]}
-              >
-                <Ionicons name={item.icon} size={20} color={item.color} />
-              </View>
-              <Text style={styles.menuLabel}>{item.label}</Text>
+          {myClipsLoading ? (
+            <ActivityIndicator size="small" color="#60a5fa" style={{ marginTop: 8 }} />
+          ) : myClips.length === 0 ? (
+            <View style={styles.emptyReelsBox}>
               <Ionicons
-                name="chevron-forward"
-                size={18}
-                color="rgba(255,255,255,0.3)"
+                name="videocam-outline"
+                size={28}
+                color="rgba(255,255,255,0.4)"
               />
-            </TouchableOpacity>
-          ))}
-
-          {/* Logout */}
-          <TouchableOpacity
-            style={[styles.menuItem, styles.logoutItem]}
-            onPress={confirmLogout}
-            activeOpacity={0.6}
-          >
-            <View
-              style={[
-                styles.menuIconContainer,
-                { backgroundColor: "rgba(239,68,68,0.15)" },
-              ]}
-            >
-              <Ionicons name="log-out-outline" size={20} color="#ef4444" />
+              <Text style={styles.emptyReelsText}>
+                لم تنشر أي ريلز بعد
+              </Text>
+              <TouchableOpacity
+                style={styles.createReelBtn}
+                onPress={() => onNavigate && onNavigate("clips")}
+              >
+                <Ionicons name="add" size={18} color="#fff" />
+                <Text style={styles.createReelText}>أنشر ريلز</Text>
+              </TouchableOpacity>
             </View>
-            <Text style={[styles.menuLabel, styles.logoutText]}>
-              تسجيل الخروج
-            </Text>
-            <Ionicons name="chevron-forward" size={18} color="#ef4444" />
-          </TouchableOpacity>
+          ) : (
+            <View style={styles.reelsGrid}>
+              {myClips.slice(0, 9).map((clip) => (
+                <TouchableOpacity
+                  key={clip.clip_id}
+                  style={styles.reelTile}
+                  onPress={() => onNavigate && onNavigate("clips")}
+                  activeOpacity={0.7}
+                >
+                  {clip.thumbnail_url ? (
+                    <Image
+                      source={{ uri: clip.thumbnail_url }}
+                      style={styles.reelTileImage}
+                    />
+                  ) : (
+                    <View style={styles.reelTilePlaceholder}>
+                      <Ionicons
+                        name="play"
+                        size={20}
+                        color="rgba(255,255,255,0.7)"
+                      />
+                    </View>
+                  )}
+                  <View style={styles.reelTileBadge}>
+                    <Ionicons name="heart" size={10} color="#fff" />
+                    <Text style={styles.reelTileBadgeText}>
+                      {clip.likes_count || 0}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
 
         {/* App Version - اضغط 7 مرات لفتح لوحة الأدمن */}
         <TouchableOpacity onPress={handleVersionTap} activeOpacity={0.7}>
-          <Text style={styles.versionText}>الإصدار 7.2.11</Text>
+          <Text style={styles.versionText}>الإصدار 7.2.19</Text>
         </TouchableOpacity>
       </View>
 
@@ -1023,6 +1053,82 @@ const styles = StyleSheet.create({
   content: { padding: 16, paddingTop: 30, paddingBottom: 96 },
 
   profileHeader: { alignItems: "center", marginBottom: 20 },
+  topBar: {
+    flexDirection: "row-reverse",
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    marginBottom: 4,
+  },
+  settingsBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  myReelsCard: {
+    backgroundColor: "rgba(15,23,42,0.55)",
+    borderColor: "rgba(96,165,250,0.18)",
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 16,
+  },
+  reelsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 10,
+  },
+  reelTile: {
+    width: (Dimensions.get("window").width - 64 - 12) / 3,
+    height: ((Dimensions.get("window").width - 64 - 12) / 3) * 1.5,
+    borderRadius: 8,
+    overflow: "hidden",
+    backgroundColor: "rgba(30,41,59,0.7)",
+  },
+  reelTileImage: { width: "100%", height: "100%", resizeMode: "cover" },
+  reelTilePlaceholder: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  reelTileBadge: {
+    position: "absolute",
+    bottom: 4,
+    left: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    borderRadius: 999,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+  },
+  reelTileBadgeText: { color: "#fff", fontSize: 9, fontWeight: "600" },
+  emptyReelsBox: {
+    alignItems: "center",
+    paddingVertical: 22,
+  },
+  emptyReelsText: {
+    color: "rgba(226,232,240,0.6)",
+    fontSize: 13,
+    marginTop: 8,
+  },
+  createReelBtn: {
+    marginTop: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#3b82f6",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+  },
+  createReelText: { color: "#fff", fontWeight: "600", fontSize: 13 },
   avatar: {
     width: 80,
     height: 80,

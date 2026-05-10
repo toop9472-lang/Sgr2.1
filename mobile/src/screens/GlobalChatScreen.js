@@ -212,7 +212,7 @@ const MessageContent = memo(({ text, isOwn }) => {
 });
 
 // مكون الرسالة الاحترافي
-const ChatMessageItem = memo(({ message, isOwn, isAdmin, chatFrameColor, onLongPress }) => {
+const ChatMessageItem = memo(({ message, isOwn, isAdmin, chatFrameColor, onLongPress, onAvatarPress }) => {
   const scaleAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -254,7 +254,9 @@ const ChatMessageItem = memo(({ message, isOwn, isAdmin, chatFrameColor, onLongP
       ]}
     >
       {!isOwn && (
-        <View
+        <TouchableOpacity
+          onPress={onAvatarPress}
+          activeOpacity={0.7}
           style={[
             styles.avatarContainer,
             { backgroundColor: getAvatarColor() },
@@ -270,7 +272,7 @@ const ChatMessageItem = memo(({ message, isOwn, isAdmin, chatFrameColor, onLongP
               {message.user_name?.charAt(0) || "?"}
             </Text>
           )}
-        </View>
+        </TouchableOpacity>
       )}
 
       <TouchableOpacity
@@ -518,6 +520,7 @@ const GlobalChatScreen = ({
   onClose,
   onNavigateToFortunes,
   onBalanceUpdate,
+  onOpenUserProfile,
 }) => {
   const { language } = useLanguage();
   const isArabic = language === "ar";
@@ -979,6 +982,11 @@ const GlobalChatScreen = ({
         isOwn={item.user_id === userId}
         isAdmin={isAdmin}
         onLongPress={() => deleteMessage(item)}
+        onAvatarPress={() => {
+          if (item.user_id && item.user_id !== userId && onOpenUserProfile) {
+            onOpenUserProfile(item.user_id);
+          }
+        }}
         chatFrameColor={chatFrameColor}
       />
     ),

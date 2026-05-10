@@ -284,11 +284,16 @@ const AdViewerScreen = ({
               persisted?.payload?.points_earned ??
               0,
           ) || 0;
+        const newBalance =
+          Number(persisted?.payload?.new_gems_balance ?? NaN);
         setEarnedGems(gems);
         setShowPointsAnimation(true);
         Vibration.vibrate(100);
         if (onRewardsEarned) {
-          onRewardsEarned({ gems });
+          onRewardsEarned({
+            gems,
+            newBalance: Number.isFinite(newBalance) ? newBalance : undefined,
+          });
         }
         if (recordAdWatched) {
           recordAdWatched();

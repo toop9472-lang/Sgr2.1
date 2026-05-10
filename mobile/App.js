@@ -42,6 +42,7 @@ I18nManager.allowRTL(true);
 import AuthScreen from "./src/screens/AuthScreen";
 import HomeScreen from "./src/screens/HomeScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
+import UserProfileScreen from "./src/screens/UserProfileScreen";
 import AdvertiserScreen from "./src/screens/AdvertiserScreen";
 import AdvertiserDashboardScreen from "./src/screens/AdvertiserDashboardScreen";
 import AdViewerScreen from "./src/screens/AdViewerScreen";
@@ -91,6 +92,8 @@ function AppContent() {
   const [currentPage, setCurrentPage] = useState("home");
   const [showAdsViewer, setShowAdsViewer] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [viewingUserId, setViewingUserId] = useState(null);
+  const [privateChatTarget, setPrivateChatTarget] = useState(null);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [settings, setSettings] = useState(null);
   const [balanceRefresh, setBalanceRefresh] = useState(0);
@@ -426,14 +429,20 @@ function AppContent() {
     setCurrentPage("home");
   };
 
-  const handleGemsEarned = async (gems = 0) => {
+  const handleGemsEarned = async ({ gems = 0, newBalance } = {}) => {
     if (user && !user.isGuest) {
       setUser((prev) => {
         if (!prev) return prev;
         const next = {
           ...prev,
-          saqr_gems: (prev.saqr_gems || 0) + gems,
-          saqr_points: (prev.saqr_points || prev.saqr_gems || 0) + gems,
+          saqr_gems:
+            Number.isFinite(newBalance) && newBalance !== undefined
+              ? newBalance
+              : (prev.saqr_gems || 0) + gems,
+          saqr_points:
+            Number.isFinite(newBalance) && newBalance !== undefined
+              ? newBalance
+              : (prev.saqr_points || prev.saqr_gems || 0) + gems,
         };
         persistUserSnapshot(next);
         return next;
@@ -444,7 +453,7 @@ function AppContent() {
       await updateCurrency(gems);
       setTimeout(() => {
         syncBalanceFromServer();
-      }, 0);
+      }, 800);
     }
   };
 
@@ -514,7 +523,7 @@ function AppContent() {
           setShowAdsViewer(false);
           setCurrentPage("profile");
         }}
-        onRewardsEarned={({ gems = 0 }) => handleGemsEarned(gems)}
+        onRewardsEarned={(payload) => handleGemsEarned(payload || {})}
         user={user}
       />
     );
@@ -560,6 +569,7 @@ function AppContent() {
               onNavigate={setCurrentPage}
               onOpenAchievements={() => setShowAchievements(true)}
               onOpenAdminPanel={() => setShowAdminPanel(true)}
+              onOpenSettings={() => setCurrentPage("settings")}
               onUpdateProfile={async (updates) => {
                 const updatedUser = { ...(user || {}), ...(updates || {}) };
                 setUser(updatedUser);
@@ -567,14 +577,39 @@ function AppContent() {
               }}
             />
           )}
+          {currentPage === "user-profile" && viewingUserId && (
+            <UserProfileScreen
+              user={user}
+              targetUserId={viewingUserId}
+              onClose={() => {
+                setViewingUserId(null);
+                setCurrentPage("clips");
+              }}
+              onOpenChat={(target) => {
+                setPrivateChatTarget(target);
+                setViewingUserId(null);
+                setCurrentPage("private-messages");
+              }}
+              onOpenClip={() => {
+                setViewingUserId(null);
+                setCurrentPage("clips");
+              }}
+            />
+          )}
           {currentPage === "settings" && (
             <SettingsScreen
+              user={user}
               onBack={() => setCurrentPage("profile")}
               onLogout={handleLogout}
               currentTheme={themeMode}
               onThemeChange={handleThemeChange}
               currentHomePreset={homePreset}
               onHomePresetChange={handleHomePresetChange}
+              onUpdateProfile={async (updates) => {
+                const updatedUser = { ...(user || {}), ...(updates || {}) };
+                setUser(updatedUser);
+                await storage.setUserData(updatedUser);
+              }}
             />
           )}
           {currentPage === "advertiser" && <AdvertiserScreen />}
@@ -590,6 +625,10 @@ function AppContent() {
             <ClipsScreen
               user={user}
               onClose={() => setCurrentPage("home")}
+              onOpenUserProfile={(targetUserId) => {
+                setViewingUserId(targetUserId);
+                setCurrentPage("user-profile");
+              }}
               onNavigateToAds={() => {
                 setCurrentPage("home");
                 setShowAdsViewer(true);
@@ -602,6 +641,10 @@ function AppContent() {
               onBalanceUpdate={handleBalanceUpdate}
               onClose={() => setCurrentPage("home")}
               onNavigateToFortunes={() => setCurrentPage("fortunes")}
+              onOpenUserProfile={(targetUserId) => {
+                setViewingUserId(targetUserId);
+                setCurrentPage("user-profile");
+              }}
             />
           )}
           {currentPage === "fortunes" && (
@@ -624,11 +667,14 @@ function AppContent() {
               }}
             />
           )}
-          {currentPage === "messages" && (
+          {(currentPage === "messages" || currentPage === "private-messages") && (
             <PrivateMessagesScreen
               user={user}
-              onClose={() => setCurrentPage("friends")}
-              initialFriend={selectedFriend}
+              onClose={() => {
+                setPrivateChatTarget(null);
+                setCurrentPage("home");
+              }}
+              initialFriend={privateChatTarget || selectedFriend}
             />
           )}
         </LinearGradient>

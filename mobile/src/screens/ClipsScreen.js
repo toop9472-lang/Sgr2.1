@@ -90,7 +90,7 @@ const parseApiErrorMessage = async (
   return fallback;
 };
 
-const ClipsScreen = ({ user, onClose, onNavigateToAds }) => {
+const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
   const userId = user?.id || user?.user_id;
   const isAdmin = Boolean(
     user?.is_admin ||
@@ -490,12 +490,20 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds }) => {
             style={styles.reelOverlay}
           >
             <View style={styles.reelTopRow}>
-              <View style={styles.publisherStrip}>
+              <TouchableOpacity
+                style={styles.publisherStrip}
+                activeOpacity={0.7}
+                onPress={() => {
+                  if (item.user_id && item.user_id !== userId && onOpenUserProfile) {
+                    onOpenUserProfile(item.user_id);
+                  }
+                }}
+              >
                 <Ionicons name="person-circle-outline" size={14} color="#cbd5e1" />
                 <Text style={styles.publisherStripText} numberOfLines={1}>
                   الناشر: {item.user_name || "مستخدم"}
                 </Text>
-              </View>
+              </TouchableOpacity>
               <View style={styles.clipBadge}>
                 <Ionicons name="flash-outline" size={12} color="#22d3ee" />
                 <Text style={styles.clipBadgeText}>{MAX_CLIP_DURATION}s</Text>
@@ -577,7 +585,7 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds }) => {
         </View>
       );
     },
-    [activeIndex, deleteClip, followLoadingUserId, isAdmin, screenHeight, toggleFollow, toggleLike, userId],
+    [activeIndex, deleteClip, followLoadingUserId, isAdmin, onOpenUserProfile, screenHeight, toggleFollow, toggleLike, userId],
   );
 
   const emptyState = useMemo(

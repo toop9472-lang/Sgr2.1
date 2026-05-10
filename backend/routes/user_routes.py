@@ -3,6 +3,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from auth.dependencies import get_current_user_id
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 import os
 import uuid
 
@@ -74,7 +75,32 @@ async def update_profile(
     update_data = {}
     
     if 'name' in data:
-        update_data['name'] = data['name']
+        new_name = (data.get('name') or '').strip()
+        if not new_name:
+            raise HTTPException(status_code=400, detail='الاسم لا يمكن أن يكون فارغاً')
+        if new_name != (user.get('name') or ''):
+            # تقييد تغيير الاسم: مرة واحدة كل 7 أيام
+            last_name_change = user.get('last_name_change')
+            if last_name_change:
+                from datetime import timedelta
+                if isinstance(last_name_change, str):
+                    try:
+                        last_name_change = datetime.fromisoformat(last_name_change.replace('Z', '+00:00'))
+                    except Exception:
+                        last_name_change = None
+                if last_name_change:
+                    if last_name_change.tzinfo is None:
+                        last_name_change = last_name_change.replace(tzinfo=None)
+                    now_naive = datetime.utcnow()
+                    days_since = (now_naive - last_name_change.replace(tzinfo=None)).days if last_name_change else 999
+                    if days_since < 7:
+                        remaining = 7 - days_since
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f'يمكنك تغيير الاسم مرة واحدة كل أسبوع. تبقى {remaining} يوم.',
+                        )
+            update_data['name'] = new_name
+            update_data['last_name_change'] = datetime.utcnow()
     
     if 'avatar' in data:
         # التحقق من تقييد تغيير الصورة (مرة أسبوعياً)
@@ -163,9 +189,39 @@ async def get_user_analytics(user_id: str = Depends(get_current_user_id)):
 
 @router.post('/upload-avatar')
 async def upload_avatar(user_id: str, file: UploadFile = File(...)):
-    """Upload a profile picture from device gallery and persist its public URL on the user document."""
+    """Upload a profile picture from device gallery and persist its public URL on the user document.
+
+    Rate-limited: a user can change their avatar at most once every 7 days.
+    """
     if not user_id:
         raise HTTPException(status_code=400, detail='user_id required')
+
+    db = get_db()
+    existing = await db.users.find_one(
+        {'$or': [{'id': user_id}, {'user_id': user_id}]},
+        {'_id': 0, 'last_avatar_change': 1, 'avatar_updated_at': 1},
+    ) or {}
+    last_change_raw = existing.get('last_avatar_change') or existing.get('avatar_updated_at')
+    if last_change_raw:
+        from datetime import timedelta
+        try:
+            if isinstance(last_change_raw, str):
+                last_dt = datetime.fromisoformat(last_change_raw.replace('Z', '+00:00'))
+            else:
+                last_dt = last_change_raw
+            last_naive = last_dt.replace(tzinfo=None) if last_dt.tzinfo else last_dt
+            days_since = (datetime.utcnow() - last_naive).days
+            if days_since < 7:
+                remaining = 7 - days_since
+                raise HTTPException(
+                    status_code=429,
+                    detail=f'يمكنك تغيير الصورة مرة واحدة كل أسبوع. تبقى {remaining} يوم.',
+                )
+        except HTTPException:
+            raise
+        except Exception:
+            pass
+
     raw = await file.read()
     if not raw:
         raise HTTPException(status_code=400, detail='Empty file')
@@ -192,9 +248,126 @@ async def upload_avatar(user_id: str, file: UploadFile = File(...)):
         target.write_bytes(raw)
         avatar_url = f"/media/avatars/{filename}"
 
-    db = get_db()
+    now_iso = datetime.utcnow().isoformat()
     await db.users.update_one(
         {'$or': [{'id': user_id}, {'user_id': user_id}]},
-        {'$set': {'avatar': avatar_url, 'avatar_updated_at': datetime.utcnow().isoformat()}},
+        {'$set': {
+            'avatar': avatar_url,
+            'avatar_updated_at': now_iso,
+            'last_avatar_change': now_iso,
+        }},
     )
     return {'success': True, 'avatar_url': avatar_url, 'url': avatar_url}
+
+
+
+# ====================== Public profile + privacy ======================
+
+PUBLIC_USER_FIELDS = {
+    '_id': 0,
+    'id': 1,
+    'user_id': 1,
+    'name': 1,
+    'avatar': 1,
+    'bio': 1,
+    'is_private': 1,
+    'created_at': 1,
+    'joined_date': 1,
+}
+
+
+@router.get('/public-profile/{target_user_id}')
+async def get_public_profile(target_user_id: str, viewer_id: Optional[str] = None):
+    """Return a sanitized public profile + follow stats. Never exposes email/phone/balance."""
+    db = get_db()
+    target = await db.users.find_one(
+        {'$or': [{'id': target_user_id}, {'user_id': target_user_id}]},
+        PUBLIC_USER_FIELDS,
+    )
+    if not target:
+        raise HTTPException(status_code=404, detail='المستخدم غير موجود')
+
+    canonical_id = target.get('id') or target.get('user_id') or target_user_id
+    # Follow stats
+    followers_count = await db.clips_follows.count_documents({'target_user_id': canonical_id})
+    following_count = await db.clips_follows.count_documents({'follower_user_id': canonical_id})
+    followed_by_me = False
+    if viewer_id and viewer_id != canonical_id:
+        followed_by_me = bool(
+            await db.clips_follows.find_one(
+                {'follower_user_id': viewer_id, 'target_user_id': canonical_id},
+                {'_id': 0, 'follow_id': 1},
+            )
+        )
+
+    # Clip count (visible regardless of privacy because total is public meta)
+    clips_count = await db.clips_posts.count_documents({'user_id': canonical_id})
+
+    is_private = bool(target.get('is_private', False))
+    can_view_clips = (not is_private) or followed_by_me or viewer_id == canonical_id
+
+    return {
+        'user_id': canonical_id,
+        'name': target.get('name') or 'مستخدم',
+        'avatar': target.get('avatar') or '',
+        'bio': target.get('bio') or '',
+        'is_private': is_private,
+        'joined_date': target.get('created_at') or target.get('joined_date') or '',
+        'followers_count': followers_count,
+        'following_count': following_count,
+        'clips_count': clips_count,
+        'followed_by_me': followed_by_me,
+        'can_view_clips': can_view_clips,
+        'is_self': viewer_id == canonical_id,
+    }
+
+
+@router.get('/clips/{target_user_id}')
+async def get_user_clips(
+    target_user_id: str,
+    viewer_id: Optional[str] = None,
+    limit: int = 30,
+):
+    """Return user's own posted clips. Respects `is_private`: only owner or followers can list when private."""
+    db = get_db()
+    target = await db.users.find_one(
+        {'$or': [{'id': target_user_id}, {'user_id': target_user_id}]},
+        {'_id': 0, 'id': 1, 'user_id': 1, 'is_private': 1},
+    )
+    if not target:
+        raise HTTPException(status_code=404, detail='المستخدم غير موجود')
+    canonical_id = target.get('id') or target.get('user_id') or target_user_id
+    if target.get('is_private') and viewer_id != canonical_id:
+        is_follower = bool(
+            await db.clips_follows.find_one(
+                {'follower_user_id': viewer_id, 'target_user_id': canonical_id},
+                {'_id': 0, 'follow_id': 1},
+            )
+        ) if viewer_id else False
+        if not is_follower:
+            return {'clips': [], 'count': 0, 'private': True}
+
+    capped = max(1, min(int(limit or 30), 100))
+    clips = await (
+        db.clips_posts.find({'user_id': canonical_id}, {'_id': 0})
+        .sort('created_at', -1)
+        .limit(capped)
+        .to_list(capped)
+    )
+    return {'clips': clips, 'count': len(clips), 'private': False}
+
+
+@router.put('/privacy/{user_id}')
+async def set_account_privacy(user_id: str, data: dict):
+    """Toggle account privacy. Body: { "is_private": true|false }."""
+    if not user_id:
+        raise HTTPException(status_code=400, detail='user_id required')
+    is_private = bool(data.get('is_private'))
+    db = get_db()
+    result = await db.users.update_one(
+        {'$or': [{'id': user_id}, {'user_id': user_id}]},
+        {'$set': {'is_private': is_private, 'privacy_updated_at': datetime.utcnow().isoformat()}},
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail='المستخدم غير موجود')
+    return {'success': True, 'is_private': is_private}
