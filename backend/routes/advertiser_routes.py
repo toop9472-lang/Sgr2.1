@@ -303,6 +303,54 @@ async def submit_payment_proof(ad_id: str, data: dict):
         'message': 'تم إرسال إثبات الدفع بنجاح! سيتم مراجعته من قبل الإدارة'
     }
 
+@router.post('/ads/{ad_id}/boost', response_model=dict)
+async def boost_advertiser_ad(ad_id: str, data: dict = None):
+    """
+    Boost an existing ad to the top of the feed for 5 SAR.
+    This is a one-time uplift — it does NOT extend the ad duration.
+    """
+    db = get_db()
+    ad = await db.advertiser_ads.find_one({'id': ad_id})
+    if not ad:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Ad not found')
+
+    payment_method = (data or {}).get('payment_method')
+    payment_proof = (data or {}).get('payment_proof')
+
+    now = datetime.utcnow()
+    boost_price = 5.0
+
+    # Mark the ad as boosted (timestamp drives the feed sort order)
+    await db.advertiser_ads.update_one(
+        {'id': ad_id},
+        {'$set': {
+            'boosted_at': now,
+            'boost_paid': True,
+        }}
+    )
+
+    # Record a separate boost payment for transparency
+    boost_payment = AdvertiserPayment(
+        advertiser_id=ad.get('advertiser_id', f'adv_{now.timestamp()}'),
+        ad_id=ad_id,
+        amount=boost_price,
+        status='pending' if not payment_proof else 'paid',
+        payment_method=payment_method,
+        payment_proof=payment_proof,
+    )
+    boost_dict = boost_payment.dict()
+    boost_dict['type'] = 'boost'
+    await db.advertiser_payments.insert_one(boost_dict)
+
+    return {
+        'success': True,
+        'message': 'تم رفع إعلانك للأعلى!',
+        'boost_price': boost_price,
+        'boost_payment_id': boost_payment.id,
+        'boosted_at': now.isoformat(),
+    }
+
+
 @router.get('/pricing', response_model=dict)
 async def get_pricing():
     """

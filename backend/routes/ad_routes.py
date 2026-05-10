@@ -57,20 +57,27 @@ async def get_ads(ad_type: Optional[str] = Query(None, description="Filter by ty
     main_ads = await db.ads.find(main_ads_query, {'_id': 0}).to_list(100)
     
     # Get active ads from advertiser_ads collection (filter expired ones)
-    advertiser_ads = await db.advertiser_ads.find(advertiser_query, {'_id': 0}).to_list(100)
+    # Sort by boosted_at desc (most recently boosted first), then created_at desc
+    advertiser_ads = await db.advertiser_ads.find(advertiser_query, {'_id': 0}).sort([
+        ('boosted_at', -1),
+        ('created_at', -1),
+    ]).to_list(100)
     
     all_ads = []
+    boosted_advertiser_ads = []
+    normal_advertiser_ads = []
     
     removed_main_ad_ids = []
     removed_advertiser_ad_ids = []
 
-    # Process main ads
+    # Process main ads (added later — boosted advertiser ads come first)
+    main_responses = []
     for ad in main_ads:
         if _is_demo_ad(ad):
             if ad.get("id"):
                 removed_main_ad_ids.append(ad["id"])
             continue
-        all_ads.append(AdResponse(
+        main_responses.append(AdResponse(
             id=ad['id'],
             title=ad['title'],
             description=ad['description'],
@@ -115,7 +122,7 @@ async def get_ads(ad_type: Optional[str] = Query(None, description="Filter by ty
                 )
                 continue
         
-        all_ads.append(AdResponse(
+        all_ads_item = AdResponse(
             id=ad.get('id', ''),
             title=ad.get('title', ''),
             description=ad.get('description', ''),
@@ -126,7 +133,14 @@ async def get_ads(ad_type: Optional[str] = Query(None, description="Filter by ty
             duration=ad.get('duration', 30),
             points=ad.get('points', 1),
             ad_type=ad.get('ad_type', 'local')
-        ))
+        )
+        if ad.get('boosted_at'):
+            boosted_advertiser_ads.append(all_ads_item)
+        else:
+            normal_advertiser_ads.append(all_ads_item)
+
+    # Final order: boosted advertiser ads → normal advertiser ads → main/system ads
+    all_ads = boosted_advertiser_ads + normal_advertiser_ads + main_responses
 
     # Cleanup test/demo records so they stop reappearing.
     if removed_main_ad_ids:

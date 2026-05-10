@@ -31,6 +31,7 @@ class AdvertiserAd(BaseModel):
     title: str
     description: str
     video_url: str
+    website_url: Optional[str] = None  # Optional landing URL displayed below video in the viewer
     thumbnail_url: Optional[str] = None
     duration: int = 60  # seconds
     ad_type: str = 'local'  # 'local' for personal ads, 'global' for wide reach
@@ -38,6 +39,10 @@ class AdvertiserAd(BaseModel):
     # Pricing - Hourly based
     price: float = 79.0  # SAR
     duration_hours: int = 1  # Default 1 hour
+    
+    # Boost (rocket) — paid one-time uplift, NOT a renewal
+    boosted_at: Optional[datetime] = None
+    boost_paid: bool = False
     
     # Status
     status: str = 'pending'  # 'pending', 'approved', 'rejected', 'active', 'expired'
@@ -66,6 +71,7 @@ class AdvertiserAdCreate(BaseModel):
     title: str
     description: str
     video_url: str
+    website_url: Optional[str] = None
     thumbnail_url: Optional[str] = None
     duration: int = 60
     duration_hours: int = 1
@@ -77,6 +83,7 @@ class AdvertiserAdResponse(BaseModel):
     title: str
     description: str
     video_url: str
+    website_url: Optional[str] = None
     thumbnail_url: Optional[str]
     duration: int
     price: float
@@ -86,6 +93,8 @@ class AdvertiserAdResponse(BaseModel):
     created_at: datetime
     expires_at: Optional[str]
     ad_type: str = 'local'
+    boosted_at: Optional[datetime] = None
+    boost_paid: bool = False
 
     class Config:
         json_encoders = {

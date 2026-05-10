@@ -21,6 +21,42 @@ const AdvertiserDashboardScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [boostingAdId, setBoostingAdId] = useState(null);
+
+  const handleBoostAd = (adId) => {
+    if (!adId || boostingAdId) return;
+    Alert.alert(
+      'رفع الإعلان للأعلى',
+      'سيتم رفع إعلانك للأعلى مقابل 5 ﷼. هذه ترقية لمرة واحدة ولا تُجدد مدة الإعلان.',
+      [
+        { text: 'إلغاء', style: 'cancel' },
+        {
+          text: 'تأكيد',
+          style: 'default',
+          onPress: async () => {
+            try {
+              setBoostingAdId(adId);
+              const r = await api.boostAdvertiserAd
+                ? await api.boostAdvertiserAd(adId)
+                : await fetch(`${api.baseUrl || ''}/api/advertiser/ads/${adId}/boost`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ payment_method: 'manual' }),
+                  });
+              const body = await r.json().catch(() => ({}));
+              if (!r.ok) throw new Error(body?.detail || 'فشلت العملية');
+              Alert.alert('🚀 تم!', body?.message || 'تم رفع إعلانك للأعلى');
+              if (email) fetchDashboard(email);
+            } catch (e) {
+              Alert.alert('خطأ', String(e?.message || e));
+            } finally {
+              setBoostingAdId(null);
+            }
+          },
+        },
+      ],
+    );
+  };
 
   const fetchDashboard = async (advertiserEmail) => {
     if (!advertiserEmail) return;
@@ -285,6 +321,28 @@ const AdvertiserDashboardScreen = ({ navigation }) => {
                     تاريخ الإنشاء: {new Date(ad.created_at).toLocaleDateString('ar-SA')}
                   </Text>
                 )}
+
+                {/* Boost button / boosted badge */}
+                <View style={styles.boostRow}>
+                  {ad.boosted_at ? (
+                    <View style={styles.boostedBadge}>
+                      <Ionicons name="rocket" size={13} color="#fbbf24" />
+                      <Text style={styles.boostedBadgeText}>مرفوع للأعلى</Text>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={[styles.boostBtn, boostingAdId === ad.ad_id && styles.boostBtnDisabled]}
+                      onPress={() => handleBoostAd(ad.ad_id)}
+                      disabled={boostingAdId === ad.ad_id}
+                      activeOpacity={0.85}
+                    >
+                      <Ionicons name="rocket" size={14} color="#0a0a0f" />
+                      <Text style={styles.boostBtnText}>
+                        {boostingAdId === ad.ad_id ? 'جاري الرفع...' : 'ارفع للأعلى — 5 ﷼'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
             ))
           )}
@@ -616,6 +674,49 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.3)',
     marginTop: 12,
     textAlign: 'center',
+  },
+  boostRow: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.06)',
+    alignItems: 'flex-end',
+  },
+  boostBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#fbbf24',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    shadowColor: '#fbbf24',
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  boostBtnDisabled: { opacity: 0.6 },
+  boostBtnText: {
+    color: '#0a0a0f',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  boostedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(251, 191, 36, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 191, 36, 0.45)',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  boostedBadgeText: {
+    color: '#fbbf24',
+    fontSize: 11,
+    fontWeight: '700',
   },
 
   // Spent Card

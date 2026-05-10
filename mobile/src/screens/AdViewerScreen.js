@@ -765,6 +765,33 @@ const AdViewerScreen = ({
                 ? "بعد إكمال إعلان Google تنتقل تلقائياً للعنصر التالي"
                 : "يمكنك الانتقال بين الإعلانات الشخصية وAdMob من أزرار السابق/التالي"}
             </Text>
+
+            {/* Website card — Personal ads only */}
+            {!isAdMobSlot && currentAd?.website_url && /^https?:\/\//i.test(currentAd.website_url) && (
+              <TouchableOpacity
+                style={styles.adWebsiteCard}
+                onPress={handleOpenAdvertiserAd}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel="انتقل لصفحة الإعلان"
+              >
+                <View style={styles.adWebsiteIconWrap}>
+                  <Ionicons name="globe-outline" size={18} color="#93c5fd" />
+                </View>
+                <View style={styles.adWebsiteBody}>
+                  <Text style={styles.adWebsiteTitle} numberOfLines={1}>
+                    انتقل لصفحة الإعلان
+                  </Text>
+                  <Text style={styles.adWebsiteHost} numberOfLines={1}>
+                    {String(currentAd.website_url).replace(/^https?:\/\//, '').split('/')[0]}
+                  </Text>
+                </View>
+                <View style={styles.adWebsiteArrow}>
+                  <Ionicons name="chevron-back" size={16} color="#bfdbfe" />
+                </View>
+              </TouchableOpacity>
+            )}
+
             <View style={styles.watchPrimaryNavRow}>
               <TouchableOpacity
                 style={[
@@ -1286,6 +1313,50 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+  },
+  adWebsiteCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: 16,
+    backgroundColor: "rgba(59, 130, 246, 0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.32)",
+  },
+  adWebsiteIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: "rgba(59, 130, 246, 0.18)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  adWebsiteBody: {
+    flex: 1,
+    alignItems: "flex-end",
+  },
+  adWebsiteTitle: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "700",
+    textAlign: "right",
+  },
+  adWebsiteHost: {
+    color: "rgba(191, 219, 254, 0.85)",
+    fontSize: 11,
+    marginTop: 2,
+    textAlign: "right",
+  },
+  adWebsiteArrow: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "rgba(59, 130, 246, 0.22)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   watchPrimaryNavBtn: {
     flexDirection: "row",

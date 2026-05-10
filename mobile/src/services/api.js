@@ -648,6 +648,13 @@ export const api = {
     });
   },
 
+  async boostAdvertiserAd(adId, payload = {}) {
+    return this.fetch(`/api/advertiser/ads/${encodeURIComponent(adId)}/boost`, {
+      method: "POST",
+      body: JSON.stringify({ payment_method: 'manual', ...payload }),
+    });
+  },
+
   async uploadAdvertiserVideo(fileUri, thumbnailUri = null) {
     const formData = new FormData();
     const videoFilename =

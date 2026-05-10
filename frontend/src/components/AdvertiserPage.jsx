@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Check, AlertCircle, CreditCard, Building2, Smartphone, Clock, Timer, Globe, MapPin } from 'lucide-react';
+import { ArrowRight, Check, AlertCircle, CreditCard, Building2, Smartphone, Clock, Timer, Globe, MapPin, Rocket } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
@@ -365,6 +365,19 @@ const AdvertiserPage = ({ onNavigate }) => {
           <div className="mb-8">
             <h3 className="text-xl font-bold text-white mb-2 text-center">اختر مدة الإعلان</h3>
             <p className="text-gray-400 text-sm text-center mb-6">الإعلان يبدأ فوراً بعد الدفع مع مؤقت عد تنازلي</p>
+
+            {/* Boost upsell - independent rocket offer */}
+            <div className="mb-6 flex items-center gap-3 bg-yellow-400/10 border border-yellow-400/40 rounded-2xl p-3" data-testid="boost-upsell-card">
+              <div className="w-11 h-11 rounded-xl bg-yellow-400 flex items-center justify-center shadow-lg shadow-yellow-400/30 flex-shrink-0">
+                <Rocket className="w-5 h-5 text-[#0a0a0f]" />
+              </div>
+              <div className="text-right flex-1">
+                <p className="text-yellow-200 font-extrabold text-sm">ارفع إعلانك للأعلى</p>
+                <p className="text-yellow-200/75 text-xs leading-relaxed mt-0.5">
+                  بعد نشر إعلانك، يمكنك ترقيته للأعلى بـ 5 ﷼ لمرة واحدة من «إعلاناتي» — دون تجديد المدة.
+                </p>
+              </div>
+            </div>
             
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {packages.map((pkg, index) => (
@@ -402,40 +415,6 @@ const AdvertiserPage = ({ onNavigate }) => {
                   )}
                 </div>
               ))}
-            </div>
-
-            {/* Ad Type Selection */}
-            <div className="mt-6 bg-[#111118]/80 border border-white/10 rounded-xl p-4">
-              <h4 className="text-white font-medium mb-3 flex items-center gap-2">
-                <Globe className="w-4 h-4 text-[#60a5fa]" />
-                نوع الإعلان
-              </h4>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => setAdData({ ...adData, ad_type: 'local' })}
-                  className={`p-3 rounded-lg border transition-all ${
-                    adData.ad_type === 'local'
-                      ? 'border-[#3b82f6] bg-[#3b82f6]/10'
-                      : 'border-white/10 hover:border-white/30'
-                  }`}
-                >
-                  <MapPin className={`w-5 h-5 mx-auto mb-1 ${adData.ad_type === 'local' ? 'text-[#60a5fa]' : 'text-gray-400'}`} />
-                  <p className={`text-sm font-medium ${adData.ad_type === 'local' ? 'text-white' : 'text-gray-400'}`}>محلي</p>
-                  <p className="text-xs text-gray-500">إعلان شخصي</p>
-                </button>
-                <button
-                  onClick={() => setAdData({ ...adData, ad_type: 'global' })}
-                  className={`p-3 rounded-lg border transition-all ${
-                    adData.ad_type === 'global'
-                      ? 'border-[#3b82f6] bg-[#3b82f6]/10'
-                      : 'border-white/10 hover:border-white/30'
-                  }`}
-                >
-                  <Globe className={`w-5 h-5 mx-auto mb-1 ${adData.ad_type === 'global' ? 'text-[#60a5fa]' : 'text-gray-400'}`} />
-                  <p className={`text-sm font-medium ${adData.ad_type === 'global' ? 'text-white' : 'text-gray-400'}`}>عالمي</p>
-                  <p className="text-xs text-gray-500">وصول أوسع</p>
-                </button>
-              </div>
             </div>
           </div>
         )}
@@ -574,10 +553,6 @@ const AdvertiserPage = ({ onNavigate }) => {
                     <div className="flex justify-between">
                       <span className="text-gray-400">المدة:</span>
                       <span className="text-white font-medium">{formatDuration(getCurrentPackage()?.duration_hours || 1)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">النوع:</span>
-                      <span className="text-white font-medium">{adData.ad_type === 'local' ? 'محلي' : 'عالمي'}</span>
                     </div>
                     <div className="flex justify-between border-t border-white/10 pt-2 mt-2">
                       <span className="text-gray-400">المبلغ الإجمالي:</span>

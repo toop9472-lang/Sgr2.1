@@ -331,25 +331,15 @@ const AdvertiserScreen = () => {
           <>
             <Text style={styles.sectionTitle}>اختر مدة الإعلان</Text>
             <Text style={styles.sectionSubtitle}>الإعلان يبدأ فوراً بعد الدفع مع مؤقت عد تنازلي</Text>
-            
-            {/* Ad Type Selection */}
-            <View style={styles.adTypeContainer}>
-              <Text style={styles.adTypeLabel}>نوع الإعلان:</Text>
-              <View style={styles.adTypeButtons}>
-                <TouchableOpacity
-                  style={[styles.adTypeBtn, adType === 'local' && styles.adTypeBtnActive]}
-                  onPress={() => setAdType('local')}
-                >
-                  <Ionicons name="location-outline" size={18} color={adType === 'local' ? '#FFF' : '#888'} />
-                  <Text style={[styles.adTypeBtnText, adType === 'local' && styles.adTypeBtnTextActive]}>محلي</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.adTypeBtn, adType === 'global' && styles.adTypeBtnActive]}
-                  onPress={() => setAdType('global')}
-                >
-                  <Ionicons name="globe-outline" size={18} color={adType === 'global' ? '#FFF' : '#888'} />
-                  <Text style={[styles.adTypeBtnText, adType === 'global' && styles.adTypeBtnTextActive]}>عالمي</Text>
-                </TouchableOpacity>
+
+            {/* Boost upsell — independent rocket offer */}
+            <View style={styles.boostUpsellCard}>
+              <View style={styles.boostUpsellIconWrap}>
+                <Ionicons name="rocket" size={20} color="#0a0a0f" />
+              </View>
+              <View style={styles.boostUpsellBody}>
+                <Text style={styles.boostUpsellTitle}>ارفع إعلانك للأعلى</Text>
+                <Text style={styles.boostUpsellDesc}>بعد نشر إعلانك، يمكنك ترقيته للأعلى بـ 5 ﷼ لمرة واحدة من «إعلاناتي».</Text>
               </View>
             </View>
 
@@ -566,10 +556,6 @@ const AdvertiserScreen = () => {
                   <Text style={styles.summaryValue}>{formatDuration(selectedPackage.duration_hours)}</Text>
                 </View>
                 <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>نوع الإعلان</Text>
-                  <Text style={styles.summaryValue}>{adType === 'local' ? 'محلي' : 'عالمي'}</Text>
-                </View>
-                <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>المبلغ الإجمالي</Text>
                   <Text style={styles.summaryPrice}>{selectedPackage.amount} ﷼</Text>
                 </View>
@@ -776,6 +762,46 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
     marginBottom: 16,
+  },
+
+  // Boost upsell card
+  boostUpsellCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(251, 191, 36, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 191, 36, 0.40)',
+    borderRadius: 16,
+    padding: 12,
+    marginBottom: 16,
+  },
+  boostUpsellIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#fbbf24',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#fbbf24',
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
+  },
+  boostUpsellBody: { flex: 1, alignItems: 'flex-end' },
+  boostUpsellTitle: {
+    color: '#fde68a',
+    fontSize: 14,
+    fontWeight: '800',
+    textAlign: 'right',
+  },
+  boostUpsellDesc: {
+    color: 'rgba(253, 230, 138, 0.78)',
+    fontSize: 11,
+    marginTop: 3,
+    textAlign: 'right',
+    lineHeight: 16,
   },
 
   // Ad Type Selection

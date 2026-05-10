@@ -590,32 +590,57 @@ const FullScreenAdsViewer = ({ user, onClose, onPointsEarned, onNavigateToProfil
         </button>
       </div>
 
-      {/* معلومات الإعلان - تظهر لثانيتين ثم تختفي - تظهر عند اللمس */}
+      {/* معلومات الإعلان + مربع أنيق "زيارة الموقع" — يظهر للإعلانات الشخصية فقط */}
       <div 
         className={`absolute bottom-0 left-0 right-0 z-20 transition-all duration-300 ${
           showInfo ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
         }`}
       >
-        <div className="bg-gradient-to-t from-black/80 via-black/40 to-transparent pt-16 pb-6 px-4">
+        <div className="bg-gradient-to-t from-black/85 via-black/50 to-transparent pt-16 pb-6 px-4">
           <div className="text-right" dir="rtl">
-            <p className="text-white/40 text-xs font-light mb-1">
+            <p className="text-white/50 text-xs font-light mb-1">
               {currentAd.advertiser || 'معلن'}
             </p>
-            <h3 className="text-white/90 text-sm font-normal mb-1.5 line-clamp-1">
+            <h3 className="text-white text-base font-semibold mb-1 line-clamp-1">
               {currentAd.title}
             </h3>
-            <p className="text-white/30 text-xs font-light line-clamp-1 mb-3">
+            <p className="text-white/60 text-xs font-light line-clamp-2 mb-3">
               {currentAd.description}
             </p>
-            {currentAd.website_url && (
+
+            {currentAd.website_url && /^https?:\/\//i.test(currentAd.website_url) && (
               <a
                 href={currentAd.website_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="inline-block text-white/50 text-xs font-light hover:text-white/70 transition-colors"
+                className="group block bg-white/8 hover:bg-white/14 border border-white/15 backdrop-blur-xl rounded-2xl p-3 transition-all duration-200"
+                data-testid="ad-website-card"
               >
-                {currentAd.website_url.replace(/^https?:\/\//, '').split('/')[0]}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500/30 to-indigo-500/20 flex items-center justify-center flex-shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-300">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="2" y1="12" x2="22" y2="12"/>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                      </svg>
+                    </div>
+                    <div className="min-w-0 flex-1 text-right">
+                      <p className="text-white text-sm font-semibold truncate">
+                        انتقل لصفحة الإعلان
+                      </p>
+                      <p className="text-white/55 text-[11px] truncate">
+                        {currentAd.website_url.replace(/^https?:\/\//, '').split('/')[0]}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="w-7 h-7 rounded-full bg-blue-500/20 group-hover:bg-blue-500/40 flex items-center justify-center transition-colors flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-blue-200">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </div>
+                </div>
               </a>
             )}
           </div>
