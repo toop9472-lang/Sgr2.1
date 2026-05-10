@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { User, Award, TrendingUp, Clock, LogOut, Lock, History, Share2, Shield, MessageCircle, LockKeyhole, Settings, Film, Play, Heart, Plus, Users } from 'lucide-react';
+import React, { useState } from 'react';
+import { User, Award, TrendingUp, Clock, LogOut, Lock, History, Share2, Shield, MessageCircle, LockKeyhole, Settings } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -24,52 +24,6 @@ const ProfilePage = ({ user, onLogout, onNavigate }) => {
   const [showHistory, setShowHistory] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
-  const [myClips, setMyClips] = useState([]);
-  const [myClipsLoading, setMyClipsLoading] = useState(false);
-  const [followStats, setFollowStats] = useState({ followers_count: 0, following_count: 0 });
-
-  // Load My Reels + Follow stats
-  useEffect(() => {
-    const uid = user?.id || user?._id;
-    if (!uid) return;
-
-    const loadMyClips = async () => {
-      try {
-        setMyClipsLoading(true);
-        const r = await fetch(
-          `${API_URL}/api/users/clips/${encodeURIComponent(uid)}?viewer_id=${encodeURIComponent(uid)}`,
-          { credentials: 'include' },
-        );
-        if (!r.ok) return;
-        const d = await r.json().catch(() => ({}));
-        setMyClips(Array.isArray(d?.clips) ? d.clips : []);
-      } catch (e) {
-        // silent
-      } finally {
-        setMyClipsLoading(false);
-      }
-    };
-
-    const loadFollowStats = async () => {
-      try {
-        const r = await fetch(
-          `${API_URL}/api/users/public-profile/${encodeURIComponent(uid)}?viewer_id=${encodeURIComponent(uid)}`,
-          { credentials: 'include' },
-        );
-        if (!r.ok) return;
-        const d = await r.json().catch(() => ({}));
-        setFollowStats({
-          followers_count: Number(d?.followers_count ?? 0) || 0,
-          following_count: Number(d?.following_count ?? 0) || 0,
-        });
-      } catch (e) {
-        // silent
-      }
-    };
-
-    loadMyClips();
-    loadFollowStats();
-  }, [user?.id, user?._id]);
 
   const handleChangePassword = async () => {
     if (!passwords.current || !passwords.new || !passwords.confirm) {
@@ -166,28 +120,16 @@ const ProfilePage = ({ user, onLogout, onNavigate }) => {
       <div className="relative z-10 bg-gradient-to-r from-[#3b82f6] to-[#6366f1] px-4 pt-8 pb-24 rounded-b-3xl shadow-lg shadow-[#3b82f6]/20">
         <div className="flex justify-between items-start mb-6">
           <h1 className="text-white text-2xl font-bold">{t('profile')}</h1>
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={() => onNavigate('settings')}
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-white/20"
-              title={isRTL ? 'الإعدادات' : 'Settings'}
-              data-testid="profile-settings-gear-btn"
-            >
-              <Settings size={20} />
-            </Button>
-            <Button
-              onClick={onLogout}
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-white/20"
-              title={t('logout')}
-              data-testid="logout-btn"
-            >
-              <LogOut size={20} />
-            </Button>
-          </div>
+          <Button
+            onClick={onLogout}
+            variant="ghost"
+            size="icon"
+            className="text-white hover:bg-white/20"
+            title={t('logout')}
+            data-testid="logout-btn"
+          >
+            <LogOut size={20} />
+          </Button>
         </div>
 
         <div className="flex items-center gap-4">
@@ -381,88 +323,6 @@ const ProfilePage = ({ user, onLogout, onNavigate }) => {
             </CardContent>
           </Card>
         )}
-
-        {/* Follow Stats - Followers / Following */}
-        <Card className="shadow-xl border border-white/10 bg-[#111118]/80 backdrop-blur-xl">
-          <CardContent className="p-0">
-            <div className="flex items-center divide-x divide-white/8 rtl:divide-x-reverse">
-              <div className="flex-1 flex flex-col items-center py-4">
-                <Users className="text-blue-400 mb-1" size={18} />
-                <span className="text-white text-lg font-bold">{followStats.followers_count}</span>
-                <span className="text-gray-400 text-xs mt-0.5">{isRTL ? 'متابعون' : 'Followers'}</span>
-              </div>
-              <div className="flex-1 flex flex-col items-center py-4">
-                <Users className="text-sky-400 mb-1" size={18} />
-                <span className="text-white text-lg font-bold">{followStats.following_count}</span>
-                <span className="text-gray-400 text-xs mt-0.5">{isRTL ? 'يتابع' : 'Following'}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* My Reels Grid */}
-        <Card className="shadow-xl border border-white/10 bg-[#111118]/80 backdrop-blur-xl" data-testid="my-reels-card">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
-                <Film className="text-blue-400" size={16} />
-              </div>
-              <span className="text-blue-400 font-semibold text-sm">
-                {isRTL ? `ريلزي (${myClips.length})` : `My Reels (${myClips.length})`}
-              </span>
-            </div>
-
-            {myClipsLoading ? (
-              <div className="flex items-center justify-center py-6">
-                <div className="w-6 h-6 rounded-full border-2 border-blue-500/30 border-t-blue-500 animate-spin" />
-              </div>
-            ) : myClips.length === 0 ? (
-              <div className="flex flex-col items-center py-6 px-3 text-center">
-                <Film className="text-white/40 mb-2" size={26} />
-                <p className="text-gray-400 text-sm mb-3">
-                  {isRTL ? 'لم تنشر أي ريلز بعد' : 'No reels yet'}
-                </p>
-                <button
-                  onClick={() => onNavigate('clips')}
-                  className="flex items-center gap-1.5 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors"
-                  data-testid="my-reels-create-btn"
-                >
-                  <Plus size={16} />
-                  {isRTL ? 'أنشر ريلز' : 'Create Reel'}
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-3 gap-1">
-                {myClips.slice(0, 9).map((clip) => (
-                  <button
-                    key={clip.clip_id}
-                    onClick={() => onNavigate('clips')}
-                    className="relative aspect-[2/3] bg-slate-800/80 rounded-md overflow-hidden group"
-                    data-testid={`my-reel-tile-${clip.clip_id}`}
-                  >
-                    {clip.thumbnail_url ? (
-                      <img
-                        src={clip.thumbnail_url}
-                        alt=""
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-slate-700/60">
-                        <Play className="text-white/70" size={20} />
-                      </div>
-                    )}
-                    <div className="absolute bottom-1 left-1 flex items-center gap-0.5 bg-black/55 rounded-full px-1.5 py-0.5">
-                      <Heart className="text-white" size={10} fill="currentColor" />
-                      <span className="text-white text-[10px] font-semibold">
-                        {clip.likes_count || 0}
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
         {/* Version */}
         <p className="text-center text-gray-600 text-xs py-4">
