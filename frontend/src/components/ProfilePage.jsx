@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Award, TrendingUp, Clock, LogOut, Lock, History, Share2, Shield, MessageCircle, LockKeyhole, Settings } from 'lucide-react';
+import { User, Award, TrendingUp, Clock, LogOut, Lock, History, Share2, Shield, MessageCircle, LockKeyhole, Settings, Eye, EyeOff, Copy, Wallet, HelpCircle, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -24,6 +24,7 @@ const ProfilePage = ({ user, onLogout, onNavigate }) => {
   const [showHistory, setShowHistory] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
+  const [showReferralCode, setShowReferralCode] = useState(false);
 
   const handleChangePassword = async () => {
     if (!passwords.current || !passwords.new || !passwords.confirm) {
@@ -90,16 +91,37 @@ const ProfilePage = ({ user, onLogout, onNavigate }) => {
     }
   };
 
-  const menuItems = [
-    { id: 'settings', icon: Settings, label: t('settings'), action: () => onNavigate('settings'), color: 'text-gray-400', bgColor: 'bg-gray-500/10' },
-    { id: 'withdraw', icon: Award, label: t('withdrawBalance'), action: () => onNavigate('withdraw'), color: 'text-green-400', bgColor: 'bg-green-500/10' },
-    { id: 'history', icon: History, label: t('transactionHistory'), action: () => setShowHistory(true), color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
-    { id: 'password', icon: Lock, label: t('changePassword'), action: () => setShowChangePassword(true), color: 'text-purple-400', bgColor: 'bg-purple-500/10' },
-    { id: 'support', icon: MessageCircle, label: t('helpSupport'), action: () => window.open('/support', '_self'), color: 'text-yellow-400', bgColor: 'bg-yellow-500/10' },
-    { id: 'share', icon: Share2, label: t('shareApp'), action: handleShare, color: 'text-pink-400', bgColor: 'bg-pink-500/10' },
-    { id: 'privacy', icon: Shield, label: t('privacyPolicy'), action: () => window.open('/privacy', '_blank'), color: 'text-indigo-400', bgColor: 'bg-indigo-500/10' },
-    { id: 'terms', icon: Shield, label: t('termsConditions'), action: () => window.open('/terms', '_blank'), color: 'text-cyan-400', bgColor: 'bg-cyan-500/10' },
+  const menuGroups = [
+    {
+      id: 'wallet',
+      title: isRTL ? 'المحفظة والأرباح' : 'Wallet & Earnings',
+      items: [
+        { id: 'withdraw', icon: Wallet, label: t('withdrawBalance'), action: () => onNavigate('withdraw'), color: 'text-emerald-400', bgColor: 'bg-emerald-500/10' },
+        { id: 'history', icon: History, label: t('transactionHistory'), action: () => setShowHistory(true), color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
+      ],
+    },
+    {
+      id: 'account',
+      title: isRTL ? 'الحساب' : 'Account',
+      items: [
+        { id: 'settings', icon: Settings, label: t('settings'), action: () => onNavigate('settings'), color: 'text-slate-300', bgColor: 'bg-slate-500/15' },
+        { id: 'password', icon: Lock, label: t('changePassword'), action: () => setShowChangePassword(true), color: 'text-purple-400', bgColor: 'bg-purple-500/10' },
+        { id: 'share', icon: Share2, label: t('shareApp'), action: handleShare, color: 'text-pink-400', bgColor: 'bg-pink-500/10' },
+      ],
+    },
+    {
+      id: 'help',
+      title: isRTL ? 'المساعدة والقانونية' : 'Help & Legal',
+      items: [
+        { id: 'support', icon: HelpCircle, label: t('helpSupport'), action: () => window.open('/support', '_self'), color: 'text-yellow-400', bgColor: 'bg-yellow-500/10' },
+        { id: 'privacy', icon: Shield, label: t('privacyPolicy'), action: () => window.open('/privacy', '_blank'), color: 'text-indigo-400', bgColor: 'bg-indigo-500/10' },
+        { id: 'terms', icon: FileText, label: t('termsConditions'), action: () => window.open('/terms', '_blank'), color: 'text-cyan-400', bgColor: 'bg-cyan-500/10' },
+      ],
+    },
   ];
+
+  // Legacy flat list kept for backward compat (not rendered)
+  const menuItems = menuGroups.flatMap((g) => g.items);
 
   const watchedAds = user?.watchedAds || user?.watched_ads || [];
   const totalEarned = user?.totalEarned || user?.total_earned || 0;
@@ -260,74 +282,139 @@ const ProfilePage = ({ user, onLogout, onNavigate }) => {
           </div>
         )}
 
-        {/* Referral Code Card */}
+        {/* Referral Code Card - Professional + Sensitive Data Hidden */}
         {!isGuest && (
-          <Card className="shadow-xl border border-pink-500/20 bg-[#111118]/80 backdrop-blur-xl">
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-full bg-pink-500/20 flex items-center justify-center">
-                  <Share2 className="text-pink-400" size={16} />
+          <Card className="shadow-xl border border-pink-500/20 bg-gradient-to-br from-[#1a1024]/80 via-[#111118]/80 to-[#0f1a24]/80 backdrop-blur-xl overflow-hidden">
+            <CardContent className="pt-5 pb-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500/30 to-rose-500/20 flex items-center justify-center">
+                    <Share2 className="text-pink-400" size={17} />
+                  </div>
+                  <div>
+                    <p className="text-pink-400 font-semibold text-sm leading-tight">
+                      {isRTL ? 'كود الإحالة' : 'Referral Code'}
+                    </p>
+                    <p className="text-gray-500 text-[11px] mt-0.5">
+                      {isRTL ? 'اربح 50 نقطة عن كل صديق' : 'Earn 50 points per friend'}
+                    </p>
+                  </div>
                 </div>
-                <span className="text-pink-400 font-semibold text-sm">{isRTL ? 'كود الإحالة' : 'Referral Code'}</span>
+                <button
+                  type="button"
+                  onClick={() => setShowReferralCode((v) => !v)}
+                  className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+                  title={showReferralCode ? (isRTL ? 'إخفاء' : 'Hide') : (isRTL ? 'إظهار' : 'Show')}
+                  data-testid="toggle-referral-visibility"
+                >
+                  {showReferralCode ? (
+                    <EyeOff className="text-gray-400" size={15} />
+                  ) : (
+                    <Eye className="text-gray-400" size={15} />
+                  )}
+                </button>
               </div>
-              <div 
-                className="bg-black/30 rounded-lg p-3 flex items-center justify-between cursor-pointer hover:bg-black/40 transition-colors"
-                onClick={() => {
-                  navigator.clipboard.writeText(referralCode);
-                  toast.success(isRTL ? 'تم نسخ الكود' : 'Code copied');
-                }}
-              >
-                <span className="text-white font-bold text-lg tracking-widest">{referralCode}</span>
-                <span className="text-blue-400 text-xs">{isRTL ? 'انسخ' : 'Copy'}</span>
+
+              <div className="bg-black/40 border border-white/5 rounded-xl px-4 py-3 flex items-center justify-between">
+                <span
+                  className={`text-white font-bold text-base tracking-[0.3em] ${showReferralCode ? '' : 'select-none'}`}
+                  data-testid="referral-code-display"
+                >
+                  {showReferralCode ? referralCode : `SAQR••••••`}
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(referralCode);
+                      toast.success(isRTL ? 'تم نسخ الكود' : 'Code copied');
+                    }}
+                    className="px-2.5 py-1.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-300 text-xs font-semibold flex items-center gap-1 transition-colors"
+                    data-testid="copy-referral-btn"
+                  >
+                    <Copy size={12} />
+                    {isRTL ? 'نسخ' : 'Copy'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleShare}
+                    className="px-2.5 py-1.5 rounded-lg bg-pink-500/15 hover:bg-pink-500/25 border border-pink-500/30 text-pink-300 text-xs font-semibold flex items-center gap-1 transition-colors"
+                    data-testid="share-referral-btn"
+                  >
+                    <Share2 size={12} />
+                    {isRTL ? 'مشاركة' : 'Share'}
+                  </button>
+                </div>
               </div>
-              <p className="text-gray-500 text-xs text-center mt-2">
-                {isRTL ? 'شارك الكود واحصل على 50 نقطة لكل صديق يسجل!' : 'Share and get 50 points for each friend!'}
-              </p>
             </CardContent>
           </Card>
         )}
 
-        {/* Menu Items */}
+        {/* Menu Groups - Professional Sectioned Layout */}
+        {!isGuest && menuGroups.map((group) => {
+          const ArrowIcon = isRTL ? ChevronLeft : ChevronRight;
+          return (
+            <div key={group.id} className="space-y-2">
+              <p className="text-gray-500 text-[11px] font-semibold uppercase tracking-wider px-1">
+                {group.title}
+              </p>
+              <Card className="shadow-xl border border-white/8 bg-[#111118]/80 backdrop-blur-xl overflow-hidden">
+                <CardContent className="p-0">
+                  {group.items.map((item, idx) => (
+                    <button
+                      key={item.id}
+                      onClick={item.action}
+                      className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-white/5 active:bg-white/8 transition-colors ${
+                        idx !== group.items.length - 1 ? 'border-b border-white/5' : ''
+                      }`}
+                      data-testid={`menu-${item.id}`}
+                    >
+                      <div className={`w-9 h-9 rounded-lg ${item.bgColor} flex items-center justify-center flex-shrink-0`}>
+                        <item.icon className={item.color} size={18} />
+                      </div>
+                      <span className="text-white text-sm flex-1 text-start">{item.label}</span>
+                      <ArrowIcon className="text-gray-600" size={16} />
+                    </button>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          );
+        })}
+
+        {/* Logout - Standalone prominent button */}
         {!isGuest && (
-          <Card className="shadow-xl border border-white/10 bg-[#111118]/80 backdrop-blur-xl overflow-hidden">
+          <Card className="shadow-xl border border-red-500/20 bg-red-500/5 backdrop-blur-xl overflow-hidden">
             <CardContent className="p-0">
-              {menuItems.map((item, index) => (
-                <button
-                  key={item.id}
-                  onClick={item.action}
-                  className={`w-full flex items-center gap-3 p-3.5 hover:bg-white/5 transition-colors ${
-                    index !== menuItems.length - 1 ? 'border-b border-white/5' : ''
-                  }`}
-                  data-testid={`menu-${item.id}`}
-                >
-                  <div className={`w-9 h-9 rounded-lg ${item.bgColor} flex items-center justify-center`}>
-                    <item.icon className={item.color} size={18} />
-                  </div>
-                  <span className="text-white text-sm flex-1 text-left">{item.label}</span>
-                  <span className="text-gray-600">›</span>
-                </button>
-              ))}
-              
-              {/* Logout */}
               <button
                 onClick={onLogout}
-                className="w-full flex items-center gap-3 p-3.5 hover:bg-red-500/10 transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-red-500/15 active:bg-red-500/20 transition-colors"
                 data-testid="menu-logout"
               >
-                <div className="w-9 h-9 rounded-lg bg-red-500/10 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-lg bg-red-500/15 flex items-center justify-center flex-shrink-0">
                   <LogOut className="text-red-400" size={18} />
                 </div>
-                <span className="text-red-400 text-sm flex-1 text-left">{isRTL ? 'تسجيل الخروج' : 'Logout'}</span>
-                <span className="text-red-600">›</span>
+                <span className="text-red-400 text-sm font-semibold flex-1 text-start">
+                  {isRTL ? 'تسجيل الخروج' : 'Logout'}
+                </span>
               </button>
             </CardContent>
           </Card>
         )}
 
-        {/* Version */}
-        <p className="text-center text-gray-600 text-xs py-4">
-          {isRTL ? 'الإصدار' : 'Version'} 4.8.1
-        </p>
+        {/* Version - Clean centered footer */}
+        <div className="flex flex-col items-center gap-1 py-6">
+          <div className="flex items-center gap-1.5">
+            <div className="w-1 h-1 rounded-full bg-gray-700" />
+            <p className="text-gray-600 text-[11px] font-medium">
+              {isRTL ? 'الإصدار 4.8.1' : 'Version 4.8.1'}
+            </p>
+            <div className="w-1 h-1 rounded-full bg-gray-700" />
+          </div>
+          <p className="text-gray-700 text-[10px]">
+            {isRTL ? 'صُنع بحب لمستخدمي صقر' : 'Made with care for Saqr users'}
+          </p>
+        </div>
       </div>
 
       {/* Change Password Dialog */}
