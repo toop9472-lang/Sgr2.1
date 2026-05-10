@@ -24,6 +24,7 @@ import {
 } from "expo-tracking-transparency";
 import colors from "./src/styles/colors";
 import * as NavigationBar from "expo-navigation-bar";
+import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from "expo-av";
 
 // Ignore specific warnings that don't affect functionality
 LogBox.ignoreLogs([
@@ -141,6 +142,7 @@ function AppContent() {
   useEffect(() => {
     initApp();
     setupNotifications();
+    setupAudioMode();
 
     return () => {
       if (notificationListenerRef.current) {
@@ -148,6 +150,23 @@ function AppContent() {
       }
     };
   }, []);
+
+  // CRITICAL: enable audio playback in iOS silent mode so Reels/Ads videos have sound
+  const setupAudioMode = async () => {
+    try {
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+        interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+        interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+      });
+    } catch (error) {
+      console.log("Audio mode setup error:", error?.message);
+    }
+  };
 
   // Setup push notifications
   const setupNotifications = async () => {
