@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { User, Award, TrendingUp, Clock, LogOut, Lock, History, Share2, Shield, MessageCircle, LockKeyhole, Settings, Eye, EyeOff, Copy, Wallet, HelpCircle, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { User, Award, TrendingUp, Clock, LogOut, Lock, History, Share2, Shield, MessageCircle, LockKeyhole, Settings, Wallet, HelpCircle, FileText, ChevronLeft, ChevronRight, Film, Play, Heart, Plus } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -24,7 +24,34 @@ const ProfilePage = ({ user, onLogout, onNavigate }) => {
   const [showHistory, setShowHistory] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
-  const [showReferralCode, setShowReferralCode] = useState(false);
+  const [myClips, setMyClips] = useState([]);
+  const [myClipsLoading, setMyClipsLoading] = useState(false);
+
+  // Load user's own reels — shown inline on the profile page
+  useEffect(() => {
+    const uid = user?.id || user?._id;
+    if (!uid || isGuest) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        setMyClipsLoading(true);
+        const r = await fetch(
+          `${API_URL}/api/users/clips/${encodeURIComponent(uid)}?viewer_id=${encodeURIComponent(uid)}&limit=60`,
+          { credentials: 'include' },
+        );
+        if (!r.ok) return;
+        const d = await r.json().catch(() => ({}));
+        if (!cancelled) {
+          setMyClips(Array.isArray(d?.clips) ? d.clips : []);
+        }
+      } catch (_) {
+        // silent
+      } finally {
+        if (!cancelled) setMyClipsLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id, user?._id, isGuest]);
 
   const handleChangePassword = async () => {
     if (!passwords.current || !passwords.new || !passwords.confirm) {
@@ -282,70 +309,100 @@ const ProfilePage = ({ user, onLogout, onNavigate }) => {
           </div>
         )}
 
-        {/* Referral Code Card - Professional + Sensitive Data Hidden */}
+        {/* My Reels Grid — Inline section on Profile page */}
         {!isGuest && (
-          <Card className="shadow-xl border border-pink-500/20 bg-gradient-to-br from-[#1a1024]/80 via-[#111118]/80 to-[#0f1a24]/80 backdrop-blur-xl overflow-hidden">
-            <CardContent className="pt-5 pb-5">
+          <Card className="shadow-xl border border-white/8 bg-[#111118]/80 backdrop-blur-xl overflow-hidden" data-testid="my-reels-card">
+            <CardContent className="pt-5 pb-4 px-4">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500/30 to-rose-500/20 flex items-center justify-center">
-                    <Share2 className="text-pink-400" size={17} />
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500/30 to-indigo-500/20 flex items-center justify-center">
+                    <Film className="text-blue-400" size={17} />
                   </div>
                   <div>
-                    <p className="text-pink-400 font-semibold text-sm leading-tight">
-                      {isRTL ? 'كود الإحالة' : 'Referral Code'}
+                    <p className="text-blue-400 font-semibold text-sm leading-tight">
+                      {isRTL ? 'ريلزاتي' : 'My Reels'}
                     </p>
                     <p className="text-gray-500 text-[11px] mt-0.5">
-                      {isRTL ? 'اربح 50 نقطة عن كل صديق' : 'Earn 50 points per friend'}
+                      {isRTL
+                        ? `${myClips.length} مقطع منشور`
+                        : `${myClips.length} clip${myClips.length === 1 ? '' : 's'} posted`}
                     </p>
                   </div>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setShowReferralCode((v) => !v)}
-                  className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
-                  title={showReferralCode ? (isRTL ? 'إخفاء' : 'Hide') : (isRTL ? 'إظهار' : 'Show')}
-                  data-testid="toggle-referral-visibility"
+                  onClick={() => onNavigate('clips')}
+                  className="px-3 py-1.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-300 text-xs font-semibold flex items-center gap-1 transition-colors"
+                  data-testid="my-reels-new-btn"
                 >
-                  {showReferralCode ? (
-                    <EyeOff className="text-gray-400" size={15} />
-                  ) : (
-                    <Eye className="text-gray-400" size={15} />
-                  )}
+                  <Plus size={13} />
+                  {isRTL ? 'جديد' : 'New'}
                 </button>
               </div>
 
-              <div className="bg-black/40 border border-white/5 rounded-xl px-4 py-3 flex items-center justify-between">
-                <span
-                  className={`text-white font-bold text-base tracking-[0.3em] ${showReferralCode ? '' : 'select-none'}`}
-                  data-testid="referral-code-display"
-                >
-                  {showReferralCode ? referralCode : `SAQR••••••`}
-                </span>
-                <div className="flex items-center gap-1.5">
+              {myClipsLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <div className="w-7 h-7 rounded-full border-2 border-blue-500/30 border-t-blue-500 animate-spin" />
+                </div>
+              ) : myClips.length === 0 ? (
+                <div className="flex flex-col items-center py-10 px-3 text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center mb-3">
+                    <Film className="text-white/40" size={28} />
+                  </div>
+                  <p className="text-gray-300 text-sm font-medium mb-1">
+                    {isRTL ? 'لم تنشر أي ريلز بعد' : 'No reels yet'}
+                  </p>
+                  <p className="text-gray-500 text-xs mb-4 max-w-xs">
+                    {isRTL
+                      ? 'انشر أول ريلز من صفحة المقاطع وسيظهر هنا تلقائياً'
+                      : 'Post your first reel from the Clips page and it will appear here.'}
+                  </p>
                   <button
-                    type="button"
-                    onClick={() => {
-                      navigator.clipboard.writeText(referralCode);
-                      toast.success(isRTL ? 'تم نسخ الكود' : 'Code copied');
-                    }}
-                    className="px-2.5 py-1.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-300 text-xs font-semibold flex items-center gap-1 transition-colors"
-                    data-testid="copy-referral-btn"
+                    onClick={() => onNavigate('clips')}
+                    className="flex items-center gap-1.5 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors"
+                    data-testid="my-reels-create-btn"
                   >
-                    <Copy size={12} />
-                    {isRTL ? 'نسخ' : 'Copy'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleShare}
-                    className="px-2.5 py-1.5 rounded-lg bg-pink-500/15 hover:bg-pink-500/25 border border-pink-500/30 text-pink-300 text-xs font-semibold flex items-center gap-1 transition-colors"
-                    data-testid="share-referral-btn"
-                  >
-                    <Share2 size={12} />
-                    {isRTL ? 'مشاركة' : 'Share'}
+                    <Plus size={16} />
+                    {isRTL ? 'أنشر ريلز الآن' : 'Create a Reel'}
                   </button>
                 </div>
-              </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-1">
+                  {myClips.map((clip) => {
+                    const thumb = clip.thumbnail_url || clip.video_url || '';
+                    return (
+                      <button
+                        key={clip.clip_id}
+                        onClick={() => onNavigate('clips')}
+                        className="relative aspect-[2/3] bg-slate-800/80 rounded-md overflow-hidden group"
+                        data-testid={`my-reel-tile-${clip.clip_id}`}
+                      >
+                        {thumb ? (
+                          <img
+                            src={thumb}
+                            alt=""
+                            loading="lazy"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-slate-700/60">
+                            <Play className="text-white/70" size={20} />
+                          </div>
+                        )}
+                        {/* gradient overlay for readability */}
+                        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+                        <div className="absolute bottom-1 left-1 flex items-center gap-0.5 bg-black/55 backdrop-blur-sm rounded-full px-1.5 py-0.5">
+                          <Heart className="text-rose-400" size={10} fill="currentColor" />
+                          <span className="text-white text-[10px] font-semibold">
+                            {clip.likes_count || 0}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Moon, Sun, Monitor, Globe, Shield, Bell, Palette, ChevronRight, Check, Lock, LockOpen } from 'lucide-react';
+import { ArrowLeft, Moon, Sun, Monitor, Globe, Shield, Bell, Palette, ChevronRight, Check, Lock, LockOpen, Share2, Eye, EyeOff, Copy } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
@@ -16,6 +16,25 @@ const SettingsPage = ({ onBack, onNavigate, user, onUpdateProfile }) => {
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [isPrivate, setIsPrivate] = useState(Boolean(user?.is_private));
   const [privacyBusy, setPrivacyBusy] = useState(false);
+  const [showReferralCode, setShowReferralCode] = useState(false);
+
+  const referralCode = user?.referral_code || ('SAQR' + ((user?.id || user?._id || '123456').slice(-6)).toUpperCase());
+
+  const handleShareReferral = async () => {
+    const shareData = {
+      title: 'تطبيق صقر',
+      text: isRTL
+        ? `جرب تطبيق صقر واكسب المال من مشاهدة الإعلانات! استخدم كود الإحالة: ${referralCode}`
+        : `Try Saqr app and earn from watching ads! Referral code: ${referralCode}`,
+      url: window.location.origin,
+    };
+    if (navigator.share) {
+      try { await navigator.share(shareData); } catch (_) { /* cancelled */ }
+    } else {
+      navigator.clipboard.writeText(shareData.text);
+      toast.success(isRTL ? 'تم نسخ رابط المشاركة' : 'Share link copied');
+    }
+  };
 
   useEffect(() => {
     setIsPrivate(Boolean(user?.is_private));
@@ -133,6 +152,74 @@ const SettingsPage = ({ onBack, onNavigate, user, onUpdateProfile }) => {
       </div>
 
       <div className="px-4 -mt-4 space-y-4">
+        {/* Referral Code Card — moved from Profile */}
+        {!user?.isGuest && (
+          <Card className={`shadow-xl border ${isDark ? 'border-pink-500/20 bg-gradient-to-br from-[#1a1024]/80 via-[#111118]/80 to-[#0f1a24]/80' : 'border-pink-200 bg-white'} backdrop-blur-xl overflow-hidden`} data-testid="settings-referral-card">
+            <CardContent className="pt-5 pb-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500/30 to-rose-500/20 flex items-center justify-center">
+                    <Share2 className="text-pink-400" size={17} />
+                  </div>
+                  <div>
+                    <p className={`font-semibold text-sm leading-tight ${isDark ? 'text-pink-400' : 'text-pink-600'}`}>
+                      {isRTL ? 'كود الإحالة' : 'Referral Code'}
+                    </p>
+                    <p className={`text-[11px] mt-0.5 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                      {isRTL ? 'اربح 50 نقطة عن كل صديق يسجل' : 'Earn 50 points per signup'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowReferralCode((v) => !v)}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'}`}
+                  title={showReferralCode ? (isRTL ? 'إخفاء' : 'Hide') : (isRTL ? 'إظهار' : 'Show')}
+                  data-testid="toggle-referral-visibility"
+                >
+                  {showReferralCode ? (
+                    <EyeOff className={isDark ? 'text-gray-400' : 'text-gray-600'} size={15} />
+                  ) : (
+                    <Eye className={isDark ? 'text-gray-400' : 'text-gray-600'} size={15} />
+                  )}
+                </button>
+              </div>
+
+              <div className={`rounded-xl px-4 py-3 flex items-center justify-between border ${isDark ? 'bg-black/40 border-white/5' : 'bg-gray-50 border-gray-200'}`}>
+                <span
+                  className={`font-bold text-base tracking-[0.3em] ${isDark ? 'text-white' : 'text-gray-900'} ${showReferralCode ? '' : 'select-none'}`}
+                  data-testid="referral-code-display"
+                >
+                  {showReferralCode ? referralCode : 'SAQR••••••'}
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(referralCode);
+                      toast.success(isRTL ? 'تم نسخ الكود' : 'Code copied');
+                    }}
+                    className="px-2.5 py-1.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-500 text-xs font-semibold flex items-center gap-1 transition-colors"
+                    data-testid="copy-referral-btn"
+                  >
+                    <Copy size={12} />
+                    {isRTL ? 'نسخ' : 'Copy'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleShareReferral}
+                    className="px-2.5 py-1.5 rounded-lg bg-pink-500/15 hover:bg-pink-500/25 border border-pink-500/30 text-pink-500 text-xs font-semibold flex items-center gap-1 transition-colors"
+                    data-testid="share-referral-btn"
+                  >
+                    <Share2 size={12} />
+                    {isRTL ? 'مشاركة' : 'Share'}
+                  </button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Card className={`${isDark ? 'bg-[#111118]/80 border-white/10' : 'bg-white border-gray-200'} overflow-hidden`}>
           <CardContent className="p-0">
             {settingsItems.map((item, index) => (
