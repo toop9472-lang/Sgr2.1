@@ -262,9 +262,23 @@ const ClipsPage = ({ user, onBack }) => {
             >
               {/* Author */}
               <div className="flex items-center justify-between px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center text-white font-bold">
-                    {(clip.user_name || 'U').charAt(0).toUpperCase()}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!isOwn && onOpenUserProfile && clip.user_id) {
+                      onOpenUserProfile(clip.user_id);
+                    }
+                  }}
+                  className="flex items-center gap-3 text-left hover:opacity-90 transition-opacity"
+                  data-testid={`clip-author-btn-${clip.clip_id}`}
+                  disabled={isOwn}
+                >
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center text-white font-bold overflow-hidden">
+                    {clip.user_avatar ? (
+                      <img src={clip.user_avatar} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      (clip.user_name || 'U').charAt(0).toUpperCase()
+                    )}
                   </div>
                   <div>
                     <p className="font-semibold">{clip.user_name || tt('مستخدم', 'User')}</p>
@@ -272,7 +286,7 @@ const ClipsPage = ({ user, onBack }) => {
                       {clip.followers_count || 0} {tt('متابع', 'followers')}
                     </p>
                   </div>
-                </div>
+                </button>
                 {!isOwn && (
                   <button
                     onClick={() => handleToggleFollow(clip)}

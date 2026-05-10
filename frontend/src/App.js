@@ -29,6 +29,7 @@ import ClipsPage from "./components/ClipsPage";
 import SaqrFortunesPage from "./components/SaqrFortunesPage";
 import GlobalChatPage from "./components/GlobalChatPage";
 import FriendsPage from "./components/FriendsPage";
+import UserProfilePage from "./components/UserProfilePage";
 import BottomNav from "./components/BottomNav";
 import { Toaster } from "./components/ui/toaster";
 import { toast } from "./hooks/use-toast";
@@ -59,6 +60,7 @@ function MainApp() {
   const [currentPage, setCurrentPage] = useState('home');
   const [isLoading, setIsLoading] = useState(true);
   const [showFullScreenAds, setShowFullScreenAds] = useState(false);
+  const [viewingUserId, setViewingUserId] = useState(null);
   
   // Admin state
   const [isAdmin, setIsAdmin] = useState(false);
@@ -536,6 +538,10 @@ function MainApp() {
                 <ClipsPage 
                   user={user}
                   onBack={() => setCurrentPage('home')}
+                  onOpenUserProfile={(targetUserId) => {
+                    setViewingUserId(targetUserId);
+                    setCurrentPage('user-profile');
+                  }}
                 />
               )}
               {currentPage === 'fortunes' && !showFullScreenAds && (
@@ -550,6 +556,10 @@ function MainApp() {
                   user={user}
                   onBack={() => setCurrentPage('home')}
                   onNavigateToFortunes={() => setCurrentPage('fortunes')}
+                  onOpenUserProfile={(targetUserId) => {
+                    setViewingUserId(targetUserId);
+                    setCurrentPage('user-profile');
+                  }}
                 />
               )}
               {currentPage === 'friends' && !showFullScreenAds && (
@@ -579,7 +589,7 @@ function MainApp() {
                   onWithdrawRequest={handleWithdrawRequest}
                 />
               )}
-              {currentPage !== 'withdraw' && !showFullScreenAds && (
+              {currentPage !== 'withdraw' && currentPage !== 'user-profile' && !showFullScreenAds && (
                 <BottomNav 
                   currentPage={currentPage}
                   onNavigate={handleNavigate}

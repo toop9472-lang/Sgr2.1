@@ -1,16 +1,57 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Moon, Sun, Monitor, Globe, Shield, Bell, Palette, ChevronRight, Check } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ArrowLeft, Moon, Sun, Monitor, Globe, Shield, Bell, Palette, ChevronRight, Check, Lock, LockOpen } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
+import { toast } from 'sonner';
 
-const SettingsPage = ({ onBack, onNavigate }) => {
+const API_URL = process.env.REACT_APP_BACKEND_URL || '';
+
+const SettingsPage = ({ onBack, onNavigate, user, onUpdateProfile }) => {
   const { t, isRTL, language, setLanguage } = useLanguage();
   const { theme, setThemeMode, isDark } = useTheme();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(Boolean(user?.is_private));
+  const [privacyBusy, setPrivacyBusy] = useState(false);
+
+  useEffect(() => {
+    setIsPrivate(Boolean(user?.is_private));
+  }, [user?.is_private]);
+
+  const togglePrivacy = async () => {
+    if (privacyBusy) return;
+    const userId = user?.id || user?._id;
+    if (!userId) {
+      toast.error(isRTL ? 'يجب تسجيل الدخول' : 'Sign in required');
+      return;
+    }
+    const next = !isPrivate;
+    setPrivacyBusy(true);
+    try {
+      const r = await fetch(`${API_URL}/api/users/privacy/${encodeURIComponent(userId)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ is_private: next }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data?.detail || (isRTL ? 'فشلت العملية' : 'Operation failed'));
+      setIsPrivate(next);
+      if (onUpdateProfile) onUpdateProfile({ is_private: next });
+      toast.success(
+        next
+          ? (isRTL ? 'تم تفعيل الحساب الخاص. مقاطعك ستكون مرئية للمتابعين فقط.' : 'Private account enabled.')
+          : (isRTL ? 'الحساب عام الآن.' : 'Account is now public.'),
+      );
+    } catch (e) {
+      toast.error(String(e?.message || e));
+    } finally {
+      setPrivacyBusy(false);
+    }
+  };
 
   const languages = [
     { code: 'ar', name: 'العربية', flag: '🇸🇦' },
@@ -63,6 +104,19 @@ const SettingsPage = ({ onBack, onNavigate }) => {
       action: () => {},
       color: 'text-yellow-400',
       bgColor: 'bg-yellow-500/10'
+    },
+    {
+      id: 'account_privacy',
+      icon: isPrivate ? Lock : LockOpen,
+      label: isRTL ? 'خصوصية الحساب' : 'Account Privacy',
+      value: privacyBusy
+        ? (isRTL ? 'جاري...' : 'Updating...')
+        : isPrivate
+          ? (isRTL ? 'حساب خاص' : 'Private')
+          : (isRTL ? 'حساب عام' : 'Public'),
+      action: togglePrivacy,
+      color: 'text-purple-400',
+      bgColor: 'bg-purple-500/10'
     },
   ];
 

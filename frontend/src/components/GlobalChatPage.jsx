@@ -96,13 +96,18 @@ const ChatMessage = ({ message, isOwn }) => {
   return (
     <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-4 animate-slideIn`}>
       {!isOwn && (
-        <div className={`w-10 h-10 rounded-full ${getAvatarColor()} flex items-center justify-center mr-3 flex-shrink-0 ring-2 ring-white/20`}>
+        <button
+          type="button"
+          onClick={() => onAvatarClick && message.user_id && onAvatarClick(message.user_id)}
+          className={`w-10 h-10 rounded-full ${getAvatarColor()} flex items-center justify-center mr-3 flex-shrink-0 ring-2 ring-white/20 hover:ring-blue-400/60 transition-all overflow-hidden`}
+          data-testid={`chat-avatar-${message.id || message.user_id}`}
+        >
           {message.user_avatar ? (
-            <img src={message.user_avatar} alt="" className="w-9 h-9 rounded-full" />
+            <img src={message.user_avatar} alt="" className="w-full h-full rounded-full object-cover" />
           ) : (
             <span className="text-white font-bold text-sm">{message.user_name?.charAt(0) || '?'}</span>
           )}
-        </div>
+        </button>
       )}
       
       <div 
@@ -431,6 +436,7 @@ const GlobalChatPage = ({ user, onBack, onNavigateToFortunes }) => {
                   key={msg.id}
                   message={msg}
                   isOwn={msg.user_id === user?.id}
+                  onAvatarClick={onOpenUserProfile}
                 />
               ))}
               <div ref={messagesEndRef} />
