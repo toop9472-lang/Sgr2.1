@@ -753,6 +753,17 @@ const GlobalChatScreen = ({
       return;
     }
 
+    // SECURITY: Disallow URLs/links in chat (server-side enforced too)
+    const LINK_REGEX = /(https?:\/\/[^\s]+|www\.[^\s]+|\b[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\/[^\s]*)?|t\.me\/[^\s]+|wa\.me\/[^\s]+|bit\.ly\/[^\s]+)/i;
+    if (LINK_REGEX.test(trimmedDraft)) {
+      gameSounds.wrong();
+      Alert.alert(
+        '🚫 الروابط غير مسموحة',
+        'لا يُسمح بإرسال الروابط في الدردشة. يرجى إعادة كتابة رسالتك بدون روابط.',
+      );
+      return;
+    }
+
     if (messageCost > 0 && normalizedSaqrGems < messageCost) {
       const serverBalance = await checkChatBalance();
       if (serverBalance) {

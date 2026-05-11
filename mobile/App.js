@@ -416,6 +416,17 @@ function AppContent() {
     [updateUserBalanceLocally, userId],
   );
 
+  // Periodic gems sync: every 25s while authenticated to keep all screens in sync
+  useEffect(() => {
+    if (!isAuthenticated || !userId || user?.isGuest) return;
+    const intervalId = setInterval(() => {
+      syncBalanceFromServer(userId);
+    }, 25000);
+    // Initial fetch right after auth/screen change too
+    syncBalanceFromServer(userId);
+    return () => clearInterval(intervalId);
+  }, [isAuthenticated, userId, user?.isGuest, currentPage, syncBalanceFromServer]);
+
   const handleBalanceUpdate = useCallback(
     (partial) => {
       updateUserBalanceLocally(partial);

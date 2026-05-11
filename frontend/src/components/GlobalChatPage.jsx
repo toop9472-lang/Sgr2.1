@@ -275,9 +275,18 @@ const GlobalChatPage = ({ user, onBack, onNavigateToFortunes }) => {
     }
   };
 
+  // Link/URL detector — blocks any kind of link in chat to match server policy
+  const LINK_REGEX = /(https?:\/\/[^\s]+|www\.[^\s]+|\b[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\/[^\s]*)?|t\.me\/[^\s]+|wa\.me\/[^\s]+|bit\.ly\/[^\s]+)/i;
+
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
-    
+
+    // SECURITY: Disallow any kind of link in chat
+    if (LINK_REGEX.test(newMessage)) {
+      alert('🚫 لا يُسمح بإرسال الروابط في الدردشة. يرجى إعادة كتابة رسالتك بدون روابط.');
+      return;
+    }
+
     if (diamonds < MESSAGE_COST) {
       setShowInsufficientModal(true);
       return;
@@ -304,11 +313,13 @@ const GlobalChatPage = ({ user, onBack, onNavigateToFortunes }) => {
         setDiamonds(data.new_balance);
         setMessages(prev => [...prev, data.chat_message]);
       } else {
-        const error = await response.json();
+        const error = await response.json().catch(() => ({}));
         if (error.detail?.error === 'insufficient_diamonds') {
           setShowInsufficientModal(true);
+        } else if (typeof error.detail === 'string' && error.detail.includes('روابط')) {
+          alert(error.detail);
         } else {
-          alert('حدث خطأ أثناء إرسال الرسالة');
+          alert(error.detail || 'حدث خطأ أثناء إرسال الرسالة');
         }
       }
     } catch (e) {

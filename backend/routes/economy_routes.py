@@ -528,6 +528,25 @@ async def send_chat_message(request: SendChatMessageRequest):
     text = (request.message or "").strip()
     if not text:
         raise HTTPException(status_code=400, detail="الرسالة فارغة")
+
+    # SECURITY: Block URLs/links in chat messages.
+    # This protects users from phishing/spam and matches the platform policy.
+    import re
+    url_pattern = re.compile(
+        r"(?ix)"
+        r"("
+        r"https?://[^\s]+"
+        r"|www\.[^\s]+"
+        r"|\b[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:/[^\s]*)?"
+        r"|t\.me/[^\s]+|wa\.me/[^\s]+|bit\.ly/[^\s]+"
+        r")"
+    )
+    if url_pattern.search(text):
+        raise HTTPException(
+            status_code=400,
+            detail="🚫 لا يُسمح بإرسال الروابط في الدردشة. يرجى إعادة كتابة رسالتك بدون روابط.",
+        )
+
     message_id = str(uuid.uuid4())
     timestamp = datetime.now(timezone.utc).isoformat()
     safe_user_name = (request.user_name or "مستخدم").strip()[:60] or "مستخدم"
@@ -561,6 +580,25 @@ async def get_chat_messages(server_id: str, limit: int = 50, before: Optional[st
     normalized_limit = max(1, min(int(limit or 50), 200))
     messages = await db.chat_messages.find(query, {"_id": 0}).sort("timestamp", -1).limit(normalized_limit).to_list(normalized_limit)
     messages.reverse()
+
+    # AUTO-PURGE: silently remove any legacy messages that contain links
+    # so users never see URLs in the chat after the new policy.
+    import re as _re
+    _url_re = _re.compile(
+        r"(?ix)(https?://[^\s]+|www\.[^\s]+|\b[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:/[^\s]*)?|t\.me/[^\s]+|wa\.me/[^\s]+|bit\.ly/[^\s]+)"
+    )
+    leaked_ids = [
+        (m or {}).get("id")
+        for m in messages
+        if (m or {}).get("message") and _url_re.search((m or {}).get("message") or "")
+    ]
+    if leaked_ids:
+        try:
+            await db.chat_messages.delete_many({"id": {"$in": [x for x in leaked_ids if x]}})
+        except Exception:
+            pass
+        messages = [m for m in messages if (m or {}).get("id") not in leaked_ids]
+
     active_users = len({(msg or {}).get("user_id") for msg in messages if (msg or {}).get("user_id")})
     return {
         "server_id": server_id,
