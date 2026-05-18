@@ -17,12 +17,16 @@ db = client[os.environ.get("DB_NAME", "saqr_db")]
 EXCHANGE_GEMS = 500
 EXCHANGE_SAR = 3
 AD_REWARD_GEMS = 5
-AD_COOLDOWN_SECONDS = 45
+AD_COOLDOWN_SECONDS = 15  # تخفيض من 45 إلى 15 ثانية بين الإعلانات
 AD_DAILY_GEMS_LIMIT = 30
 AD_DAILY_ADS_LIMIT = max(1, AD_DAILY_GEMS_LIMIT // AD_REWARD_GEMS)
-MIN_AD_WATCH_SECONDS = 40
+MIN_AD_WATCH_SECONDS = 10  # تخفيض من 40 إلى 10 ثوانٍ (إعلانات AdMob المكافأة 15-30 ثانية فقط)
 CHAT_MESSAGE_COST = 0
 EMPTY_DIAMONDS = 0
+
+# AdMob-attested watches (rewarded ads) are trusted by Google. We allow them
+# to bypass the local watch_duration check because Google guarantees completion.
+ADMOB_TRUSTED_AD_TYPES = {"admob_rewarded", "admob"}
 
 
 def _user_filter(user_id: str):
@@ -317,7 +321,13 @@ async def spend_diamonds(request: SpendDiamondsDirectRequest):
 
 @router.post("/ad-watch-reward")
 async def claim_ad_watch_reward(request: AdWatchRewardRequest):
-    if int(request.watch_duration_seconds or 0) < MIN_AD_WATCH_SECONDS:
+    # AdMob rewarded ads are attested by Google — bypass the local watch
+    # duration minimum (AdMob ads are 15-30s typically). Personal ads still
+    # require the minimum watch threshold.
+    ad_type_norm = str(request.ad_type or "").strip().lower()
+    is_admob_trusted = ad_type_norm in ADMOB_TRUSTED_AD_TYPES
+
+    if not is_admob_trusted and int(request.watch_duration_seconds or 0) < MIN_AD_WATCH_SECONDS:
         raise HTTPException(
             status_code=400,
             detail={

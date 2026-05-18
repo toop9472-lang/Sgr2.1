@@ -270,7 +270,7 @@ const AdViewerScreen = ({
       }
 
       const persisted = await persistReward({
-        watchDuration: 60,
+        watchDuration: 30,
         adType: "admob_rewarded",
       });
 
@@ -492,10 +492,13 @@ const AdViewerScreen = ({
 
   const handlePointsEarned = useCallback(
     async (points) => {
-      const requestedMinutes = Math.max(1, Number(points) || 1);
       if (currentAd) {
+        // Use the ad's actual duration if available; fall back to requested minutes * 60
+        const requestedMinutes = Math.max(1, Number(points) || 1);
+        const declaredDuration = Number(currentAd?.duration) || 0;
+        const watchSeconds = Math.max(15, declaredDuration > 0 ? declaredDuration : requestedMinutes * 60);
         const persisted = await persistReward({
-          watchDuration: requestedMinutes * 60,
+          watchDuration: watchSeconds,
           adType: "advertiser_rewarded",
         });
         if (!persisted?.ok) {
