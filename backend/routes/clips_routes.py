@@ -250,6 +250,25 @@ async def create_clip_post(request: CreateClipRequest):
     if duration <= 0 or duration > 15:
         raise HTTPException(status_code=400, detail="مدة المقطع يجب أن تكون بين 1 و 15 ثانية")
 
+    # SECURITY: Block profane captions/titles before saving
+    try:
+        from routes.moderation_routes import contains_profanity
+        for field_name, field_val in (
+            ("caption", request.caption),
+            ("title", request.title),
+            ("content", request.content),
+        ):
+            hit = contains_profanity(field_val or "")
+            if hit:
+                raise HTTPException(
+                    status_code=400,
+                    detail="🚫 لا يُسمح بالألفاظ النابية في وصف المقطع.",
+                )
+    except HTTPException:
+        raise
+    except Exception:
+        pass
+
     visual_source = (
         (request.video_url or "").strip()
         or (request.thumbnail_url or "").strip()

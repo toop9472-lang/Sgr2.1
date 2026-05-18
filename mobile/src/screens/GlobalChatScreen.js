@@ -34,6 +34,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../services/api";
 import gameSounds from "../utils/gameSounds";
+import { hapticLight } from "../utils/haptics";
+import ReportBlockSheet from "../components/ReportBlockSheet";
 import { useLanguage } from "../i18n/LanguageContext";
 import { APP_BACKGROUND_IMAGE } from "../constants/uiAssets";
 
@@ -212,7 +214,7 @@ const MessageContent = memo(({ text, isOwn }) => {
 });
 
 // مكون الرسالة الاحترافي
-const ChatMessageItem = memo(({ message, isOwn, isAdmin, chatFrameColor, onLongPress, onAvatarPress }) => {
+const ChatMessageItem = memo(({ message, isOwn, isAdmin, chatFrameColor, onLongPress, onAvatarPress, onReport }) => {
   const scaleAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -276,8 +278,14 @@ const ChatMessageItem = memo(({ message, isOwn, isAdmin, chatFrameColor, onLongP
       )}
 
       <TouchableOpacity
-        activeOpacity={isOwn || isAdmin ? 0.7 : 1}
-        onLongPress={isOwn || isAdmin ? onLongPress : undefined}
+        activeOpacity={0.85}
+        onLongPress={() => {
+          if (isOwn || isAdmin) {
+            onLongPress && onLongPress();
+          } else {
+            onReport && onReport();
+          }
+        }}
         delayLongPress={350}
         style={[
           styles.messageBubble,
@@ -584,6 +592,7 @@ const GlobalChatScreen = ({
   const [saqrGems, setSaqrGems] = useState(0);
   const [messageCost, setMessageCost] = useState(MESSAGE_COST);
   const [showInsufficientModal, setShowInsufficientModal] = useState(false);
+  const [reportSheet, setReportSheet] = useState(null); // {targetId, targetUserId, targetUserName}
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState(0);
   const [chatFrameColor, setChatFrameColor] = useState(null);
@@ -993,6 +1002,15 @@ const GlobalChatScreen = ({
         isOwn={item.user_id === userId}
         isAdmin={isAdmin}
         onLongPress={() => deleteMessage(item)}
+        onReport={() => {
+          if (item.user_id && item.user_id !== userId) {
+            setReportSheet({
+              targetId: item.id,
+              targetUserId: item.user_id,
+              targetUserName: item.user_name,
+            });
+          }
+        }}
         onAvatarPress={() => {
           if (item.user_id && item.user_id !== userId && onOpenUserProfile) {
             onOpenUserProfile(item.user_id);
@@ -1001,7 +1019,7 @@ const GlobalChatScreen = ({
         chatFrameColor={chatFrameColor}
       />
     ),
-    [userId, chatFrameColor],
+    [userId, chatFrameColor, isAdmin, deleteMessage, onOpenUserProfile],
   );
 
   const handleWatchAds = () => {
@@ -1223,6 +1241,20 @@ const GlobalChatScreen = ({
           currentBalance={normalizedSaqrGems}
           copy={copy}
           messageCost={messageCost}
+        />
+
+        <ReportBlockSheet
+          visible={Boolean(reportSheet)}
+          onClose={() => setReportSheet(null)}
+          reporterUserId={userId}
+          targetType="chat_message"
+          targetId={reportSheet?.targetId}
+          targetUserId={reportSheet?.targetUserId}
+          targetUserName={reportSheet?.targetUserName}
+          onBlockedUser={(blockedId) => {
+            // Hide blocked user's messages locally
+            setMessages((prev) => prev.filter((m) => m.user_id !== blockedId));
+          }}
         />
       </View>
     </ImageBackground>

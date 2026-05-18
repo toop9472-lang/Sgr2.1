@@ -557,6 +557,20 @@ async def send_chat_message(request: SendChatMessageRequest):
             detail="🚫 لا يُسمح بإرسال الروابط في الدردشة. يرجى إعادة كتابة رسالتك بدون روابط.",
         )
 
+    # SECURITY: Block profane language (Arabic + English).
+    try:
+        from routes.moderation_routes import contains_profanity
+        hit = contains_profanity(text)
+        if hit:
+            raise HTTPException(
+                status_code=400,
+                detail="🚫 لا يُسمح بالألفاظ النابية في الدردشة. يرجى احترام المستخدمين الآخرين.",
+            )
+    except HTTPException:
+        raise
+    except Exception:
+        pass
+
     message_id = str(uuid.uuid4())
     timestamp = datetime.now(timezone.utc).isoformat()
     safe_user_name = (request.user_name or "مستخدم").strip()[:60] or "مستخدم"

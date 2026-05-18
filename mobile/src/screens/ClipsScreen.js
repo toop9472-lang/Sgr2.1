@@ -22,6 +22,8 @@ import { Video, ResizeMode } from "expo-av";
 import * as ImagePicker from "expo-image-picker";
 import api from "../services/api";
 import { APP_BACKGROUND_IMAGE } from "../constants/uiAssets";
+import { hapticLight, hapticMedium } from "../utils/haptics";
+import ReportBlockSheet from "../components/ReportBlockSheet";
 
 const MAX_CLIP_DURATION = 15;
 const CLIP_PLACEHOLDERS = [
@@ -112,6 +114,7 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [followLoadingUserId, setFollowLoadingUserId] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [reportSheet, setReportSheet] = useState(null); // { targetId, targetUserId, targetUserName }
   const listRef = useRef(null);
   const touchStartRef = useRef({ y: 0, x: 0, time: 0 });
   const { height: screenHeight } = Dimensions.get("window");
@@ -291,6 +294,8 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
   const toggleLike = useCallback(
     async (clip) => {
       if (!ensureSignedIn()) return;
+      // Haptic feedback the instant the user taps — matches premium apps
+      hapticMedium();
       try {
         const response = await api.toggleClipLike(clip.clip_id, userId);
         if (!response.ok) return;
@@ -557,6 +562,23 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
                       color={isAdmin && item.user_id !== userId ? "#fbbf24" : "#fca5a5"}
                     />
                     <Text style={styles.actionText}>حذف</Text>
+                  </TouchableOpacity>
+                )}
+
+                {item.user_id !== userId && (
+                  <TouchableOpacity
+                    style={styles.reelActionBtn}
+                    onPress={() => {
+                      hapticLight();
+                      setReportSheet({
+                        targetId: item.clip_id,
+                        targetUserId: item.user_id,
+                        targetUserName: item.user_name,
+                      });
+                    }}
+                  >
+                    <Ionicons name="flag-outline" size={20} color="#fbbf24" />
+                    <Text style={styles.actionText}>إبلاغ</Text>
                   </TouchableOpacity>
                 )}
 
@@ -893,6 +915,20 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      <ReportBlockSheet
+        visible={Boolean(reportSheet)}
+        onClose={() => setReportSheet(null)}
+        reporterUserId={userId}
+        targetType="clip"
+        targetId={reportSheet?.targetId}
+        targetUserId={reportSheet?.targetUserId}
+        targetUserName={reportSheet?.targetUserName}
+        onBlockedUser={(blockedId) => {
+          // Hide this user's clips locally after blocking
+          setClips((prev) => prev.filter((c) => c.user_id !== blockedId));
+        }}
+      />
     </ImageBackground>
   );
 };
