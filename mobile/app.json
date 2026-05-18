@@ -61,7 +61,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.saqr.rewards",
-      "buildNumber": "111",
+      "buildNumber": "112",
       "usesAppleSignIn": true,
       "config": {
         "usesNonExemptEncryption": false

@@ -185,11 +185,28 @@ async def _build_follow_maps(
 
 @router.get("/feed")
 async def get_clips_feed(limit: int = 30, viewer_id: Optional[str] = None):
+    """
+    Premium-tier feed ranking inspired by TikTok / Reels:
+      score = engagement_rate * recency_decay * follow_boost
+    Where:
+      • engagement_rate = (likes + 2*comments + 3*shares) / max(views, 30)
+      • recency_decay   = 1 / (1 + hours_old / 24)
+      • follow_boost    = 3.5x if viewer follows the clip's author else 1.0
+
+    Hidden test/demo content is filtered out, and clips from users the
+    viewer has blocked are removed from the result.
+    """
+    from datetime import datetime, timezone
+
     normalized_limit = max(1, min(80, int(limit or 30)))
+
+    # Pull a generous candidate pool so the ranker has room to work
+    candidate_pool = max(normalized_limit * 4, 80)
     clips = await db.clips_posts.find(
         {},
         {"_id": 0},
-    ).sort("created_at", -1).limit(normalized_limit).to_list(normalized_limit)
+    ).sort("created_at", -1).limit(candidate_pool).to_list(candidate_pool)
+
     hidden_test_clip_ids = []
     safe_clips = []
     for clip in clips:
@@ -208,11 +225,61 @@ async def get_clips_feed(limit: int = 30, viewer_id: Optional[str] = None):
     if hidden_test_clip_ids:
         await db.clips_posts.delete_many({"clip_id": {"$in": hidden_test_clip_ids}})
 
+    # Filter out clips from blocked users (viewer-side block list)
+    blocked_ids = set()
+    if viewer_id:
+        try:
+            blocks = await db.user_blocks.find(
+                {"user_id": viewer_id}, {"_id": 0, "target_user_id": 1}
+            ).to_list(500)
+            blocked_ids = {b.get("target_user_id") for b in blocks if b.get("target_user_id")}
+        except Exception:
+            blocked_ids = set()
+    if blocked_ids:
+        clips = [c for c in clips if str(c.get("user_id") or "") not in blocked_ids]
+
     owner_ids = {str((clip or {}).get("user_id")) for clip in clips if (clip or {}).get("user_id")}
     followers_count_map, following_count_map, viewer_following_set = await _build_follow_maps(
         owner_ids,
         viewer_id,
     )
+
+    # --- Ranking ---
+    now = datetime.now(timezone.utc)
+
+    def _hours_old(c):
+        try:
+            ts = c.get("created_at")
+            if isinstance(ts, str):
+                ts_clean = ts.replace("Z", "+00:00")
+                dt = datetime.fromisoformat(ts_clean)
+            else:
+                dt = ts
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return max(0.0, (now - dt).total_seconds() / 3600.0)
+        except Exception:
+            return 24.0  # fallback: assume 1 day old
+
+    def _score(c):
+        likes = int(c.get("likes_count") or len(c.get("liked_by", []) or []))
+        comments = int(c.get("comments_count") or len(c.get("comments", []) or []))
+        shares = int(c.get("shares_count") or 0)
+        views = max(30, int(c.get("views_count") or c.get("views") or 30))
+        engagement = (likes + 2 * comments + 3 * shares) / views
+        hours = _hours_old(c)
+        recency = 1.0 / (1.0 + hours / 24.0)
+        owner_id = str(c.get("user_id") or "")
+        is_followed = bool(
+            viewer_id and owner_id and owner_id != viewer_id and owner_id in viewer_following_set
+        )
+        follow_boost = 3.5 if is_followed else 1.0
+        # A small fairness boost for fresh clips (<2 hours) so new creators
+        # get discovered — matches Instagram Reels' cold-start policy.
+        fresh_boost = 1.4 if hours < 2 else 1.0
+        return engagement * recency * follow_boost * fresh_boost
+
+    clips = sorted(clips, key=_score, reverse=True)[:normalized_limit]
 
     normalized_clips = []
     for clip in clips:
@@ -241,6 +308,7 @@ async def get_clips_feed(limit: int = 30, viewer_id: Optional[str] = None):
     return {
         "clips": normalized_clips,
         "count": len(normalized_clips),
+        "algorithm": "v2_engagement_recency_follow",
     }
 
 

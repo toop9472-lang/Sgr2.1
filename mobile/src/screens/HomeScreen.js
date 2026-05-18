@@ -1,5 +1,9 @@
-// Home Screen - الصفحة الرئيسية
-// بدون ألعاب - فقط ثروات صقر والميزات الأساسية
+// Home Screen — Calm, premium, polished.
+// Two distinct visual themes the user can switch between in one tap:
+//   • "luxuryDark"  — Black & gold (true premium feel — App Store-tier)
+//   • "brightModern" — Clean white & blue (modern / classic minimal feel)
+// Both share the SAME information density (low) and use Ionicons only.
+// No busy background images.
 import React, { useState, useMemo, useCallback, useEffect, useRef, memo } from "react";
 import {
   View,
@@ -9,170 +13,160 @@ import {
   StyleSheet,
   Dimensions,
   RefreshControl,
-  ImageBackground,
-  Image,
   Animated,
+  Easing,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import { useLanguage } from "../i18n/LanguageContext";
-import { APP_BACKGROUND_IMAGE, ICON_ASSETS, getHomeCardBackgrounds } from "../constants/uiAssets";
+import { hapticLight } from "../utils/haptics";
 
 const { width } = Dimensions.get("window");
 
-const ICON_NAME_BY_ASSET = {
-  [ICON_ASSETS.home]: "home-outline",
-  [ICON_ASSETS.clips]: "play-circle-outline",
-  [ICON_ASSETS.watch]: "eye-outline",
-  [ICON_ASSETS.advertise]: "megaphone-outline",
-  [ICON_ASSETS.profile]: "person-outline",
-  [ICON_ASSETS.gems]: "diamond-outline",
-  [ICON_ASSETS.chat]: "chatbubble-ellipses-outline",
-  [ICON_ASSETS.friends]: "people-outline",
-  [ICON_ASSETS.fortunes]: "sparkles-outline",
+/* ---------- Theme tokens (two highly distinct presets) ---------- */
+const themes = {
+  luxuryDark: {
+    id: "luxuryDark",
+    bg: ["#06070d", "#0a0b14", "#0d0d1a"],
+    surface: "#11121b",
+    surfaceAlt: "#161823",
+    border: "rgba(255,215,128,0.10)",
+    text: "#ffffff",
+    textMuted: "#9ca3af",
+    accent: "#fbbf24", // gold
+    accentSoft: "rgba(251,191,36,0.13)",
+    icon: "#fbbf24",
+    cardElevation: 0,
+    statusGood: "#34d399",
+    chip: "rgba(255,255,255,0.06)",
+    label: "فاخر",
+    labelEn: "Luxury",
+  },
+  brightModern: {
+    id: "brightModern",
+    bg: ["#f4f6fb", "#eaf0fa", "#dfe8f5"],
+    surface: "#ffffff",
+    surfaceAlt: "#f8fafd",
+    border: "rgba(59,130,246,0.15)",
+    text: "#0f172a",
+    textMuted: "#64748b",
+    accent: "#3b82f6", // blue
+    accentSoft: "rgba(59,130,246,0.10)",
+    icon: "#3b82f6",
+    cardElevation: 2,
+    statusGood: "#10b981",
+    chip: "rgba(15,23,42,0.05)",
+    label: "كلاسيك",
+    labelEn: "Classic",
+  },
 };
 
-const AppIcon = ({ uri, size = 18, tintColor = "#fff", style }) => {
-  // Allow passing an Ionicons name directly (e.g. "play-circle-outline").
-  if (typeof uri === "string" && !uri.startsWith("http") && !uri.startsWith("/")) {
-    return <Ionicons name={uri} size={size} color={tintColor} style={style} />;
-  }
-  const mappedIcon = ICON_NAME_BY_ASSET[uri];
-  if (mappedIcon) {
-    return <Ionicons name={mappedIcon} size={size} color={tintColor} style={style} />;
-  }
-  return (
-    <Image
-      source={{ uri }}
-      style={[{ width: size, height: size, resizeMode: "contain" }, style]}
-    />
-  );
-};
+/* ---------- Reusable atoms ---------- */
 
-const QuickStatSticker = memo(({ iconSource, value, label, tintColor, backgroundImage }) => (
-  <ImageBackground
-    source={{ uri: backgroundImage }}
-    style={styles.quickStatCard}
-    imageStyle={styles.quickStatImage}
-  >
-    <View style={styles.quickStatOverlay}>
-      <AppIcon uri={iconSource} size={16} tintColor={tintColor} />
-      <Text style={styles.quickStatValue}>{value}</Text>
-      <Text style={styles.quickStatLabel}>{label}</Text>
-    </View>
-  </ImageBackground>
+const Pill = memo(({ icon, label, accent, bg, textColor }) => (
+  <View style={[styles.pill, { backgroundColor: bg }]}>
+    <Ionicons name={icon} size={11} color={accent} />
+    <Text style={[styles.pillText, { color: textColor }]}>{label}</Text>
+  </View>
 ));
 
-const QuickActionPill = memo(({ iconSource, title, subtitle, onPress, backgroundImage }) => (
-  <TouchableOpacity style={styles.quickActionPill} onPress={onPress} activeOpacity={0.85}>
-    <ImageBackground
-      source={{ uri: backgroundImage }}
-      style={styles.quickActionPillBg}
-      imageStyle={styles.quickActionPillImage}
+const StatCard = memo(({ icon, value, label, theme }) => (
+  <View
+    style={[
+      styles.statCard,
+      {
+        backgroundColor: theme.surface,
+        borderColor: theme.border,
+        shadowOpacity: theme.cardElevation ? 0.08 : 0,
+      },
+    ]}
+  >
+    <View
+      style={[
+        styles.statIconWrap,
+        { backgroundColor: theme.accentSoft, borderColor: theme.border },
+      ]}
     >
-      <View style={styles.quickActionPillGradient}>
-        <View style={styles.quickActionPillIcon}>
-          <AppIcon uri={iconSource} size={20} tintColor="#fff" />
-        </View>
-        <View style={styles.quickActionPillTextWrap}>
-          <Text style={styles.quickActionPillTitle}>{title}</Text>
-          <Text style={styles.quickActionPillSub}>{subtitle}</Text>
-        </View>
+      <Ionicons name={icon} size={16} color={theme.accent} />
+    </View>
+    <Text style={[styles.statValue, { color: theme.text }]} numberOfLines={1}>
+      {value}
+    </Text>
+    <Text style={[styles.statLabel, { color: theme.textMuted }]} numberOfLines={1}>
+      {label}
+    </Text>
+  </View>
+));
+
+const ActionRow = memo(({ icon, title, subtitle, theme, onPress, badge }) => (
+  <TouchableOpacity
+    activeOpacity={0.85}
+    onPress={() => {
+      hapticLight();
+      onPress && onPress();
+    }}
+    style={[
+      styles.actionRow,
+      {
+        backgroundColor: theme.surface,
+        borderColor: theme.border,
+        shadowOpacity: theme.cardElevation ? 0.06 : 0,
+      },
+    ]}
+  >
+    <View
+      style={[
+        styles.actionIconWrap,
+        {
+          backgroundColor: theme.accentSoft,
+          borderColor: theme.border,
+        },
+      ]}
+    >
+      <Ionicons name={icon} size={20} color={theme.accent} />
+    </View>
+    <View style={styles.actionBody}>
+      <View style={styles.actionTitleRow}>
+        <Text
+          style={[styles.actionTitle, { color: theme.text }]}
+          numberOfLines={1}
+        >
+          {title}
+        </Text>
+        {badge && (
+          <View
+            style={[
+              styles.actionBadge,
+              {
+                backgroundColor: theme.accentSoft,
+                borderColor: theme.border,
+              },
+            ]}
+          >
+            <Text style={[styles.actionBadgeText, { color: theme.accent }]}>
+              {badge}
+            </Text>
+          </View>
+        )}
       </View>
-    </ImageBackground>
+      <Text
+        style={[styles.actionSubtitle, { color: theme.textMuted }]}
+        numberOfLines={1}
+      >
+        {subtitle}
+      </Text>
+    </View>
+    <Ionicons
+      name="chevron-back"
+      size={16}
+      color={theme.textMuted}
+      style={{ opacity: 0.5 }}
+    />
   </TouchableOpacity>
 ));
 
-const PrimaryActionCard = memo(
-  ({ iconSource, title, subtitle, onPress, backgroundImage }) => (
-    <TouchableOpacity style={styles.primaryAction} onPress={onPress} activeOpacity={0.9}>
-      <ImageBackground
-        source={{ uri: backgroundImage }}
-        style={styles.primaryActionBg}
-        imageStyle={styles.primaryActionImage}
-      >
-        <View style={styles.primaryActionGradient}>
-          <View style={styles.primaryActionIcon}>
-            <AppIcon uri={iconSource} size={18} />
-          </View>
-          <View style={styles.primaryActionTextWrap}>
-            <Text style={styles.primaryActionTitle}>{title}</Text>
-            <Text style={styles.primaryActionSub}>{subtitle}</Text>
-          </View>
-        </View>
-      </ImageBackground>
-    </TouchableOpacity>
-  ),
-);
-
-// بطاقة مميزة كبيرة
-const FeaturedCard = memo(
-  ({ title, subtitle, image, colors, iconSource, onPress, badge }) => (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.9}
-      style={styles.featuredCard}
-    >
-      <ImageBackground
-        source={{ uri: image }}
-        style={styles.featuredBg}
-        imageStyle={styles.featuredImage}
-      >
-        <View style={styles.featuredOverlay}>
-          {badge && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{badge}</Text>
-            </View>
-          )}
-          <View style={styles.featuredContent}>
-            <View style={styles.featuredInfo}>
-              <Text style={styles.featuredTitle}>{title}</Text>
-              <Text style={styles.featuredSubtitle}>{subtitle}</Text>
-            </View>
-            <View style={styles.playBtn}>
-              <AppIcon uri={iconSource || ICON_ASSETS.watch} size={16} />
-            </View>
-          </View>
-        </View>
-      </ImageBackground>
-    </TouchableOpacity>
-  ),
-);
-
-// بطاقة ميزة
-const FeatureCard = memo(
-  ({ title, subtitle, image, color, iconSource, onPress, badge }) => (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.9}
-      style={styles.featureCard}
-    >
-      <ImageBackground
-        source={{ uri: image }}
-        style={styles.featureBg}
-        imageStyle={styles.featureImage}
-      >
-        <View style={styles.featureOverlay}>
-          {badge && (
-            <View style={styles.featureBadge}>
-              <Text style={styles.featureBadgeText}>{badge}</Text>
-            </View>
-          )}
-          <View style={styles.featureBottom}>
-            <View style={styles.featureContent}>
-              <Text style={styles.featureTitle}>{title}</Text>
-              <Text style={styles.featureSubtitle}>{subtitle}</Text>
-            </View>
-            <View style={styles.featureBtn}>
-              <AppIcon uri={iconSource || ICON_ASSETS.watch} size={14} />
-            </View>
-          </View>
-        </View>
-      </ImageBackground>
-    </TouchableOpacity>
-  ),
-);
+/* ---------- Main screen ---------- */
 
 const HomeScreen = ({
   user,
@@ -181,7 +175,6 @@ const HomeScreen = ({
   onNavigateToChat,
   onNavigateToFortunes,
   onNavigateToFriends,
-  settings,
   homePreset,
   onHomePresetChange,
   onRefresh,
@@ -189,59 +182,57 @@ const HomeScreen = ({
   const { language } = useLanguage();
   const isArabic = language === "ar";
   const [refreshing, setRefreshing] = useState(false);
-  const presetFade = useRef(new Animated.Value(1)).current;
-  const homeCardBackgrounds = useMemo(
-    () => getHomeCardBackgrounds(homePreset),
+  const fade = useRef(new Animated.Value(0)).current;
+
+  // Resolve theme (default luxuryDark to feel premium on first launch)
+  const theme = useMemo(
+    () => themes[homePreset === "brightModern" ? "brightModern" : "luxuryDark"],
     [homePreset],
   );
-  const copy = useMemo(
-    () => ({
-      defaultPlayer: isArabic ? "لاعب" : "Player",
-      welcomePrefix: isArabic ? "أهلاً" : "Welcome",
-      welcomeSub: isArabic ? "مرحباً بك في صقر" : "Welcome to Saqr",
-      fortunes: isArabic ? "ثروات صقر" : "Saqr Fortunes",
-      newLabel: isArabic ? "جديد" : "NEW",
-      fortunesSubtitle: isArabic
-        ? "اربح جواهر صقر للاستبدال بالمال الحقيقي!"
-        : "Earn Saqr gems and exchange them for real cash!",
-      exchangeBadge: isArabic ? "500 جوهرة = 3 ريال" : "500 gems = 3 SAR",
-      fortunesDesc: isArabic
-        ? "إعلانات AdMob مكتملة • مكافأة ثابتة 5 جواهر • سحب مرن"
-        : "Completed AdMob ads • Fixed 5 gems reward • Flexible cashout",
-      watchAndEarn: isArabic ? "شاهد واربح" : "Watch & Earn",
-      watchAndEarnSubtitle: isArabic
-        ? "إعلانات AdMob كاملة الشاشة + إعلانات المعلنين"
-        : "Full-screen AdMob + advertiser ads",
-      clips: isArabic ? "ريلز المجتمع" : "Community Reels",
-      clipsSub: isArabic
-        ? "مقاطع 15 ثانية من المستخدمين"
-        : "15-second clips by users",
-      chat: isArabic ? "الدردشة" : "Chat",
-      chatSub: isArabic ? "تواصل مع اللاعبين" : "Connect with players",
-      friends: isArabic ? "الأصدقاء" : "Friends",
-      friendsSub: isArabic ? "أضف أصدقاء جدد" : "Add new friends",
-      chatCostBadge: isArabic ? "مجاني" : "Free",
-      tip: isArabic
-        ? "ادعُ أصدقاءك واربح جواهر صقر مضاعفة!"
-        : "Invite friends and earn boosted Saqr gems!",
-      adsPill: isArabic ? "صفحة الإعلانات" : "Ads Feed",
-      adsPillSub: isArabic ? "AdMob + المعلنين" : "AdMob + advertisers",
-      reelsPill: isArabic ? "صفحة الريلز" : "Reels Feed",
-      reelsPillSub: isArabic ? "15 ثانية لكل فيديو" : "15s per reel",
-      chatPill: isArabic ? "الدردشة العامة" : "Global Chat",
-      chatPillSub: isArabic ? "مجانية بالكامل" : "Always free",
-      fortunesPill: isArabic ? "ثروات صقر" : "Saqr Fortunes",
-      fortunesPillSub: isArabic ? "500 = 3 ريال" : "500 = 3 SAR",
-      styleLuxury: isArabic ? "فاخر داكن" : "Luxury Dark",
-      styleBright: isArabic ? "مشرق عصري" : "Bright Modern",
-    }),
-    [isArabic],
+  const otherTheme = useMemo(
+    () =>
+      themes[theme.id === "luxuryDark" ? "brightModern" : "luxuryDark"],
+    [theme.id],
   );
 
-  // بيانات المستخدم
-  const userName = useMemo(
-    () => user?.name || copy.defaultPlayer,
-    [copy.defaultPlayer, user?.name],
+  // Soft fade-in whenever preset changes — gives the toggle real feedback
+  useEffect(() => {
+    fade.setValue(0);
+    Animated.timing(fade, {
+      toValue: 1,
+      duration: 300,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [theme.id, fade]);
+
+  const copy = useMemo(
+    () => ({
+      welcomePrefix: isArabic ? "أهلاً" : "Welcome",
+      welcomeSub: isArabic
+        ? "ابدأ يومك بمشاهدة إعلانات واكتساب جواهر صقر"
+        : "Start your day by watching ads and earning Saqr gems",
+      defaultPlayer: isArabic ? "لاعب" : "Player",
+      gems: isArabic ? "جوهرة" : "Gems",
+      reels: isArabic ? "ريلز" : "Reels",
+      friends: isArabic ? "أصدقاء" : "Friends",
+      sectionExplore: isArabic ? "استكشف" : "Explore",
+      sectionEarn: isArabic ? "اكسب جواهر" : "Earn Gems",
+      sectionConnect: isArabic ? "تواصل" : "Connect",
+      adsTitle: isArabic ? "شاهد وأكسب" : "Watch & Earn",
+      adsSub: isArabic ? "إعلانات قصيرة = جواهر فورية" : "Short ads = instant gems",
+      reelsTitle: isArabic ? "ريلز المجتمع" : "Community Reels",
+      reelsSub: isArabic ? "15 ثانية لكل مقطع" : "15 seconds each",
+      fortunesTitle: isArabic ? "ثروات صقر" : "Saqr Fortunes",
+      fortunesSub: isArabic ? "500 جوهرة = 3 ﷼" : "500 gems = 3 SAR",
+      chatTitle: isArabic ? "الدردشة العامة" : "Global Chat",
+      chatSub: isArabic ? "مجانية بالكامل" : "Always free",
+      friendsTitle: isArabic ? "الأصدقاء" : "Friends",
+      friendsSub: isArabic ? "أضف وتواصل" : "Add & connect",
+      free: isArabic ? "مجاني" : "Free",
+      new: isArabic ? "جديد" : "New",
+    }),
+    [isArabic],
   );
 
   const handleRefresh = useCallback(async () => {
@@ -250,660 +241,388 @@ const HomeScreen = ({
     setRefreshing(false);
   }, [onRefresh]);
 
-  // Auto-refresh balance every time HomeScreen becomes visible
   useEffect(() => {
-    if (onRefresh) {
-      onRefresh();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (onRefresh) onRefresh();
   }, []);
 
-  const handleQuickPresetToggle = useCallback(() => {
-    if (!onHomePresetChange) return;
-    const nextPreset = homePreset === "brightModern" ? "luxuryDark" : "brightModern";
-    onHomePresetChange(nextPreset);
-  }, [homePreset, onHomePresetChange]);
+  const handleToggleTheme = useCallback(() => {
+    hapticLight();
+    const next = theme.id === "luxuryDark" ? "brightModern" : "luxuryDark";
+    onHomePresetChange && onHomePresetChange(next);
+  }, [theme.id, onHomePresetChange]);
 
-  const quickPrimaryCards = useMemo(
-    () => [
-      {
-        id: "ads",
-        title: copy.adsPill,
-        subtitle: copy.adsPillSub,
-        iconName: "play-circle-outline",
-        onPress: onNavigateToAds,
-        backgroundImage: homeCardBackgrounds.quickAds,
-      },
-      {
-        id: "reels",
-        title: copy.reelsPill,
-        subtitle: copy.reelsPillSub,
-        iconName: "videocam-outline",
-        onPress: onNavigateToClips,
-        backgroundImage: homeCardBackgrounds.quickReels,
-      },
-      {
-        id: "fortunes",
-        title: copy.fortunesPill,
-        subtitle: copy.fortunesPillSub,
-        iconName: "diamond-outline",
-        onPress: onNavigateToFortunes,
-        backgroundImage: homeCardBackgrounds.quickFortunes,
-      },
-    ],
-    [
-      copy.adsPill,
-      copy.adsPillSub,
-      copy.fortunesPill,
-      copy.fortunesPillSub,
-      copy.reelsPill,
-      copy.reelsPillSub,
-      homeCardBackgrounds.quickAds,
-      homeCardBackgrounds.quickFortunes,
-      homeCardBackgrounds.quickReels,
-      onNavigateToAds,
-      onNavigateToClips,
-      onNavigateToFortunes,
-    ],
-  );
-
-  useEffect(() => {
-    // Smoothly fade home content when switching background presets.
-    Animated.sequence([
-      Animated.timing(presetFade, {
-        toValue: 0.35,
-        duration: 140,
-        useNativeDriver: true,
-      }),
-      Animated.timing(presetFade, {
-        toValue: 1,
-        duration: 220,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [homePreset, presetFade]);
+  const userName = user?.name || copy.defaultPlayer;
+  const gemsValue =
+    Number(user?.saqr_gems ?? user?.saqr_points ?? user?.points ?? 0) || 0;
 
   return (
-    <ImageBackground
-      source={{ uri: APP_BACKGROUND_IMAGE }}
+    <LinearGradient
+      colors={theme.bg}
       style={styles.bg}
-      resizeMode="cover"
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
     >
-      <LinearGradient
-        colors={["rgba(15,23,42,0.26)", "rgba(30,41,59,0.68)", "rgba(30,27,75,0.88)"]}
-        style={styles.bgOverlay}
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: 110 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={theme.accent}
+            colors={[theme.accent]}
+          />
+        }
       >
-        <ScrollView
-          style={styles.container}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              tintColor="#3b82f6"
-              colors={["#3b82f6"]}
-            />
-          }
-        >
-          <Animated.View style={[styles.content, { opacity: presetFade }]}>
-        {/* الترويسة */}
-        <View style={styles.headerShell}>
+        <Animated.View style={{ opacity: fade }}>
+          {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <LanguageSwitcher />
-              <View style={styles.headerTextWrap}>
-                <Text style={styles.greeting}>
+              <View style={styles.greetingBlock}>
+                <Text style={[styles.greeting, { color: theme.text }]}>
                   {copy.welcomePrefix} {userName}
                 </Text>
-                <Text style={styles.subGreeting}>{copy.welcomeSub}</Text>
+                <Text
+                  style={[styles.subGreeting, { color: theme.textMuted }]}
+                  numberOfLines={1}
+                >
+                  {copy.welcomeSub}
+                </Text>
               </View>
             </View>
+
+            {/* Theme toggle — large and obvious */}
             <TouchableOpacity
-              style={styles.presetSwitchBtn}
-              onPress={handleQuickPresetToggle}
               activeOpacity={0.85}
+              onPress={handleToggleTheme}
+              style={[
+                styles.themeToggle,
+                {
+                  backgroundColor: theme.surface,
+                  borderColor: theme.border,
+                },
+              ]}
             >
-              <Ionicons name="swap-horizontal" size={14} color="#e2e8f0" />
-              <Text style={styles.presetSwitchText}>
-                {homePreset === "brightModern" ? copy.styleBright : copy.styleLuxury}
+              <Ionicons
+                name={theme.id === "luxuryDark" ? "moon" : "sunny"}
+                size={14}
+                color={theme.accent}
+              />
+              <Text
+                style={[styles.themeToggleText, { color: theme.text }]}
+              >
+                {isArabic ? theme.label : theme.labelEn}
               </Text>
+              <View
+                style={[styles.themeNextDot, { backgroundColor: otherTheme.accent }]}
+              />
             </TouchableOpacity>
           </View>
-        </View>
 
-        <View style={styles.quickStatsRow}>
-          <QuickStatSticker
-            iconSource={ICON_ASSETS.gems}
-            value={Number(user?.saqr_gems ?? user?.saqr_points ?? user?.points ?? 0) || 0}
-            label="جواهر"
-            tintColor="#fbbf24"
-            backgroundImage={homeCardBackgrounds.statGems}
-          />
-          <QuickStatSticker
-            iconSource={ICON_ASSETS.clips}
-            value={user?.clips_count || 0}
-            label="ريلز"
-            tintColor="#a5f3fc"
-            backgroundImage={homeCardBackgrounds.statReels}
-          />
-          <QuickStatSticker
-            iconSource={ICON_ASSETS.chat}
-            value="24/7"
-            label="دردشة"
-            tintColor="#93c5fd"
-            backgroundImage={homeCardBackgrounds.statChat}
-          />
-        </View>
+          {/* Hero balance — gems are the soul of this app */}
+          <View
+            style={[
+              styles.heroCard,
+              {
+                backgroundColor: theme.surface,
+                borderColor: theme.border,
+                shadowOpacity: theme.cardElevation ? 0.10 : 0,
+              },
+            ]}
+          >
+            <View style={styles.heroTop}>
+              <Pill
+                icon="diamond"
+                label={copy.gems}
+                accent={theme.accent}
+                bg={theme.accentSoft}
+                textColor={theme.text}
+              />
+              <View
+                style={[styles.dotBadge, { backgroundColor: theme.statusGood }]}
+              />
+            </View>
+            <Text style={[styles.heroValue, { color: theme.text }]}>
+              {gemsValue.toLocaleString("en-US")}
+            </Text>
+            <Text style={[styles.heroLabel, { color: theme.textMuted }]}>
+              {isArabic
+                ? "رصيدك الحالي • يُحدّث تلقائياً"
+                : "Your current balance • auto-synced"}
+            </Text>
 
-        <View style={styles.quickActionsWrap}>
-          {quickPrimaryCards.map((card) => (
-            <QuickActionPill
-              key={card.id}
-              iconSource={card.iconName}
-              title={card.title}
-              subtitle={card.subtitle}
-              backgroundImage={card.backgroundImage}
-              onPress={card.onPress}
-            />
-          ))}
-        </View>
-
-        {/* ثروات صقر - القسم الرئيسي */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <AppIcon uri={ICON_ASSETS.fortunes} size={18} tintColor="#ec4899" />
-            <Text style={styles.sectionTitle}>{copy.fortunes}</Text>
-            <View style={styles.newTag}>
-              <Text style={styles.newTagText}>{copy.newLabel}</Text>
+            <View style={styles.miniStats}>
+              <StatCard
+                icon="play-circle"
+                value={user?.clips_count || 0}
+                label={copy.reels}
+                theme={theme}
+              />
+              <StatCard
+                icon="people"
+                value={user?.friends_count || 0}
+                label={copy.friends}
+                theme={theme}
+              />
+              <StatCard
+                icon="eye"
+                value={user?.watched_ads_today || 0}
+                label={isArabic ? "اليوم" : "Today"}
+                theme={theme}
+              />
             </View>
           </View>
 
-          <FeaturedCard
-            title={copy.fortunes}
-            subtitle={copy.fortunesSubtitle}
-            image={homeCardBackgrounds.featuredFortunes}
-            colors={["#ec4899", "#be185d"]}
-            iconSource={ICON_ASSETS.fortunes}
+          {/* Earn section */}
+          <Text
+            style={[styles.sectionLabel, { color: theme.textMuted }]}
+          >
+            {copy.sectionEarn}
+          </Text>
+          <ActionRow
+            icon="play-circle"
+            title={copy.adsTitle}
+            subtitle={copy.adsSub}
+            theme={theme}
+            onPress={onNavigateToAds}
+          />
+          <ActionRow
+            icon="diamond"
+            title={copy.fortunesTitle}
+            subtitle={copy.fortunesSub}
+            theme={theme}
             onPress={onNavigateToFortunes}
-            badge={copy.exchangeBadge}
+            badge={copy.new}
           />
 
-          <Text style={styles.fortunesDesc}>{copy.fortunesDesc}</Text>
-        </View>
+          {/* Explore section */}
+          <Text
+            style={[styles.sectionLabel, { color: theme.textMuted }]}
+          >
+            {copy.sectionExplore}
+          </Text>
+          <ActionRow
+            icon="film"
+            title={copy.reelsTitle}
+            subtitle={copy.reelsSub}
+            theme={theme}
+            onPress={onNavigateToClips}
+          />
 
-        {/* البطاقات الثنائية: الأصدقاء + الدردشة */}
-        <View style={styles.dualCards}>
-          <FeatureCard
-            title={copy.friends}
+          {/* Connect section */}
+          <Text
+            style={[styles.sectionLabel, { color: theme.textMuted }]}
+          >
+            {copy.sectionConnect}
+          </Text>
+          <ActionRow
+            icon="chatbubble-ellipses"
+            title={copy.chatTitle}
+            subtitle={copy.chatSub}
+            theme={theme}
+            onPress={onNavigateToChat}
+            badge={copy.free}
+          />
+          <ActionRow
+            icon="people"
+            title={copy.friendsTitle}
             subtitle={copy.friendsSub}
-            image={homeCardBackgrounds.friends}
-            color="#22c55e"
-            iconSource={ICON_ASSETS.friends}
+            theme={theme}
             onPress={onNavigateToFriends}
           />
-          <FeatureCard
-            title={copy.chat}
-            subtitle={copy.chatSub}
-            image={homeCardBackgrounds.chat}
-            color="#3b82f6"
-            iconSource={ICON_ASSETS.chat}
-            onPress={onNavigateToChat}
-            badge={copy.chatCostBadge}
-          />
-        </View>
 
-        {/* نصيحة */}
-        <ImageBackground
-          source={{ uri: homeCardBackgrounds.tip }}
-          style={styles.tipCard}
-          imageStyle={styles.tipImage}
-        >
-          <View style={styles.tipOverlay}>
-            <View style={styles.tipIconWrap}>
-              <AppIcon uri={ICON_ASSETS.home} size={18} tintColor="#fbbf24" />
-            </View>
-            <Text style={styles.tipText}>{copy.tip}</Text>
+          {/* Footer note */}
+          <View style={styles.footerNote}>
+            <View
+              style={[
+                styles.footerDot,
+                { backgroundColor: theme.statusGood },
+              ]}
+            />
+            <Text style={{ color: theme.textMuted, fontSize: 11 }}>
+              {isArabic
+                ? "صقر — اكسب من مشاهداتك اليومية"
+                : "Saqr — earn from your daily views"}
+            </Text>
           </View>
-        </ImageBackground>
-          </Animated.View>
-        </ScrollView>
-      </LinearGradient>
-    </ImageBackground>
+        </Animated.View>
+      </ScrollView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "transparent",
-  },
-  bg: {
-    flex: 1,
-  },
-  bgOverlay: {
-    flex: 1,
-  },
-  content: {
-    padding: 18,
-    paddingTop: 24,
-    paddingBottom: 120,
-  },
-  quickStatsRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 12,
-  },
-  quickStatCard: {
-    flex: 1,
-    borderRadius: 14,
-    overflow: "hidden",
-    minHeight: 82,
-  },
-  quickStatImage: {
-    borderRadius: 14,
-  },
-  quickStatOverlay: {
-    flex: 1,
-    borderRadius: 14,
-    paddingVertical: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 3,
-  },
-  quickStatValue: {
-    color: "#fff",
-    fontSize: 15,
-    fontWeight: "800",
-    textShadowColor: "rgba(0,0,0,0.95)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
-  },
-  quickStatLabel: {
-    color: "rgba(255,255,255,0.95)",
-    fontSize: 10,
-    fontWeight: "700",
-    textShadowColor: "rgba(0,0,0,0.95)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-  },
-  quickActionsWrap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 18,
-  },
-  quickActionPill: {
-    width: (width - 48) / 2,
-    borderRadius: 14,
-    overflow: "hidden",
-  },
-  quickActionPillBg: {
-    minHeight: 64,
-  },
-  quickActionPillImage: {
-    borderRadius: 14,
-  },
-  quickActionPillGradient: {
-    flexDirection: "row",
-    alignItems: "center",
-    minHeight: 64,
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 11,
-  },
-  quickActionPillIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.4)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
-    marginRight: 8,
-  },
-  quickActionPillTextWrap: {
-    flex: 1,
-  },
-  quickActionPillTitle: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "800",
-    lineHeight: 16,
-    textShadowColor: "rgba(0,0,0,0.95)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
-  },
-  quickActionPillSub: {
-    marginTop: 2,
-    color: "rgba(255,255,255,0.95)",
-    fontSize: 10,
-    lineHeight: 13,
-    textShadowColor: "rgba(0,0,0,0.9)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-  },
+  bg: { flex: 1 },
+  container: { flex: 1 },
 
-  // الترويسة
-  headerShell: {
-    marginBottom: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "rgba(148,163,184,0.2)",
-    backgroundColor: "rgba(2,6,23,0.42)",
-    overflow: "hidden",
-  },
+  /* Header */
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 11,
+    justifyContent: "space-between",
+    paddingHorizontal: 18,
+    paddingTop: 14,
+    paddingBottom: 16,
   },
   headerLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
     flex: 1,
-    minWidth: 0,
+    gap: 10,
   },
-  headerTextWrap: {
-    flex: 1,
-    minWidth: 0,
+  greetingBlock: { flex: 1 },
+  greeting: { fontSize: 17, fontWeight: "800", textAlign: "right" },
+  subGreeting: { fontSize: 11, marginTop: 2, textAlign: "right" },
+
+  themeToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    borderRadius: 22,
+    borderWidth: 1,
   },
-  presetSwitchBtn: {
+  themeToggleText: { fontSize: 12, fontWeight: "700" },
+  themeNextDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginLeft: 2,
+  },
+
+  /* Hero */
+  heroCard: {
+    marginHorizontal: 16,
+    marginBottom: 22,
+    paddingHorizontal: 18,
+    paddingTop: 14,
+    paddingBottom: 14,
+    borderRadius: 22,
+    borderWidth: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  heroTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+  pill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "rgba(15,23,42,0.55)",
-    borderWidth: 1,
-    borderColor: "rgba(148,163,184,0.32)",
     paddingHorizontal: 9,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  presetSwitchText: {
-    color: "#e2e8f0",
-    fontSize: 9,
-    fontWeight: "700",
-  },
-  greeting: {
-    fontSize: 17,
-    fontWeight: "800",
-    color: "#f8fafc",
-    maxWidth: "100%",
-  },
-  subGreeting: {
-    marginTop: 2,
-    fontSize: 11,
-    color: "rgba(226,232,240,0.72)",
-    lineHeight: 15,
-  },
-
-  // الأقسام
-  section: {
-    marginBottom: 18,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-    gap: 8,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: "800",
-    color: "#FFF",
-    flex: 1,
-  },
-  newTag: {
-    backgroundColor: "#22c55e",
-    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 10,
-  },
-  newTagText: {
-    color: "#FFF",
-    fontSize: 10,
-    fontWeight: "bold",
-  },
-  fortunesDesc: {
-    color: "rgba(255,255,255,0.6)",
-    fontSize: 12,
-    lineHeight: 17,
-    textAlign: "center",
-    marginTop: 10,
-  },
-  primaryActionsRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 14,
-  },
-  primaryAction: {
-    flex: 1,
-    borderRadius: 14,
-    overflow: "hidden",
-  },
-  primaryActionBg: {
-    minHeight: 86,
-  },
-  primaryActionImage: {
-    borderRadius: 14,
-  },
-  primaryActionGradient: {
-    minHeight: 86,
-    padding: 13,
-    borderRadius: 14,
-  },
-  primaryActionIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.4)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
-    marginBottom: 8,
-  },
-  primaryActionTextWrap: {
-    gap: 3,
-  },
-  primaryActionTitle: {
-    color: "#fff",
-    fontSize: 13,
-    fontWeight: "800",
-    lineHeight: 17,
-    textShadowColor: "rgba(0,0,0,0.95)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
-  },
-  primaryActionSub: {
-    color: "rgba(255,255,255,0.95)",
-    fontSize: 10,
-    lineHeight: 14,
-    textShadowColor: "rgba(0,0,0,0.9)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-  },
-
-  // البطاقة المميزة
-  featuredCard: {
-    borderRadius: 16,
-    overflow: "hidden",
-    elevation: 8,
-    shadowColor: "#ec4899",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-  },
-  featuredBg: {
-    height: 164,
-  },
-  featuredImage: {
-    borderRadius: 16,
-  },
-  featuredOverlay: {
-    flex: 1,
-    padding: 16,
-    justifyContent: "space-between",
-  },
-  badge: {
-    alignSelf: "flex-start",
-    backgroundColor: "#22c55e",
-    paddingHorizontal: 12,
-    paddingVertical: 5,
     borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 3,
   },
-  badgeText: {
-    color: "#FFF",
-    fontSize: 11,
-    fontWeight: "bold",
-    textShadowColor: "rgba(0,0,0,0.5)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  featuredContent: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-  },
-  featuredInfo: {},
-  featuredTitle: {
-    fontSize: 21,
-    fontWeight: "800",
-    color: "#FFF",
-    textShadowColor: "rgba(0,0,0,0.95)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 6,
-  },
-  featuredSubtitle: {
-    fontSize: 12,
-    color: "rgba(255,255,255,0.95)",
-    marginTop: 4,
-    lineHeight: 16,
-    textShadowColor: "rgba(0,0,0,0.9)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-  },
-  playBtn: {
-    padding: 8,
-  },
-
-  // البطاقات الثنائية
-  dualCards: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 10,
-  },
-  featureCard: {
-    flex: 1,
-    borderRadius: 14,
-    overflow: "hidden",
-  },
-  featureBg: {
-    height: 110,
-  },
-  featureImage: {
-    borderRadius: 14,
-  },
-  featureOverlay: {
-    flex: 1,
-    padding: 12,
-    justifyContent: "space-between",
-  },
-  featureBadge: {
-    alignSelf: "flex-start",
-    backgroundColor: "rgba(96,165,250,0.95)",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  featureBadgeText: {
-    color: "#FFF",
-    fontSize: 9,
-    fontWeight: "bold",
-    textShadowColor: "rgba(0,0,0,0.5)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 1,
-  },
-  featureBottom: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-  },
-  featureContent: {},
-  featureTitle: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: "#FFF",
-    textShadowColor: "rgba(0,0,0,0.95)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
-  featureSubtitle: {
-    fontSize: 10,
-    color: "rgba(255,255,255,0.95)",
-    marginTop: 2,
-    lineHeight: 13,
-    textShadowColor: "rgba(0,0,0,0.9)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  featureBtn: {
-    padding: 6,
-  },
-
-  // نصيحة
-  tipCard: {
-    borderRadius: 12,
-    overflow: "hidden",
+  pillText: { fontSize: 11, fontWeight: "700" },
+  dotBadge: { width: 8, height: 8, borderRadius: 4 },
+  heroValue: {
+    fontSize: 44,
+    fontWeight: "900",
+    letterSpacing: -1.2,
+    textAlign: "right",
     marginTop: 6,
-    elevation: 4,
+    marginBottom: 2,
+  },
+  heroLabel: { fontSize: 11, textAlign: "right" },
+
+  /* Mini stats inside hero */
+  miniStats: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 14,
+  },
+  statCard: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
     shadowRadius: 6,
   },
-  tipImage: {
-    borderRadius: 12,
-  },
-  tipOverlay: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 14,
-    gap: 10,
-  },
-  tipIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  statIconWrap: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.4)",
+    marginBottom: 6,
+  },
+  statValue: { fontSize: 15, fontWeight: "800" },
+  statLabel: { fontSize: 10, marginTop: 1 },
+
+  /* Section labels */
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 1,
+    textAlign: "right",
+    paddingHorizontal: 20,
+    marginTop: 10,
+    marginBottom: 8,
+    textTransform: "uppercase",
+  },
+
+  /* Action rows */
+  actionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 13,
+    paddingHorizontal: 14,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: "rgba(251,191,36,0.4)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
   },
-  tipText: {
-    color: "#fff",
-    fontSize: 12,
-    lineHeight: 17,
-    flex: 1,
-    fontWeight: "600",
-    textShadowColor: "rgba(0,0,0,0.95)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+  actionIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
   },
+  actionBody: { flex: 1, alignItems: "flex-end" },
+  actionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  actionTitle: { fontSize: 14, fontWeight: "700", textAlign: "right" },
+  actionSubtitle: { fontSize: 11, marginTop: 2, textAlign: "right" },
+  actionBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  actionBadgeText: { fontSize: 10, fontWeight: "700" },
+
+  /* Footer */
+  footerNote: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 24,
+    paddingHorizontal: 16,
+  },
+  footerDot: { width: 5, height: 5, borderRadius: 3 },
 });
 
-export default HomeScreen;
+export default memo(HomeScreen);
