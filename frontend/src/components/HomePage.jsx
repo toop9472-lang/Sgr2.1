@@ -1,538 +1,306 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+// Saqr Home — Web (mirrors the new mobile HomeScreen design exactly).
+// Two distinct themes the user can toggle with one tap:
+//   - "luxuryDark"   black + gold, premium feel
+//   - "brightModern" white + blue, calm classic feel
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Home as HomeIcon,
+  Diamond,
   Film,
   PlayCircle,
-  Gem,
   MessageCircle,
   Users,
-  RefreshCw,
-  ArrowLeftRight,
-  Lightbulb,
+  Sparkles,
+  ChevronLeft,
+  ChevronRight,
+  Moon,
+  Sun,
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import LanguageSwitcher from './LanguageSwitcher';
 
-const APP_BACKGROUND_IMAGE =
-  'https://static.prod-images.emergentagent.com/jobs/40eca190-5242-4463-8c95-bc5f66df29cb/images/e35d59ccd161791b6e9cbecdfa426302685267afa2c8e806fa233976816403de.png';
-
-const ICONS = {
-  home: HomeIcon,
-  clips: Film,
-  watch: PlayCircle,
-  gems: Gem,
-  chat: MessageCircle,
-  friends: Users,
-  fortunes: Gem,
-};
-
-const AppIcon = ({ name, size = 18, color = '#fff', strokeWidth = 2.25 }) => {
-  const Comp = ICONS[name] || HomeIcon;
-  return <Comp size={size} color={color} strokeWidth={strokeWidth} className="shrink-0" />;
-};
-
-const HOME_CARD_BACKGROUND_PRESETS = {
+const themes = {
   luxuryDark: {
-    featuredFortunes: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1400&q=80',
-    statGems: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?auto=format&fit=crop&w=1200&q=80',
-    statReels: 'https://images.unsplash.com/photo-1524253482453-3fed8d2fe12b?auto=format&fit=crop&w=1200&q=80',
-    statChat: 'https://images.unsplash.com/photo-1526498460520-4c246339dccb?auto=format&fit=crop&w=1200&q=80',
-    quickAds: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80',
-    quickReels: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
-    quickChat: 'https://images.unsplash.com/photo-1525182008055-f88b95ff7980?auto=format&fit=crop&w=1200&q=80',
-    quickFortunes: 'https://images.unsplash.com/photo-1559526324-593bc073d938?auto=format&fit=crop&w=1200&q=80',
-    primaryWatch: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=80',
-    primaryFortunes: 'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1200&q=80',
-    reels: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1400&q=80',
-    friends: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1400&q=80',
-    chat: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1400&q=80',
-    tip: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1400&q=80',
+    id: 'luxuryDark',
+    bg: 'bg-gradient-to-b from-[#06070d] via-[#0a0b14] to-[#0d0d1a]',
+    surface: 'bg-[#11121b]',
+    border: 'border-yellow-400/10',
+    text: 'text-white',
+    textMuted: 'text-gray-400',
+    accent: 'text-yellow-400',
+    accentBg: 'bg-yellow-400/12',
+    accentBorder: 'border-yellow-400/20',
+    label: 'فاخر',
+    labelEn: 'Luxury',
+    icon: Moon,
   },
   brightModern: {
-    featuredFortunes: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1400&q=80',
-    statGems: 'https://images.unsplash.com/photo-1473186505569-9c61870c11f9?auto=format&fit=crop&w=1200&q=80',
-    statReels: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80',
-    statChat: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1200&q=80',
-    quickAds: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80',
-    quickReels: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=1200&q=80',
-    quickChat: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80',
-    quickFortunes: 'https://images.unsplash.com/photo-1553729459-efe14ef6055d?auto=format&fit=crop&w=1200&q=80',
-    primaryWatch: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
-    primaryFortunes: 'https://images.unsplash.com/photo-1462899006636-339e08d1844e?auto=format&fit=crop&w=1200&q=80',
-    reels: 'https://images.unsplash.com/photo-1496559249665-c7e2874707ea?auto=format&fit=crop&w=1400&q=80',
-    friends: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1400&q=80',
-    chat: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=1400&q=80',
-    tip: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1400&q=80',
+    id: 'brightModern',
+    bg: 'bg-gradient-to-b from-[#f4f6fb] via-[#eaf0fa] to-[#dfe8f5]',
+    surface: 'bg-white shadow-sm',
+    border: 'border-blue-500/15',
+    text: 'text-slate-900',
+    textMuted: 'text-slate-500',
+    accent: 'text-blue-500',
+    accentBg: 'bg-blue-500/10',
+    accentBorder: 'border-blue-500/25',
+    label: 'كلاسيك',
+    labelEn: 'Classic',
+    icon: Sun,
   },
 };
 
-const QuickStatSticker = ({ iconName, value, label, tintColor, backgroundImage }) => (
+const Pill = ({ icon: Icon, label, accent, bg, textColor }) => (
+  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${bg}`}>
+    <Icon size={11} className={accent} />
+    <span className={`text-[11px] font-bold ${textColor}`}>{label}</span>
+  </span>
+);
+
+const StatCard = ({ icon: Icon, value, label, theme }) => (
   <div
-    className="flex-1 relative rounded-[14px] overflow-hidden min-h-[82px]"
-    style={{
-      backgroundImage: `url(${backgroundImage})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-    }}
+    className={`flex-1 flex flex-col items-center py-2.5 px-2 rounded-2xl border ${theme.surface} ${theme.border}`}
   >
-    <div className="h-full w-full px-2 py-2.5 flex flex-col items-center justify-center gap-[3px]">
-      <AppIcon name={iconName} size={18} color={tintColor} strokeWidth={2.5} />
-      <div
-        className="text-white text-[15px] font-extrabold leading-none"
-        style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6)' }}
-      >
-        {value}
-      </div>
-      <div
-        className="text-white/95 text-[10px] font-semibold"
-        style={{ textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}
-      >
-        {label}
-      </div>
+    <div
+      className={`w-7 h-7 rounded-lg border flex items-center justify-center mb-1.5 ${theme.accentBg} ${theme.accentBorder}`}
+    >
+      <Icon size={14} className={theme.accent} />
     </div>
+    <span className={`text-sm font-extrabold ${theme.text}`}>{value}</span>
+    <span className={`text-[10px] mt-0.5 ${theme.textMuted}`}>{label}</span>
   </div>
 );
 
-const QuickActionPill = ({ iconName, title, subtitle, backgroundImage, onClick, testId }) => (
-  <button
-    onClick={onClick}
-    className="relative rounded-[14px] overflow-hidden text-right"
-    style={{ width: 'calc((100% - 8px) / 2)' }}
-    data-testid={testId}
-  >
-    <img src={backgroundImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
-    <div className="relative flex items-center gap-2 px-3 py-[11px] min-h-[64px]">
-      <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/20">
-        <AppIcon name={iconName} size={17} strokeWidth={2.5} />
+const ActionRow = ({ icon: Icon, title, subtitle, theme, onPress, badge, isRTL }) => {
+  const Chev = isRTL ? ChevronLeft : ChevronRight;
+  return (
+    <button
+      onClick={onPress}
+      className={`w-full flex items-center gap-3 py-3 px-3.5 mx-4 mb-2 rounded-2xl border transition-all hover:scale-[1.01] active:scale-[0.99] ${theme.surface} ${theme.border}`}
+      data-testid={`home-action-${title}`}
+    >
+      <div
+        className={`w-10 h-10 rounded-xl border flex items-center justify-center ${theme.accentBg} ${theme.accentBorder}`}
+      >
+        <Icon size={20} className={theme.accent} />
       </div>
       <div className="flex-1 text-right min-w-0">
-        <div
-          className="text-white text-[12px] font-extrabold leading-[16px] truncate"
-          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 6px rgba(0,0,0,0.7)' }}
-        >
-          {title}
+        <div className="flex items-center gap-1.5 justify-end">
+          {badge && (
+            <span
+              className={`px-1.5 py-0.5 rounded-md border text-[10px] font-bold ${theme.accentBg} ${theme.accentBorder} ${theme.accent}`}
+            >
+              {badge}
+            </span>
+          )}
+          <span className={`text-sm font-bold ${theme.text} truncate`}>{title}</span>
         </div>
-        <div
-          className="text-white/95 text-[10px] leading-[13px] mt-0.5 truncate"
-          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}
-        >
-          {subtitle}
-        </div>
+        <div className={`text-[11px] mt-0.5 ${theme.textMuted} truncate`}>{subtitle}</div>
       </div>
-    </div>
-  </button>
-);
+      <Chev size={16} className={`${theme.textMuted} opacity-50`} />
+    </button>
+  );
+};
 
-const PrimaryActionCard = ({ iconName, title, subtitle, backgroundImage, onClick, testId }) => (
-  <button
-    onClick={onClick}
-    className="flex-1 rounded-[14px] overflow-hidden relative text-right"
-    data-testid={testId}
-  >
-    <img src={backgroundImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
-    <div className="relative min-h-[86px] p-[13px]">
-      <div className="w-[34px] h-[34px] rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center mb-2">
-        <AppIcon name={iconName} size={18} strokeWidth={2.5} />
-      </div>
-      <div className="space-y-[3px] text-right">
-        <div
-          className="text-white text-[13px] font-extrabold leading-[17px]"
-          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 6px rgba(0,0,0,0.7)' }}
-        >
-          {title}
-        </div>
-        <div
-          className="text-white/95 text-[10px] leading-[14px]"
-          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}
-        >
-          {subtitle}
-        </div>
-      </div>
-    </div>
-  </button>
-);
-
-const FeaturedCard = ({ title, subtitle, image, iconName, onClick, badge, testId }) => (
-  <button
-    onClick={onClick}
-    className="w-full rounded-2xl overflow-hidden relative shadow-xl group text-right"
-    style={{ boxShadow: '0 4px 12px rgba(236,72,153,0.35)' }}
-    data-testid={testId}
-  >
-    <img
-      src={image}
-      alt={title}
-      className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
-    />
-    <div className="relative h-[164px] p-4 flex flex-col justify-between">
-      {badge && (
-        <div className="self-start bg-emerald-500 px-3 py-1 rounded-xl shadow-md">
-          <span
-            className="text-white text-[11px] font-bold"
-            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
-          >
-            {badge}
-          </span>
-        </div>
-      )}
-      <div className="flex items-end justify-between">
-        <div className="text-right flex-1">
-          <h3
-            className="text-white text-[21px] font-extrabold"
-            style={{ textShadow: '0 2px 6px rgba(0,0,0,0.95), 0 0 12px rgba(0,0,0,0.8)' }}
-          >
-            {title}
-          </h3>
-          <p
-            className="text-white/95 text-[12px] mt-1 leading-[16px]"
-            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
-          >
-            {subtitle}
-          </p>
-        </div>
-        <div className="p-2">
-          <AppIcon name={iconName} size={20} color="#fff" strokeWidth={2.5} />
-        </div>
-      </div>
-    </div>
-  </button>
-);
-
-const FeatureCard = ({ title, subtitle, image, iconName, onClick, badge, testId }) => (
-  <button
-    onClick={onClick}
-    className="flex-1 rounded-[14px] overflow-hidden relative group text-right"
-    data-testid={testId}
-  >
-    <img
-      src={image}
-      alt={title}
-      className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
-    />
-    <div className="relative h-[110px] p-3 flex flex-col justify-between">
-      {badge && (
-        <div
-          className="self-start px-2 py-[3px] rounded-lg shadow-md"
-          style={{ backgroundColor: 'rgba(96,165,250,0.95)' }}
-        >
-          <span
-            className="text-white text-[9px] font-bold"
-            style={{ textShadow: '0 1px 1px rgba(0,0,0,0.5)' }}
-          >
-            {badge}
-          </span>
-        </div>
-      )}
-      <div className="flex items-end justify-between">
-        <div className="text-right flex-1">
-          <h4
-            className="text-white text-[14px] font-extrabold"
-            style={{ textShadow: '0 2px 4px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.75)' }}
-          >
-            {title}
-          </h4>
-          <p
-            className="text-white/95 text-[10px] mt-0.5 leading-[13px]"
-            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}
-          >
-            {subtitle}
-          </p>
-        </div>
-        <div className="p-1.5">
-          <AppIcon name={iconName} size={16} color="#fff" strokeWidth={2.5} />
-        </div>
-      </div>
-    </div>
-  </button>
-);
-
-const PRESET_STORAGE_KEY = 'saqr_home_preset';
-
-const HomePage = ({ user, onNavigate, onNavigateToAds }) => {
+const HomePage = ({
+  user,
+  homePreset,
+  onHomePresetChange,
+  onNavigateToAds,
+  onNavigateToClips,
+  onNavigateToChat,
+  onNavigateToFortunes,
+  onNavigateToFriends,
+  onRefresh,
+}) => {
   const { language } = useLanguage();
   const isArabic = language === 'ar';
-  const [homePreset, setHomePreset] = useState('luxuryDark');
-  const [fadeOpacity, setFadeOpacity] = useState(1);
+  const theme = themes[homePreset === 'brightModern' ? 'brightModern' : 'luxuryDark'];
+  const otherTheme = themes[theme.id === 'luxuryDark' ? 'brightModern' : 'luxuryDark'];
+  const [fadeKey, setFadeKey] = useState(0);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(PRESET_STORAGE_KEY);
-      if (saved === 'luxuryDark' || saved === 'brightModern') {
-        setHomePreset(saved);
-      }
-    } catch (_) { /* ignore */ }
-  }, []);
+    setFadeKey((k) => k + 1);
+  }, [theme.id]);
 
-  const bg = HOME_CARD_BACKGROUND_PRESETS[homePreset] || HOME_CARD_BACKGROUND_PRESETS.luxuryDark;
+  useEffect(() => {
+    if (onRefresh) onRefresh();
+  }, []);
 
   const copy = useMemo(
     () => ({
-      defaultPlayer: isArabic ? 'لاعب' : 'Player',
       welcomePrefix: isArabic ? 'أهلاً' : 'Welcome',
-      welcomeSub: isArabic ? 'مرحباً بك في صقر' : 'Welcome to Saqr',
-      fortunes: isArabic ? 'ثروات صقر' : 'Saqr Fortunes',
-      newLabel: isArabic ? 'جديد' : 'NEW',
-      fortunesSubtitle: isArabic
-        ? 'اربح جواهر صقر للاستبدال بالمال الحقيقي!'
-        : 'Earn Saqr gems and exchange them for real cash!',
-      exchangeBadge: isArabic ? '500 جوهرة = 3 ريال' : '500 gems = 3 SAR',
-      fortunesDesc: isArabic
-        ? 'إعلانات AdMob مكتملة • مكافأة ثابتة 5 جواهر • سحب مرن'
-        : 'Completed AdMob ads • Fixed 5 gems reward • Flexible cashout',
-      watchAndEarn: isArabic ? 'شاهد واربح' : 'Watch & Earn',
-      watchAndEarnSubtitle: isArabic
-        ? 'إعلانات AdMob كاملة الشاشة + إعلانات المعلنين'
-        : 'Full-screen AdMob + advertiser ads',
-      clips: isArabic ? 'ريلز المجتمع' : 'Community Reels',
-      clipsSub: isArabic ? 'مقاطع 15 ثانية من المستخدمين' : '15-second clips by users',
-      friends: isArabic ? 'الأصدقاء' : 'Friends',
-      friendsSub: isArabic ? 'أضف أصدقاء جدد' : 'Add new friends',
-      tip: isArabic
-        ? 'ادعُ أصدقاءك واربح جواهر صقر مضاعفة!'
-        : 'Invite friends and earn boosted Saqr gems!',
-      adsPill: isArabic ? 'صفحة الإعلانات' : 'Ads Feed',
-      adsPillSub: isArabic ? 'AdMob + المعلنين' : 'AdMob + advertisers',
-      reelsPill: isArabic ? 'صفحة الريلز' : 'Reels Feed',
-      reelsPillSub: isArabic ? '15 ثانية لكل فيديو' : '15s per reel',
-      fortunesPill: isArabic ? 'ثروات صقر' : 'Saqr Fortunes',
-      fortunesPillSub: isArabic ? '500 = 3 ريال' : '500 = 3 SAR',
-      styleLuxury: isArabic ? 'فاخر داكن' : 'Luxury Dark',
-      styleBright: isArabic ? 'مشرق عصري' : 'Bright Modern',
-      gemsLabel: isArabic ? 'جواهر' : 'Gems',
-      reelsLabel: isArabic ? 'ريلز' : 'Reels',
-      chatLabel: isArabic ? 'دردشة' : 'Chat',
+      welcomeSub: isArabic
+        ? 'ابدأ يومك بمشاهدة إعلانات واكتساب جواهر صقر'
+        : 'Watch ads & earn Saqr gems',
+      defaultPlayer: isArabic ? 'لاعب' : 'Player',
+      gems: isArabic ? 'جوهرة' : 'Gems',
+      reels: isArabic ? 'ريلز' : 'Reels',
+      friends: isArabic ? 'أصدقاء' : 'Friends',
+      today: isArabic ? 'اليوم' : 'Today',
+      balanceLine: isArabic ? 'رصيدك الحالي • يُحدّث تلقائياً' : 'Auto-synced balance',
+      sectionExplore: isArabic ? 'استكشف' : 'EXPLORE',
+      sectionEarn: isArabic ? 'اكسب جواهر' : 'EARN',
+      sectionConnect: isArabic ? 'تواصل' : 'CONNECT',
+      adsTitle: isArabic ? 'شاهد وأكسب' : 'Watch & Earn',
+      adsSub: isArabic ? 'إعلانات قصيرة = جواهر فورية' : 'Short ads = instant gems',
+      reelsTitle: isArabic ? 'ريلز المجتمع' : 'Community Reels',
+      reelsSub: isArabic ? '15 ثانية لكل مقطع' : '15 seconds each',
+      fortunesTitle: isArabic ? 'ثروات صقر' : 'Saqr Fortunes',
+      fortunesSub: isArabic ? '500 جوهرة = 3 ﷼' : '500 gems = 3 SAR',
+      chatTitle: isArabic ? 'الدردشة العامة' : 'Global Chat',
+      chatSub: isArabic ? 'مجانية بالكامل' : 'Always free',
+      friendsTitle: isArabic ? 'الأصدقاء' : 'Friends',
+      friendsSub: isArabic ? 'أضف وتواصل' : 'Add & connect',
+      free: isArabic ? 'مجاني' : 'Free',
+      new: isArabic ? 'جديد' : 'New',
+      footer: isArabic ? 'صقر — اكسب من مشاهداتك اليومية' : 'Saqr — earn from your daily views',
     }),
-    [isArabic]
+    [isArabic],
   );
 
+  const handleToggleTheme = () => {
+    const next = theme.id === 'luxuryDark' ? 'brightModern' : 'luxuryDark';
+    onHomePresetChange && onHomePresetChange(next);
+  };
+
   const userName = user?.name || copy.defaultPlayer;
-
-  const handleQuickPresetToggle = useCallback(() => {
-    const next = homePreset === 'brightModern' ? 'luxuryDark' : 'brightModern';
-    setFadeOpacity(0.35);
-    setTimeout(() => {
-      setHomePreset(next);
-      try {
-        localStorage.setItem(PRESET_STORAGE_KEY, next);
-      } catch (_) { /* ignore */ }
-      setTimeout(() => setFadeOpacity(1), 60);
-    }, 140);
-  }, [homePreset]);
-
-  const goAds = onNavigateToAds || (() => onNavigate && onNavigate('ads'));
-  const goClips = () => onNavigate && onNavigate('clips');
-  const goFortunes = () => onNavigate && onNavigate('fortunes');
-  const goFriends = () => onNavigate && onNavigate('friends');
-  const goChat = () => onNavigate && onNavigate('chat');
-
-  // Quick pills - 3 items like the latest mobile (ads, reels, fortunes)
-  const quickPrimaryCards = [
-    {
-      id: 'ads',
-      title: copy.adsPill,
-      subtitle: copy.adsPillSub,
-      iconName: 'watch',
-      onClick: goAds,
-      backgroundImage: bg.quickAds,
-    },
-    {
-      id: 'reels',
-      title: copy.reelsPill,
-      subtitle: copy.reelsPillSub,
-      iconName: 'clips',
-      onClick: goClips,
-      backgroundImage: bg.quickReels,
-    },
-    {
-      id: 'fortunes',
-      title: copy.fortunesPill,
-      subtitle: copy.fortunesPillSub,
-      iconName: 'fortunes',
-      onClick: goFortunes,
-      backgroundImage: bg.quickFortunes,
-    },
-  ];
+  const gemsValue = Number(user?.saqr_gems ?? user?.saqr_points ?? user?.points ?? 0) || 0;
 
   return (
-    <div
-      className="min-h-screen relative pb-28"
-      data-testid="home-page"
-      dir={isArabic ? 'rtl' : 'ltr'}
-    >
-      {/* Fixed background */}
-      <div
-        className="fixed inset-0 -z-10"
-        style={{
-          backgroundImage: `url(${APP_BACKGROUND_IMAGE})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      />
-      <div
-        className="fixed inset-0 -z-10"
-        style={{
-          background:
-            'linear-gradient(to bottom, rgba(15,23,42,0.26) 0%, rgba(30,41,59,0.68) 50%, rgba(30,27,75,0.88) 100%)',
-        }}
-      />
-
-      <div
-        className="max-w-2xl mx-auto px-[18px] pt-6 pb-4 transition-opacity duration-200"
-        style={{ opacity: fadeOpacity }}
-      >
-        {/* Header Shell */}
-        <div
-          className="mb-4 rounded-[16px] border overflow-hidden"
-          style={{
-            borderColor: 'rgba(148,163,184,0.2)',
-            backgroundColor: 'rgba(2,6,23,0.42)',
-          }}
-        >
-          <div className="flex items-center justify-between px-3 py-[11px] gap-2">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <LanguageSwitcher />
-              <div className="flex-1 min-w-0 text-right">
-                <div
-                  className="text-[17px] font-extrabold leading-tight truncate"
-                  style={{ color: '#f8fafc' }}
-                >
-                  {copy.welcomePrefix} {userName}
-                </div>
-                <div
-                  className="text-[11px] leading-[15px] mt-0.5 truncate"
-                  style={{ color: 'rgba(226,232,240,0.72)' }}
-                >
-                  {copy.welcomeSub}
-                </div>
-              </div>
+    <div className={`min-h-screen ${theme.bg} pb-28`} key={fadeKey}>
+      <div className="animate-fadeIn">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 pt-5 pb-3">
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            <LanguageSwitcher />
+            <div className="flex-1 min-w-0">
+              <h1 className={`text-base font-extrabold truncate ${theme.text} text-right`}>
+                {copy.welcomePrefix} {userName}
+              </h1>
+              <p className={`text-[11px] ${theme.textMuted} truncate text-right mt-0.5`}>
+                {copy.welcomeSub}
+              </p>
             </div>
-            <button
-              onClick={handleQuickPresetToggle}
-              className="flex items-center gap-1.5 rounded-full border transition hover:bg-slate-900/70"
-              style={{
-                backgroundColor: 'rgba(15,23,42,0.55)',
-                borderColor: 'rgba(148,163,184,0.32)',
-                paddingInline: '9px',
-                paddingBlock: '6px',
-              }}
-              data-testid="home-preset-toggle"
-            >
-              <ArrowLeftRight size={14} color="#e2e8f0" className="shrink-0" />
-              <span
-                className="text-[9px] font-bold whitespace-nowrap"
-                style={{ color: '#e2e8f0' }}
-              >
-                {homePreset === 'brightModern' ? copy.styleBright : copy.styleLuxury}
-              </span>
-            </button>
           </div>
-        </div>
 
-        {/* Quick Stats Row */}
-        <div className="flex gap-2 mb-3">
-          <QuickStatSticker
-            iconName="gems"
-            value={Number(user?.saqr_gems ?? user?.saqr_points ?? user?.points ?? 0) || 0}
-            label={copy.gemsLabel}
-            tintColor="#fbbf24"
-            backgroundImage={bg.statGems}
-          />
-          <QuickStatSticker
-            iconName="clips"
-            value={user?.clips_count || 0}
-            label={copy.reelsLabel}
-            tintColor="#a5f3fc"
-            backgroundImage={bg.statReels}
-          />
-          <QuickStatSticker
-            iconName="chat"
-            value="24/7"
-            label={copy.chatLabel}
-            tintColor="#93c5fd"
-            backgroundImage={bg.statChat}
-          />
-        </div>
-
-        {/* Quick Actions - 3 Pills (flex-wrap) */}
-        <div className="flex flex-wrap gap-2 mb-[18px]">
-          {quickPrimaryCards.map((card) => (
-            <QuickActionPill
-              key={card.id}
-              iconName={card.iconName}
-              title={card.title}
-              subtitle={card.subtitle}
-              backgroundImage={card.backgroundImage}
-              onClick={card.onClick}
-              testId={`home-pill-${card.id}`}
+          {/* Theme toggle */}
+          <button
+            onClick={handleToggleTheme}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border ${theme.surface} ${theme.border}`}
+            data-testid="home-theme-toggle"
+          >
+            <theme.icon size={13} className={theme.accent} />
+            <span className={`text-[11px] font-bold ${theme.text}`}>
+              {isArabic ? theme.label : theme.labelEn}
+            </span>
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${otherTheme.accent.replace('text-', 'bg-')}`}
             />
-          ))}
+          </button>
         </div>
 
-        {/* Saqr Fortunes Section */}
-        <div className="mb-[18px]">
-          <div className="flex items-center gap-2 mb-2.5">
-            <AppIcon name="fortunes" size={18} color="#ec4899" />
-            <h2 className="text-white text-[17px] font-extrabold flex-1 text-right">
-              {copy.fortunes}
-            </h2>
-            <div
-              className="px-2.5 py-1 rounded-lg"
-              style={{ backgroundColor: '#22c55e' }}
-            >
-              <span className="text-white text-[10px] font-bold">{copy.newLabel}</span>
-            </div>
+        {/* Hero balance */}
+        <div className={`mx-4 mb-5 p-4 rounded-3xl border ${theme.surface} ${theme.border} shadow-2xl`}>
+          <div className="flex items-center justify-between mb-1">
+            <Pill
+              icon={Diamond}
+              label={copy.gems}
+              accent={theme.accent}
+              bg={theme.accentBg}
+              textColor={theme.text}
+            />
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
           </div>
-
-          <FeaturedCard
-            title={copy.fortunes}
-            subtitle={copy.fortunesSubtitle}
-            image={bg.featuredFortunes}
-            iconName="fortunes"
-            onClick={goFortunes}
-            badge={copy.exchangeBadge}
-            testId="home-featured-fortunes"
-          />
-
-          <p className="text-white/60 text-[12px] leading-[17px] text-center mt-2.5">
-            {copy.fortunesDesc}
-          </p>
-        </div>
-
-        {/* Dual Cards: Friends + Chat (no duplicates) */}
-        <div className="flex gap-2.5 mb-2.5">
-          <FeatureCard
-            title={copy.friends}
-            subtitle={copy.friendsSub}
-            image={bg.friends}
-            iconName="friends"
-            onClick={goFriends}
-            testId="home-card-friends"
-          />
-          <FeatureCard
-            title={copy.chat || (isArabic ? 'الدردشة' : 'Chat')}
-            subtitle={isArabic ? 'تواصل مع اللاعبين' : 'Connect with players'}
-            image={bg.chat}
-            iconName="chat"
-            onClick={goChat}
-            badge={isArabic ? 'مجاني' : 'Free'}
-            testId="home-card-chat"
-          />
-        </div>
-
-        {/* Tip Card - no overlay, only image */}
-        <div className="relative rounded-xl overflow-hidden mt-1.5 shadow-lg">
-          <img src={bg.tip} alt="" className="absolute inset-0 w-full h-full object-cover" />
-          <div className="relative flex items-center gap-2.5 p-3.5">
-            <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm border border-amber-400/40 flex items-center justify-center shrink-0">
-              <Lightbulb size={18} color="#fbbf24" strokeWidth={2.5} />
-            </div>
-            <p
-              className="text-white text-[12px] leading-[17px] flex-1 text-right font-semibold"
-              style={{ textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.75)' }}
-            >
-              {copy.tip}
-            </p>
+          <div className={`text-4xl font-black text-right mt-1 tracking-tight ${theme.text}`}>
+            {gemsValue.toLocaleString('en-US')}
           </div>
+          <p className={`text-[11px] text-right ${theme.textMuted}`}>{copy.balanceLine}</p>
+
+          {/* Mini stats */}
+          <div className="flex gap-2 mt-3.5">
+            <StatCard icon={Film} value={user?.clips_count || 0} label={copy.reels} theme={theme} />
+            <StatCard
+              icon={Users}
+              value={user?.friends_count || 0}
+              label={copy.friends}
+              theme={theme}
+            />
+            <StatCard
+              icon={PlayCircle}
+              value={user?.watched_ads_today || 0}
+              label={copy.today}
+              theme={theme}
+            />
+          </div>
+        </div>
+
+        {/* Earn */}
+        <p
+          className={`text-[11px] font-bold tracking-widest px-5 mt-2 mb-2 ${theme.textMuted} text-right`}
+        >
+          {copy.sectionEarn}
+        </p>
+        <ActionRow
+          icon={PlayCircle}
+          title={copy.adsTitle}
+          subtitle={copy.adsSub}
+          theme={theme}
+          onPress={onNavigateToAds}
+          isRTL={isArabic}
+        />
+        <ActionRow
+          icon={Diamond}
+          title={copy.fortunesTitle}
+          subtitle={copy.fortunesSub}
+          theme={theme}
+          onPress={onNavigateToFortunes}
+          badge={copy.new}
+          isRTL={isArabic}
+        />
+
+        {/* Explore */}
+        <p
+          className={`text-[11px] font-bold tracking-widest px-5 mt-3 mb-2 ${theme.textMuted} text-right`}
+        >
+          {copy.sectionExplore}
+        </p>
+        <ActionRow
+          icon={Film}
+          title={copy.reelsTitle}
+          subtitle={copy.reelsSub}
+          theme={theme}
+          onPress={onNavigateToClips}
+          isRTL={isArabic}
+        />
+
+        {/* Connect */}
+        <p
+          className={`text-[11px] font-bold tracking-widest px-5 mt-3 mb-2 ${theme.textMuted} text-right`}
+        >
+          {copy.sectionConnect}
+        </p>
+        <ActionRow
+          icon={MessageCircle}
+          title={copy.chatTitle}
+          subtitle={copy.chatSub}
+          theme={theme}
+          onPress={onNavigateToChat}
+          badge={copy.free}
+          isRTL={isArabic}
+        />
+        <ActionRow
+          icon={Users}
+          title={copy.friendsTitle}
+          subtitle={copy.friendsSub}
+          theme={theme}
+          onPress={onNavigateToFriends}
+          isRTL={isArabic}
+        />
+
+        {/* Footer */}
+        <div className="flex items-center justify-center gap-1.5 mt-6 px-4">
+          <span className="w-1 h-1 rounded-full bg-emerald-400" />
+          <p className={`text-[10px] ${theme.textMuted}`}>{copy.footer}</p>
         </div>
       </div>
     </div>

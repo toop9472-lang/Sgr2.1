@@ -52,6 +52,13 @@ from routes.support_routes import router as support_router
 from routes.two_factor_routes import router as two_factor_router
 from routes.comments_routes import router as comments_router
 from routes.moderation_routes import router as moderation_router
+from routes.premium_features_routes import (
+    stories_router,
+    hashtags_router,
+    creator_fund_router,
+    push_router,
+    share_router,
+)
 from routes.challenges_routes import router as challenges_router
 from routes.phone_auth_routes import router as phone_auth_router
 from routes.games_routes import router as games_router
@@ -438,6 +445,11 @@ api_router.include_router(support_router)
 api_router.include_router(two_factor_router)
 api_router.include_router(comments_router)
 api_router.include_router(moderation_router)
+api_router.include_router(stories_router)
+api_router.include_router(hashtags_router)
+api_router.include_router(creator_fund_router)
+api_router.include_router(push_router)
+api_router.include_router(share_router)
 api_router.include_router(challenges_router)
 api_router.include_router(phone_auth_router)
 api_router.include_router(games_router)

@@ -20,10 +20,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Video, ResizeMode } from "expo-av";
 import * as ImagePicker from "expo-image-picker";
+import * as Sharing from "expo-sharing";
+import * as Linking from "expo-linking";
 import api from "../services/api";
 import { APP_BACKGROUND_IMAGE } from "../constants/uiAssets";
 import { hapticLight, hapticMedium } from "../utils/haptics";
 import ReportBlockSheet from "../components/ReportBlockSheet";
+import StoriesBar from "../components/StoriesBar";
+import StoryViewer from "../components/StoryViewer";
+import TrendingHashtags from "../components/TrendingHashtags";
 
 const MAX_CLIP_DURATION = 15;
 const CLIP_PLACEHOLDERS = [
@@ -114,7 +119,9 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [followLoadingUserId, setFollowLoadingUserId] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [reportSheet, setReportSheet] = useState(null); // { targetId, targetUserId, targetUserName }
+  const [reportSheet, setReportSheet] = useState(null);
+  const [activeStories, setActiveStories] = useState(null);
+  const [showTrending, setShowTrending] = useState(false);
   const listRef = useRef(null);
   const touchStartRef = useRef({ y: 0, x: 0, time: 0 });
   const { height: screenHeight } = Dimensions.get("window");
@@ -582,6 +589,29 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
                   </TouchableOpacity>
                 )}
 
+                <TouchableOpacity
+                  style={styles.reelActionBtn}
+                  onPress={async () => {
+                    hapticLight();
+                    try {
+                      const shareUrl = `https://saqr.app/clips/${item.clip_id}`;
+                      if (await Sharing.isAvailableAsync()) {
+                        await Sharing.shareAsync(shareUrl, {
+                          mimeType: "text/plain",
+                          dialogTitle: "شارك هذا الريل",
+                        });
+                      } else {
+                        await Linking.openURL(`mailto:?subject=ريل صقر&body=${shareUrl}`);
+                      }
+                    } catch (_) {
+                      /* user cancelled */
+                    }
+                  }}
+                >
+                  <Ionicons name="share-social-outline" size={20} color="#fff" />
+                  <Text style={styles.actionText}>مشاركة</Text>
+                </TouchableOpacity>
+
                 {item.user_id && item.user_id !== userId && (
                   <TouchableOpacity
                     style={[
@@ -695,13 +725,30 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
             <Ionicons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>ميدان المقاطع</Text>
-          <TouchableOpacity
-            style={styles.headerBtn}
-            onPress={() => setShowCreate(true)}
-          >
-            <Ionicons name="add" size={22} color="#22d3ee" />
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <TouchableOpacity
+              style={styles.headerBtn}
+              onPress={() => {
+                hapticLight();
+                setShowTrending(true);
+              }}
+            >
+              <Ionicons name="trending-up" size={20} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.headerBtn}
+              onPress={() => setShowCreate(true)}
+            >
+              <Ionicons name="add" size={22} color="#22d3ee" />
+            </TouchableOpacity>
+          </View>
         </View>
+
+        {/* Stories carousel */}
+        <StoriesBar
+          user={user}
+          onOpenUserStories={(u) => setActiveStories(u)}
+        />
 
         {loading ? (
           <View style={styles.loadingWrap}>
@@ -925,8 +972,25 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
         targetUserId={reportSheet?.targetUserId}
         targetUserName={reportSheet?.targetUserName}
         onBlockedUser={(blockedId) => {
-          // Hide this user's clips locally after blocking
           setClips((prev) => prev.filter((c) => c.user_id !== blockedId));
+        }}
+      />
+
+      <StoryViewer
+        visible={Boolean(activeStories)}
+        userStories={activeStories}
+        viewerId={userId}
+        onClose={() => setActiveStories(null)}
+      />
+
+      <TrendingHashtags
+        visible={showTrending}
+        viewerId={userId}
+        onClose={() => setShowTrending(false)}
+        onPlayClip={(clip) => {
+          // Push selected clip to top of feed
+          setClips((prev) => [clip, ...prev.filter((c) => c.clip_id !== clip.clip_id)]);
+          setActiveIndex(0);
         }}
       />
     </ImageBackground>

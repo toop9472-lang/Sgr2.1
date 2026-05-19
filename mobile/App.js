@@ -25,6 +25,7 @@ import {
 import colors from "./src/styles/colors";
 import * as NavigationBar from "expo-navigation-bar";
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from "expo-av";
+import * as Linking from "expo-linking";
 
 // Ignore specific warnings that don't affect functionality
 LogBox.ignoreLogs([
@@ -168,7 +169,35 @@ function AppContent() {
     }
   };
 
-  // Setup push notifications
+  // Deep links: open the app at the right screen when a clip URL is tapped
+  useEffect(() => {
+    const handleUrl = (urlOrEvent) => {
+      const url = typeof urlOrEvent === "string" ? urlOrEvent : urlOrEvent?.url;
+      if (!url) return;
+      try {
+        const parsed = Linking.parse(url);
+        const path = parsed?.path || "";
+        if (path.startsWith("clips/")) setCurrentPage("clips");
+        else if (path.startsWith("chat")) setCurrentPage("chat");
+        else if (path.startsWith("watch")) setCurrentPage("watch");
+        else if (path.startsWith("profile")) setCurrentPage("profile");
+      } catch (_) {
+        /* ignore malformed urls */
+      }
+    };
+    // Initial URL (cold start)
+    Linking.getInitialURL().then(handleUrl).catch(() => {});
+    const sub = Linking.addEventListener("url", handleUrl);
+    return () => {
+      try {
+        sub?.remove?.();
+      } catch (_) {
+        /* ignore */
+      }
+    };
+  }, []);
+
+  // Setup push notifications + register Expo token with backend
   const setupNotifications = async () => {
     if (!NotificationService) {
       console.log("NotificationService not available, skipping setup");
@@ -176,9 +205,19 @@ function AppContent() {
     }
 
     try {
-      // Register for push notifications
+      // Register for push notifications (returns the token)
+      let token = null;
       if (NotificationService.registerForPushNotifications) {
-        await NotificationService.registerForPushNotifications();
+        token = await NotificationService.registerForPushNotifications();
+      }
+
+      // Persist Expo token on backend so we can dispatch pushes from server
+      if (token && userId) {
+        try {
+          await api.registerPushToken(userId, token, "ios");
+        } catch (_) {
+          /* silent — non-critical */
+        }
       }
 
       // Schedule daily reward reminder
@@ -200,6 +239,12 @@ function AppContent() {
               if (!data) return;
 
               console.log("Notification response:", data);
+
+              // Deep-link routing based on push data
+              if (data.target === "clips") setCurrentPage("clips");
+              else if (data.target === "chat") setCurrentPage("chat");
+              else if (data.target === "watch") setCurrentPage("watch");
+              else if (data.target === "fortunes") setCurrentPage("fortunes");
 
               // Navigate based on notification type
               const TYPES = NotificationService.NOTIFICATION_TYPES || {};

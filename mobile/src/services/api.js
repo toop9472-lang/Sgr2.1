@@ -648,6 +648,53 @@ export const api = {
     });
   },
 
+  // ---- Premium features (Stories, Hashtags, Push, Creator Fund) ----
+  async getStoriesFeed(viewerId) {
+    const q = viewerId ? `?viewer_id=${encodeURIComponent(viewerId)}` : "";
+    return this.fetch(`/api/stories/feed${q}`);
+  },
+  async createStory(payload) {
+    return this.fetch("/api/stories/create", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  async viewStory(storyId, viewerId) {
+    return this.fetch(
+      `/api/stories/${encodeURIComponent(storyId)}/view?viewer_id=${encodeURIComponent(viewerId || "")}`,
+      { method: "POST" },
+    );
+  },
+  async deleteStory(storyId, userId) {
+    return this.fetch(
+      `/api/stories/${encodeURIComponent(storyId)}?user_id=${encodeURIComponent(userId)}`,
+      { method: "DELETE" },
+    );
+  },
+  async getTrendingHashtags(limit = 20) {
+    return this.fetch(`/api/hashtags/trending?limit=${limit}`);
+  },
+  async getClipsByHashtag(tag, viewerId) {
+    const q = viewerId ? `&viewer_id=${encodeURIComponent(viewerId)}` : "";
+    return this.fetch(`/api/hashtags/${encodeURIComponent(tag)}/clips?limit=40${q}`);
+  },
+  async registerPushToken(userId, expoPushToken, platform = "ios") {
+    return this.fetch("/api/push/register", {
+      method: "POST",
+      body: JSON.stringify({
+        user_id: userId,
+        expo_push_token: expoPushToken,
+        platform,
+      }),
+    });
+  },
+  async getCreatorFundStatus(userId) {
+    return this.fetch(`/api/creator-fund/me?user_id=${encodeURIComponent(userId)}`);
+  },
+  async getShareClip(clipId) {
+    return this.fetch(`/api/share/clip/${encodeURIComponent(clipId)}`);
+  },
+
   async boostAdvertiserAd(adId, payload = {}) {
     return this.fetch(`/api/advertiser/ads/${encodeURIComponent(adId)}/boost`, {
       method: "POST",
