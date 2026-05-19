@@ -1,6 +1,17 @@
 export const APP_BACKGROUND_IMAGE =
   "https://static.prod-images.emergentagent.com/jobs/40eca190-5242-4463-8c95-bc5f66df29cb/images/e35d59ccd161791b6e9cbecdfa426302685267afa2c8e806fa233976816403de.png";
 
+// Polished, app-themed luxury icons generated for the home screen.
+// Local bundled assets — no network dependency.
+export const HOME_ICONS = {
+  watch: require("../../assets/home_icons/watch_earn.png"),
+  fortunes: require("../../assets/home_icons/fortunes.png"),
+  reels: require("../../assets/home_icons/reels.png"),
+  chat: require("../../assets/home_icons/chat.png"),
+  friends: require("../../assets/home_icons/friends.png"),
+  brand: require("../../assets/home_icons/home.png"),
+};
+
 export const ICON_ASSETS = {
   home:
     "https://static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8c507ce/images/80a9b958945b14e3f85f8b8e2b49544963122866ce9cdc8af6f2ab70c5c8bb31.png",

@@ -15,12 +15,15 @@ import {
   RefreshControl,
   Animated,
   Easing,
+  ImageBackground,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import { useLanguage } from "../i18n/LanguageContext";
 import { hapticLight } from "../utils/haptics";
+import { APP_BACKGROUND_IMAGE, HOME_ICONS } from "../constants/uiAssets";
 
 const { width } = Dimensions.get("window");
 
@@ -28,14 +31,14 @@ const { width } = Dimensions.get("window");
 const themes = {
   luxuryDark: {
     id: "luxuryDark",
-    bg: ["#06070d", "#0a0b14", "#0d0d1a"],
-    surface: "#11121b",
-    surfaceAlt: "#161823",
-    border: "rgba(255,215,128,0.10)",
+    bg: ["rgba(6,7,13,0.72)", "rgba(10,11,20,0.78)", "rgba(13,13,26,0.82)"],
+    surface: "rgba(17,18,27,0.78)",
+    surfaceAlt: "rgba(22,24,35,0.80)",
+    border: "rgba(255,215,128,0.18)",
     text: "#ffffff",
-    textMuted: "#9ca3af",
+    textMuted: "#cbd5e1",
     accent: "#fbbf24", // gold
-    accentSoft: "rgba(251,191,36,0.13)",
+    accentSoft: "rgba(251,191,36,0.16)",
     icon: "#fbbf24",
     cardElevation: 0,
     statusGood: "#34d399",
@@ -45,14 +48,14 @@ const themes = {
   },
   brightModern: {
     id: "brightModern",
-    bg: ["#f4f6fb", "#eaf0fa", "#dfe8f5"],
-    surface: "#ffffff",
-    surfaceAlt: "#f8fafd",
-    border: "rgba(59,130,246,0.15)",
+    bg: ["rgba(244,246,251,0.80)", "rgba(234,240,250,0.85)", "rgba(223,232,245,0.88)"],
+    surface: "rgba(255,255,255,0.86)",
+    surfaceAlt: "rgba(248,250,253,0.86)",
+    border: "rgba(59,130,246,0.18)",
     text: "#0f172a",
-    textMuted: "#64748b",
+    textMuted: "#475569",
     accent: "#3b82f6", // blue
-    accentSoft: "rgba(59,130,246,0.10)",
+    accentSoft: "rgba(59,130,246,0.12)",
     icon: "#3b82f6",
     cardElevation: 2,
     statusGood: "#10b981",
@@ -99,7 +102,7 @@ const StatCard = memo(({ icon, value, label, theme }) => (
   </View>
 ));
 
-const ActionRow = memo(({ icon, title, subtitle, theme, onPress, badge }) => (
+const ActionRow = memo(({ icon, iconImage, title, subtitle, theme, onPress, badge }) => (
   <TouchableOpacity
     activeOpacity={0.85}
     onPress={() => {
@@ -111,7 +114,7 @@ const ActionRow = memo(({ icon, title, subtitle, theme, onPress, badge }) => (
       {
         backgroundColor: theme.surface,
         borderColor: theme.border,
-        shadowOpacity: theme.cardElevation ? 0.06 : 0,
+        shadowOpacity: theme.cardElevation ? 0.06 : 0.18,
       },
     ]}
   >
@@ -119,12 +122,20 @@ const ActionRow = memo(({ icon, title, subtitle, theme, onPress, badge }) => (
       style={[
         styles.actionIconWrap,
         {
-          backgroundColor: theme.accentSoft,
-          borderColor: theme.border,
+          backgroundColor: iconImage ? "transparent" : theme.accentSoft,
+          borderColor: iconImage ? "transparent" : theme.border,
         },
       ]}
     >
-      <Ionicons name={icon} size={20} color={theme.accent} />
+      {iconImage ? (
+        <Image
+          source={iconImage}
+          style={styles.actionIconImage}
+          resizeMode="contain"
+        />
+      ) : (
+        <Ionicons name={icon} size={20} color={theme.accent} />
+      )}
     </View>
     <View style={styles.actionBody}>
       <View style={styles.actionTitleRow}>
@@ -256,12 +267,17 @@ const HomeScreen = ({
     Number(user?.saqr_gems ?? user?.saqr_points ?? user?.points ?? 0) || 0;
 
   return (
-    <LinearGradient
-      colors={theme.bg}
+    <ImageBackground
+      source={{ uri: APP_BACKGROUND_IMAGE }}
       style={styles.bg}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
+      resizeMode="cover"
     >
+      <LinearGradient
+        colors={theme.bg}
+        style={styles.bg}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+      >
       <ScrollView
         style={styles.container}
         contentContainerStyle={{ paddingBottom: 110 }}
@@ -383,6 +399,7 @@ const HomeScreen = ({
           </Text>
           <ActionRow
             icon="play-circle"
+            iconImage={HOME_ICONS.watch}
             title={copy.adsTitle}
             subtitle={copy.adsSub}
             theme={theme}
@@ -390,6 +407,7 @@ const HomeScreen = ({
           />
           <ActionRow
             icon="diamond"
+            iconImage={HOME_ICONS.fortunes}
             title={copy.fortunesTitle}
             subtitle={copy.fortunesSub}
             theme={theme}
@@ -405,6 +423,7 @@ const HomeScreen = ({
           </Text>
           <ActionRow
             icon="film"
+            iconImage={HOME_ICONS.reels}
             title={copy.reelsTitle}
             subtitle={copy.reelsSub}
             theme={theme}
@@ -419,6 +438,7 @@ const HomeScreen = ({
           </Text>
           <ActionRow
             icon="chatbubble-ellipses"
+            iconImage={HOME_ICONS.chat}
             title={copy.chatTitle}
             subtitle={copy.chatSub}
             theme={theme}
@@ -427,6 +447,7 @@ const HomeScreen = ({
           />
           <ActionRow
             icon="people"
+            iconImage={HOME_ICONS.friends}
             title={copy.friendsTitle}
             subtitle={copy.friendsSub}
             theme={theme}
@@ -449,7 +470,8 @@ const HomeScreen = ({
           </View>
         </Animated.View>
       </ScrollView>
-    </LinearGradient>
+      </LinearGradient>
+    </ImageBackground>
   );
 };
 
@@ -590,12 +612,17 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   actionIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+    width: 48,
+    height: 48,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
+    overflow: "hidden",
+  },
+  actionIconImage: {
+    width: 48,
+    height: 48,
   },
   actionBody: { flex: 1, alignItems: "flex-end" },
   actionTitleRow: {

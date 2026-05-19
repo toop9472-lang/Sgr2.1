@@ -230,7 +230,7 @@ const SaqrFortunesScreen = ({ user, onClose, onBalanceUpdate }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0a0a0f" },
+  container: { flex: 1, backgroundColor: "rgba(10,10,15,0.55)" },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",

@@ -24,10 +24,16 @@ Strict requirement: Web UI MUST perfectly mirror Mobile UI.
 - ✅ Click avatar → Public profile flow (Chat + Reels) on Mobile + Web
 - ✅ **iOS Audio Mode Fix**: `Audio.setAudioModeAsync({playsInSilentModeIOS: true})` at app boot — videos now have sound on iPhone silent mode
 - ✅ Web UserProfilePage.jsx created and wired
-
-## P0 Pending
-- Build iOS Build 110 via EAS (includes audio fix + profiles)
-- User verification of synced Web UI
+- ✅ Smart feed algorithm `v2_engagement_recency_follow`
+- ✅ Profanity filter + URL block in global chat
+- ✅ Boost Ad (5 SAR) feature
+- ✅ Premium features backend (Stories, Trending Hashtags, Creator Fund)
+- ✅ Mobile premium UI: Stories bar, Trending modal, Share/Deep links/Push
+- ✅ iOS Build 113 (v7.2.20) submitted to App Store Connect
+- ✅ **Home Screen restored background + polished icons (May 2026)**:
+  - Restored `APP_BACKGROUND_IMAGE` across all main app pages (translucent overlay)
+  - Generated 6 luxury 3D icons via Gemini Nano Banana, bundled at `/app/mobile/assets/home_icons/`
+  - HomeScreen ActionRow now displays polished image icons (watch/fortunes/reels/chat/friends)
 
 ## P1 Backlog
 - Privacy Manifest / App Tracking Transparency review

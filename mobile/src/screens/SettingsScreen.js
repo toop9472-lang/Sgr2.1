@@ -441,7 +441,7 @@ const SettingsScreen = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: 'rgba(10,10,15,0.55)',
   },
   header: {
     flexDirection: 'row',

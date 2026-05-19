@@ -552,10 +552,12 @@ function AppContent() {
         ? "light"
         : "dark"
       : themeMode;
+  // Translucent overlay over the global background image so the artwork
+  // shows through on every page (home, profile, settings, etc.)
   const appGradient =
     effectiveTheme === "light"
-      ? ["#f8fafc", "#eef2ff", "#e2e8f0"]
-      : colors.gradients.dark;
+      ? ["rgba(248,250,252,0.78)", "rgba(238,242,255,0.82)", "rgba(226,232,240,0.86)"]
+      : ["rgba(10,11,20,0.62)", "rgba(15,17,28,0.70)", "rgba(13,13,26,0.78)"];
 
   // Loading Screen
   if (isLoading) {
