@@ -127,6 +127,8 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
   const [activeStories, setActiveStories] = useState(null);
   const [showTrending, setShowTrending] = useState(false);
   const [bookmarked, setBookmarked] = useState(new Set());
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const listRef = useRef(null);
   const touchStartRef = useRef({ y: 0, x: 0, time: 0 });
   const { height: screenHeight } = Dimensions.get("window");
@@ -191,8 +193,21 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
   }, [userId]);
 
   useEffect(() => {
-    setFilteredClips(clips);
-  }, [clips]);
+    if (!searchQuery.trim()) {
+      setFilteredClips(clips);
+      return;
+    }
+    const q = searchQuery.trim().toLowerCase();
+    setFilteredClips(
+      clips.filter((c) => {
+        const fields = [c.title, c.content, c.caption, c.user_name]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return fields.includes(q);
+      }),
+    );
+  }, [clips, searchQuery]);
 
   useEffect(() => {
     loadClips();
@@ -806,6 +821,24 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <TouchableOpacity
               style={styles.headerBtn}
+              accessibilityRole="button"
+              accessibilityLabel="بحث في الريلز"
+              onPress={() => {
+                hapticLight();
+                setShowSearch((v) => !v);
+                if (showSearch) setSearchQuery("");
+              }}
+            >
+              <Ionicons
+                name={showSearch ? "close" : "search"}
+                size={18}
+                color="#fff"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.headerBtn}
+              accessibilityRole="button"
+              accessibilityLabel="الهاشتاجات الرائجة"
               onPress={() => {
                 hapticLight();
                 setShowTrending(true);
@@ -815,12 +848,37 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.headerBtn}
+              accessibilityRole="button"
+              accessibilityLabel="إنشاء ريل جديد"
               onPress={() => setShowCreate(true)}
             >
               <Ionicons name="add" size={22} color="#22d3ee" />
             </TouchableOpacity>
           </View>
         </View>
+
+        {showSearch && (
+          <View style={styles.searchBarWrap}>
+            <Ionicons name="search" size={16} color="#94a3b8" />
+            <TextInput
+              style={styles.searchBarInput}
+              placeholder="ابحث عن ريل، عنوان، أو ناشر..."
+              placeholderTextColor="#64748b"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus
+              accessibilityLabel="حقل البحث في الريلز"
+            />
+            {!!searchQuery && (
+              <TouchableOpacity
+                onPress={() => setSearchQuery("")}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="close-circle" size={16} color="#94a3b8" />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
 
         {/* Stories carousel */}
         <StoriesBar
@@ -1116,6 +1174,29 @@ const styles = StyleSheet.create({
     height: 16,
     backgroundColor: "rgba(255,255,255,0.25)",
     marginHorizontal: 2,
+  },
+  searchBarWrap: {
+    position: "absolute",
+    top: 86,
+    left: 14,
+    right: 14,
+    zIndex: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "rgba(15,23,42,0.92)",
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(148,163,184,0.22)",
+  },
+  searchBarInput: {
+    flex: 1,
+    color: "#fff",
+    fontSize: 13,
+    textAlign: "right",
+    padding: 0,
   },
   loadingWrap: { flex: 1, justifyContent: "center", alignItems: "center" },
   loadingText: { color: "#cbd5e1", marginTop: 10 },

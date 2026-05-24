@@ -47,6 +47,9 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress, onClipsPress, badges =
         style={styles.navItem}
         onPress={() => onNavigate(item.id)}
         activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel={item.label}
+        accessibilityState={{ selected: isActive }}
       >
         <View
           style={[
@@ -87,6 +90,8 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress, onClipsPress, badges =
               onClipsPress ? onClipsPress() : onNavigate("clips")
             }
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={language === "ar" ? "المقاطع" : "Clips"}
             style={styles.centerButton}
           >
             <View style={styles.centerButtonGlow} />
@@ -107,6 +112,8 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress, onClipsPress, badges =
           <TouchableOpacity
             onPress={onAdsPress}
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={language === "ar" ? "شاهد إعلانات" : "Watch ads"}
             style={styles.centerButton}
           >
             <View

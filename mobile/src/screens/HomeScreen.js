@@ -33,6 +33,8 @@ const borderGold = "rgba(255,215,128,0.18)";
 const HeroTile = memo(({ image, title, subtitle, badge, onPress, isRTL }) => (
   <TouchableOpacity
     activeOpacity={0.9}
+    accessibilityRole="button"
+    accessibilityLabel={`${title}. ${subtitle}`}
     onPress={() => { hapticLight(); onPress && onPress(); }}
     style={[styles.heroTile, { width: TILE_W, height: TILE_H }]}
   >
@@ -68,6 +70,8 @@ const HeroTile = memo(({ image, title, subtitle, badge, onPress, isRTL }) => (
 const SquareTile = memo(({ image, title, subtitle, onPress, isRTL }) => (
   <TouchableOpacity
     activeOpacity={0.9}
+    accessibilityRole="button"
+    accessibilityLabel={`${title}. ${subtitle}`}
     onPress={() => { hapticLight(); onPress && onPress(); }}
     style={[styles.squareTile, { width: SQUARE_W, height: SQUARE_W }]}
   >
