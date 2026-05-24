@@ -237,14 +237,6 @@ const SettingsScreen = ({
       color: '#a855f7',
     },
     {
-      id: 'home-style',
-      icon: 'images-outline',
-      label: language === 'ar' ? 'نمط الصفحة الرئيسية' : 'Home Style',
-      value: getHomePresetName(),
-      action: () => setShowHomePresetModal(true),
-      color: '#0ea5e9',
-    },
-    {
       id: '2fa',
       icon: 'shield-checkmark-outline',
       label: language === 'ar' ? 'التحقق بخطوتين' : 'Two-Factor Auth',
@@ -396,44 +388,7 @@ const SettingsScreen = ({
         </View>
       </Modal>
 
-      {/* Home preset modal */}
-      <Modal
-        visible={showHomePresetModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowHomePresetModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                {language === 'ar' ? 'اختر نمط الصفحة الرئيسية' : 'Select Home Style'}
-              </Text>
-              <TouchableOpacity onPress={() => setShowHomePresetModal(false)}>
-                <Ionicons name="close" size={24} color="#FFF" />
-              </TouchableOpacity>
-            </View>
-            {homePresets.map((preset) => (
-              <TouchableOpacity
-                key={preset.id}
-                style={[
-                  styles.optionItem,
-                  homePreset === preset.id && styles.optionItemSelected
-                ]}
-                onPress={() => saveHomePreset(preset.id)}
-              >
-                <View style={styles.themeIconContainer}>
-                  <Ionicons name={preset.icon} size={22} color="#FFF" />
-                </View>
-                <Text style={styles.optionText}>{preset.name}</Text>
-                {homePreset === preset.id && (
-                  <Ionicons name="checkmark" size={20} color="#3b82f6" />
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </Modal>
+      {/* Home preset modal removed — single design now */}
     </LinearGradient>
   );
 };

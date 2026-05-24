@@ -34,6 +34,18 @@ Strict requirement: Web UI MUST perfectly mirror Mobile UI.
   - Restored `APP_BACKGROUND_IMAGE` across all main app pages (translucent overlay)
   - Generated 6 luxury 3D icons via Gemini Nano Banana, bundled at `/app/mobile/assets/home_icons/`
   - HomeScreen ActionRow now displays polished image icons (watch/fortunes/reels/chat/friends)
+- ✅ **World-class home redesign (May 2026)**:
+  - **Single luxury dark design** — removed Classic/Luxury toggle from Mobile & Web
+  - Full-image **HeroTile** cards (16:9) + paired **SquareTile** cards
+  - Regenerated home icons as **photorealistic Unsplash-style JPGs** via Nano Banana (royalty-free)
+  - Bundled locally as `.jpg` (60-90KB each) for mobile, mirrored to `frontend/public/home_icons/` for web
+- ✅ **Critical AdMob gem-reward fix (May 2026)**:
+  - Root cause: iOS race condition — `CLOSED` event fired before `EARNED_REWARD`, causing gems to be skipped
+  - Fix: added 1.2s grace period in `admobService.js` `showRewardedAd()` to catch late `EARNED_REWARD`
+- ✅ **Bottom-sheet Comments for Reels** (TikTok style):
+  - Replaced the large details modal with a 72%-height sheet that keeps video visible behind
+  - Drag handle + clean header + empty-state illustration + sticky composer
+- ✅ Reusable polished `Skeleton` + `EmptyState` components added; integrated into ClipsScreen.
 
 ## P1 Backlog
 - Privacy Manifest / App Tracking Transparency review

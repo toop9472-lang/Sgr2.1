@@ -1,10 +1,6 @@
-// Home Screen — Calm, premium, polished.
-// Two distinct visual themes the user can switch between in one tap:
-//   • "luxuryDark"  — Black & gold (true premium feel — App Store-tier)
-//   • "brightModern" — Clean white & blue (modern / classic minimal feel)
-// Both share the SAME information density (low) and use Ionicons only.
-// No busy background images.
-import React, { useState, useMemo, useCallback, useEffect, useRef, memo } from "react";
+// Saqr Home — single luxury design (no theme toggle).
+// Each section is a full-image card with text overlay.
+import React, { useState, useCallback, useEffect, useRef, memo } from "react";
 import {
   View,
   Text,
@@ -15,6 +11,7 @@ import {
   RefreshControl,
   Animated,
   Easing,
+  ImageBackground,
   Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -24,159 +21,69 @@ import { useLanguage } from "../i18n/LanguageContext";
 import { hapticLight } from "../utils/haptics";
 import { HOME_ICONS } from "../constants/uiAssets";
 
-const { width } = Dimensions.get("window");
+const { width: SCREEN_W } = Dimensions.get("window");
+const TILE_W = SCREEN_W - 32;
+const TILE_H = Math.round(TILE_W * 9 / 16);
+const SQUARE_W = (SCREEN_W - 44) / 2;
 
-/* ---------- Theme tokens (two highly distinct presets) ---------- */
-const themes = {
-  luxuryDark: {
-    id: "luxuryDark",
-    bg: ["#06070d", "#0a0b14", "#0d0d1a"],
-    surface: "#11121b",
-    surfaceAlt: "#161823",
-    border: "rgba(255,215,128,0.10)",
-    text: "#ffffff",
-    textMuted: "#9ca3af",
-    accent: "#fbbf24", // gold
-    accentSoft: "rgba(251,191,36,0.13)",
-    icon: "#fbbf24",
-    cardElevation: 0,
-    statusGood: "#34d399",
-    chip: "rgba(255,255,255,0.06)",
-    label: "فاخر",
-    labelEn: "Luxury",
-  },
-  brightModern: {
-    id: "brightModern",
-    bg: ["#f4f6fb", "#eaf0fa", "#dfe8f5"],
-    surface: "#ffffff",
-    surfaceAlt: "#f8fafd",
-    border: "rgba(59,130,246,0.15)",
-    text: "#0f172a",
-    textMuted: "#64748b",
-    accent: "#3b82f6", // blue
-    accentSoft: "rgba(59,130,246,0.10)",
-    icon: "#3b82f6",
-    cardElevation: 2,
-    statusGood: "#10b981",
-    chip: "rgba(15,23,42,0.05)",
-    label: "كلاسيك",
-    labelEn: "Classic",
-  },
-};
+const accent = "#fbbf24";
+const accentSoft = "rgba(251,191,36,0.18)";
+const borderGold = "rgba(255,215,128,0.18)";
 
-/* ---------- Reusable atoms ---------- */
-
-const Pill = memo(({ icon, label, accent, bg, textColor }) => (
-  <View style={[styles.pill, { backgroundColor: bg }]}>
-    <Ionicons name={icon} size={11} color={accent} />
-    <Text style={[styles.pillText, { color: textColor }]}>{label}</Text>
-  </View>
-));
-
-const StatCard = memo(({ icon, value, label, theme }) => (
-  <View
-    style={[
-      styles.statCard,
-      {
-        backgroundColor: theme.surface,
-        borderColor: theme.border,
-        shadowOpacity: theme.cardElevation ? 0.08 : 0,
-      },
-    ]}
-  >
-    <View
-      style={[
-        styles.statIconWrap,
-        { backgroundColor: theme.accentSoft, borderColor: theme.border },
-      ]}
-    >
-      <Ionicons name={icon} size={16} color={theme.accent} />
-    </View>
-    <Text style={[styles.statValue, { color: theme.text }]} numberOfLines={1}>
-      {value}
-    </Text>
-    <Text style={[styles.statLabel, { color: theme.textMuted }]} numberOfLines={1}>
-      {label}
-    </Text>
-  </View>
-));
-
-const ActionRow = memo(({ icon, iconImage, title, subtitle, theme, onPress, badge }) => (
+const HeroTile = memo(({ image, title, subtitle, badge, onPress, isRTL }) => (
   <TouchableOpacity
-    activeOpacity={0.85}
-    onPress={() => {
-      hapticLight();
-      onPress && onPress();
-    }}
-    style={[
-      styles.actionRow,
-      {
-        backgroundColor: theme.surface,
-        borderColor: theme.border,
-        shadowOpacity: theme.cardElevation ? 0.06 : 0.18,
-      },
-    ]}
+    activeOpacity={0.9}
+    onPress={() => { hapticLight(); onPress && onPress(); }}
+    style={[styles.heroTile, { width: TILE_W, height: TILE_H }]}
   >
-    <View
-      style={[
-        styles.actionIconWrap,
-        {
-          backgroundColor: iconImage ? "transparent" : theme.accentSoft,
-          borderColor: iconImage ? "transparent" : theme.border,
-        },
-      ]}
-    >
-      {iconImage ? (
-        <Image
-          source={iconImage}
-          style={styles.actionIconImage}
-          resizeMode="contain"
-        />
-      ) : (
-        <Ionicons name={icon} size={20} color={theme.accent} />
-      )}
-    </View>
-    <View style={styles.actionBody}>
-      <View style={styles.actionTitleRow}>
-        <Text
-          style={[styles.actionTitle, { color: theme.text }]}
-          numberOfLines={1}
+    <ImageBackground source={image} style={styles.heroBg} imageStyle={styles.heroImg}>
+      <LinearGradient
+        colors={["rgba(0,0,0,0.05)", "rgba(0,0,0,0.45)", "rgba(0,0,0,0.92)"]}
+        locations={[0, 0.45, 1]}
+        style={StyleSheet.absoluteFillObject}
+      />
+      {!!badge && (
+        <View
+          style={[
+            styles.tileBadge,
+            isRTL ? { left: 12 } : { right: 12 },
+          ]}
         >
-          {title}
-        </Text>
-        {badge && (
-          <View
-            style={[
-              styles.actionBadge,
-              {
-                backgroundColor: theme.accentSoft,
-                borderColor: theme.border,
-              },
-            ]}
-          >
-            <Text style={[styles.actionBadgeText, { color: theme.accent }]}>
-              {badge}
-            </Text>
-          </View>
-        )}
+          <Text style={styles.tileBadgeText}>{badge}</Text>
+        </View>
+      )}
+      <View style={styles.heroBottom}>
+        <Text style={styles.heroTitle} numberOfLines={1}>{title}</Text>
+        <Text style={styles.heroSub} numberOfLines={1}>{subtitle}</Text>
+        <View style={styles.heroOpenRow}>
+          <View style={styles.heroOpenDot} />
+          <Text style={styles.heroOpenText}>{isRTL ? "افتح" : "Open"}</Text>
+          <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={14} color="#fff" />
+        </View>
       </View>
-      <Text
-        style={[styles.actionSubtitle, { color: theme.textMuted }]}
-        numberOfLines={1}
-      >
-        {subtitle}
-      </Text>
-    </View>
-    <Ionicons
-      name="chevron-back"
-      size={16}
-      color={theme.textMuted}
-      style={{ opacity: 0.5 }}
-    />
+    </ImageBackground>
   </TouchableOpacity>
 ));
 
-/* ---------- Main screen ---------- */
+const SquareTile = memo(({ image, title, subtitle, onPress, isRTL }) => (
+  <TouchableOpacity
+    activeOpacity={0.9}
+    onPress={() => { hapticLight(); onPress && onPress(); }}
+    style={[styles.squareTile, { width: SQUARE_W, height: SQUARE_W }]}
+  >
+    <ImageBackground source={image} style={styles.heroBg} imageStyle={styles.heroImg}>
+      <LinearGradient
+        colors={["rgba(0,0,0,0.05)", "rgba(0,0,0,0.35)", "rgba(0,0,0,0.92)"]}
+        locations={[0, 0.45, 1]}
+        style={StyleSheet.absoluteFillObject}
+      />
+      <View style={styles.squareBottom}>
+        <Text style={styles.squareTitle} numberOfLines={1}>{title}</Text>
+        <Text style={styles.squareSub} numberOfLines={1}>{subtitle}</Text>
+      </View>
+    </ImageBackground>
+  </TouchableOpacity>
+));
 
 const HomeScreen = ({
   user,
@@ -185,8 +92,6 @@ const HomeScreen = ({
   onNavigateToChat,
   onNavigateToFortunes,
   onNavigateToFriends,
-  homePreset,
-  onHomePresetChange,
   onRefresh,
 }) => {
   const { language } = useLanguage();
@@ -194,56 +99,19 @@ const HomeScreen = ({
   const [refreshing, setRefreshing] = useState(false);
   const fade = useRef(new Animated.Value(0)).current;
 
-  // Resolve theme (default luxuryDark to feel premium on first launch)
-  const theme = useMemo(
-    () => themes[homePreset === "brightModern" ? "brightModern" : "luxuryDark"],
-    [homePreset],
-  );
-  const otherTheme = useMemo(
-    () =>
-      themes[theme.id === "luxuryDark" ? "brightModern" : "luxuryDark"],
-    [theme.id],
-  );
-
-  // Soft fade-in whenever preset changes — gives the toggle real feedback
   useEffect(() => {
-    fade.setValue(0);
     Animated.timing(fade, {
       toValue: 1,
-      duration: 300,
+      duration: 350,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
-  }, [theme.id, fade]);
+  }, [fade]);
 
-  const copy = useMemo(
-    () => ({
-      welcomePrefix: isArabic ? "أهلاً" : "Welcome",
-      welcomeSub: isArabic
-        ? "ابدأ يومك بمشاهدة إعلانات واكتساب جواهر صقر"
-        : "Start your day by watching ads and earning Saqr gems",
-      defaultPlayer: isArabic ? "لاعب" : "Player",
-      gems: isArabic ? "جوهرة" : "Gems",
-      reels: isArabic ? "ريلز" : "Reels",
-      friends: isArabic ? "أصدقاء" : "Friends",
-      sectionExplore: isArabic ? "استكشف" : "Explore",
-      sectionEarn: isArabic ? "اكسب جواهر" : "Earn Gems",
-      sectionConnect: isArabic ? "تواصل" : "Connect",
-      adsTitle: isArabic ? "شاهد وأكسب" : "Watch & Earn",
-      adsSub: isArabic ? "إعلانات قصيرة = جواهر فورية" : "Short ads = instant gems",
-      reelsTitle: isArabic ? "ريلز المجتمع" : "Community Reels",
-      reelsSub: isArabic ? "15 ثانية لكل مقطع" : "15 seconds each",
-      fortunesTitle: isArabic ? "ثروات صقر" : "Saqr Fortunes",
-      fortunesSub: isArabic ? "500 جوهرة = 3 ﷼" : "500 gems = 3 SAR",
-      chatTitle: isArabic ? "الدردشة العامة" : "Global Chat",
-      chatSub: isArabic ? "مجانية بالكامل" : "Always free",
-      friendsTitle: isArabic ? "الأصدقاء" : "Friends",
-      friendsSub: isArabic ? "أضف وتواصل" : "Add & connect",
-      free: isArabic ? "مجاني" : "Free",
-      new: isArabic ? "جديد" : "New",
-    }),
-    [isArabic],
-  );
+  useEffect(() => {
+    if (onRefresh) onRefresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -251,212 +119,124 @@ const HomeScreen = ({
     setRefreshing(false);
   }, [onRefresh]);
 
-  useEffect(() => {
-    if (onRefresh) onRefresh();
-  }, []);
-
-  const handleToggleTheme = useCallback(() => {
-    hapticLight();
-    const next = theme.id === "luxuryDark" ? "brightModern" : "luxuryDark";
-    onHomePresetChange && onHomePresetChange(next);
-  }, [theme.id, onHomePresetChange]);
-
-  const userName = user?.name || copy.defaultPlayer;
+  const userName = user?.name || (isArabic ? "لاعب" : "Player");
   const gemsValue =
     Number(user?.saqr_gems ?? user?.saqr_points ?? user?.points ?? 0) || 0;
 
   return (
     <LinearGradient
-      colors={theme.bg}
+      colors={["#06070d", "#0a0b14", "#0d0d1a"]}
       style={styles.bg}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
     >
       <ScrollView
         style={styles.container}
-        contentContainerStyle={{ paddingBottom: 110 }}
+        contentContainerStyle={{ paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={theme.accent}
-            colors={[theme.accent]}
+            tintColor={accent}
+            colors={[accent]}
           />
         }
       >
         <Animated.View style={{ opacity: fade }}>
           {/* Header */}
           <View style={styles.header}>
-            <View style={styles.headerLeft}>
-              <LanguageSwitcher />
-              <View style={styles.greetingBlock}>
-                <Text style={[styles.greeting, { color: theme.text }]}>
-                  {copy.welcomePrefix} {userName}
-                </Text>
-                <Text
-                  style={[styles.subGreeting, { color: theme.textMuted }]}
-                  numberOfLines={1}
-                >
-                  {copy.welcomeSub}
-                </Text>
-              </View>
-            </View>
-
-            {/* Theme toggle — large and obvious */}
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={handleToggleTheme}
-              style={[
-                styles.themeToggle,
-                {
-                  backgroundColor: theme.surface,
-                  borderColor: theme.border,
-                },
-              ]}
-            >
-              <Ionicons
-                name={theme.id === "luxuryDark" ? "moon" : "sunny"}
-                size={14}
-                color={theme.accent}
-              />
-              <Text
-                style={[styles.themeToggleText, { color: theme.text }]}
-              >
-                {isArabic ? theme.label : theme.labelEn}
+            <LanguageSwitcher />
+            <View style={styles.greetBlock}>
+              <Text style={styles.greet} numberOfLines={1}>
+                {isArabic ? "أهلاً" : "Welcome"} {userName}
               </Text>
-              <View
-                style={[styles.themeNextDot, { backgroundColor: otherTheme.accent }]}
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* Hero balance — gems are the soul of this app */}
-          <View
-            style={[
-              styles.heroCard,
-              {
-                backgroundColor: theme.surface,
-                borderColor: theme.border,
-                shadowOpacity: theme.cardElevation ? 0.10 : 0,
-              },
-            ]}
-          >
-            <View style={styles.heroTop}>
-              <Pill
-                icon="diamond"
-                label={copy.gems}
-                accent={theme.accent}
-                bg={theme.accentSoft}
-                textColor={theme.text}
-              />
-              <View
-                style={[styles.dotBadge, { backgroundColor: theme.statusGood }]}
-              />
-            </View>
-            <Text style={[styles.heroValue, { color: theme.text }]}>
-              {gemsValue.toLocaleString("en-US")}
-            </Text>
-            <Text style={[styles.heroLabel, { color: theme.textMuted }]}>
-              {isArabic
-                ? "رصيدك الحالي • يُحدّث تلقائياً"
-                : "Your current balance • auto-synced"}
-            </Text>
-
-            <View style={styles.miniStats}>
-              <StatCard
-                icon="play-circle"
-                value={user?.clips_count || 0}
-                label={copy.reels}
-                theme={theme}
-              />
-              <StatCard
-                icon="people"
-                value={user?.friends_count || 0}
-                label={copy.friends}
-                theme={theme}
-              />
-              <StatCard
-                icon="eye"
-                value={user?.watched_ads_today || 0}
-                label={isArabic ? "اليوم" : "Today"}
-                theme={theme}
-              />
+              <Text style={styles.subGreet} numberOfLines={1}>
+                {isArabic
+                  ? "شاهد، اربح، شارك — كل شيء في صقر"
+                  : "Watch, earn, share — all in Saqr"}
+              </Text>
             </View>
           </View>
 
-          {/* Earn section */}
-          <Text
-            style={[styles.sectionLabel, { color: theme.textMuted }]}
-          >
-            {copy.sectionEarn}
-          </Text>
-          <ActionRow
-            icon="play-circle"
-            iconImage={HOME_ICONS.watch}
-            title={copy.adsTitle}
-            subtitle={copy.adsSub}
-            theme={theme}
-            onPress={onNavigateToAds}
-          />
-          <ActionRow
-            icon="diamond"
-            iconImage={HOME_ICONS.fortunes}
-            title={copy.fortunesTitle}
-            subtitle={copy.fortunesSub}
-            theme={theme}
-            onPress={onNavigateToFortunes}
-            badge={copy.new}
-          />
+          {/* Hero balance */}
+          <View style={styles.balanceCard}>
+            <Image source={HOME_ICONS.brand} style={styles.balanceBrand} />
+            <View style={styles.balanceRight}>
+              <View style={styles.balancePillRow}>
+                <Ionicons name="diamond" size={12} color={accent} />
+                <Text style={styles.balancePill}>{isArabic ? "جوهرة" : "Gems"}</Text>
+              </View>
+              <Text style={styles.balanceValue}>
+                {gemsValue.toLocaleString("en-US")}
+              </Text>
+              <Text style={styles.balanceMuted}>
+                {isArabic ? "رصيدك الحالي • يُحدّث تلقائياً" : "Auto-synced balance"}
+              </Text>
+            </View>
+          </View>
 
-          {/* Explore section */}
-          <Text
-            style={[styles.sectionLabel, { color: theme.textMuted }]}
-          >
-            {copy.sectionExplore}
-          </Text>
-          <ActionRow
-            icon="film"
-            iconImage={HOME_ICONS.reels}
-            title={copy.reelsTitle}
-            subtitle={copy.reelsSub}
-            theme={theme}
-            onPress={onNavigateToClips}
-          />
-
-          {/* Connect section */}
-          <Text
-            style={[styles.sectionLabel, { color: theme.textMuted }]}
-          >
-            {copy.sectionConnect}
-          </Text>
-          <ActionRow
-            icon="chatbubble-ellipses"
-            iconImage={HOME_ICONS.chat}
-            title={copy.chatTitle}
-            subtitle={copy.chatSub}
-            theme={theme}
-            onPress={onNavigateToChat}
-            badge={copy.free}
-          />
-          <ActionRow
-            icon="people"
-            iconImage={HOME_ICONS.friends}
-            title={copy.friendsTitle}
-            subtitle={copy.friendsSub}
-            theme={theme}
-            onPress={onNavigateToFriends}
-          />
-
-          {/* Footer note */}
-          <View style={styles.footerNote}>
-            <View
-              style={[
-                styles.footerDot,
-                { backgroundColor: theme.statusGood },
-              ]}
+          {/* FEATURED — Watch & Earn */}
+          <Text style={styles.sectionLabel}>{isArabic ? "مميز" : "FEATURED"}</Text>
+          <View style={styles.tileWrap}>
+            <HeroTile
+              image={HOME_ICONS.watch}
+              title={isArabic ? "شاهد وأكسب" : "Watch & Earn"}
+              subtitle={isArabic ? "إعلانات قصيرة = جواهر فورية" : "Short ads = instant gems"}
+              badge={isArabic ? "الأكثر رواجاً" : "Hot"}
+              onPress={onNavigateToAds}
+              isRTL={isArabic}
             />
-            <Text style={{ color: theme.textMuted, fontSize: 11 }}>
+          </View>
+
+          {/* EARN — Fortunes */}
+          <Text style={styles.sectionLabel}>{isArabic ? "اكسب جواهر" : "EARN GEMS"}</Text>
+          <View style={styles.tileWrap}>
+            <HeroTile
+              image={HOME_ICONS.fortunes}
+              title={isArabic ? "ثروات صقر" : "Saqr Fortunes"}
+              subtitle={isArabic ? "500 جوهرة = 3 ﷼" : "500 gems = 3 SAR"}
+              badge={isArabic ? "جديد" : "New"}
+              onPress={onNavigateToFortunes}
+              isRTL={isArabic}
+            />
+          </View>
+
+          {/* EXPLORE — Reels */}
+          <Text style={styles.sectionLabel}>{isArabic ? "استكشف" : "EXPLORE"}</Text>
+          <View style={styles.tileWrap}>
+            <HeroTile
+              image={HOME_ICONS.reels}
+              title={isArabic ? "ريلز المجتمع" : "Community Reels"}
+              subtitle={isArabic ? "15 ثانية لكل مقطع" : "15 seconds each"}
+              onPress={onNavigateToClips}
+              isRTL={isArabic}
+            />
+          </View>
+
+          {/* CONNECT — two squares */}
+          <Text style={styles.sectionLabel}>{isArabic ? "تواصل" : "CONNECT"}</Text>
+          <View style={styles.squareRow}>
+            <SquareTile
+              image={HOME_ICONS.chat}
+              title={isArabic ? "الدردشة" : "Chat"}
+              subtitle={isArabic ? "مجانية" : "Free"}
+              onPress={onNavigateToChat}
+              isRTL={isArabic}
+            />
+            <SquareTile
+              image={HOME_ICONS.friends}
+              title={isArabic ? "الأصدقاء" : "Friends"}
+              subtitle={isArabic ? "أضف وتواصل" : "Add & connect"}
+              onPress={onNavigateToFriends}
+              isRTL={isArabic}
+            />
+          </View>
+
+          {/* Footer */}
+          <View style={styles.footerNote}>
+            <View style={styles.footerDot} />
+            <Text style={styles.footerText}>
               {isArabic
                 ? "صقر — اكسب من مشاهداتك اليومية"
                 : "Saqr — earn from your daily views"}
@@ -472,177 +252,136 @@ const styles = StyleSheet.create({
   bg: { flex: 1 },
   container: { flex: 1 },
 
-  /* Header */
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 18,
-    paddingTop: 14,
-    paddingBottom: 16,
-  },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 14,
     gap: 10,
   },
-  greetingBlock: { flex: 1 },
-  greeting: { fontSize: 17, fontWeight: "800", textAlign: "right" },
-  subGreeting: { fontSize: 11, marginTop: 2, textAlign: "right" },
+  greetBlock: { flex: 1 },
+  greet: { color: "#fff", fontSize: 16, fontWeight: "800", textAlign: "right" },
+  subGreet: { color: "#94a3b8", fontSize: 11, marginTop: 2, textAlign: "right" },
 
-  themeToggle: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 11,
-    paddingVertical: 7,
-    borderRadius: 22,
-    borderWidth: 1,
-  },
-  themeToggleText: { fontSize: 12, fontWeight: "700" },
-  themeNextDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginLeft: 2,
-  },
-
-  /* Hero */
-  heroCard: {
+  balanceCard: {
     marginHorizontal: 16,
-    marginBottom: 22,
-    paddingHorizontal: 18,
-    paddingTop: 14,
-    paddingBottom: 14,
-    borderRadius: 22,
-    borderWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 16,
-    elevation: 4,
-  },
-  heroTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 4,
-  },
-  pill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  pillText: { fontSize: 11, fontWeight: "700" },
-  dotBadge: { width: 8, height: 8, borderRadius: 4 },
-  heroValue: {
-    fontSize: 44,
-    fontWeight: "900",
-    letterSpacing: -1.2,
-    textAlign: "right",
-    marginTop: 6,
-    marginBottom: 2,
-  },
-  heroLabel: { fontSize: 11, textAlign: "right" },
-
-  /* Mini stats inside hero */
-  miniStats: {
-    flexDirection: "row",
-    gap: 8,
-    marginTop: 14,
-  },
-  statCard: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    borderRadius: 16,
-    borderWidth: 1,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
-  },
-  statIconWrap: {
-    width: 30,
-    height: 30,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 6,
-  },
-  statValue: { fontSize: 15, fontWeight: "800" },
-  statLabel: { fontSize: 10, marginTop: 1 },
-
-  /* Section labels */
-  sectionLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 1,
-    textAlign: "right",
-    paddingHorizontal: 20,
-    marginTop: 10,
-    marginBottom: 8,
-    textTransform: "uppercase",
-  },
-
-  /* Action rows */
-  actionRow: {
+    marginBottom: 16,
+    padding: 14,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    paddingVertical: 13,
-    paddingHorizontal: 14,
-    marginHorizontal: 16,
-    marginBottom: 8,
-    borderRadius: 16,
+    borderRadius: 22,
     borderWidth: 1,
+    borderColor: borderGold,
+    backgroundColor: "#11121b",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    elevation: 5,
   },
-  actionIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    overflow: "hidden",
+  balanceBrand: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    backgroundColor: "#0a0a0f",
   },
-  actionIconImage: {
-    width: 48,
-    height: 48,
-  },
-  actionBody: { flex: 1, alignItems: "flex-end" },
-  actionTitleRow: {
+  balanceRight: { flex: 1, alignItems: "flex-end" },
+  balancePillRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 4,
+    backgroundColor: accentSoft,
+    paddingHorizontal: 8,
+    paddingVertical: 2.5,
+    borderRadius: 10,
   },
-  actionTitle: { fontSize: 14, fontWeight: "700", textAlign: "right" },
-  actionSubtitle: { fontSize: 11, marginTop: 2, textAlign: "right" },
-  actionBadge: {
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 8,
-    borderWidth: 1,
+  balancePill: { color: accent, fontSize: 10, fontWeight: "700" },
+  balanceValue: {
+    color: "#fff",
+    fontSize: 30,
+    fontWeight: "900",
+    letterSpacing: -0.8,
+    marginTop: 4,
   },
-  actionBadgeText: { fontSize: 10, fontWeight: "700" },
+  balanceMuted: { color: "#94a3b8", fontSize: 10, marginTop: 2 },
 
-  /* Footer */
+  sectionLabel: {
+    color: "#94a3b8",
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 1.5,
+    paddingHorizontal: 20,
+    marginTop: 14,
+    marginBottom: 8,
+    textAlign: "right",
+    textTransform: "uppercase",
+  },
+
+  tileWrap: { paddingHorizontal: 16 },
+  heroTile: {
+    borderRadius: 22,
+    overflow: "hidden",
+    backgroundColor: "#0a0a0f",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.5,
+    shadowRadius: 22,
+    elevation: 6,
+  },
+  heroBg: { flex: 1, justifyContent: "flex-end" },
+  heroImg: { borderRadius: 22 },
+  tileBadge: {
+    position: "absolute",
+    top: 12,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
+  },
+  tileBadgeText: { color: "#fff", fontSize: 10, fontWeight: "800" },
+  heroBottom: { padding: 16 },
+  heroTitle: { color: "#fff", fontSize: 18, fontWeight: "800" },
+  heroSub: { color: "rgba(255,255,255,0.85)", fontSize: 12, marginTop: 2 },
+  heroOpenRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 8 },
+  heroOpenDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: accent },
+  heroOpenText: { color: "#fff", fontSize: 11, fontWeight: "700" },
+
+  squareRow: {
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    gap: 12,
+  },
+  squareTile: {
+    borderRadius: 22,
+    overflow: "hidden",
+    backgroundColor: "#0a0a0f",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.45,
+    shadowRadius: 16,
+    elevation: 5,
+  },
+  squareBottom: { padding: 12 },
+  squareTitle: { color: "#fff", fontSize: 14, fontWeight: "800" },
+  squareSub: { color: "rgba(255,255,255,0.8)", fontSize: 10, marginTop: 2 },
+
   footerNote: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
     marginTop: 24,
-    paddingHorizontal: 16,
   },
-  footerDot: { width: 5, height: 5, borderRadius: 3 },
+  footerDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: "#34d399" },
+  footerText: { color: "#94a3b8", fontSize: 11 },
 });
 
 export default memo(HomeScreen);

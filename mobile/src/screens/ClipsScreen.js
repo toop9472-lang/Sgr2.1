@@ -29,6 +29,8 @@ import ReportBlockSheet from "../components/ReportBlockSheet";
 import StoriesBar from "../components/StoriesBar";
 import StoryViewer from "../components/StoryViewer";
 import TrendingHashtags from "../components/TrendingHashtags";
+import EmptyState from "../components/EmptyState";
+import { ReelsListSkeleton } from "../components/Skeleton";
 
 const MAX_CLIP_DURATION = 15;
 const CLIP_PLACEHOLDERS = [
@@ -642,11 +644,17 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
 
   const emptyState = useMemo(
     () => (
-      <View style={styles.emptyWrap}>
-        <Ionicons name="sparkles-outline" size={42} color="#60a5fa" />
-        <Text style={styles.emptyTitle}>لا توجد مقاطع بعد</Text>
-        <Text style={styles.emptySub}>ابدأ أول مقطع سريع مدته 15 ثانية.</Text>
-      </View>
+      <EmptyState
+        icon="film-outline"
+        iconColor="#60a5fa"
+        title="لا توجد مقاطع بعد"
+        subtitle="ابدأ أول مقطع سريع مدته 15 ثانية وشاركه مع المجتمع."
+        cta={{
+          label: "أنشئ مقطع",
+          icon: "add-circle-outline",
+          onPress: () => setShowCreate(true),
+        }}
+      />
     ),
     [],
   );
@@ -751,10 +759,7 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
         />
 
         {loading ? (
-          <View style={styles.loadingWrap}>
-            <ActivityIndicator size="large" color="#60a5fa" />
-            <Text style={styles.loadingText}>جاري تحميل المقاطع...</Text>
-          </View>
+          <ReelsListSkeleton />
         ) : (
           <FlatList
             ref={listRef}
@@ -875,88 +880,75 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
         onRequestClose={() => setActiveClip(null)}
       >
         <KeyboardAvoidingView
-          style={styles.modalOverlay}
+          style={styles.commentsSheetOverlay}
           behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
-          <View style={[styles.modalCard, styles.detailsCard]}>
-            <View style={styles.detailsHeader}>
-              <Text style={styles.modalTitle}>
-                {activeClip?.title || "المقطع"}
+          {/* Dismiss area — tap to close, keeps video visible behind */}
+          <TouchableOpacity
+            style={styles.commentsSheetBackdrop}
+            activeOpacity={1}
+            onPress={() => setActiveClip(null)}
+          />
+          <View style={styles.commentsSheet}>
+            {/* Drag handle */}
+            <View style={styles.sheetHandle} />
+            <View style={styles.commentsSheetHeader}>
+              <Text style={styles.commentsSheetTitle}>
+                {(activeClip?.comments_count || activeClip?.comments?.length || 0)} تعليق
               </Text>
-              <TouchableOpacity onPress={() => setActiveClip(null)}>
+              <TouchableOpacity
+                onPress={() => setActiveClip(null)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
                 <Ionicons name="close" size={22} color="#fff" />
               </TouchableOpacity>
             </View>
-            <Text style={styles.detailsText}>{activeClip?.content}</Text>
-            <View style={styles.detailsFollowRow}>
-              <Text style={styles.followStatsText}>
-                {activeClip?.followers_count || 0} متابع •{" "}
-                {activeClip?.following_count || 0} يتابع
-              </Text>
-              {activeClip?.user_id && activeClip.user_id !== userId && (
-                <TouchableOpacity
-                  style={[
-                    styles.followBtn,
-                    activeClip?.followed_by_me ? styles.followBtnActive : null,
-                    followLoadingUserId === activeClip.user_id
-                      ? styles.followBtnDisabled
-                      : null,
-                  ]}
-                  disabled={followLoadingUserId === activeClip.user_id}
-                  onPress={() => toggleFollow(activeClip)}
-                >
-                  {followLoadingUserId === activeClip.user_id ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Text style={styles.followBtnText}>
-                      {activeClip?.followed_by_me ? "متابَع" : "متابعة"}
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              )}
-            </View>
-            <View style={styles.detailsQuickActions}>
-              <TouchableOpacity
-                style={styles.quickAction}
-                onPress={() => toggleLike(activeClip)}
-                activeOpacity={0.8}
-              >
-                <Ionicons
-                  name={activeClip?.liked_by_me ? "heart" : "heart-outline"}
-                  size={16}
-                  color={activeClip?.liked_by_me ? "#ef4444" : "#e2e8f0"}
-                />
-                <Text style={styles.quickActionText}>
-                  إعجاب ({activeClip?.likes_count || 0})
-                </Text>
-              </TouchableOpacity>
-            </View>
             <ScrollView
-              style={styles.commentsArea}
+              style={styles.commentsSheetList}
+              contentContainerStyle={{ paddingBottom: 14 }}
               showsVerticalScrollIndicator={false}
             >
-              {(activeClip?.comments || []).map((c) => (
-                <View
-                  key={c.comment_id || `${c.user_name}-${c.created_at}`}
-                  style={styles.commentRow}
-                >
-                  <Text style={styles.commentName}>
-                    {c.user_name || "مستخدم"}
+              {(activeClip?.comments || []).length === 0 ? (
+                <View style={styles.commentsEmptyWrap}>
+                  <Ionicons name="chatbubbles-outline" size={36} color="#475569" />
+                  <Text style={styles.commentsEmptyText}>
+                    كن أول من يعلق على هذا الريل
                   </Text>
-                  <Text style={styles.commentContent}>{c.content}</Text>
                 </View>
-              ))}
+              ) : (
+                (activeClip?.comments || []).map((c) => (
+                  <View
+                    key={c.comment_id || `${c.user_name}-${c.created_at}`}
+                    style={styles.commentSheetRow}
+                  >
+                    <View style={styles.commentAvatar}>
+                      <Ionicons name="person-circle" size={32} color="#64748b" />
+                    </View>
+                    <View style={styles.commentBody}>
+                      <Text style={styles.commentName}>{c.user_name || "مستخدم"}</Text>
+                      <Text style={styles.commentContent}>{c.content}</Text>
+                    </View>
+                  </View>
+                ))
+              )}
             </ScrollView>
-            <View style={styles.commentInputRow}>
+            <View style={styles.commentSheetComposer}>
               <TextInput
-                style={[styles.input, { flex: 1, marginBottom: 0 }]}
+                style={styles.commentSheetInput}
                 placeholder="أضف تعليقًا..."
                 placeholderTextColor="#64748b"
                 value={commentDraft}
                 onChangeText={setCommentDraft}
               />
-              <TouchableOpacity style={styles.primaryBtn} onPress={addComment}>
-                <Ionicons name="send" size={16} color="#fff" />
+              <TouchableOpacity
+                style={[
+                  styles.commentSendBtn,
+                  !commentDraft.trim() && styles.commentSendBtnDisabled,
+                ]}
+                disabled={!commentDraft.trim()}
+                onPress={addComment}
+              >
+                <Ionicons name="send" size={18} color="#fff" />
               </TouchableOpacity>
             </View>
           </View>
@@ -1291,6 +1283,93 @@ const styles = StyleSheet.create({
   commentName: { color: "#93c5fd", fontSize: 11, fontWeight: "700" },
   commentContent: { color: "#e2e8f0", fontSize: 12, marginTop: 2 },
   commentInputRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+
+  // Bottom Sheet Comments (TikTok style)
+  commentsSheetOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "transparent",
+  },
+  commentsSheetBackdrop: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0,0,0,0.35)",
+  },
+  commentsSheet: {
+    backgroundColor: "#0b0c14",
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(148,163,184,0.18)",
+    paddingTop: 8,
+    paddingBottom: Platform.OS === "ios" ? 34 : 14,
+    paddingHorizontal: 0,
+    height: "72%",
+  },
+  sheetHandle: {
+    alignSelf: "center",
+    width: 42,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#475569",
+    marginBottom: 8,
+  },
+  commentsSheetHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 18,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(148,163,184,0.12)",
+  },
+  commentsSheetTitle: { color: "#fff", fontSize: 15, fontWeight: "800" },
+  commentsSheetList: { flex: 1, paddingHorizontal: 16, paddingTop: 8 },
+  commentsEmptyWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 50,
+  },
+  commentsEmptyText: { color: "#94a3b8", marginTop: 10, fontSize: 12 },
+  commentSheetRow: {
+    flexDirection: "row",
+    gap: 10,
+    paddingVertical: 10,
+  },
+  commentAvatar: { paddingTop: 2 },
+  commentBody: { flex: 1 },
+  commentSheetComposer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 4,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(148,163,184,0.12)",
+  },
+  commentSheetInput: {
+    flex: 1,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderRadius: 22,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    color: "#fff",
+    borderWidth: 1,
+    borderColor: "rgba(148,163,184,0.18)",
+  },
+  commentSendBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "#2563eb",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  commentSendBtnDisabled: { opacity: 0.45 },
 });
 
 export default memo(ClipsScreen);
