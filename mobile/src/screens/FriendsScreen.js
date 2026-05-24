@@ -412,8 +412,14 @@ const FriendsScreen = ({ user, onClose, onOpenMessages }) => {
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 onSubmitEditing={searchUsers}
+                accessibilityLabel={language === 'ar' ? 'حقل البحث عن أصدقاء' : 'Search friends field'}
               />
-              <TouchableOpacity onPress={searchUsers} disabled={searching}>
+              <TouchableOpacity
+                onPress={searchUsers}
+                disabled={searching}
+                accessibilityRole="button"
+                accessibilityLabel={language === 'ar' ? 'بحث' : 'Search'}
+              >
                 {searching ? (
                   <ActivityIndicator size="small" color="#3b82f6" />
                 ) : (
@@ -463,7 +469,12 @@ const FriendsScreen = ({ user, onClose, onOpenMessages }) => {
       <LinearGradient colors={["#0a0a0f", "#1a1a2e"]} style={styles.gradient}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.backBtn}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.backBtn}
+            accessibilityRole="button"
+            accessibilityLabel={language === 'ar' ? 'رجوع' : 'Back'}
+          >
             <Ionicons name="arrow-back" size={24} color="#FFF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>

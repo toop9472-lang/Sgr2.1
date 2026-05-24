@@ -124,8 +124,9 @@ const ConversationView = ({ user, friend, onBack, onReport }) => {
     }
   };
 
-  const sendMessage = async () => {
-    if (!newMessage.trim()) return;
+  const sendMessage = async (overrideText) => {
+    const textToSend = (overrideText ?? newMessage).trim();
+    if (!textToSend) return;
 
     setSending(true);
     try {
@@ -135,12 +136,12 @@ const ConversationView = ({ user, friend, onBack, onReport }) => {
           from_user_id: user?.id,
           to_user_id: friend.id || friend.from_user_id,
           from_user_name: user?.name || 'مستخدم',
-          message: newMessage.trim()
+          message: textToSend
         }),
       });
 
       if (res.ok) {
-        setNewMessage('');
+        if (!overrideText) setNewMessage('');
         loadMessages(false);
         setTimeout(() => {
           flatListRef.current?.scrollToEnd({ animated: true });
@@ -154,6 +155,10 @@ const ConversationView = ({ user, friend, onBack, onReport }) => {
     } finally {
       setSending(false);
     }
+  };
+
+  const sendSticker = (emoji) => {
+    sendMessage(emoji);
   };
 
   const handleReport = (message) => {
@@ -225,6 +230,22 @@ const ConversationView = ({ user, friend, onBack, onReport }) => {
           />
         )}
 
+        {/* Quick stickers bar — TikTok-style instant reactions */}
+        <View style={styles.stickerBar}>
+          {['❤️', '🔥', '👏', '😂', '🎉', '👍', '🙏', '⚡'].map((emoji) => (
+            <TouchableOpacity
+              key={emoji}
+              style={styles.stickerBtn}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`إرسال ${emoji}`}
+              onPress={() => sendSticker(emoji)}
+            >
+              <Text style={styles.stickerEmoji}>{emoji}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         {/* Input */}
         <View style={styles.inputContainer}>
           <TextInput
@@ -235,11 +256,14 @@ const ConversationView = ({ user, friend, onBack, onReport }) => {
             onChangeText={setNewMessage}
             multiline
             maxLength={500}
+            accessibilityLabel="حقل كتابة الرسالة"
           />
           <TouchableOpacity
             style={[styles.sendBtn, (!newMessage.trim() || sending) && styles.sendBtnDisabled]}
-            onPress={sendMessage}
+            onPress={() => sendMessage()}
             disabled={!newMessage.trim() || sending}
+            accessibilityRole="button"
+            accessibilityLabel="إرسال الرسالة"
           >
             {sending ? (
               <ActivityIndicator size="small" color="#FFF" />
@@ -534,6 +558,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sendBtnDisabled: { backgroundColor: '#333' },
+  stickerBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.02)',
+  },
+  stickerBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stickerEmoji: { fontSize: 20 },
 });
 
 export default PrivateMessagesScreen;

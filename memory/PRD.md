@@ -52,6 +52,15 @@ Strict requirement: Web UI MUST perfectly mirror Mobile UI.
 - ✅ **OnboardingTour** — first-launch 4-slide intro (welcome → watch & earn → reels → fortunes), persistence flag `saqr_onboarding_v1_completed`.
 - ✅ **Notification badges** on BottomNav — `badges={profile, advertiser}` wired through props.
 - ✅ **Realistic gem brand icon** — replaced the falcon emblem in the balance card with a photo of a cyan diamond on velvet.
+- ✅ **Search Bar in ClipsScreen** — header toggle + sliding input, filters by title/content/publisher.
+- ✅ **A11y labels** — added `accessibilityRole`/`accessibilityLabel` on BottomNav, HomeScreen tiles, Clips header buttons, Profile settings gear, Settings back, Friends search & back, PrivateMessages composer.
+- ✅ **DM Sticker bar** — 8 quick-reaction emoji shortcuts (❤️🔥👏😂🎉👍🙏⚡) above the message composer, sends instantly with one tap.
+
+## Build History (May 24, 2026)
+- ✅ Android Build `e439e6fb-5ae2-4b50-ba2f-61fa4caaf287` — in progress (v7.2.21 / versionCode 92)
+- ✅ iOS Build `c70a0880-65b9-476d-b46f-6a1ab9c0213b` — scheduled with auto-submit to App Store Connect (v7.2.21 / buildNumber 114)
+  - First iOS attempt was blocked by Free plan quota, retry succeeded
+  - Submission ID: `3b0548eb-db9c-46d3-ae5a-452aee98ccdf`
 
 ## P1 Backlog
 - Privacy Manifest / App Tracking Transparency review

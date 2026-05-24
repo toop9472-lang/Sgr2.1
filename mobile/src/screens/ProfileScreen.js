@@ -562,6 +562,7 @@ const ProfileScreen = ({
             onPress={onOpenSettings}
             style={styles.settingsBtn}
             activeOpacity={0.7}
+            accessibilityRole="button"
             accessibilityLabel="الإعدادات"
           >
             <Ionicons name="settings-outline" size={22} color="#fff" />

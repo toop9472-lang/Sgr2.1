@@ -281,7 +281,12 @@ const SettingsScreen = ({
     >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={onBack}
+          style={styles.backButton}
+          accessibilityRole="button"
+          accessibilityLabel={language === 'ar' ? 'رجوع' : 'Back'}
+        >
           <Ionicons name="arrow-forward" size={24} color="#FFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('settings')}</Text>
