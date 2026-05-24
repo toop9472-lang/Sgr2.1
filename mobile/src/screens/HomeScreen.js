@@ -15,7 +15,6 @@ import {
   RefreshControl,
   Animated,
   Easing,
-  ImageBackground,
   Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -23,7 +22,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import { useLanguage } from "../i18n/LanguageContext";
 import { hapticLight } from "../utils/haptics";
-import { APP_BACKGROUND_IMAGE, HOME_ICONS } from "../constants/uiAssets";
+import { HOME_ICONS } from "../constants/uiAssets";
 
 const { width } = Dimensions.get("window");
 
@@ -31,14 +30,14 @@ const { width } = Dimensions.get("window");
 const themes = {
   luxuryDark: {
     id: "luxuryDark",
-    bg: ["rgba(6,7,13,0.72)", "rgba(10,11,20,0.78)", "rgba(13,13,26,0.82)"],
-    surface: "rgba(17,18,27,0.78)",
-    surfaceAlt: "rgba(22,24,35,0.80)",
-    border: "rgba(255,215,128,0.18)",
+    bg: ["#06070d", "#0a0b14", "#0d0d1a"],
+    surface: "#11121b",
+    surfaceAlt: "#161823",
+    border: "rgba(255,215,128,0.10)",
     text: "#ffffff",
-    textMuted: "#cbd5e1",
+    textMuted: "#9ca3af",
     accent: "#fbbf24", // gold
-    accentSoft: "rgba(251,191,36,0.16)",
+    accentSoft: "rgba(251,191,36,0.13)",
     icon: "#fbbf24",
     cardElevation: 0,
     statusGood: "#34d399",
@@ -48,14 +47,14 @@ const themes = {
   },
   brightModern: {
     id: "brightModern",
-    bg: ["rgba(244,246,251,0.80)", "rgba(234,240,250,0.85)", "rgba(223,232,245,0.88)"],
-    surface: "rgba(255,255,255,0.86)",
-    surfaceAlt: "rgba(248,250,253,0.86)",
-    border: "rgba(59,130,246,0.18)",
+    bg: ["#f4f6fb", "#eaf0fa", "#dfe8f5"],
+    surface: "#ffffff",
+    surfaceAlt: "#f8fafd",
+    border: "rgba(59,130,246,0.15)",
     text: "#0f172a",
-    textMuted: "#475569",
+    textMuted: "#64748b",
     accent: "#3b82f6", // blue
-    accentSoft: "rgba(59,130,246,0.12)",
+    accentSoft: "rgba(59,130,246,0.10)",
     icon: "#3b82f6",
     cardElevation: 2,
     statusGood: "#10b981",
@@ -267,17 +266,12 @@ const HomeScreen = ({
     Number(user?.saqr_gems ?? user?.saqr_points ?? user?.points ?? 0) || 0;
 
   return (
-    <ImageBackground
-      source={{ uri: APP_BACKGROUND_IMAGE }}
+    <LinearGradient
+      colors={theme.bg}
       style={styles.bg}
-      resizeMode="cover"
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
     >
-      <LinearGradient
-        colors={theme.bg}
-        style={styles.bg}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-      >
       <ScrollView
         style={styles.container}
         contentContainerStyle={{ paddingBottom: 110 }}
@@ -470,8 +464,7 @@ const HomeScreen = ({
           </View>
         </Animated.View>
       </ScrollView>
-      </LinearGradient>
-    </ImageBackground>
+    </LinearGradient>
   );
 };
 

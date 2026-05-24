@@ -1049,7 +1049,7 @@ const ProfileScreen = ({
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "rgba(6,8,20,0.55)" },
+  container: { flex: 1, backgroundColor: "#060814" },
   content: { padding: 16, paddingTop: 30, paddingBottom: 96 },
 
   profileHeader: { alignItems: "center", marginBottom: 20 },

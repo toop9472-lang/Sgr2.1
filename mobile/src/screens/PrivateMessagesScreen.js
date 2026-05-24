@@ -367,7 +367,7 @@ const PrivateMessagesScreen = ({ user, onClose, initialFriend }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'rgba(10,10,15,0.55)' },
+  container: { flex: 1, backgroundColor: '#0a0a0f' },
   gradient: { flex: 1 },
   header: {
     flexDirection: 'row',

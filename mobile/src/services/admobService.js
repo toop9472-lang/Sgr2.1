@@ -229,14 +229,19 @@ class AdMobService {
         );
 
         // مستمع مؤقت للإغلاق: عندها نُرجع النتيجة النهائية للمكالمة
+        // ملاحظة مهمة: على iOS قد يصل CLOSED قبل EARNED_REWARD بفارق بسيط،
+        // لذا ننتظر فترة سماح قصيرة قبل اتخاذ القرار النهائي حتى لا نخسر المكافأة.
         showUnsubscribers.push(
           this.rewardedAd.addAdEventListener(AdEventType.CLOSED, () => {
-            finalize({
-              success: true,
-              rewarded: Boolean(rewardPayload),
-              amount: rewardPayload?.amount || 0,
-              type: rewardPayload?.type || null,
-            });
+            // امنح EARNED_REWARD حتى 1.2 ثانية للوصول قبل الإغلاق النهائي
+            setTimeout(() => {
+              finalize({
+                success: true,
+                rewarded: Boolean(rewardPayload),
+                amount: rewardPayload?.amount || 0,
+                type: rewardPayload?.type || null,
+              });
+            }, 1200);
           }),
         );
 

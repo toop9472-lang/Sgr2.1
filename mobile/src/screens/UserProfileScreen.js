@@ -319,7 +319,7 @@ const UserProfileScreen = ({
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "rgba(15,23,42,0.55)" },
+  container: { flex: 1, backgroundColor: "#0f172a" },
   loaderWrap: {
     flex: 1,
     alignItems: "center",
