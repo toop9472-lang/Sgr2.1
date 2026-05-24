@@ -15,7 +15,7 @@ import { useLanguage } from "../i18n/LanguageContext";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const hasNotch = Platform.OS === "ios" && SCREEN_HEIGHT >= 812;
-const BottomNav = ({ currentPage, onNavigate, onAdsPress, onClipsPress }) => {
+const BottomNav = ({ currentPage, onNavigate, onAdsPress, onClipsPress, badges = {} }) => {
   const { language } = useLanguage();
   const navItems = [
     {
@@ -40,6 +40,7 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress, onClipsPress }) => {
 
   const NavButton = ({ item }) => {
     const isActive = currentPage === item.id;
+    const badgeCount = Number(badges[item.id] || 0);
 
     return (
       <TouchableOpacity
@@ -58,6 +59,13 @@ const BottomNav = ({ currentPage, onNavigate, onAdsPress, onClipsPress }) => {
             size={20}
             color={isActive ? "#dbeafe" : "rgba(255,255,255,0.72)"}
           />
+          {badgeCount > 0 && (
+            <View style={styles.badgeWrap}>
+              <Text style={styles.badgeText}>
+                {badgeCount > 99 ? "99+" : badgeCount}
+              </Text>
+            </View>
+          )}
         </View>
         <Text style={[styles.navLabel, isActive && styles.navLabelActive]}>
           {item.label}
@@ -214,6 +222,26 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 13,
     fontWeight: "700",
+  },
+  badgeWrap: {
+    position: "absolute",
+    top: -2,
+    right: -4,
+    minWidth: 16,
+    height: 16,
+    paddingHorizontal: 4,
+    borderRadius: 8,
+    backgroundColor: "#ef4444",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: "rgba(10,10,15,0.95)",
+  },
+  badgeText: {
+    color: "#fff",
+    fontSize: 9,
+    fontWeight: "800",
+    lineHeight: 11,
   },
 });
 

@@ -46,6 +46,12 @@ Strict requirement: Web UI MUST perfectly mirror Mobile UI.
   - Replaced the large details modal with a 72%-height sheet that keeps video visible behind
   - Drag handle + clean header + empty-state illustration + sticky composer
 - ✅ Reusable polished `Skeleton` + `EmptyState` components added; integrated into ClipsScreen.
+- ✅ **Live / Reels top toggle** in ClipsScreen — pressing "لايف" shows polite "Coming soon" alert.
+- ✅ **Bookmark/Save Reels** — heart-bookmark button, persisted locally via AsyncStorage.
+- ✅ **VerifiedBadge** component — inline cyan checkmark, shown next to user names where `is_verified` is true.
+- ✅ **OnboardingTour** — first-launch 4-slide intro (welcome → watch & earn → reels → fortunes), persistence flag `saqr_onboarding_v1_completed`.
+- ✅ **Notification badges** on BottomNav — `badges={profile, advertiser}` wired through props.
+- ✅ **Realistic gem brand icon** — replaced the falcon emblem in the balance card with a photo of a cyan diamond on velvet.
 
 ## P1 Backlog
 - Privacy Manifest / App Tracking Transparency review

@@ -11,7 +11,7 @@ const HOME_ICONS = {
   reels: '/home_icons/reels.jpg',
   chat: '/home_icons/chat.jpg',
   friends: '/home_icons/friends.jpg',
-  brand: '/home_icons/home.png',
+  brand: '/home_icons/gem_brand.jpg',
 };
 
 const HeroTile = ({ image, title, subtitle, badge, onClick, isRTL }) => {

@@ -23,6 +23,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as Sharing from "expo-sharing";
 import * as Linking from "expo-linking";
 import api from "../services/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { APP_BACKGROUND_IMAGE } from "../constants/uiAssets";
 import { hapticLight, hapticMedium } from "../utils/haptics";
 import ReportBlockSheet from "../components/ReportBlockSheet";
@@ -30,6 +31,7 @@ import StoriesBar from "../components/StoriesBar";
 import StoryViewer from "../components/StoryViewer";
 import TrendingHashtags from "../components/TrendingHashtags";
 import EmptyState from "../components/EmptyState";
+import VerifiedBadge from "../components/VerifiedBadge";
 import { ReelsListSkeleton } from "../components/Skeleton";
 
 const MAX_CLIP_DURATION = 15;
@@ -124,9 +126,40 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
   const [reportSheet, setReportSheet] = useState(null);
   const [activeStories, setActiveStories] = useState(null);
   const [showTrending, setShowTrending] = useState(false);
+  const [bookmarked, setBookmarked] = useState(new Set());
   const listRef = useRef(null);
   const touchStartRef = useRef({ y: 0, x: 0, time: 0 });
   const { height: screenHeight } = Dimensions.get("window");
+
+  // Restore bookmarks from disk on mount
+  useEffect(() => {
+    AsyncStorage.getItem("saqr_bookmarked_clips")
+      .then((raw) => {
+        if (raw) {
+          try {
+            const arr = JSON.parse(raw);
+            if (Array.isArray(arr)) setBookmarked(new Set(arr));
+          } catch (_) {
+            /* ignore */
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const toggleBookmark = useCallback((clip) => {
+    hapticLight();
+    setBookmarked((prev) => {
+      const next = new Set(prev);
+      if (next.has(clip.clip_id)) next.delete(clip.clip_id);
+      else next.add(clip.clip_id);
+      AsyncStorage.setItem(
+        "saqr_bookmarked_clips",
+        JSON.stringify(Array.from(next)),
+      ).catch(() => {});
+      return next;
+    });
+  }, []);
 
   const loadClips = useCallback(async () => {
     setLoading(true);
@@ -517,6 +550,7 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
                 <Text style={styles.publisherStripText} numberOfLines={1}>
                   الناشر: {item.user_name || "مستخدم"}
                 </Text>
+                <VerifiedBadge verified={item.is_verified} size={12} />
               </TouchableOpacity>
               <View style={styles.clipBadge}>
                 <Ionicons name="flash-outline" size={12} color="#22d3ee" />
@@ -593,6 +627,20 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
 
                 <TouchableOpacity
                   style={styles.reelActionBtn}
+                  onPress={() => toggleBookmark(item)}
+                >
+                  <Ionicons
+                    name={bookmarked.has(item.clip_id) ? "bookmark" : "bookmark-outline"}
+                    size={20}
+                    color={bookmarked.has(item.clip_id) ? "#fbbf24" : "#fff"}
+                  />
+                  <Text style={styles.actionText}>
+                    {bookmarked.has(item.clip_id) ? "محفوظ" : "حفظ"}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.reelActionBtn}
                   onPress={async () => {
                     hapticLight();
                     try {
@@ -639,7 +687,7 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
         </View>
       );
     },
-    [activeIndex, deleteClip, followLoadingUserId, isAdmin, onOpenUserProfile, screenHeight, toggleFollow, toggleLike, userId],
+    [activeIndex, bookmarked, deleteClip, followLoadingUserId, isAdmin, onOpenUserProfile, screenHeight, toggleBookmark, toggleFollow, toggleLike, userId],
   );
 
   const emptyState = useMemo(
@@ -732,7 +780,29 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
           <TouchableOpacity style={styles.headerBtn} onPress={onClose}>
             <Ionicons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>ميدان المقاطع</Text>
+
+          {/* Reels / Live tab toggle — TikTok style */}
+          <View style={styles.topTabs}>
+            <TouchableOpacity
+              style={styles.topTab}
+              activeOpacity={0.85}
+              onPress={() => {
+                hapticLight();
+                Alert.alert(
+                  "قريباً",
+                  "ميزة البث المباشر ستتوفر قريباً. ترقّبها!",
+                );
+              }}
+            >
+              <Text style={styles.topTabText}>لايف</Text>
+            </TouchableOpacity>
+            <View style={styles.topTabDivider} />
+            <TouchableOpacity style={styles.topTab} activeOpacity={1}>
+              <Text style={[styles.topTabText, styles.topTabActive]}>ريلز</Text>
+              <View style={styles.topTabUnderline} />
+            </TouchableOpacity>
+          </View>
+
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <TouchableOpacity
               style={styles.headerBtn}
@@ -1014,6 +1084,39 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   headerTitle: { color: "#fff", fontSize: 20, fontWeight: "800" },
+  topTabs: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  topTab: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    alignItems: "center",
+  },
+  topTabText: {
+    color: "rgba(255,255,255,0.55)",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  topTabActive: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "900",
+  },
+  topTabUnderline: {
+    marginTop: 4,
+    width: 24,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: "#fff",
+  },
+  topTabDivider: {
+    width: 1,
+    height: 16,
+    backgroundColor: "rgba(255,255,255,0.25)",
+    marginHorizontal: 2,
+  },
   loadingWrap: { flex: 1, justifyContent: "center", alignItems: "center" },
   loadingText: { color: "#cbd5e1", marginTop: 10 },
   listContent: { padding: 14, paddingBottom: 110 },

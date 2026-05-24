@@ -9,7 +9,7 @@ export const HOME_ICONS = {
   reels: require("../../assets/home_icons/reels.jpg"),
   chat: require("../../assets/home_icons/chat.jpg"),
   friends: require("../../assets/home_icons/friends.jpg"),
-  brand: require("../../assets/home_icons/home.png"),
+  brand: require("../../assets/home_icons/gem_brand.jpg"),
 };
 
 export const ICON_ASSETS = {

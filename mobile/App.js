@@ -60,6 +60,7 @@ import PrivateMessagesScreen from "./src/screens/PrivateMessagesScreen";
 
 // Components
 import BottomNav from "./src/components/BottomNav";
+import OnboardingTour from "./src/components/OnboardingTour";
 
 // Contexts
 import { LanguageProvider, useLanguage } from "./src/i18n/LanguageContext";
@@ -788,10 +789,17 @@ function AppContent() {
           onNavigate={setCurrentPage}
           onAdsPress={() => setShowAdsViewer(true)}
           onClipsPress={() => setCurrentPage("clips")}
+          badges={{
+            profile: Number(user?.unread_notifications || 0),
+            advertiser: Number(user?.advertiser_pending || 0),
+          }}
         />
       )}
 
       <StatusBar style={effectiveTheme === "light" ? "dark" : "light"} />
+
+      {/* First-launch onboarding tour */}
+      <OnboardingTour />
     </View>
   );
 }
