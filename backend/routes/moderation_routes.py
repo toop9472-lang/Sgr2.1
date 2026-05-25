@@ -148,7 +148,35 @@ async def list_blocks(user_id: str):
     blocks = await db.user_blocks.find(
         {"user_id": user_id}, {"_id": 0}
     ).sort("created_at", -1).to_list(500)
-    return {"user_id": user_id, "blocked": [b["target_user_id"] for b in blocks], "count": len(blocks)}
+    target_ids = [b["target_user_id"] for b in blocks]
+    # Hydrate basic profile info so clients can render names/avatars without
+    # extra round-trips per blocked user.
+    users = []
+    if target_ids:
+        cursor = db.users.find(
+            {"$or": [{"id": {"$in": target_ids}}, {"user_id": {"$in": target_ids}}]},
+            {"_id": 0, "id": 1, "user_id": 1, "name": 1, "avatar": 1, "is_verified": 1},
+        )
+        docs = await cursor.to_list(length=len(target_ids) + 50)
+        by_id = {}
+        for d in docs:
+            canonical = d.get("id") or d.get("user_id")
+            if canonical:
+                by_id[canonical] = d
+        for tid in target_ids:
+            d = by_id.get(tid) or {}
+            users.append({
+                "user_id": tid,
+                "name": d.get("name") or "مستخدم محذوف",
+                "avatar": d.get("avatar") or "",
+                "is_verified": bool(d.get("is_verified")),
+            })
+    return {
+        "user_id": user_id,
+        "blocked": target_ids,
+        "users": users,
+        "count": len(blocks),
+    }
 
 
 @router.post("/block")

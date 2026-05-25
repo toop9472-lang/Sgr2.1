@@ -111,3 +111,10 @@ Strict requirement: Web UI MUST perfectly mirror Mobile UI.
 - **Profile follower/following lists**: New backend endpoints `/api/users/followers/{id}` and `/api/users/following/{id}` with proper privacy enforcement (private accounts only expose lists to owner or existing followers). New reusable `FollowListModal` component used by both `ProfileScreen` (own profile) and `UserProfileScreen` (other users).
 - **Settings revamp**: New sectioned layout (Account, Preferences, About & Support, Account Actions). All icons unified to pure white (`#FFF`). Added Blocked Users, Help & Support, Terms, Privacy Policy, Version row. Header redone with dark luxury palette instead of bright purple block.
 - **Fixed UserProfileScreen follow bug**: payload was sending `follower_user_id` but backend expects `viewer_user_id` — now corrected.
+- **Profile reel thumbnails fix**: Each reel tile in the profile grid now renders its own real thumbnail (absolute URL resolved). When `thumbnail_url` is missing, a deterministic varied fallback is picked from a pool of 9 Unsplash images per `clip_id`, so the grid no longer looks like a uniform red/pink block. A subtle play-overlay icon is rendered above the image. Applied to both `ProfileScreen.js` and `UserProfileScreen.js`.
+- **Blocked Users feature wired**: New `BlockedUsersScreen.js` with route `blocked-users` in `App.js`, opened from Settings → "المستخدمون المحظورون". Lists blocked users with avatar/name/verified-badge and an "إلغاء الحظر" action. Backend `GET /api/moderation/blocks/{user_id}` enhanced to return hydrated `users` array (name/avatar/is_verified) so the frontend doesn't need extra round-trips.
+
+## Verified Backend (curl)
+- AdMob reward flow: `/api/economy/ad-watch-reward` grants +5 gems, cooldown 15s enforced, daily progress tracked. Tested end-to-end.
+- Followers/Following lists: privacy honored (`private: true` returned when viewer can't see).
+- Block/Unblock: persists, hydrated list works, idempotent block returns `already_blocked: true`.

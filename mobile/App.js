@@ -49,6 +49,7 @@ import AdvertiserScreen from "./src/screens/AdvertiserScreen";
 import AdvertiserDashboardScreen from "./src/screens/AdvertiserDashboardScreen";
 import AdViewerScreen from "./src/screens/AdViewerScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
+import BlockedUsersScreen from "./src/screens/BlockedUsersScreen";
 import SupportScreen from "./src/screens/SupportScreen";
 import ClipsScreen from "./src/screens/ClipsScreen";
 import AchievementsScreen from "./src/screens/AchievementsScreen";
@@ -685,11 +686,18 @@ function AppContent() {
               onThemeChange={handleThemeChange}
               currentHomePreset={homePreset}
               onHomePresetChange={handleHomePresetChange}
+              onOpenBlockedUsers={() => setCurrentPage("blocked-users")}
               onUpdateProfile={async (updates) => {
                 const updatedUser = { ...(user || {}), ...(updates || {}) };
                 setUser(updatedUser);
                 await storage.setUserData(updatedUser);
               }}
+            />
+          )}
+          {currentPage === "blocked-users" && (
+            <BlockedUsersScreen
+              user={user}
+              onBack={() => setCurrentPage("settings")}
             />
           )}
           {currentPage === "advertiser" && <AdvertiserScreen />}

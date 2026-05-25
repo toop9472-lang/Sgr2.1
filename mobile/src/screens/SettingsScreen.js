@@ -24,6 +24,7 @@ const SettingsScreen = ({
   currentHomePreset = 'luxuryDark',
   onHomePresetChange,
   onUpdateProfile,
+  onOpenBlockedUsers,
 }) => {
   const [theme, setTheme] = useState(currentTheme);
   const [homePreset, setHomePreset] = useState(currentHomePreset);
@@ -240,10 +241,16 @@ const SettingsScreen = ({
           icon: 'remove-circle-outline',
           label: language === 'ar' ? 'المستخدمون المحظورون' : 'Blocked Users',
           value: language === 'ar' ? 'إدارة' : 'Manage',
-          action: () => Alert.alert(
-            language === 'ar' ? 'قريباً' : 'Coming Soon',
-            language === 'ar' ? 'صفحة إدارة المحظورين ستتوفر قريباً.' : 'Blocked users management is coming soon.',
-          ),
+          action: () => {
+            if (onOpenBlockedUsers) {
+              onOpenBlockedUsers();
+            } else {
+              Alert.alert(
+                language === 'ar' ? 'غير متاح' : 'Unavailable',
+                language === 'ar' ? 'الميزة غير مفعلة في هذه الشاشة.' : 'Not enabled here.',
+              );
+            }
+          },
         },
         {
           id: '2fa',

@@ -16,6 +16,35 @@ import { LinearGradient } from "expo-linear-gradient";
 import api from "../services/api";
 import FollowListModal from "../components/FollowListModal";
 
+const REEL_FALLBACKS = [
+  "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=600&q=80",
+  "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=600&q=80",
+  "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=600&q=80",
+  "https://images.unsplash.com/photo-1521334884684-d80222895322?auto=format&fit=crop&w=600&q=80",
+  "https://images.unsplash.com/photo-1493612276216-ee3925520721?auto=format&fit=crop&w=600&q=80",
+  "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=600&q=80",
+  "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=600&q=80",
+  "https://images.unsplash.com/photo-1518609571773-39b7d303a87b?auto=format&fit=crop&w=600&q=80",
+  "https://images.unsplash.com/photo-1483393458019-411bc6bd104e?auto=format&fit=crop&w=600&q=80",
+];
+
+const toAbsoluteUrl = (value) => {
+  const normalized = (value || "").trim();
+  if (!normalized) return "";
+  if (normalized.startsWith("http")) return normalized;
+  if (normalized.startsWith("/")) return `${api.getActiveBaseUrl()}${normalized}`;
+  return normalized;
+};
+
+const resolveClipThumb = (clip, index) => {
+  const direct = toAbsoluteUrl(clip?.thumbnail_url);
+  if (direct) return direct;
+  const key = String(clip?.clip_id || index || "");
+  let hash = 0;
+  for (let i = 0; i < key.length; i += 1) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  return REEL_FALLBACKS[hash % REEL_FALLBACKS.length];
+};
+
 const { width: screenWidth } = Dimensions.get("window");
 const GRID_COLUMN_COUNT = 3;
 const GRID_GAP = 2;
@@ -129,19 +158,19 @@ const UserProfileScreen = ({
   }, [isSelf, onOpenChat, profile]);
 
   const renderClipTile = useCallback(
-    ({ item }) => (
+    ({ item, index }) => (
       <TouchableOpacity
         style={styles.tile}
         activeOpacity={0.7}
         onPress={() => onOpenClip && onOpenClip(item)}
       >
-        {item.thumbnail_url ? (
-          <Image source={{ uri: item.thumbnail_url }} style={styles.tileImage} />
-        ) : (
-          <View style={styles.tilePlaceholder}>
-            <Ionicons name="play-outline" size={26} color="rgba(255,255,255,0.75)" />
-          </View>
-        )}
+        <Image
+          source={{ uri: resolveClipThumb(item, index) }}
+          style={styles.tileImage}
+        />
+        <View style={styles.tilePlayOverlay}>
+          <Ionicons name="play" size={22} color="rgba(255,255,255,0.92)" />
+        </View>
         <View style={styles.tileBadge}>
           <Ionicons name="heart" size={11} color="#fff" />
           <Text style={styles.tileBadgeText}>{item.likes_count || 0}</Text>
@@ -484,6 +513,16 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   tileImage: { width: "100%", height: "100%", resizeMode: "cover" },
+  tilePlayOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.15)",
+  },
   tilePlaceholder: {
     flex: 1,
     alignItems: "center",
