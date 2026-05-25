@@ -15,6 +15,7 @@
       "**/*"
     ],
     "plugins": [
+      "react-native-iap",
       [
         "expo-build-properties",
         {

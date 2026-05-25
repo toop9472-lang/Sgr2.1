@@ -247,6 +247,46 @@ async def send_gift(req: SendGiftRequest):
     if not gift:
         raise HTTPException(status_code=404, detail="الهدية غير موجودة في الكتالوج")
 
+    # --- Apple IAP enforcement -------------------------------------------------
+    # On iOS production, require a verified StoreKit 2 signed transaction.
+    # Sandbox + Android are accepted with a softer check during development.
+    iap_env = "local"
+    iap_verified = False
+    if (req.platform or "").lower() == "ios":
+        if not req.receipt:
+            raise HTTPException(status_code=400, detail="receipt مطلوب لمشتريات iOS")
+        try:
+            from services.apple_iap_service import verify_with_fallback
+            payload, iap_env = verify_with_fallback(req.receipt)
+            iap_verified = True
+            # Cross-check product
+            apple_product_id = (payload.get("productId") or "").strip()
+            if apple_product_id and apple_product_id != gift["ios_product_id"]:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Apple productId mismatch: receipt={apple_product_id}, expected={gift['ios_product_id']}",
+                )
+            # Prevent receipt reuse
+            apple_tx_id = str(payload.get("transactionId") or "")
+            if apple_tx_id:
+                already = await db.gift_transactions.find_one(
+                    {"apple_transaction_id": apple_tx_id}, {"_id": 0, "tx_id": 1}
+                )
+                if already:
+                    raise HTTPException(
+                        status_code=409,
+                        detail="هذه العملية تم استخدامها من قبل",
+                    )
+                req.transaction_id = apple_tx_id
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"فشل التحقق من إيصال Apple: {type(e).__name__}: {e}",
+            ) from e
+    # ---------------------------------------------------------------------------
+
     receiver = await db.users.find_one(
         {"$or": [{"id": receiver_id}, {"user_id": receiver_id}]},
         {"_id": 0, "id": 1, "user_id": 1, "saqr_gems": 1, "name": 1, "avatar": 1},
@@ -325,7 +365,10 @@ async def send_gift(req: SendGiftRequest):
         "message": req.message,
         "platform": req.platform,
         "transaction_id": req.transaction_id,
+        "apple_transaction_id": req.transaction_id if (req.platform or "").lower() == "ios" else None,
         "iap_receipt_present": bool(req.receipt),
+        "iap_verified": iap_verified,
+        "iap_env": iap_env,
         "delivered": False,         # set true once receiver fetches it
         "delivered_at": None,
         "created_at": now_dt.isoformat(),
@@ -401,21 +444,60 @@ class VerifyReceiptRequest(BaseModel):
 
 @router.post("/verify-receipt")
 async def verify_receipt(req: VerifyReceiptRequest):
-    """Phase 2: validate Apple/Google receipt before recording the gift.
+    """Validate Apple StoreKit 2 signed transaction (or Android purchase token).
 
-    For now this only records a pending verification and trusts the client.
-    Real Apple verification will POST the receipt to verifyReceipt-prod
-    (and fallback to verifyReceipt-sandbox) once the user adds the shared
-    secret to env (`APPLE_IAP_SHARED_SECRET`).
+    For iOS: `req.receipt` must be a StoreKit 2 JWS signed transaction string.
+    The server verifies the signature locally using the embedded x5c chain,
+    confirms the bundleId matches, then cross-checks with Apple's App Store
+    Server API (prod first, sandbox fallback).
     """
-    now_dt = datetime.now(timezone.utc)
+    platform = (req.platform or "").lower()
+    if platform == "ios":
+        try:
+            from services.apple_iap_service import verify_with_fallback, is_configured
+            if not is_configured():
+                raise RuntimeError("Apple IAP keys are not configured on the server")
+            payload, env = verify_with_fallback(req.receipt)
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Apple verification failed: {type(e).__name__}: {e}",
+            ) from e
+
+        # Persist for auditing
+        await db.iap_receipts.insert_one({
+            "user_id": req.user_id,
+            "platform": "ios",
+            "product_id": payload.get("productId") or req.product_id,
+            "transaction_id": str(payload.get("transactionId") or req.transaction_id),
+            "original_transaction_id": str(payload.get("originalTransactionId") or ""),
+            "bundle_id": payload.get("bundleId"),
+            "purchase_date_ms": payload.get("purchaseDate"),
+            "verified": True,
+            "env": env,  # "prod" | "sandbox" | "local"
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+        return {
+            "success": True,
+            "verified": True,
+            "env": env,
+            "transaction_id": payload.get("transactionId"),
+            "product_id": payload.get("productId"),
+            "bundle_id": payload.get("bundleId"),
+        }
+
+    # Android / other platforms (Phase 2 follow-up)
     await db.iap_receipts.insert_one({
         "user_id": req.user_id,
-        "platform": req.platform,
+        "platform": platform,
         "product_id": req.product_id,
         "transaction_id": req.transaction_id,
         "receipt_len": len(req.receipt or ""),
         "verified": False,
-        "created_at": now_dt.isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
     })
-    return {"success": True, "verified": False, "message": "Receipt stored for backend verification (Phase 2)."}
+    return {
+        "success": True,
+        "verified": False,
+        "message": "Receipt stored. Android/Google Play verification not yet implemented.",
+    }

@@ -9,10 +9,16 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { getCatalog, sendGift } from "../services/giftsService";
+import {
+  isIAPAvailable,
+  purchaseGiftProduct,
+  finishPurchase,
+} from "../services/appleIapService";
 import { hapticLight, hapticMedium } from "../utils/haptics";
 
 /**
@@ -96,6 +102,60 @@ const GiftPickerModal = ({
     }
     hapticMedium();
     setSending(true);
+
+    // ── iOS production flow: real Apple IAP via StoreKit 2 ────────────────
+    if (Platform.OS === "ios" && isIAPAvailable()) {
+      const productId = selected.ios_product_id;
+      let purchaseResult = null;
+      try {
+        purchaseResult = await purchaseGiftProduct(productId);
+      } catch (e) {
+        setSending(false);
+        if (!e?.userCancelled) {
+          Alert.alert("تعذر الشراء", String(e?.message || e));
+        }
+        return;
+      }
+
+      if (!purchaseResult?.jws) {
+        setSending(false);
+        Alert.alert("خطأ", "لم نستلم إيصال الشراء من Apple. حاول مرة أخرى.");
+        return;
+      }
+
+      try {
+        const res = await sendGift({
+          senderId,
+          receiverId: receiver.user_id,
+          giftId: selected.gift_id,
+          contextType,
+          contextId,
+          platform: "ios",
+          transactionId: purchaseResult.transactionId,
+          receipt: purchaseResult.jws,
+        });
+        // Always finish the StoreKit transaction once the gems are credited
+        await finishPurchase(purchaseResult.purchase);
+        if (onSent) {
+          onSent({
+            ...res,
+            gift: { ...selected, ...(res?.gift || {}) },
+            receiver,
+          });
+        }
+        onClose && onClose();
+      } catch (e) {
+        Alert.alert(
+          "تعذر إيصال الهدية",
+          `${e?.message || e}\n\nسيتم استرداد المبلغ تلقائياً من Apple إذا لم يُستهلك الشراء.`,
+        );
+      } finally {
+        setSending(false);
+      }
+      return;
+    }
+
+    // ── Android / Expo Go / dev: backend-only sandbox path ────────────────
     try {
       const res = await sendGift({
         senderId,
@@ -103,9 +163,14 @@ const GiftPickerModal = ({
         giftId: selected.gift_id,
         contextType,
         contextId,
-        platform: "sandbox", // Phase 2: replace with real IAP platform + receipt
+        platform: Platform.OS === "android" ? "android" : "sandbox",
       });
-      if (onSent) onSent({ ...res, gift: { ...selected, ...(res?.gift || {}) }, receiver });
+      if (onSent)
+        onSent({
+          ...res,
+          gift: { ...selected, ...(res?.gift || {}) },
+          receiver,
+        });
       onClose && onClose();
     } catch (e) {
       Alert.alert("تعذر الإرسال", String(e?.message || e));

@@ -51,6 +51,7 @@ import AdViewerScreen from "./src/screens/AdViewerScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import BlockedUsersScreen from "./src/screens/BlockedUsersScreen";
 import { GiftCenterProvider } from "./src/components/GiftCenterProvider";
+import { initIAP, shutdownIAP } from "./src/services/appleIapService";
 import SupportScreen from "./src/screens/SupportScreen";
 import ClipsScreen from "./src/screens/ClipsScreen";
 import AchievementsScreen from "./src/screens/AchievementsScreen";
@@ -147,11 +148,14 @@ function AppContent() {
     initApp();
     setupNotifications();
     setupAudioMode();
+    // Initialize Apple/Google IAP (no-op on Expo Go; real on native builds)
+    initIAP().catch((e) => console.warn("IAP init:", e?.message || e));
 
     return () => {
       if (notificationListenerRef.current) {
         notificationListenerRef.current();
       }
+      shutdownIAP().catch(() => {});
     };
   }, []);
 

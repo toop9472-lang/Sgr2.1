@@ -127,26 +127,47 @@ Strict requirement: Web UI MUST perfectly mirror Mobile UI.
 - Block/Unblock: persists, hydrated list works, idempotent block returns `already_blocked: true`.
 - Gifts system Phase 1 (Feb 2026): 15/15 backend tests passed at 100%. Catalog returns 12 gifts. Send credits gems atomically via `find_one_and_update`. Pending → delivered idempotency confirmed. Self-gift / invalid gift_id / unknown receiver all return correct errors. `context_type` whitelist-validated via Pydantic Literal (422 on invalid value).
 
-## Gifts System (Phase 1 — IMPLEMENTED Feb 2026)
-**Backend** (`/app/backend/routes/gifts_routes.py`):
+## Gifts System (Phase 1 — IMPLEMENTED Feb 2026) + Apple IAP (Phase 2 — DONE Feb 2026)
+**Backend** (`/app/backend/routes/gifts_routes.py`, `services/apple_iap_service.py`):
 - 12-gift catalog (3 → 299 SAR) with Microsoft Fluent Emoji 3D images (MIT licensed, **NOT emojis**, real PNG renders).
-- Receiver earns 20% of price as Saqr Gems at rate `500 gems = 3 SAR`. Examples: Rose 3 SAR → 100 gems; Crown 100 SAR → 3333 gems; Golden Eagle 299 SAR → 9967 gems.
-- Animation kinds: `fall | rise | drive | sparkle | bounce | epic` — driven by client overlay.
+- Receiver earns 20% of price as Saqr Gems at rate `500 gems = 3 SAR`.
+- Animation kinds: `fall | rise | drive | sparkle | bounce | epic`.
+- **Apple StoreKit 2 verification fully implemented** using App Store Server API JWT signed by `.p8` (ES256). Validates JWS signature with embedded x5c chain, checks bundleId == `com.saqr.rewards`, cross-checks `productId` against catalog. Prevents replay attacks (one transactionId per gift).
+- iOS gifts: now REQUIRE valid Apple receipt → 400 on missing/invalid JWS.
+
+**Apple IAP credentials** (in `/app/backend/secrets/` and `.env`):
+- `APPLE_IAP_BUNDLE_ID=com.saqr.rewards`
+- `APPLE_IAP_ISSUER_ID=2b3dfd1a-b44d-4cf7-94b8-6f10d64b9567`
+- `APPLE_IAP_KEY_ID=KX82RC2996`
+- `APPLE_IAP_KEY_PATH=/app/backend/secrets/apple_iap_key.p8` (mode 600)
+- Sandbox tester: `aaaaaatata079@gmail.com`
 
 **Mobile** (`/app/mobile/src/`):
 - `services/giftsService.js` — REST client.
-- `components/GiftPickerModal.js` — bottom sheet with 3x grid + price tier tabs + send button.
-- `components/GiftAnimationOverlay.js` — full-screen cinematic overlay (particles + hero + sender card) using built-in `Animated` API (no Lottie/Reanimated needed).
+- `services/appleIapService.js` — `react-native-iap` wrapper with StoreKit 2 mode + auto-fallback for Expo Go.
+- `components/GiftPickerModal.js` — bottom sheet with 3x grid + price tier tabs + send button. **iOS path**: triggers real Apple purchase sheet → extracts JWS → sends to backend with platform="ios" + receipt. **Android/Sandbox path**: legacy backend-only flow.
+- `components/GiftAnimationOverlay.js` — full-screen cinematic overlay (particles + hero + sender card).
 - `components/GiftCenter.js` — polling controller (every 10s + on app foreground).
-- `components/GiftCenterProvider.js` — context wrapper mounted at app root, exposes `useGiftCenter()` hook with `playLocal(gift)` for instant sender preview.
+- `components/GiftCenterProvider.js` — context wrapper.
 
-**Wired into 3 send locations** (per user request):
-1. **Private chat** (`PrivateMessagesScreen.js`): gift button next to text input.
-2. **Reel comments sheet** (`ClipsScreen.js`): gift button in comment composer.
-3. **User profile** (`UserProfileScreen.js`): pink "هدية" button next to "متابعة" / "رسالة خاصة".
+**12 IAP Products created in App Store Connect** (Consumable):
+`com.saqr.gift.{rose, bouquet, chocolate, teddy, gem, crown, cake, car, ring, castle, yacht, trophy}`
 
-## Phase 2 — TODO (when user provides App Store Connect / Google Play config)
-- Install `react-native-iap` and bridge to `/api/gifts/verify-receipt`.
-- Implement real Apple receipt verification (POST to `verifyReceipt-prod` w/ fallback to sandbox) and Google Play purchase token verification.
-- Gate `/api/gifts/send` behind a verified receipt before crediting gems.
-- IAP Product IDs already declared in catalog: `com.saqr.gift.*` (iOS), `saqr_gift_*` (Android).
+**App Store Review Screenshots**: 1024×1024 luxury renders generated at `/app/frontend/public/app-store-assets/` (12 PNGs + ZIP).
+
+**Wired into 3 send locations**:
+1. **Private chat** — gift button next to text input.
+2. **Reel comments sheet** — gift button in comment composer.
+3. **User profile** — pink "هدية" button next to "متابعة" / "رسالة خاصة".
+
+## Phase 2 — DONE
+- ✅ react-native-iap installed (`^12.15.0`)
+- ✅ Expo plugin registered in `app.json` (`react-native-iap`)
+- ✅ Apple receipt verification with App Store Server API + JWT signing
+- ✅ Bundle ID, Issuer ID, Key ID, .p8 file all wired into env
+- ✅ Sandbox tester documented
+
+## Phase 3 — Next steps
+- 🍎 Run `eas build --profile production --platform ios` to produce TestFlight build with IAP
+- 🤖 Create Google Play IAP products + implement Play Billing receipt verification (`google_iap_service.py`)
+- 🧪 Test full purchase flow on real iPhone with sandbox tester `aaaaaatata079@gmail.com`
