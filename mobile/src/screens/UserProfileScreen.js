@@ -14,6 +14,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import api from "../services/api";
+import FollowListModal from "../components/FollowListModal";
 
 const { width: screenWidth } = Dimensions.get("window");
 const GRID_COLUMN_COUNT = 3;
@@ -37,6 +38,7 @@ const UserProfileScreen = ({
   const [clips, setClips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [followBusy, setFollowBusy] = useState(false);
+  const [followListMode, setFollowListMode] = useState(null); // 'followers' | 'following' | null
 
   const isSelf = useMemo(
     () => Boolean(viewerId && profile?.user_id === viewerId),
@@ -88,7 +90,7 @@ const UserProfileScreen = ({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          follower_user_id: viewerId,
+          viewer_user_id: viewerId,
           target_user_id: profile.user_id,
         }),
       });
@@ -98,11 +100,9 @@ const UserProfileScreen = ({
         prev
           ? {
               ...prev,
-              followed_by_me: Boolean(data?.is_following),
-              followers_count: Math.max(
-                0,
-                (prev.followers_count || 0) +
-                  (data?.is_following ? 1 : -1),
+              followed_by_me: Boolean(data?.followed),
+              followers_count: Number(
+                data?.followers_count ?? prev.followers_count ?? 0,
               ),
             }
           : prev,
@@ -228,15 +228,27 @@ const UserProfileScreen = ({
             <Text style={styles.statLabel}>ريلز</Text>
           </View>
           <View style={styles.statDivider} />
-          <View style={styles.statCol}>
+          <TouchableOpacity
+            style={styles.statCol}
+            activeOpacity={0.7}
+            onPress={() => setFollowListMode("followers")}
+            accessibilityRole="button"
+            accessibilityLabel="عرض المتابعين"
+          >
             <Text style={styles.statValue}>{profile.followers_count}</Text>
             <Text style={styles.statLabel}>متابعون</Text>
-          </View>
+          </TouchableOpacity>
           <View style={styles.statDivider} />
-          <View style={styles.statCol}>
+          <TouchableOpacity
+            style={styles.statCol}
+            activeOpacity={0.7}
+            onPress={() => setFollowListMode("following")}
+            accessibilityRole="button"
+            accessibilityLabel="عرض قائمة المتابَعين"
+          >
             <Text style={styles.statValue}>{profile.following_count}</Text>
             <Text style={styles.statLabel}>يتابع</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Action buttons */}
@@ -314,6 +326,19 @@ const UserProfileScreen = ({
           />
         )}
       </ScrollView>
+
+      <FollowListModal
+        visible={Boolean(followListMode)}
+        mode={followListMode || "followers"}
+        targetUserId={profile?.user_id}
+        viewerId={viewerId}
+        onClose={() => setFollowListMode(null)}
+        onOpenUser={(uid) => {
+          // Already in a user profile — replace would be ideal,
+          // but here we just close the modal to avoid stacking issues.
+          setFollowListMode(null);
+        }}
+      />
     </View>
   );
 };

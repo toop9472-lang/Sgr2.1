@@ -28,6 +28,7 @@ import * as ImagePicker from "expo-image-picker";
 import api from "../services/api";
 import storage from "../services/storage";
 import { useAchievements } from "../services/AchievementsContext";
+import FollowListModal from "../components/FollowListModal";
 
 const ProfileScreen = ({
   user,
@@ -37,6 +38,7 @@ const ProfileScreen = ({
   onOpenAdminPanel,
   onUpdateProfile,
   onOpenSettings,
+  onOpenUserProfile,
 }) => {
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -68,6 +70,7 @@ const ProfileScreen = ({
   });
   const [myClips, setMyClips] = useState([]);
   const [myClipsLoading, setMyClipsLoading] = useState(false);
+  const [followListMode, setFollowListMode] = useState(null); // 'followers' | 'following' | null
 
   // Achievements context
   const { recordAppShared } = useAchievements();
@@ -656,16 +659,28 @@ const ProfileScreen = ({
             <Text style={styles.statValue}>{referrals}</Text>
             <Text style={styles.statLabel}>إحالات</Text>
           </View>
-          <View style={styles.statBox}>
-            <Ionicons name="person-add-outline" size={18} color="#38bdf8" />
+          <TouchableOpacity
+            style={styles.statBox}
+            activeOpacity={0.7}
+            onPress={() => setFollowListMode("following")}
+            accessibilityRole="button"
+            accessibilityLabel="عرض قائمة من تتابعهم"
+          >
+            <Ionicons name="person-add-outline" size={18} color="#FFF" />
             <Text style={styles.statValue}>{followStats.following_count}</Text>
             <Text style={styles.statLabel}>يتابع</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Ionicons name="people-outline" size={18} color="#0ea5e9" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.statBox}
+            activeOpacity={0.7}
+            onPress={() => setFollowListMode("followers")}
+            accessibilityRole="button"
+            accessibilityLabel="عرض المتابعين"
+          >
+            <Ionicons name="people-outline" size={18} color="#FFF" />
             <Text style={styles.statValue}>{followStats.followers_count}</Text>
             <Text style={styles.statLabel}>متابعون</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* My Reels Grid */}
@@ -1045,6 +1060,18 @@ const ProfileScreen = ({
           </View>
         </View>
       </Modal>
+
+      <FollowListModal
+        visible={Boolean(followListMode)}
+        mode={followListMode || "followers"}
+        targetUserId={user?.id || user?.user_id}
+        viewerId={user?.id || user?.user_id}
+        onClose={() => setFollowListMode(null)}
+        onOpenUser={(uid) => {
+          setFollowListMode(null);
+          if (onOpenUserProfile && uid) onOpenUserProfile(uid);
+        }}
+      />
     </ScrollView>
   );
 };

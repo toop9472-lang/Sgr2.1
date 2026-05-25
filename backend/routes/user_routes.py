@@ -371,3 +371,125 @@ async def set_account_privacy(user_id: str, data: dict):
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail='المستخدم غير موجود')
     return {'success': True, 'is_private': is_private}
+
+
+async def _can_view_social_lists(db, canonical_id: str, viewer_id: Optional[str]) -> bool:
+    """Privacy gate: only owner or follower can view lists of a private account."""
+    target = await db.users.find_one(
+        {'$or': [{'id': canonical_id}, {'user_id': canonical_id}]},
+        {'_id': 0, 'is_private': 1, 'id': 1, 'user_id': 1},
+    )
+    if not target:
+        return False
+    if not target.get('is_private'):
+        return True
+    if viewer_id and viewer_id == canonical_id:
+        return True
+    if not viewer_id:
+        return False
+    return bool(
+        await db.clips_follows.find_one(
+            {'follower_user_id': viewer_id, 'target_user_id': canonical_id},
+            {'_id': 0, 'follow_id': 1},
+        )
+    )
+
+
+async def _hydrate_users_by_ids(db, user_ids: list, viewer_id: Optional[str]) -> list:
+    """Return minimal public user info for a list of user ids."""
+    if not user_ids:
+        return []
+    cursor = db.users.find(
+        {'$or': [{'id': {'$in': user_ids}}, {'user_id': {'$in': user_ids}}]},
+        {'_id': 0, 'id': 1, 'user_id': 1, 'name': 1, 'avatar': 1, 'is_private': 1, 'is_verified': 1},
+    )
+    docs = await cursor.to_list(length=len(user_ids) + 50)
+    # Map back to original order
+    by_id = {}
+    for d in docs:
+        canonical = d.get('id') or d.get('user_id')
+        if canonical:
+            by_id[canonical] = d
+    out = []
+    follow_targets = set()
+    if viewer_id:
+        # Pre-compute which of these the viewer follows for the "متابعة/متابَع" tag
+        follows = await db.clips_follows.find(
+            {'follower_user_id': viewer_id, 'target_user_id': {'$in': user_ids}},
+            {'_id': 0, 'target_user_id': 1},
+        ).to_list(length=len(user_ids) + 50)
+        follow_targets = {f.get('target_user_id') for f in follows}
+    for uid in user_ids:
+        d = by_id.get(uid)
+        if not d:
+            continue
+        canonical = d.get('id') or d.get('user_id') or uid
+        out.append({
+            'user_id': canonical,
+            'name': d.get('name') or 'مستخدم',
+            'avatar': d.get('avatar') or '',
+            'is_private': bool(d.get('is_private')),
+            'is_verified': bool(d.get('is_verified')),
+            'followed_by_me': canonical in follow_targets if viewer_id else False,
+        })
+    return out
+
+
+@router.get('/followers/{target_user_id}')
+async def list_followers(
+    target_user_id: str,
+    viewer_id: Optional[str] = None,
+    limit: int = 100,
+):
+    """Return followers of a user. Respects `is_private`."""
+    db = get_db()
+    target = await db.users.find_one(
+        {'$or': [{'id': target_user_id}, {'user_id': target_user_id}]},
+        {'_id': 0, 'id': 1, 'user_id': 1, 'is_private': 1},
+    )
+    if not target:
+        raise HTTPException(status_code=404, detail='المستخدم غير موجود')
+    canonical_id = target.get('id') or target.get('user_id') or target_user_id
+
+    can_view = await _can_view_social_lists(db, canonical_id, viewer_id)
+    if not can_view:
+        return {'users': [], 'count': 0, 'private': True}
+
+    capped = max(1, min(int(limit or 100), 500))
+    rows = await db.clips_follows.find(
+        {'target_user_id': canonical_id},
+        {'_id': 0, 'follower_user_id': 1, 'created_at': 1},
+    ).sort('created_at', -1).limit(capped).to_list(capped)
+    user_ids = [r.get('follower_user_id') for r in rows if r.get('follower_user_id')]
+    users = await _hydrate_users_by_ids(db, user_ids, viewer_id)
+    return {'users': users, 'count': len(users), 'private': False}
+
+
+@router.get('/following/{target_user_id}')
+async def list_following(
+    target_user_id: str,
+    viewer_id: Optional[str] = None,
+    limit: int = 100,
+):
+    """Return users the target follows. Respects `is_private`."""
+    db = get_db()
+    target = await db.users.find_one(
+        {'$or': [{'id': target_user_id}, {'user_id': target_user_id}]},
+        {'_id': 0, 'id': 1, 'user_id': 1, 'is_private': 1},
+    )
+    if not target:
+        raise HTTPException(status_code=404, detail='المستخدم غير موجود')
+    canonical_id = target.get('id') or target.get('user_id') or target_user_id
+
+    can_view = await _can_view_social_lists(db, canonical_id, viewer_id)
+    if not can_view:
+        return {'users': [], 'count': 0, 'private': True}
+
+    capped = max(1, min(int(limit or 100), 500))
+    rows = await db.clips_follows.find(
+        {'follower_user_id': canonical_id},
+        {'_id': 0, 'target_user_id': 1, 'created_at': 1},
+    ).sort('created_at', -1).limit(capped).to_list(capped)
+    user_ids = [r.get('target_user_id') for r in rows if r.get('target_user_id')]
+    users = await _hydrate_users_by_ids(db, user_ids, viewer_id)
+    return {'users': users, 'count': len(users), 'private': False}

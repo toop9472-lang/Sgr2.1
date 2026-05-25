@@ -131,7 +131,11 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const listRef = useRef(null);
   const touchStartRef = useRef({ y: 0, x: 0, time: 0 });
-  const { height: screenHeight } = Dimensions.get("window");
+  const { height: windowHeight } = Dimensions.get("window");
+  // Reserve space for the top header overlay + stories bar so each reel
+  // fits perfectly inside the viewport without clipping action buttons.
+  const STORIES_BAR_HEIGHT = 86;
+  const screenHeight = Math.max(360, windowHeight - STORIES_BAR_HEIGHT);
 
   // Restore bookmarks from disk on mount
   useEffect(() => {
@@ -587,15 +591,16 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
                   {item.followers_count || 0} متابع • {item.following_count || 0} يتابع
                 </Text>
               </View>
+            </View>
 
-              <View style={styles.reelActionsStack}>
+            <View style={styles.reelActionsStack} pointerEvents="box-none">
                 <TouchableOpacity
                   style={styles.reelActionBtn}
                   onPress={() => toggleLike(item)}
                 >
                   <Ionicons
                     name={item.liked_by_me ? "heart" : "heart-outline"}
-                    size={22}
+                    size={28}
                     color={item.liked_by_me ? "#ef4444" : "#fff"}
                   />
                   <Text style={styles.actionText}>{item.likes_count || 0}</Text>
@@ -605,7 +610,7 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
                   style={styles.reelActionBtn}
                   onPress={() => setActiveClip(item)}
                 >
-                  <Ionicons name="chatbubble-outline" size={22} color="#fff" />
+                  <Ionicons name="chatbubble-outline" size={26} color="#fff" />
                   <Text style={styles.actionText}>{item.comments_count || 0}</Text>
                 </TouchableOpacity>
 
@@ -616,7 +621,7 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
                   >
                     <Ionicons
                       name="trash-outline"
-                      size={22}
+                      size={24}
                       color={isAdmin && item.user_id !== userId ? "#fbbf24" : "#fca5a5"}
                     />
                     <Text style={styles.actionText}>حذف</Text>
@@ -635,7 +640,7 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
                       });
                     }}
                   >
-                    <Ionicons name="flag-outline" size={20} color="#fbbf24" />
+                    <Ionicons name="flag-outline" size={22} color="#fbbf24" />
                     <Text style={styles.actionText}>إبلاغ</Text>
                   </TouchableOpacity>
                 )}
@@ -646,7 +651,7 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
                 >
                   <Ionicons
                     name={bookmarked.has(item.clip_id) ? "bookmark" : "bookmark-outline"}
-                    size={20}
+                    size={24}
                     color={bookmarked.has(item.clip_id) ? "#fbbf24" : "#fff"}
                   />
                   <Text style={styles.actionText}>
@@ -673,7 +678,7 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
                     }
                   }}
                 >
-                  <Ionicons name="share-social-outline" size={20} color="#fff" />
+                  <Ionicons name="share-social-outline" size={24} color="#fff" />
                   <Text style={styles.actionText}>مشاركة</Text>
                 </TouchableOpacity>
 
@@ -697,7 +702,6 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
                   </TouchableOpacity>
                 )}
               </View>
-            </View>
           </LinearGradient>
         </View>
       );
@@ -1129,49 +1133,49 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingTop: 34,
-    paddingBottom: 10,
+    paddingHorizontal: 12,
+    paddingTop: Platform.OS === "ios" ? 50 : 22,
+    paddingBottom: 6,
   },
   headerBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 34,
+    height: 34,
+    borderRadius: 10,
     backgroundColor: "rgba(255,255,255,0.08)",
     alignItems: "center",
     justifyContent: "center",
   },
-  headerTitle: { color: "#fff", fontSize: 20, fontWeight: "800" },
+  headerTitle: { color: "#fff", fontSize: 18, fontWeight: "800" },
   topTabs: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 2,
   },
   topTab: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
     alignItems: "center",
   },
   topTabText: {
     color: "rgba(255,255,255,0.55)",
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: "700",
   },
   topTabActive: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "900",
   },
   topTabUnderline: {
-    marginTop: 4,
-    width: 24,
-    height: 3,
+    marginTop: 3,
+    width: 18,
+    height: 2,
     borderRadius: 2,
     backgroundColor: "#fff",
   },
   topTabDivider: {
     width: 1,
-    height: 16,
+    height: 12,
     backgroundColor: "rgba(255,255,255,0.25)",
     marginHorizontal: 2,
   },
@@ -1218,7 +1222,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 14,
     paddingTop: 14,
-    paddingBottom: Platform.OS === "ios" ? 40 : 24,
+    paddingBottom: Platform.OS === "ios" ? 28 : 18,
   },
   reelTopRow: {
     flexDirection: "row",
@@ -1231,17 +1235,23 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     justifyContent: "space-between",
     gap: 12,
+    paddingRight: 64, // leave room for the absolute right-side action stack
   },
   reelMetaBlock: {
     flex: 1,
   },
   reelActionsStack: {
+    position: "absolute",
+    right: 8,
+    bottom: Platform.OS === "ios" ? 90 : 70,
     alignItems: "center",
-    gap: 12,
+    gap: 14,
+    zIndex: 5,
   },
   reelActionBtn: {
     alignItems: "center",
-    gap: 5,
+    gap: 3,
+    minWidth: 48,
   },
   clipCard: { marginBottom: 12, borderRadius: 16, overflow: "hidden" },
   clipGradient: {
@@ -1304,13 +1314,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   followBtn: {
-    minWidth: 78,
-    paddingHorizontal: 12,
+    minWidth: 70,
+    paddingHorizontal: 10,
     paddingVertical: 7,
     borderRadius: 999,
     backgroundColor: "#2563eb",
     alignItems: "center",
     justifyContent: "center",
+    marginTop: 4,
   },
   followBtnActive: {
     backgroundColor: "#0ea5e9",

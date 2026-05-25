@@ -646,6 +646,10 @@ function AppContent() {
               onOpenAchievements={() => setShowAchievements(true)}
               onOpenAdminPanel={() => setShowAdminPanel(true)}
               onOpenSettings={() => setCurrentPage("settings")}
+              onOpenUserProfile={(targetUserId) => {
+                setViewingUserId(targetUserId);
+                setCurrentPage("user-profile");
+              }}
               onUpdateProfile={async (updates) => {
                 const updatedUser = { ...(user || {}), ...(updates || {}) };
                 setUser(updatedUser);

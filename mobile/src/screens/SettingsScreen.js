@@ -219,64 +219,134 @@ const SettingsScreen = ({
     }
   };
 
-  const settingsItems = [
+  const settingsSections = [
     {
-      id: 'language',
-      icon: 'globe-outline',
-      label: t('language'),
-      value: getLanguageName(),
-      action: () => setShowLanguageModal(true),
-      color: '#3b82f6',
+      id: 'account',
+      title: language === 'ar' ? 'الحساب' : 'Account',
+      items: [
+        {
+          id: 'account_privacy',
+          icon: isPrivate ? 'lock-closed-outline' : 'lock-open-outline',
+          label: language === 'ar' ? 'خصوصية الحساب' : 'Account Privacy',
+          value: privacyBusy
+            ? (language === 'ar' ? 'جاري...' : 'Updating...')
+            : isPrivate
+              ? (language === 'ar' ? 'حساب خاص' : 'Private')
+              : (language === 'ar' ? 'حساب عام' : 'Public'),
+          action: togglePrivacy,
+        },
+        {
+          id: 'blocked_users',
+          icon: 'remove-circle-outline',
+          label: language === 'ar' ? 'المستخدمون المحظورون' : 'Blocked Users',
+          value: language === 'ar' ? 'إدارة' : 'Manage',
+          action: () => Alert.alert(
+            language === 'ar' ? 'قريباً' : 'Coming Soon',
+            language === 'ar' ? 'صفحة إدارة المحظورين ستتوفر قريباً.' : 'Blocked users management is coming soon.',
+          ),
+        },
+        {
+          id: '2fa',
+          icon: 'shield-checkmark-outline',
+          label: language === 'ar' ? 'التحقق بخطوتين' : 'Two-Factor Auth',
+          value: twoFactorEnabled
+            ? (language === 'ar' ? 'مفعّل' : 'Enabled')
+            : (language === 'ar' ? 'غير مفعّل' : 'Disabled'),
+          action: toggleTwoFactor,
+        },
+      ],
     },
     {
-      id: 'theme',
-      icon: 'color-palette-outline',
-      label: language === 'ar' ? 'المظهر' : 'Theme',
-      value: getThemeName(),
-      action: () => setShowThemeModal(true),
-      color: '#a855f7',
+      id: 'preferences',
+      title: language === 'ar' ? 'التفضيلات' : 'Preferences',
+      items: [
+        {
+          id: 'notifications',
+          icon: 'notifications-outline',
+          label: t('notifications'),
+          value: notificationsEnabled
+            ? (language === 'ar' ? 'مفعّلة' : 'Enabled')
+            : (language === 'ar' ? 'متوقفة' : 'Disabled'),
+          action: toggleNotifications,
+        },
+        {
+          id: 'language',
+          icon: 'globe-outline',
+          label: t('language'),
+          value: getLanguageName(),
+          action: () => setShowLanguageModal(true),
+        },
+        {
+          id: 'theme',
+          icon: 'color-palette-outline',
+          label: language === 'ar' ? 'المظهر' : 'Theme',
+          value: getThemeName(),
+          action: () => setShowThemeModal(true),
+        },
+      ],
     },
     {
-      id: '2fa',
-      icon: 'shield-checkmark-outline',
-      label: language === 'ar' ? 'التحقق بخطوتين' : 'Two-Factor Auth',
-      value: twoFactorEnabled ? (language === 'ar' ? 'مفعّل' : 'Enabled') : (language === 'ar' ? 'غير مفعّل' : 'Disabled'),
-      action: toggleTwoFactor,
-      color: '#22c55e',
+      id: 'about',
+      title: language === 'ar' ? 'المعلومات والدعم' : 'About & Support',
+      items: [
+        {
+          id: 'help',
+          icon: 'help-circle-outline',
+          label: language === 'ar' ? 'المساعدة والدعم' : 'Help & Support',
+          value: '',
+          action: () => Alert.alert(
+            language === 'ar' ? 'الدعم' : 'Support',
+            language === 'ar' ? 'تواصل معنا عبر: support@saqr4u.com' : 'Contact us at: support@saqr4u.com',
+          ),
+        },
+        {
+          id: 'terms',
+          icon: 'document-text-outline',
+          label: language === 'ar' ? 'الشروط والأحكام' : 'Terms of Service',
+          value: '',
+          action: () => Alert.alert(
+            language === 'ar' ? 'الشروط' : 'Terms',
+            language === 'ar' ? 'تخضع جميع التعاملات لشروط الاستخدام المنشورة على saqr4u.com' : 'All terms are published on saqr4u.com',
+          ),
+        },
+        {
+          id: 'privacy_policy',
+          icon: 'shield-outline',
+          label: language === 'ar' ? 'سياسة الخصوصية' : 'Privacy Policy',
+          value: '',
+          action: () => Alert.alert(
+            language === 'ar' ? 'الخصوصية' : 'Privacy',
+            language === 'ar' ? 'نلتزم بحماية بياناتك. التفاصيل على saqr4u.com/privacy' : 'See our privacy policy at saqr4u.com/privacy',
+          ),
+        },
+        {
+          id: 'version',
+          icon: 'information-circle-outline',
+          label: language === 'ar' ? 'الإصدار' : 'Version',
+          value: '7.2.23',
+          action: () => {},
+        },
+      ],
     },
     {
-      id: 'notifications',
-      icon: 'notifications-outline',
-      label: t('notifications'),
-      value: notificationsEnabled ? (language === 'ar' ? 'مفعّلة' : 'Enabled') : (language === 'ar' ? 'متوقفة' : 'Disabled'),
-      action: toggleNotifications,
-      color: '#fbbf24',
-    },
-    {
-      id: 'account_privacy',
-      icon: isPrivate ? 'lock-closed' : 'lock-open-outline',
-      label: language === 'ar' ? 'خصوصية الحساب' : 'Account Privacy',
-      value: privacyBusy
-        ? (language === 'ar' ? 'جاري...' : 'Updating...')
-        : isPrivate
-          ? (language === 'ar' ? 'حساب خاص' : 'Private')
-          : (language === 'ar' ? 'حساب عام' : 'Public'),
-      action: togglePrivacy,
-      color: '#a855f7',
-    },
-    {
-      id: 'logout',
-      icon: 'log-out-outline',
-      label: t('logout'),
-      value: '',
-      action: handleLogout,
-      color: '#ef4444',
+      id: 'danger',
+      title: language === 'ar' ? 'إجراءات الحساب' : 'Account Actions',
+      items: [
+        {
+          id: 'logout',
+          icon: 'log-out-outline',
+          label: t('logout'),
+          value: '',
+          action: handleLogout,
+          tint: '#fca5a5',
+        },
+      ],
     },
   ];
 
   return (
     <LinearGradient
-      colors={["#0b1020", "#111a33", "#0e172d"]}
+      colors={["#05070d", "#0b1020", "#0e172d"]}
       style={styles.container}
     >
       {/* Header */}
@@ -287,36 +357,57 @@ const SettingsScreen = ({
           accessibilityRole="button"
           accessibilityLabel={language === 'ar' ? 'رجوع' : 'Back'}
         >
-          <Ionicons name="arrow-forward" size={24} color="#FFF" />
+          <Ionicons name="arrow-forward" size={22} color="#FFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('settings')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.card}>
-          {settingsItems.map((item, index) => (
-            <TouchableOpacity
-              key={item.id}
-              style={[
-                styles.menuItem,
-                index !== settingsItems.length - 1 && styles.menuItemBorder
-              ]}
-              onPress={item.action}
-            >
-              <View style={[styles.iconContainer, { backgroundColor: `${item.color}20` }]}>
-                <Ionicons name={item.icon} size={22} color={item.color} />
-              </View>
-              <View style={styles.menuItemContent}>
-                <Text style={styles.menuItemLabel}>{item.label}</Text>
-                {item.value ? (
-                  <Text style={styles.menuItemValue}>{item.value}</Text>
-                ) : null}
-              </View>
-              <Ionicons name="chevron-back" size={20} color="#666" />
-            </TouchableOpacity>
-          ))}
-        </View>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={{ paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {settingsSections.map((section) => (
+          <View key={section.id} style={styles.section}>
+            <Text style={styles.sectionTitle}>{section.title}</Text>
+            <View style={styles.card}>
+              {section.items.map((item, index) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[
+                    styles.menuItem,
+                    index !== section.items.length - 1 && styles.menuItemBorder,
+                  ]}
+                  onPress={item.action}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.iconContainer}>
+                    <Ionicons name={item.icon} size={20} color="#FFF" />
+                  </View>
+                  <View style={styles.menuItemContent}>
+                    <Text
+                      style={[
+                        styles.menuItemLabel,
+                        item.tint ? { color: item.tint } : null,
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                    {item.value ? (
+                      <Text style={styles.menuItemValue}>{item.value}</Text>
+                    ) : null}
+                  </View>
+                  <Ionicons
+                    name={language === 'ar' ? 'chevron-back' : 'chevron-forward'}
+                    size={18}
+                    color="rgba(255,255,255,0.35)"
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        ))}
       </ScrollView>
 
       {/* Language Modal */}
@@ -344,7 +435,7 @@ const SettingsScreen = ({
                 onPress={() => saveLanguage(lang.code)}
               >
                 <View style={styles.langIconContainer}>
-                  <Ionicons name={lang.icon} size={20} color="#60a5fa" />
+                  <Ionicons name={lang.icon} size={20} color="#FFF" />
                 </View>
                 <Text style={styles.optionText}>{lang.name}</Text>
                 {language === lang.code && (
@@ -401,52 +492,75 @@ const SettingsScreen = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: '#05070d',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 34,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    backgroundColor: '#6366f1',
+    paddingTop: 48,
+    paddingBottom: 14,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(8, 14, 28, 0.92)',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
   },
   backButton: {
     width: 40,
     height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '800',
     color: '#FFF',
+    letterSpacing: 0.3,
   },
   content: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 14,
+    paddingTop: 18,
+  },
+  section: {
+    marginBottom: 22,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.45)',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+    marginHorizontal: 6,
+    textAlign: 'right',
   },
   card: {
-    backgroundColor: "rgba(8,16,32,0.86)",
+    backgroundColor: "rgba(12,20,40,0.78)",
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.06)',
     overflow: 'hidden',
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
   },
   menuItemBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
   },
   iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -455,13 +569,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   menuItemLabel: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#FFF',
+    fontWeight: '600',
     textAlign: 'right',
   },
   menuItemValue: {
-    fontSize: 14,
-    color: '#888',
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.5)',
     marginTop: 2,
     textAlign: 'right',
   },
@@ -473,7 +588,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContent: {
-    backgroundColor: '#111118',
+    backgroundColor: '#0e172d',
     borderRadius: 20,
     width: '100%',
     maxWidth: 400,
@@ -484,12 +599,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 20,
+    padding: 18,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: 'bold',
     color: '#FFF',
   },
@@ -497,32 +612,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    borderBottomWidth: 1,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: 'rgba(255, 255, 255, 0.05)',
   },
   optionItemSelected: {
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   langIconContainer: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(96, 165, 250, 0.15)',
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
   optionText: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 15,
     color: '#FFF',
     textAlign: 'right',
   },
   themeIconContainer: {
-    width: 40,
-    height: 40,
+    width: 38,
+    height: 38,
     borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,

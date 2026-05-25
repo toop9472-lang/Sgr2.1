@@ -69,6 +69,8 @@ Strict requirement: Web UI MUST perfectly mirror Mobile UI.
 ## Key API Endpoints
 - `GET /api/users/public-profile/{user_id}?viewer_id=...`
 - `GET /api/users/clips/{user_id}?viewer_id=...`
+- `GET /api/users/followers/{user_id}?viewer_id=...` (NEW - Feb 2026, privacy-aware)
+- `GET /api/users/following/{user_id}?viewer_id=...` (NEW - Feb 2026, privacy-aware)
 - `PUT /api/users/privacy/{user_id}`  body: `{is_private: bool}`
 - `POST /api/clips/follow/toggle`
 - `POST /api/clips/upload`
@@ -103,3 +105,9 @@ Strict requirement: Web UI MUST perfectly mirror Mobile UI.
 - Video/image uploads MUST go through `r2_storage.py`
 - iOS audio fix lives in `/app/mobile/App.js` (setupAudioMode useEffect)
 - Web ProfilePage shows Settings gear + My Reels for ALL users (including guests) to mirror mobile parity
+
+## Changelog (Feb 2026)
+- **ClipsScreen.js layout fix**: Top "Live/Reels" bar is now compact (font 13/14, padding tightened). Card height now subtracts StoriesBar height (~86px) so each reel fits the visible viewport. Right-side action stack moved to absolute position (TikTok-style) with safe bottom offset — Follow/Share/Bookmark are no longer clipped off-screen.
+- **Profile follower/following lists**: New backend endpoints `/api/users/followers/{id}` and `/api/users/following/{id}` with proper privacy enforcement (private accounts only expose lists to owner or existing followers). New reusable `FollowListModal` component used by both `ProfileScreen` (own profile) and `UserProfileScreen` (other users).
+- **Settings revamp**: New sectioned layout (Account, Preferences, About & Support, Account Actions). All icons unified to pure white (`#FFF`). Added Blocked Users, Help & Support, Terms, Privacy Policy, Version row. Header redone with dark luxury palette instead of bright purple block.
+- **Fixed UserProfileScreen follow bug**: payload was sending `follower_user_id` but backend expects `viewer_user_id` — now corrected.
