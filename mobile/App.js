@@ -50,6 +50,7 @@ import AdvertiserDashboardScreen from "./src/screens/AdvertiserDashboardScreen";
 import AdViewerScreen from "./src/screens/AdViewerScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import BlockedUsersScreen from "./src/screens/BlockedUsersScreen";
+import { GiftCenterProvider } from "./src/components/GiftCenterProvider";
 import SupportScreen from "./src/screens/SupportScreen";
 import ClipsScreen from "./src/screens/ClipsScreen";
 import AchievementsScreen from "./src/screens/AchievementsScreen";
@@ -613,6 +614,17 @@ function AppContent() {
 
   // Main App
   return (
+    <GiftCenterProvider
+      user={user}
+      onGemsCredited={(amount) => {
+        if (amount && user) {
+          const newGems = Number(user?.saqr_gems || 0) + Number(amount);
+          const updated = { ...user, saqr_gems: newGems };
+          setUser(updated);
+          storage.setUserData(updated).catch(() => {});
+        }
+      }}
+    >
     <View
       style={[
         styles.container,
@@ -813,6 +825,7 @@ function AppContent() {
       {/* First-launch onboarding tour */}
       <OnboardingTour />
     </View>
+    </GiftCenterProvider>
   );
 }
 

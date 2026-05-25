@@ -71,6 +71,7 @@ from routes.social_routes import router as social_router
 from routes.invitations_routes import router as invitations_router
 from routes.leaderboards_routes import router as leaderboards_router
 from routes.iap_routes import router as iap_router
+from routes.gifts_routes import router as gifts_router
 from routes.cache_routes import router as cache_router
 from routes.referrals_routes import router as referrals_router
 from routes.clips_routes import router as clips_router
@@ -456,6 +457,7 @@ api_router.include_router(games_router)
 api_router.include_router(support_form_router)
 api_router.include_router(diamonds_router)
 api_router.include_router(economy_router)
+api_router.include_router(gifts_router)
 api_router.include_router(stripe_router)
 api_router.include_router(social_router)
 api_router.include_router(invitations_router)

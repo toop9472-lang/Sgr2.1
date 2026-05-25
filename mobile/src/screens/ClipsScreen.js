@@ -33,6 +33,8 @@ import TrendingHashtags from "../components/TrendingHashtags";
 import EmptyState from "../components/EmptyState";
 import VerifiedBadge from "../components/VerifiedBadge";
 import { ReelsListSkeleton } from "../components/Skeleton";
+import GiftPickerModal from "../components/GiftPickerModal";
+import { useGiftCenter } from "../components/GiftCenterProvider";
 
 const MAX_CLIP_DURATION = 15;
 const CLIP_PLACEHOLDERS = [
@@ -116,6 +118,8 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [activeClip, setActiveClip] = useState(null);
+  const [giftPickerOpen, setGiftPickerOpen] = useState(false);
+  const { playLocal } = useGiftCenter();
   const [commentDraft, setCommentDraft] = useState("");
   const [newClipTitle, setNewClipTitle] = useState("");
   const [newClipThumb, setNewClipThumb] = useState("");
@@ -1065,6 +1069,19 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
               )}
             </ScrollView>
             <View style={styles.commentSheetComposer}>
+              <TouchableOpacity
+                style={styles.commentGiftBtn}
+                onPress={() => {
+                  if (activeClip?.user_id && activeClip.user_id !== userId) {
+                    setGiftPickerOpen(true);
+                  }
+                }}
+                disabled={!activeClip?.user_id || activeClip.user_id === userId}
+                accessibilityRole="button"
+                accessibilityLabel="إرسال هدية للناشر"
+              >
+                <Ionicons name="gift" size={18} color="#f472b6" />
+              </TouchableOpacity>
               <TextInput
                 style={styles.commentSheetInput}
                 placeholder="أضف تعليقًا..."
@@ -1097,6 +1114,39 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
         targetUserName={reportSheet?.targetUserName}
         onBlockedUser={(blockedId) => {
           setClips((prev) => prev.filter((c) => c.user_id !== blockedId));
+        }}
+      />
+
+      <GiftPickerModal
+        visible={giftPickerOpen}
+        user={user}
+        receiver={{
+          user_id: activeClip?.user_id,
+          name: activeClip?.user_name,
+        }}
+        contextType="reel_comment"
+        contextId={activeClip?.clip_id}
+        onClose={() => setGiftPickerOpen(false)}
+        onSent={(res) => {
+          playLocal({
+            ...res.gift,
+            sender_name: user?.name || "أنت",
+            gift_animation: res.gift?.animation,
+            gift_icon_url: res.gift?.icon_url,
+            gift_accent_color: res.gift?.accent_color,
+            gift_particle_count: res.gift?.particle_count,
+            gift_name_ar: res.gift?.name_ar,
+            gems_awarded: res.gems_awarded,
+            price_sar: res.gift?.price_sar,
+          });
+          // Post a small comment marking the gift in the conversation
+          if (activeClip?.clip_id) {
+            api.addClipComment(activeClip.clip_id, {
+              user_id: userId,
+              user_name: user?.name || "مستخدم",
+              content: `🎁 أرسل ${res.gift?.name_ar || "هدية"} (${res.gift?.price_sar} ر.س)`,
+            }).catch(() => {});
+          }
         }}
       />
 
@@ -1565,6 +1615,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   commentSendBtnDisabled: { opacity: 0.45 },
+  commentGiftBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "rgba(244,114,182,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(244,114,182,0.4)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });
 
 export default memo(ClipsScreen);

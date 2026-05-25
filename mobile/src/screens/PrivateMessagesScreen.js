@@ -18,6 +18,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import api from '../services/api';
+import GiftPickerModal from '../components/GiftPickerModal';
+import { useGiftCenter } from '../components/GiftCenterProvider';
 
 const { width } = Dimensions.get('window');
 
@@ -93,6 +95,8 @@ const ConversationView = ({ user, friend, onBack, onReport }) => {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [giftPickerOpen, setGiftPickerOpen] = useState(false);
+  const { playLocal } = useGiftCenter();
   const flatListRef = useRef(null);
   const pollInterval = useRef(null);
 
@@ -248,6 +252,14 @@ const ConversationView = ({ user, friend, onBack, onReport }) => {
 
         {/* Input */}
         <View style={styles.inputContainer}>
+          <TouchableOpacity
+            style={styles.giftBtn}
+            onPress={() => setGiftPickerOpen(true)}
+            accessibilityRole="button"
+            accessibilityLabel="إرسال هدية"
+          >
+            <Ionicons name="gift" size={20} color="#f472b6" />
+          </TouchableOpacity>
           <TextInput
             style={styles.textInput}
             placeholder="اكتب رسالتك..."
@@ -273,6 +285,34 @@ const ConversationView = ({ user, friend, onBack, onReport }) => {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+
+      <GiftPickerModal
+        visible={giftPickerOpen}
+        user={user}
+        receiver={{
+          user_id: friend?.id || friend?.user_id || friend?.from_user_id,
+          name: friend?.name || friend?.from_user_name,
+          avatar: friend?.avatar,
+        }}
+        contextType="private_chat"
+        contextId={friend?.id || friend?.user_id || friend?.from_user_id}
+        onClose={() => setGiftPickerOpen(false)}
+        onSent={(res) => {
+          playLocal({
+            ...res.gift,
+            sender_name: user?.name || 'أنت',
+            gift_animation: res.gift?.animation,
+            gift_icon_url: res.gift?.icon_url,
+            gift_accent_color: res.gift?.accent_color,
+            gift_particle_count: res.gift?.particle_count,
+            gift_name_ar: res.gift?.name_ar,
+            gems_awarded: res.gems_awarded,
+            price_sar: res.gift?.price_sar,
+          });
+          // Also post a small text message so it appears in the chat history.
+          sendMessage(`🎁 أرسلت لك: ${res.gift?.name_ar || 'هدية'}`);
+        }}
+      />
     </View>
   );
 };
@@ -558,6 +598,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sendBtnDisabled: { backgroundColor: '#333' },
+  giftBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(244,114,182,0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(244,114,182,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 6,
+  },
   stickerBar: {
     flexDirection: 'row',
     justifyContent: 'space-around',

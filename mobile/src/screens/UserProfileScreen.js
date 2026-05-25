@@ -15,6 +15,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import api from "../services/api";
 import FollowListModal from "../components/FollowListModal";
+import GiftPickerModal from "../components/GiftPickerModal";
+import { useGiftCenter } from "../components/GiftCenterProvider";
 
 const REEL_FALLBACKS = [
   "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=600&q=80",
@@ -67,7 +69,9 @@ const UserProfileScreen = ({
   const [clips, setClips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [followBusy, setFollowBusy] = useState(false);
-  const [followListMode, setFollowListMode] = useState(null); // 'followers' | 'following' | null
+  const [followListMode, setFollowListMode] = useState(null);
+  const [giftPickerOpen, setGiftPickerOpen] = useState(false);
+  const { playLocal } = useGiftCenter();
 
   const isSelf = useMemo(
     () => Boolean(viewerId && profile?.user_id === viewerId),
@@ -319,6 +323,16 @@ const UserProfileScreen = ({
                 رسالة خاصة
               </Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.actionBtnGift]}
+              onPress={() => setGiftPickerOpen(true)}
+              activeOpacity={0.8}
+              accessibilityLabel="إرسال هدية"
+            >
+              <Ionicons name="gift" size={17} color="#fff" />
+              <Text style={styles.actionBtnText}>هدية</Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -366,6 +380,33 @@ const UserProfileScreen = ({
           // Already in a user profile — replace would be ideal,
           // but here we just close the modal to avoid stacking issues.
           setFollowListMode(null);
+        }}
+      />
+
+      <GiftPickerModal
+        visible={giftPickerOpen}
+        user={user}
+        receiver={{
+          user_id: profile?.user_id,
+          name: profile?.name,
+          avatar: profile?.avatar,
+        }}
+        contextType="profile"
+        contextId={profile?.user_id}
+        onClose={() => setGiftPickerOpen(false)}
+        onSent={(res) => {
+          // Play the animation locally for the sender immediately.
+          playLocal({
+            ...res.gift,
+            sender_name: user?.name || "أنت",
+            gift_animation: res.gift?.animation,
+            gift_icon_url: res.gift?.icon_url,
+            gift_accent_color: res.gift?.accent_color,
+            gift_particle_count: res.gift?.particle_count,
+            gift_name_ar: res.gift?.name_ar,
+            gems_awarded: res.gems_awarded,
+            price_sar: res.gift?.price_sar,
+          });
         }}
       />
     </View>
@@ -495,6 +536,10 @@ const styles = StyleSheet.create({
   actionBtnGhost: {
     backgroundColor: "rgba(99,102,241,0.16)",
     borderColor: "rgba(99,102,241,0.38)",
+  },
+  actionBtnGift: {
+    backgroundColor: "#ec4899",
+    borderColor: "#db2777",
   },
   actionBtnText: { color: "#fff", fontWeight: "600", fontSize: 13 },
   gridHeader: {
