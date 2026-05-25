@@ -75,6 +75,13 @@ Strict requirement: Web UI MUST perfectly mirror Mobile UI.
 - `POST /api/clips/follow/toggle`
 - `POST /api/clips/upload`
 - `GET /api/economy/balance/{user_id}`
+- `GET /api/moderation/blocks/{user_id}` (NEW - Feb 2026, returns hydrated user list)
+- `POST /api/moderation/block | /unblock`
+- `GET /api/gifts/catalog` (NEW - Feb 2026, 12 premium gifts 3→299 SAR)
+- `POST /api/gifts/send` (credits receiver 20% as gems atomically)
+- `GET /api/gifts/pending/{user_id}` (polled by GiftCenter for live animations)
+- `GET /api/gifts/inbox/{user_id}` | `GET /api/gifts/sent/{user_id}`
+- `POST /api/gifts/verify-receipt` (Phase 2 stub for Apple/Google IAP)
 
 ## Architecture
 ```
@@ -118,3 +125,28 @@ Strict requirement: Web UI MUST perfectly mirror Mobile UI.
 - AdMob reward flow: `/api/economy/ad-watch-reward` grants +5 gems, cooldown 15s enforced, daily progress tracked. Tested end-to-end.
 - Followers/Following lists: privacy honored (`private: true` returned when viewer can't see).
 - Block/Unblock: persists, hydrated list works, idempotent block returns `already_blocked: true`.
+- Gifts system Phase 1 (Feb 2026): 15/15 backend tests passed at 100%. Catalog returns 12 gifts. Send credits gems atomically via `find_one_and_update`. Pending → delivered idempotency confirmed. Self-gift / invalid gift_id / unknown receiver all return correct errors. `context_type` whitelist-validated via Pydantic Literal (422 on invalid value).
+
+## Gifts System (Phase 1 — IMPLEMENTED Feb 2026)
+**Backend** (`/app/backend/routes/gifts_routes.py`):
+- 12-gift catalog (3 → 299 SAR) with Microsoft Fluent Emoji 3D images (MIT licensed, **NOT emojis**, real PNG renders).
+- Receiver earns 20% of price as Saqr Gems at rate `500 gems = 3 SAR`. Examples: Rose 3 SAR → 100 gems; Crown 100 SAR → 3333 gems; Golden Eagle 299 SAR → 9967 gems.
+- Animation kinds: `fall | rise | drive | sparkle | bounce | epic` — driven by client overlay.
+
+**Mobile** (`/app/mobile/src/`):
+- `services/giftsService.js` — REST client.
+- `components/GiftPickerModal.js` — bottom sheet with 3x grid + price tier tabs + send button.
+- `components/GiftAnimationOverlay.js` — full-screen cinematic overlay (particles + hero + sender card) using built-in `Animated` API (no Lottie/Reanimated needed).
+- `components/GiftCenter.js` — polling controller (every 10s + on app foreground).
+- `components/GiftCenterProvider.js` — context wrapper mounted at app root, exposes `useGiftCenter()` hook with `playLocal(gift)` for instant sender preview.
+
+**Wired into 3 send locations** (per user request):
+1. **Private chat** (`PrivateMessagesScreen.js`): gift button next to text input.
+2. **Reel comments sheet** (`ClipsScreen.js`): gift button in comment composer.
+3. **User profile** (`UserProfileScreen.js`): pink "هدية" button next to "متابعة" / "رسالة خاصة".
+
+## Phase 2 — TODO (when user provides App Store Connect / Google Play config)
+- Install `react-native-iap` and bridge to `/api/gifts/verify-receipt`.
+- Implement real Apple receipt verification (POST to `verifyReceipt-prod` w/ fallback to sandbox) and Google Play purchase token verification.
+- Gate `/api/gifts/send` behind a verified receipt before crediting gems.
+- IAP Product IDs already declared in catalog: `com.saqr.gift.*` (iOS), `saqr_gift_*` (Android).

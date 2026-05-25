@@ -8,7 +8,7 @@ Phase 1 records the transaction and credits gems immediately; the iap_receipt
 field is used in Phase 2 to validate the purchase.
 """
 from datetime import datetime, timezone, timedelta
-from typing import Optional, List
+from typing import Optional, Literal
 import os
 import uuid
 
@@ -22,6 +22,8 @@ client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
 
 router = APIRouter(prefix="/gifts", tags=["Gifts"])
+
+VALID_CONTEXT_TYPES = ("chat", "private_chat", "reel", "reel_comment", "profile")
 
 # Exchange: 500 gems = 3 SAR  →  1 SAR = 166.6666... gems
 # Receiver earns 20% of gift price in gems.
@@ -207,7 +209,7 @@ class SendGiftRequest(BaseModel):
     sender_id: str
     receiver_id: str
     gift_id: str
-    context_type: str = Field("profile", description="chat | private_chat | reel | reel_comment | profile")
+    context_type: Literal["chat", "private_chat", "reel", "reel_comment", "profile"] = "profile"
     context_id: Optional[str] = None  # e.g., clip_id or chat_message_id
     message: Optional[str] = None
     # Phase 2 fields (filled when IAP succeeds on device):
@@ -263,8 +265,9 @@ async def send_gift(req: SendGiftRequest):
     now_dt = datetime.now(timezone.utc)
     tx_id = str(uuid.uuid4())
 
-    # Credit gems to receiver
-    await db.users.update_one(
+    # Atomic credit + read so the returned balance reflects the post-update value
+    # even under concurrent gifts.
+    updated_receiver = await db.users.find_one_and_update(
         {"$or": [{"id": receiver_id}, {"user_id": receiver_id}]},
         {
             "$inc": {
@@ -283,7 +286,10 @@ async def send_gift(req: SendGiftRequest):
                 }
             },
         },
+        return_document=True,
+        projection={"_id": 0, "saqr_gems": 1},
     )
+    new_balance = int((updated_receiver or {}).get("saqr_gems", 0) or 0)
 
     # Update sender's sent-stat
     await db.users.update_one(
@@ -358,7 +364,7 @@ async def list_pending(user_id: str, since_seconds: int = 60):
     if pending:
         tx_ids = [p["tx_id"] for p in pending]
         await db.gift_transactions.update_many(
-            {"tx_id": {"$in": tx_ids}},
+            {"tx_id": {"$in": tx_ids}, "receiver_id": user_id},
             {"$set": {"delivered": True, "delivered_at": datetime.now(timezone.utc).isoformat()}},
         )
 
