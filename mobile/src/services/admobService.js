@@ -157,16 +157,25 @@ class AdMobService {
         this.isAdLoaded = false;
         this.notifyListeners("closed");
 
-        // تحميل إعلان جديد
-        setTimeout(() => this.loadRewardedAd(), 1000);
+        // ⚠️ مهم: نؤخر تحميل الإعلان الجديد 5 ثوانٍ كاملة بعد الإغلاق
+        // لأن EARNED_REWARD قد يصل بعد CLOSED بثوانٍ على iOS،
+        // وإذا حمّلنا إعلاناً جديداً مبكراً سنُلغي المستمعين قبل التقاط المكافأة.
+        setTimeout(() => this.loadRewardedAd(), 5000);
       },
     );
 
-    // عند الحصول على المكافأة
+    // عند الحصول على المكافأة (مستمع دائم — حماية احتياطية)
     const unsubscribeEarned = this.rewardedAd.addAdEventListener(
       RewardedAdEventType.EARNED_REWARD,
       (reward) => {
         console.log("Reward earned:", reward);
+        // نخزن آخر مكافأة في الخدمة نفسها كي يقرأها showRewardedAd حتى لو
+        // أُلغي المستمع المؤقت لأي سبب (مثل تحميل إعلان جديد)
+        this.lastReward = {
+          amount: reward.amount,
+          type: reward.type,
+          at: Date.now(),
+        };
         this.notifyListeners("reward", {
           amount: reward.amount,
           type: reward.type,
@@ -190,6 +199,10 @@ class AdMobService {
       return { success: false, rewarded: false, error: "الإعلان غير جاهز" };
     }
 
+    // نمسح أي مكافأة سابقة لكي لا نحسبها مرتين
+    this.lastReward = null;
+    const showStartTime = Date.now();
+
     return new Promise(async (resolve) => {
       let settled = false;
       let rewardPayload = null;
@@ -206,6 +219,15 @@ class AdMobService {
             // no-op
           }
         });
+
+        // حماية إضافية: لو لم نلتقط reward عبر المستمع المؤقت،
+        // نتحقق من المكافأة الدائمة المخزنة في الخدمة بعد بدء العرض
+        if (!payload.rewarded && this.lastReward && this.lastReward.at >= showStartTime) {
+          payload.rewarded = true;
+          payload.amount = this.lastReward.amount;
+          payload.type = this.lastReward.type;
+        }
+
         resolve(payload);
       };
 
@@ -229,11 +251,11 @@ class AdMobService {
         );
 
         // مستمع مؤقت للإغلاق: عندها نُرجع النتيجة النهائية للمكالمة
-        // ملاحظة مهمة: على iOS قد يصل CLOSED قبل EARNED_REWARD بفارق بسيط،
-        // لذا ننتظر فترة سماح قصيرة قبل اتخاذ القرار النهائي حتى لا نخسر المكافأة.
+        // ملاحظة مهمة: على iOS قد يصل CLOSED قبل EARNED_REWARD بفارق ملحوظ،
+        // لذا ننتظر فترة سماح كافية (3 ثوانٍ) قبل اتخاذ القرار النهائي حتى لا نخسر المكافأة.
         showUnsubscribers.push(
           this.rewardedAd.addAdEventListener(AdEventType.CLOSED, () => {
-            // امنح EARNED_REWARD حتى 1.2 ثانية للوصول قبل الإغلاق النهائي
+            // امنح EARNED_REWARD حتى 3 ثوانٍ للوصول قبل الإغلاق النهائي
             setTimeout(() => {
               finalize({
                 success: true,
@@ -241,7 +263,7 @@ class AdMobService {
                 amount: rewardPayload?.amount || 0,
                 type: rewardPayload?.type || null,
               });
-            }, 1200);
+            }, 3000);
           }),
         );
 
