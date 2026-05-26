@@ -51,10 +51,6 @@ const GiftStoreScreen = ({ onBack, onSendToFriend }) => {
         <Ionicons name="cash-outline" size={11} color="#fbbf24" />
         <Text style={styles.priceText}>{item.price_sar} ر.س</Text>
       </View>
-      <View style={styles.gemsRow}>
-        <Ionicons name="diamond" size={10} color="#22d3ee" />
-        <Text style={styles.gemsText}>+{item.gems_reward}</Text>
-      </View>
     </TouchableOpacity>
   );
 
@@ -67,14 +63,6 @@ const GiftStoreScreen = ({ onBack, onSendToFriend }) => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>متجر الهدايا</Text>
         <View style={{ width: 36 }} />
-      </View>
-
-      {/* Info banner */}
-      <View style={styles.banner}>
-        <Ionicons name="information-circle" size={16} color="#f9a8d4" />
-        <Text style={styles.bannerText}>
-          المستلم يكسب 20% من قيمة الهدية كجواهر • 500 جوهرة = 3 ر.س
-        </Text>
       </View>
 
       {/* Grid */}
@@ -116,10 +104,6 @@ const GiftStoreScreen = ({ onBack, onSendToFriend }) => {
                   <View style={styles.modalChip}>
                     <Ionicons name="cash-outline" size={14} color="#fbbf24" />
                     <Text style={[styles.modalChipText, { color: "#fbbf24" }]}>{picked.price_sar} ر.س</Text>
-                  </View>
-                  <View style={styles.modalChip}>
-                    <Ionicons name="diamond" size={13} color="#22d3ee" />
-                    <Text style={[styles.modalChipText, { color: "#67e8f9" }]}>المستلم +{picked.gems_reward} جوهرة</Text>
                   </View>
                 </View>
                 <Text style={styles.modalDesc}>

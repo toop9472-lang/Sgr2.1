@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ChevronRight, DollarSign, Diamond, Send, X, Info } from 'lucide-react';
+import { ChevronRight, DollarSign, Send, X } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 
@@ -39,14 +39,6 @@ const GiftStorePage = ({ onBack, onSendToFriend }) => {
           <div className="w-9" />
         </div>
 
-        {/* Info banner */}
-        <div className="flex items-center gap-2 mb-4 p-3 rounded-xl bg-pink-500/10 border border-pink-500/30">
-          <Info className="w-4 h-4 text-pink-300 shrink-0" />
-          <p className="text-xs text-pink-100 font-semibold flex-1 text-right">
-            المستلم يكسب 20% من قيمة الهدية كجواهر · 500 جوهرة = 3 ر.س
-          </p>
-        </div>
-
         {/* Grid */}
         {loading ? (
           <div className="text-center py-20 text-slate-400">جاري التحميل...</div>
@@ -69,10 +61,6 @@ const GiftStorePage = ({ onBack, onSendToFriend }) => {
                 <div className="relative z-10 flex items-center gap-1 mt-1">
                   <DollarSign className="w-3 h-3 text-amber-400" />
                   <span className="text-amber-400 text-[11px] font-extrabold">{g.price_sar} ر.س</span>
-                </div>
-                <div className="relative z-10 flex items-center gap-1">
-                  <Diamond className="w-2.5 h-2.5 text-cyan-400" />
-                  <span className="text-cyan-300 text-[9px] font-bold">+{g.gems_reward}</span>
                 </div>
               </button>
             ))}
@@ -106,9 +94,6 @@ const GiftStorePage = ({ onBack, onSendToFriend }) => {
             <div className="relative z-10 flex flex-wrap items-center justify-center gap-2 mt-3">
               <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-black/40 border border-white/10 text-amber-400 text-xs font-bold">
                 <DollarSign className="w-3 h-3" /> {picked.price_sar} ر.س
-              </span>
-              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-black/40 border border-white/10 text-cyan-300 text-xs font-bold">
-                <Diamond className="w-3 h-3" /> المستلم +{picked.gems_reward} جوهرة
               </span>
             </div>
             <p className="relative z-10 text-slate-300 text-sm mt-4 leading-relaxed">
