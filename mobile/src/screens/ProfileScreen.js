@@ -45,6 +45,21 @@ const REEL_FALLBACKS = [
   "https://images.unsplash.com/photo-1483393458019-411bc6bd104e?auto=format&fit=crop&w=600&q=80",
 ];
 
+// Some clips share a generic placeholder thumbnail uploaded by older
+// versions of the app. We treat these as "no real thumbnail" so the
+// grid still looks varied.
+const PLACEHOLDER_SIGNATURES = [
+  "static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8",
+  "example.com/t.jpg",
+  "example.com/thumbnail",
+];
+
+const isPlaceholderThumb = (url) => {
+  if (!url) return true;
+  const lower = String(url).toLowerCase();
+  return PLACEHOLDER_SIGNATURES.some((sig) => lower.includes(sig.toLowerCase()));
+};
+
 const toAbsoluteUrl = (value) => {
   const normalized = (value || "").trim();
   if (!normalized) return "";
@@ -55,9 +70,10 @@ const toAbsoluteUrl = (value) => {
 
 const resolveClipThumb = (clip, index) => {
   const direct = toAbsoluteUrl(clip?.thumbnail_url);
-  if (direct) return direct;
+  // Skip the well-known placeholder so we fall back to varied images
+  if (direct && !isPlaceholderThumb(direct)) return direct;
   // Deterministic fallback per clip so tiles look varied, not uniform.
-  const key = String(clip?.clip_id || index || "");
+  const key = String(clip?.clip_id || clip?.video_url || index || "");
   let hash = 0;
   for (let i = 0; i < key.length; i += 1) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
   return REEL_FALLBACKS[hash % REEL_FALLBACKS.length];

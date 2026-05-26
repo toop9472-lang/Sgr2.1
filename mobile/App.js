@@ -468,16 +468,16 @@ function AppContent() {
     [updateUserBalanceLocally, userId],
   );
 
-  // Periodic gems sync: every 25s while authenticated to keep all screens in sync
+  // Periodic gems sync: every 25s while authenticated to keep all screens in sync.
+  // Now also runs for guests so AdMob rewards / received gifts surface immediately.
   useEffect(() => {
-    if (!isAuthenticated || !userId || user?.isGuest) return;
+    if (!isAuthenticated || !userId) return;
     const intervalId = setInterval(() => {
       syncBalanceFromServer(userId);
     }, 25000);
-    // Initial fetch right after auth/screen change too
     syncBalanceFromServer(userId);
     return () => clearInterval(intervalId);
-  }, [isAuthenticated, userId, user?.isGuest, currentPage, syncBalanceFromServer]);
+  }, [isAuthenticated, userId, currentPage, syncBalanceFromServer]);
 
   const handleBalanceUpdate = useCallback(
     (partial) => {
@@ -512,31 +512,35 @@ function AppContent() {
   };
 
   const handleGemsEarned = async ({ gems = 0, newBalance } = {}) => {
-    if (user && !user.isGuest) {
-      setUser((prev) => {
-        if (!prev) return prev;
-        const next = {
-          ...prev,
-          saqr_gems:
-            Number.isFinite(newBalance) && newBalance !== undefined
-              ? newBalance
-              : (prev.saqr_gems || 0) + gems,
-          saqr_points:
-            Number.isFinite(newBalance) && newBalance !== undefined
-              ? newBalance
-              : (prev.saqr_points || prev.saqr_gems || 0) + gems,
-        };
-        persistUserSnapshot(next);
-        return next;
-      });
-      setBalanceRefresh((prev) => prev + 1);
+    // Update UI for any logged-in user. We previously skipped guests entirely
+    // which prevented the balance from refreshing — even for regular users
+    // whose `isGuest` flag was sometimes left undefined after auth.
+    if (!user) return;
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = {
+        ...prev,
+        saqr_gems:
+          Number.isFinite(newBalance) && newBalance !== undefined
+            ? newBalance
+            : (prev.saqr_gems || 0) + gems,
+        saqr_points:
+          Number.isFinite(newBalance) && newBalance !== undefined
+            ? newBalance
+            : (prev.saqr_points || prev.saqr_gems || 0) + gems,
+      };
+      persistUserSnapshot(next);
+      return next;
+    });
+    setBalanceRefresh((prev) => prev + 1);
 
-      // Update achievements
+    // Achievements still only progress for non-guest users
+    if (!user.isGuest) {
       await updateCurrency(gems);
-      setTimeout(() => {
-        syncBalanceFromServer();
-      }, 800);
     }
+    setTimeout(() => {
+      syncBalanceFromServer();
+    }, 800);
   };
 
   const handleThemeChange = (nextTheme) => {

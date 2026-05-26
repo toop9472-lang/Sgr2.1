@@ -23,10 +23,16 @@ let initialized = false;
 let initInFlight = null;
 
 // Try-require so Expo Go (where the native module is missing) still boots.
+// Wrapped at module-init time so any failure here NEVER prevents the rest
+// of the app (gift picker, ads, profile, etc.) from rendering.
 try {
   // eslint-disable-next-line global-require
-  RNIap = require("react-native-iap");
-} catch (e) {
+  const mod = require("react-native-iap");
+  // Some versions export default { initConnection, ... }, others expose
+  // top-level functions. Normalize so the rest of this file can rely on
+  // a flat shape: { initConnection, getProducts, requestPurchase, ... }.
+  RNIap = mod?.default && typeof mod.default === "object" ? mod.default : mod;
+} catch (_) {
   RNIap = null;
 }
 

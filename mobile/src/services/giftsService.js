@@ -9,16 +9,15 @@ export const getCatalog = async (force = false) => {
   if (!force && cachedCatalog && now - cachedAt < 5 * 60 * 1000) {
     return cachedCatalog;
   }
-  try {
-    const r = await api.fetch("/api/gifts/catalog");
-    if (!r.ok) return cachedCatalog || { gifts: [] };
-    const data = await r.json();
-    cachedCatalog = data;
-    cachedAt = now;
-    return data;
-  } catch (_) {
-    return cachedCatalog || { gifts: [] };
+  const r = await api.fetch("/api/gifts/catalog");
+  if (!r.ok) {
+    const text = await r.text().catch(() => "");
+    throw new Error(`HTTP ${r.status} — ${text.slice(0, 120) || "no body"}`);
   }
+  const data = await r.json();
+  cachedCatalog = data;
+  cachedAt = now;
+  return data;
 };
 
 export const sendGift = async ({

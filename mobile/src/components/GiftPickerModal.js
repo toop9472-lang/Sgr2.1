@@ -49,6 +49,7 @@ const GiftPickerModal = ({
 }) => {
   const [gifts, setGifts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const [filter, setFilter] = useState("all");
   const [sending, setSending] = useState(false);
@@ -59,11 +60,24 @@ const GiftPickerModal = ({
     if (!visible) return;
     let alive = true;
     setLoading(true);
+    setLoadError(null);
     (async () => {
-      const data = await getCatalog();
-      if (alive) {
-        setGifts(Array.isArray(data?.gifts) ? data.gifts : []);
-        setLoading(false);
+      try {
+        const data = await getCatalog(true); // force refresh on every open
+        if (!alive) return;
+        const list = Array.isArray(data?.gifts) ? data.gifts : [];
+        if (list.length === 0) {
+          setLoadError("لم يصل أي محتوى من السيرفر. تأكد من اتصال الإنترنت.");
+        }
+        setGifts(list);
+      } catch (e) {
+        if (!alive) return;
+        setLoadError(
+          `تعذر تحميل قائمة الهدايا: ${e?.message || e}\nحاول إعادة فتح الشاشة.`,
+        );
+        setGifts([]);
+      } finally {
+        if (alive) setLoading(false);
       }
     })();
     return () => {
@@ -264,6 +278,38 @@ const GiftPickerModal = ({
           {loading ? (
             <View style={styles.centered}>
               <ActivityIndicator size="large" color="#60a5fa" />
+              <Text style={styles.loadingText}>جاري تحميل قائمة الهدايا...</Text>
+            </View>
+          ) : loadError ? (
+            <View style={styles.centered}>
+              <Ionicons name="cloud-offline-outline" size={48} color="#fca5a5" />
+              <Text style={styles.errorTitle}>تعذّر تحميل الهدايا</Text>
+              <Text style={styles.errorBody}>{loadError}</Text>
+              <TouchableOpacity
+                style={styles.retryBtn}
+                onPress={() => {
+                  setLoadError(null);
+                  setLoading(true);
+                  // re-trigger the loader by closing then re-opening; here we
+                  // just force a fresh effect run by toggling state.
+                  setGifts([]);
+                  // The visible-effect will re-run on next render tick.
+                  setTimeout(() => {
+                    getCatalog(true)
+                      .then((d) => {
+                        const list = Array.isArray(d?.gifts) ? d.gifts : [];
+                        setGifts(list);
+                        if (list.length === 0) {
+                          setLoadError("لم يصل أي محتوى من السيرفر.");
+                        }
+                      })
+                      .catch((e) => setLoadError(String(e?.message || e)))
+                      .finally(() => setLoading(false));
+                  }, 50);
+                }}
+              >
+                <Text style={styles.retryBtnText}>إعادة المحاولة</Text>
+              </TouchableOpacity>
             </View>
           ) : (
             <FlatList
@@ -422,7 +468,20 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   tileGems: { color: "#67e8f9", fontSize: 9, fontWeight: "700" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+  centered: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32, gap: 10 },
+  loadingText: { color: "rgba(226,232,240,0.65)", fontSize: 13, marginTop: 8 },
+  errorTitle: { color: "#fff", fontSize: 16, fontWeight: "800", marginTop: 8 },
+  errorBody: { color: "rgba(226,232,240,0.65)", fontSize: 13, textAlign: "center", lineHeight: 18 },
+  retryBtn: {
+    marginTop: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: "rgba(96,165,250,0.18)",
+    borderWidth: 1,
+    borderColor: "rgba(96,165,250,0.4)",
+  },
+  retryBtnText: { color: "#bfdbfe", fontSize: 13, fontWeight: "700" },
   footer: {
     position: "absolute",
     left: 0,
