@@ -167,7 +167,22 @@ Strict requirement: Web UI MUST perfectly mirror Mobile UI.
 - ✅ Bundle ID, Issuer ID, Key ID, .p8 file all wired into env
 - ✅ Sandbox tester documented
 
+## Phase 2.5 — DONE (Feb 2026)
+- ✅ **AdMob reward race condition hardened (Feb 2026)**:
+  - Removed premature 45s timeout that fired mid-ad and triggered false "must watch full ad" errors. Safety timeout is now 6 minutes and ALSO honors the permanent `lastReward` cache as a final fallback.
+  - Grace period after `CLOSED` extended 3s → 5s for late `EARNED_REWARD` events.
+  - New ad reload after CLOSED delayed 5s → 8s to avoid teardown before reward arrives.
+  - Added `AdEventType.OPENED` tracking so the safety timer can distinguish "ad never shown" from "ad finished but no close fired".
+- ✅ **Gift Leaderboard backend** (`GET /api/gifts/leaderboard?scope=received|sent&period=all|month|week|day`):
+  - Aggregation pipeline groups gift_transactions by sender/receiver, sums price_sar + gems + count.
+  - Hydrates user info via `$or` on legacy `id` and modern `user_id` fields.
+  - 422 validation on invalid scope/period.
+- ✅ **Mobile screens**: `TopGiftersScreen.js` (luxury leaderboard with rank medals + period toggles + tap-to-profile) and `GiftInboxScreen.js` (received/sent tabs with totals + gem badges).
+- ✅ Wired into Settings → "هداياي" and "لوحة أفضل الداعمين".
+- ✅ Fixed stale receiver balance in `/api/gifts/send` response (was overwriting atomic `find_one_and_update` result).
+- ✅ Backend test report `/app/test_reports/iteration_14.json`: 24/24 PASS (100%).
+
 ## Phase 3 — Next steps
-- 🍎 Run `eas build --profile production --platform ios` to produce TestFlight build with IAP
+- 🍎 Run `eas build --profile production --platform ios` to produce TestFlight Build 118 with all fixes
 - 🤖 Create Google Play IAP products + implement Play Billing receipt verification (`google_iap_service.py`)
 - 🧪 Test full purchase flow on real iPhone with sandbox tester `aaaaaatata079@gmail.com`

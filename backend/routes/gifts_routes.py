@@ -375,7 +375,6 @@ async def send_gift(req: SendGiftRequest):
     }
     await db.gift_transactions.insert_one(tx_doc)
 
-    new_balance = int(receiver.get("saqr_gems", 0) or 0) + gems_reward
     return {
         "success": True,
         "tx_id": tx_id,
@@ -469,13 +468,20 @@ async def gift_leaderboard(
     ]
     rows = await db.gift_transactions.aggregate(pipeline).to_list(capped)
 
-    # Hydrate user info
+    # Hydrate user info (legacy users may have `id` instead of `user_id`)
     user_ids = [r["_id"] for r in rows if r.get("_id")]
     users = await db.users.find(
-        {"user_id": {"$in": user_ids}},
-        {"_id": 0, "user_id": 1, "name": 1, "avatar": 1, "is_verified": 1},
-    ).to_list(len(user_ids)) if user_ids else []
-    user_map = {u["user_id"]: u for u in users}
+        {"$or": [
+            {"user_id": {"$in": user_ids}},
+            {"id": {"$in": user_ids}},
+        ]},
+        {"_id": 0, "id": 1, "user_id": 1, "name": 1, "avatar": 1, "is_verified": 1},
+    ).to_list(len(user_ids) * 2) if user_ids else []
+    user_map = {}
+    for u in users:
+        uid = u.get("user_id") or u.get("id")
+        if uid:
+            user_map[uid] = u
 
     leaderboard = []
     for idx, r in enumerate(rows):
