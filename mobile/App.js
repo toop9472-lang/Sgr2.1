@@ -50,6 +50,8 @@ import AdvertiserDashboardScreen from "./src/screens/AdvertiserDashboardScreen";
 import AdViewerScreen from "./src/screens/AdViewerScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import BlockedUsersScreen from "./src/screens/BlockedUsersScreen";
+import GiftInboxScreen from "./src/screens/GiftInboxScreen";
+import TopGiftersScreen from "./src/screens/TopGiftersScreen";
 import { GiftCenterProvider } from "./src/components/GiftCenterProvider";
 import { initIAP, shutdownIAP } from "./src/services/appleIapService";
 import SupportScreen from "./src/screens/SupportScreen";
@@ -707,6 +709,8 @@ function AppContent() {
               currentHomePreset={homePreset}
               onHomePresetChange={handleHomePresetChange}
               onOpenBlockedUsers={() => setCurrentPage("blocked-users")}
+              onOpenGiftInbox={() => setCurrentPage("gift-inbox")}
+              onOpenTopGifters={() => setCurrentPage("top-gifters")}
               onUpdateProfile={async (updates) => {
                 const updatedUser = { ...(user || {}), ...(updates || {}) };
                 setUser(updatedUser);
@@ -718,6 +722,22 @@ function AppContent() {
             <BlockedUsersScreen
               user={user}
               onBack={() => setCurrentPage("settings")}
+            />
+          )}
+          {currentPage === "gift-inbox" && (
+            <GiftInboxScreen
+              user={user}
+              onBack={() => setCurrentPage("settings")}
+            />
+          )}
+          {currentPage === "top-gifters" && (
+            <TopGiftersScreen
+              user={user}
+              onBack={() => setCurrentPage("settings")}
+              onOpenUserProfile={(uid) => {
+                setViewingUserId(uid);
+                setCurrentPage("user-profile");
+              }}
             />
           )}
           {currentPage === "advertiser" && <AdvertiserScreen />}

@@ -172,6 +172,63 @@ class TestSendGift:
         r = session.post(f"{API}/gifts/send", json=body, timeout=20)
         assert r.status_code == 404, r.text
 
+    def test_send_ios_without_receipt_returns_400(self, session, two_users):
+        """iOS platform without a receipt should be rejected with 400."""
+        body = {
+            "sender_id": two_users["sender"],
+            "receiver_id": two_users["receiver"],
+            "gift_id": "rose",
+            "context_type": "profile",
+            "platform": "ios",
+            # receipt intentionally omitted
+        }
+        r = session.post(f"{API}/gifts/send", json=body, timeout=20)
+        assert r.status_code == 400, r.text
+        assert "receipt" in r.text.lower() or "إيصال" in r.text or "receipt مطلوب" in r.text
+
+    def test_send_rejects_invalid_context_type(self, session, two_users):
+        """context_type must be one of the whitelist (chat, private_chat, reel, reel_comment, profile)."""
+        body = {
+            "sender_id": two_users["sender"],
+            "receiver_id": two_users["receiver"],
+            "gift_id": "rose",
+            "context_type": "foo_bar_invalid",
+        }
+        r = session.post(f"{API}/gifts/send", json=body, timeout=20)
+        # Pydantic Literal violation -> 422
+        assert r.status_code == 422, r.text
+
+    def test_send_sandbox_chocolate_25_sar(self, session, two_users):
+        """Sandbox platform should be accepted; receiver earns ~833 gems for 25 SAR chocolate."""
+        # Use a fresh receiver to assert exact balance delta
+        receiver_id, _ = _register(session, "sandbox_recv")
+        body = {
+            "sender_id": two_users["sender"],
+            "receiver_id": receiver_id,
+            "gift_id": "chocolate",
+            "context_type": "profile",
+            "platform": "sandbox",
+            "transaction_id": "sandbox_tx_" + uuid.uuid4().hex,
+        }
+        r = session.post(f"{API}/gifts/send", json=body, timeout=30)
+        assert r.status_code == 200, r.text
+        data = r.json()
+        assert data["success"] is True
+        assert "tx_id" in data and isinstance(data["tx_id"], str)
+        assert data["gems_awarded"] == 833
+        # Verify inbox immediately
+        inbox = session.get(f"{API}/gifts/inbox/{receiver_id}", timeout=20)
+        assert inbox.status_code == 200
+        items = inbox.json()["gifts"]
+        assert len(items) >= 1
+        tx = items[0]
+        assert tx["gift_id"] == "chocolate"
+        assert tx["price_sar"] == 25
+        assert tx["gems_awarded"] == 833
+        assert tx["sender_id"] == two_users["sender"]
+        assert tx["receiver_id"] == receiver_id
+        assert tx["platform"] == "sandbox"
+
     def test_send_multiple_accumulates_balance(self, session, two_users):
         # send a crown (3333) then a bouquet (333) and verify balance grows
         r1 = session.post(f"{API}/gifts/send", json={
@@ -247,9 +304,76 @@ class TestHistoryEndpoints:
             assert g["sender_id"] == two_users["sender"]
 
 
+# ---------------------- leaderboard ----------------------
+class TestLeaderboard:
+    def test_leaderboard_received_all(self, session, two_users):
+        """Top users by total received gifts. Receiver (multiple gifts) must appear."""
+        r = session.get(f"{API}/gifts/leaderboard?scope=received&period=all", timeout=20)
+        assert r.status_code == 200, r.text
+        data = r.json()
+        assert data["scope"] == "received"
+        assert data["period"] == "all"
+        assert "leaderboard" in data
+        assert isinstance(data["leaderboard"], list)
+        assert data["count"] == len(data["leaderboard"])
+        assert data["count"] >= 1
+
+        # Validate row shape
+        row = data["leaderboard"][0]
+        for k in ("rank", "user_id", "name", "avatar", "is_verified",
+                  "total_sar", "total_gifts", "total_gems"):
+            assert k in row, f"missing key {k} in leaderboard row"
+        assert row["rank"] == 1
+        assert isinstance(row["total_sar"], (int, float))
+        assert isinstance(row["total_gifts"], int)
+        assert isinstance(row["total_gems"], int)
+        assert isinstance(row["is_verified"], bool)
+
+        # Receiver in this run must be in leaderboard
+        recv = two_users["receiver"]
+        user_ids = [r["user_id"] for r in data["leaderboard"]]
+        assert recv in user_ids, f"expected test receiver {recv} in leaderboard, got {user_ids[:5]}"
+
+        # Sort check
+        sars = [r["total_sar"] for r in data["leaderboard"]]
+        assert sars == sorted(sars, reverse=True), "leaderboard not sorted desc by total_sar"
+
+    def test_leaderboard_sent_month(self, session, two_users):
+        """scope=sent + period=month should include the test sender."""
+        r = session.get(f"{API}/gifts/leaderboard?scope=sent&period=month", timeout=20)
+        assert r.status_code == 200, r.text
+        data = r.json()
+        assert data["scope"] == "sent"
+        assert data["period"] == "month"
+        user_ids = [row["user_id"] for row in data["leaderboard"]]
+        # Our sender has sent multiple gifts moments ago — must be present in 30-day window
+        assert two_users["sender"] in user_ids, \
+            f"expected test sender in 30-day sent leaderboard, got {user_ids[:5]}"
+
+        # Verify hydrated fields for our sender row
+        my_row = next(r for r in data["leaderboard"] if r["user_id"] == two_users["sender"])
+        assert my_row["total_gifts"] >= 1
+        assert my_row["total_sar"] >= 3  # at least one rose
+
+    def test_leaderboard_invalid_scope_returns_422(self, session):
+        r = session.get(f"{API}/gifts/leaderboard?scope=invalid_xyz", timeout=20)
+        assert r.status_code == 422, r.text
+
+    def test_leaderboard_invalid_period_returns_422(self, session):
+        r = session.get(f"{API}/gifts/leaderboard?scope=received&period=eon", timeout=20)
+        assert r.status_code == 422, r.text
+
+    def test_leaderboard_limit_respected(self, session):
+        r = session.get(f"{API}/gifts/leaderboard?scope=received&limit=1", timeout=20)
+        assert r.status_code == 200
+        data = r.json()
+        assert len(data["leaderboard"]) <= 1
+
+
 # ---------------------- verify-receipt ----------------------
 class TestVerifyReceipt:
-    def test_verify_receipt_phase2_placeholder(self, session, two_users):
+    def test_verify_receipt_ios_fake_returns_400(self, session, two_users):
+        """iOS path now performs real Apple JWS verification — fake receipt must fail with 400."""
         body = {
             "user_id": two_users["sender"],
             "platform": "ios",
@@ -257,8 +381,20 @@ class TestVerifyReceipt:
             "transaction_id": "test_tx_" + uuid.uuid4().hex,
             "receipt": "FAKE_BASE64_RECEIPT_PAYLOAD",
         }
+        r = session.post(f"{API}/gifts/verify-receipt", json=body, timeout=30)
+        assert r.status_code == 400, r.text
+
+    def test_verify_receipt_android_placeholder(self, session, two_users):
+        """Android branch still records the receipt and returns verified=False."""
+        body = {
+            "user_id": two_users["sender"],
+            "platform": "android",
+            "product_id": "saqr_gift_rose",
+            "transaction_id": "android_tx_" + uuid.uuid4().hex,
+            "receipt": "fake_android_token",
+        }
         r = session.post(f"{API}/gifts/verify-receipt", json=body, timeout=20)
         assert r.status_code == 200, r.text
         data = r.json()
         assert data.get("success") is True
-        assert data.get("verified") is False  # Phase 2 placeholder
+        assert data.get("verified") is False

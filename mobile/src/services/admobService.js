@@ -157,10 +157,10 @@ class AdMobService {
         this.isAdLoaded = false;
         this.notifyListeners("closed");
 
-        // ⚠️ مهم: نؤخر تحميل الإعلان الجديد 5 ثوانٍ كاملة بعد الإغلاق
+        // ⚠️ مهم: نؤخر تحميل الإعلان الجديد 8 ثوانٍ كاملة بعد الإغلاق
         // لأن EARNED_REWARD قد يصل بعد CLOSED بثوانٍ على iOS،
         // وإذا حمّلنا إعلاناً جديداً مبكراً سنُلغي المستمعين قبل التقاط المكافأة.
-        setTimeout(() => this.loadRewardedAd(), 5000);
+        setTimeout(() => this.loadRewardedAd(), 8000);
       },
     );
 
@@ -202,16 +202,19 @@ class AdMobService {
     // نمسح أي مكافأة سابقة لكي لا نحسبها مرتين
     this.lastReward = null;
     const showStartTime = Date.now();
+    // نحتفظ بمرجع للإعلان الحالي حتى لا نخلط بينه وبين إعلان جديد لو حُمّل أثناء العرض
+    const currentAd = this.rewardedAd;
 
     return new Promise(async (resolve) => {
       let settled = false;
       let rewardPayload = null;
+      let opened = false;
       const showUnsubscribers = [];
 
       const finalize = (payload) => {
         if (settled) return;
         settled = true;
-        clearTimeout(timeoutId);
+        clearTimeout(safetyTimeoutId);
         showUnsubscribers.forEach((unsub) => {
           try {
             unsub();
@@ -231,45 +234,78 @@ class AdMobService {
         resolve(payload);
       };
 
-      const timeoutId = setTimeout(() => {
+      // ⚠️ زدنا المهلة الواقية إلى 6 دقائق كاملة حتى لا تنطلق أثناء عرض الإعلان نفسه
+      // (إعلانات AdMob قد تصل إلى 60-90 ثانية + وقت تحميل + تأخير على شبكة بطيئة).
+      // المهلة الواقية هذه لن تطلق إلا في حالات نادرة جداً يفشل فيها CLOSED بالكامل.
+      const safetyTimeoutId = setTimeout(() => {
+        // إذا لم يفتح الإعلان من الأساس بعد 30 ثانية → فشل عرض
+        if (!opened) {
+          finalize({
+            success: false,
+            rewarded: false,
+            error: "تعذر بدء عرض الإعلان",
+          });
+          return;
+        }
+        // فترة طويلة جداً مرت دون CLOSED — تحقق من المكافأة الدائمة
         finalize({
-          success: false,
-          rewarded: false,
-          error: "انتهت مهلة تحميل نتيجة الإعلان",
+          success: true,
+          rewarded: Boolean(this.lastReward && this.lastReward.at >= showStartTime),
+          amount: this.lastReward?.amount || 0,
+          type: this.lastReward?.type || null,
         });
-      }, 45000);
+      }, 360000); // 6 دقائق
 
       try {
         // مستمع مؤقت للمكافأة الخاصة بهذا العرض
         showUnsubscribers.push(
-          this.rewardedAd.addAdEventListener(
+          currentAd.addAdEventListener(
             RewardedAdEventType.EARNED_REWARD,
             (reward) => {
+              console.log("🏆 EARNED_REWARD (temp listener):", reward);
               rewardPayload = reward;
+              // ندوّن المكافأة في الخدمة أيضاً كحماية إضافية
+              this.lastReward = {
+                amount: reward.amount,
+                type: reward.type,
+                at: Date.now(),
+              };
             },
           ),
         );
 
+        // عند فتح/عرض الإعلان فعلياً
+        showUnsubscribers.push(
+          currentAd.addAdEventListener(AdEventType.OPENED, () => {
+            console.log("📺 الإعلان فُتح فعلياً");
+            opened = true;
+          }),
+        );
+
         // مستمع مؤقت للإغلاق: عندها نُرجع النتيجة النهائية للمكالمة
         // ملاحظة مهمة: على iOS قد يصل CLOSED قبل EARNED_REWARD بفارق ملحوظ،
-        // لذا ننتظر فترة سماح كافية (3 ثوانٍ) قبل اتخاذ القرار النهائي حتى لا نخسر المكافأة.
+        // لذا ننتظر فترة سماح كافية (5 ثوانٍ) قبل اتخاذ القرار النهائي حتى لا نخسر المكافأة.
         showUnsubscribers.push(
-          this.rewardedAd.addAdEventListener(AdEventType.CLOSED, () => {
-            // امنح EARNED_REWARD حتى 3 ثوانٍ للوصول قبل الإغلاق النهائي
+          currentAd.addAdEventListener(AdEventType.CLOSED, () => {
+            console.log("🚪 الإعلان أُغلق — انتظار EARNED_REWARD المتأخر...");
+            // امنح EARNED_REWARD حتى 5 ثوانٍ للوصول قبل الإغلاق النهائي
             setTimeout(() => {
+              const haveLate =
+                this.lastReward && this.lastReward.at >= showStartTime;
               finalize({
                 success: true,
-                rewarded: Boolean(rewardPayload),
-                amount: rewardPayload?.amount || 0,
-                type: rewardPayload?.type || null,
+                rewarded: Boolean(rewardPayload) || Boolean(haveLate),
+                amount: rewardPayload?.amount || this.lastReward?.amount || 0,
+                type: rewardPayload?.type || this.lastReward?.type || null,
               });
-            }, 3000);
+            }, 5000);
           }),
         );
 
         // مستمع مؤقت للأخطاء أثناء العرض
         showUnsubscribers.push(
-          this.rewardedAd.addAdEventListener(AdEventType.ERROR, (error) => {
+          currentAd.addAdEventListener(AdEventType.ERROR, (error) => {
+            console.log("❌ خطأ أثناء العرض:", error?.message || error);
             finalize({
               success: false,
               rewarded: false,
@@ -279,7 +315,7 @@ class AdMobService {
         );
 
         console.log("▶️ جاري عرض الإعلان...");
-        await this.rewardedAd.show();
+        await currentAd.show();
       } catch (error) {
         console.error("❌ فشل عرض الإعلان:", error);
         finalize({

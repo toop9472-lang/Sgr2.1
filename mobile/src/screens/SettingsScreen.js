@@ -25,6 +25,8 @@ const SettingsScreen = ({
   onHomePresetChange,
   onUpdateProfile,
   onOpenBlockedUsers,
+  onOpenGiftInbox,
+  onOpenTopGifters,
 }) => {
   const [theme, setTheme] = useState(currentTheme);
   const [homePreset, setHomePreset] = useState(currentHomePreset);
@@ -267,6 +269,24 @@ const SettingsScreen = ({
       id: 'preferences',
       title: language === 'ar' ? 'التفضيلات' : 'Preferences',
       items: [
+        {
+          id: 'gift_inbox',
+          icon: 'gift-outline',
+          label: language === 'ar' ? 'هداياي' : 'My Gifts',
+          value: language === 'ar' ? 'استقبلت/أرسلت' : 'Received & Sent',
+          action: () => {
+            if (onOpenGiftInbox) onOpenGiftInbox();
+          },
+        },
+        {
+          id: 'top_gifters',
+          icon: 'trophy-outline',
+          label: language === 'ar' ? 'لوحة أفضل الداعمين' : 'Top Gifters',
+          value: language === 'ar' ? 'الأكثر دعماً' : 'Leaderboard',
+          action: () => {
+            if (onOpenTopGifters) onOpenTopGifters();
+          },
+        },
         {
           id: 'notifications',
           icon: 'notifications-outline',

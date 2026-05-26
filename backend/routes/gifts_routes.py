@@ -433,6 +433,75 @@ async def gift_sent(user_id: str, limit: int = 50):
     return {"gifts": items, "count": len(items)}
 
 
+@router.get("/leaderboard")
+async def gift_leaderboard(
+    scope: Literal["received", "sent"] = "received",
+    period: Literal["all", "month", "week", "day"] = "all",
+    limit: int = 50,
+):
+    """Top users ranked by total gift value (SAR).
+    - scope=received → who received the most (most popular creators)
+    - scope=sent     → who sent the most (top supporters)
+    - period filters by created_at on the gift_transactions collection.
+    """
+    capped = max(1, min(int(limit or 50), 100))
+    user_key = "receiver_id" if scope == "received" else "sender_id"
+
+    # Time window
+    match = {}
+    if period != "all":
+        days = {"day": 1, "week": 7, "month": 30}[period]
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+        match["created_at"] = {"$gte": cutoff}
+
+    pipeline = [
+        {"$match": match} if match else {"$match": {}},
+        {
+            "$group": {
+                "_id": f"${user_key}",
+                "total_sar": {"$sum": "$price_sar"},
+                "total_gifts": {"$sum": 1},
+                "total_gems": {"$sum": {"$ifNull": ["$gems_awarded", 0]}},
+            }
+        },
+        {"$sort": {"total_sar": -1, "total_gifts": -1}},
+        {"$limit": capped},
+    ]
+    rows = await db.gift_transactions.aggregate(pipeline).to_list(capped)
+
+    # Hydrate user info
+    user_ids = [r["_id"] for r in rows if r.get("_id")]
+    users = await db.users.find(
+        {"user_id": {"$in": user_ids}},
+        {"_id": 0, "user_id": 1, "name": 1, "avatar": 1, "is_verified": 1},
+    ).to_list(len(user_ids)) if user_ids else []
+    user_map = {u["user_id"]: u for u in users}
+
+    leaderboard = []
+    for idx, r in enumerate(rows):
+        uid = r.get("_id")
+        if not uid:
+            continue
+        u = user_map.get(uid, {})
+        leaderboard.append({
+            "rank": idx + 1,
+            "user_id": uid,
+            "name": u.get("name") or "مستخدم",
+            "avatar": u.get("avatar"),
+            "is_verified": bool(u.get("is_verified", False)),
+            "total_sar": round(float(r.get("total_sar", 0)), 2),
+            "total_gifts": int(r.get("total_gifts", 0)),
+            "total_gems": int(r.get("total_gems", 0)),
+        })
+
+    return {
+        "scope": scope,
+        "period": period,
+        "count": len(leaderboard),
+        "leaderboard": leaderboard,
+    }
+
+
 # Phase 2 placeholder — Apple IAP receipt verification endpoint.
 class VerifyReceiptRequest(BaseModel):
     user_id: str
