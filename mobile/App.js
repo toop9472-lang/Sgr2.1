@@ -53,6 +53,8 @@ import BlockedUsersScreen from "./src/screens/BlockedUsersScreen";
 import GiftInboxScreen from "./src/screens/GiftInboxScreen";
 import TopGiftersScreen from "./src/screens/TopGiftersScreen";
 import TrendingTodayScreen from "./src/screens/TrendingTodayScreen";
+import GiftsHubScreen from "./src/screens/GiftsHubScreen";
+import GiftStoreScreen from "./src/screens/GiftStoreScreen";
 import { GiftCenterProvider } from "./src/components/GiftCenterProvider";
 import { initIAP, shutdownIAP } from "./src/services/appleIapService";
 import SupportScreen from "./src/screens/SupportScreen";
@@ -659,6 +661,7 @@ function AppContent() {
               onNavigateToChat={() => setCurrentPage("chat")}
               onNavigateToFortunes={() => setCurrentPage("fortunes")}
               onNavigateToFriends={() => setCurrentPage("friends")}
+              onNavigateToGifts={() => setCurrentPage("gifts-hub")}
               onRefresh={initApp}
             />
           )}
@@ -710,9 +713,7 @@ function AppContent() {
               currentHomePreset={homePreset}
               onHomePresetChange={handleHomePresetChange}
               onOpenBlockedUsers={() => setCurrentPage("blocked-users")}
-              onOpenGiftInbox={() => setCurrentPage("gift-inbox")}
-              onOpenTopGifters={() => setCurrentPage("top-gifters")}
-              onOpenTrendingToday={() => setCurrentPage("trending-today")}
+              onOpenGiftsHub={() => setCurrentPage("gifts-hub")}
               onUpdateProfile={async (updates) => {
                 const updatedUser = { ...(user || {}), ...(updates || {}) };
                 setUser(updatedUser);
@@ -729,13 +730,13 @@ function AppContent() {
           {currentPage === "gift-inbox" && (
             <GiftInboxScreen
               user={user}
-              onBack={() => setCurrentPage("settings")}
+              onBack={() => setCurrentPage("gifts-hub")}
             />
           )}
           {currentPage === "top-gifters" && (
             <TopGiftersScreen
               user={user}
-              onBack={() => setCurrentPage("settings")}
+              onBack={() => setCurrentPage("gifts-hub")}
               onOpenUserProfile={(uid) => {
                 setViewingUserId(uid);
                 setCurrentPage("user-profile");
@@ -745,12 +746,29 @@ function AppContent() {
           {currentPage === "trending-today" && (
             <TrendingTodayScreen
               user={user}
-              onBack={() => setCurrentPage("settings")}
+              onBack={() => setCurrentPage("gifts-hub")}
               onOpenUserProfile={(uid) => {
                 setViewingUserId(uid);
                 setCurrentPage("user-profile");
               }}
               onOpenClip={() => setCurrentPage("clips")}
+            />
+          )}
+          {currentPage === "gifts-hub" && (
+            <GiftsHubScreen
+              user={user}
+              onBack={() => setCurrentPage("home")}
+              onOpenStore={() => setCurrentPage("gift-store")}
+              onOpenInbox={() => setCurrentPage("gift-inbox")}
+              onOpenLeaderboard={() => setCurrentPage("top-gifters")}
+              onOpenTrending={() => setCurrentPage("trending-today")}
+              onOpenFriends={() => setCurrentPage("friends")}
+            />
+          )}
+          {currentPage === "gift-store" && (
+            <GiftStoreScreen
+              onBack={() => setCurrentPage("gifts-hub")}
+              onSendToFriend={() => setCurrentPage("friends")}
             />
           )}
           {currentPage === "advertiser" && <AdvertiserScreen />}

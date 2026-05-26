@@ -10,6 +10,20 @@ export const HOME_ICONS = {
   chat: require("../../assets/home_icons/chat.jpg"),
   friends: require("../../assets/home_icons/friends.jpg"),
   brand: require("../../assets/home_icons/gem_brand.jpg"),
+  // Gifts Hub home tile uses a luxury gift-themed background (Unsplash).
+  gifts: {
+    uri: "https://images.unsplash.com/photo-1513885535751-8b9238bd345a?auto=format&fit=crop&w=1400&q=80",
+  },
+};
+
+// Microsoft Fluent Emoji 3D — used inside the Gifts Hub (MIT-licensed renders).
+export const GIFT_HUB_ICONS = {
+  store: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Wrapped%20gift/3D/wrapped_gift_3d.png",
+  inbox: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Ribbon/3D/ribbon_3d.png",
+  leaderboard: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Trophy/3D/trophy_3d.png",
+  trending: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Fire/3D/fire_3d.png",
+  sparkles: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Sparkles/3D/sparkles_3d.png",
+  hero: "https://images.unsplash.com/photo-1513885535751-8b9238bd345a?auto=format&fit=crop&w=1400&q=80",
 };
 
 export const ICON_ASSETS = {

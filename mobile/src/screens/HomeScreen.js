@@ -96,6 +96,7 @@ const HomeScreen = ({
   onNavigateToChat,
   onNavigateToFortunes,
   onNavigateToFriends,
+  onNavigateToGifts,
   onRefresh,
 }) => {
   const { language } = useLanguage();
@@ -214,6 +215,19 @@ const HomeScreen = ({
               title={isArabic ? "ريلز المجتمع" : "Community Reels"}
               subtitle={isArabic ? "15 ثانية لكل مقطع" : "15 seconds each"}
               onPress={onNavigateToClips}
+              isRTL={isArabic}
+            />
+          </View>
+
+          {/* GIFTS — Hub */}
+          <Text style={styles.sectionLabel}>{isArabic ? "الهدايا" : "GIFTS"}</Text>
+          <View style={styles.tileWrap}>
+            <HeroTile
+              image={HOME_ICONS.gifts}
+              title={isArabic ? "مركز الهدايا" : "Gifts Hub"}
+              subtitle={isArabic ? "متجر • هداياي • لوحة الداعمين • ترند" : "Store • Inbox • Leaderboard • Trending"}
+              badge={isArabic ? "جديد ✨" : "New ✨"}
+              onPress={onNavigateToGifts}
               isRTL={isArabic}
             />
           </View>

@@ -195,7 +195,20 @@ Strict requirement: Web UI MUST perfectly mirror Mobile UI.
 - ✅ Backend test report `/app/test_reports/iteration_14.json`: 24/24 PASS (100%).
 - ✅ Visual verification: All 3 web pages tested via Playwright with real registered user — render perfectly with empty states.
 
-## Phase 3 — Next steps
+## Phase 2.6 — Gifts Hub (Feb 2026)
+- ✅ **Unified Gifts Hub** as the single luxury entry point — `GiftsHubScreen.js` (mobile) + `GiftsHubPage.jsx` (web):
+  - Hero header with cinematic gift-themed Unsplash background + 3D Sparkles emoji.
+  - 3-stat strip: catalog count · received · gems earned.
+  - 4 large branded tiles (Wrapped Gift / Ribbon / Trophy / Fire) using Microsoft Fluent Emoji 3D PNGs.
+  - "How it works" 3-step guide explaining the 20% receiver share + Apple Pay flow.
+  - Gradient "أرسل هدية لصديق" CTA.
+- ✅ **Gift Store** — `GiftStoreScreen.js` + `GiftStorePage.jsx`:
+  - 3-column grid of all 12 gifts with 3D icons, price (SAR), and receiver gem reward.
+  - Tap → detailed modal showing description + "اختر مستلم وأرسل" button → opens friends list.
+- ✅ **Home page entry**: Both web + mobile home now show a dedicated "GIFTS" section with a luxury gift-wrapped hero tile labeled "مركز الهدايا · جديد ✨" → navigates to the Hub.
+- ✅ **Routing**: Back navigation from Inbox/Leaderboard/Trending now returns to the Hub instead of Settings.
+- ✅ **Settings**: 3 individual entries replaced by single "مركز الهدايا" entry to avoid duplication.
+- ✅ Visual verification via Playwright: Home tile, Hub page (with stats + 4 tiles + how-it-works + CTA), and Gift Store (12 gifts grid) all confirmed rendering perfectly.
 - 🍎 Run `eas build --profile production --platform ios` to produce TestFlight Build 118 with all fixes
 - 🤖 Create Google Play IAP products + implement Play Billing receipt verification (`google_iap_service.py`)
 - 🧪 Test full purchase flow on real iPhone with sandbox tester `aaaaaatata079@gmail.com`

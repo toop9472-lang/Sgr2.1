@@ -25,9 +25,7 @@ const SettingsScreen = ({
   onHomePresetChange,
   onUpdateProfile,
   onOpenBlockedUsers,
-  onOpenGiftInbox,
-  onOpenTopGifters,
-  onOpenTrendingToday,
+  onOpenGiftsHub,
 }) => {
   const [theme, setTheme] = useState(currentTheme);
   const [homePreset, setHomePreset] = useState(currentHomePreset);
@@ -271,30 +269,12 @@ const SettingsScreen = ({
       title: language === 'ar' ? 'التفضيلات' : 'Preferences',
       items: [
         {
-          id: 'gift_inbox',
+          id: 'gifts_hub',
           icon: 'gift-outline',
-          label: language === 'ar' ? 'هداياي' : 'My Gifts',
-          value: language === 'ar' ? 'استقبلت/أرسلت' : 'Received & Sent',
+          label: language === 'ar' ? 'مركز الهدايا' : 'Gifts Hub',
+          value: language === 'ar' ? 'المتجر · الترند · لوحة الداعمين' : 'Store · Trending · Leaderboard',
           action: () => {
-            if (onOpenGiftInbox) onOpenGiftInbox();
-          },
-        },
-        {
-          id: 'top_gifters',
-          icon: 'trophy-outline',
-          label: language === 'ar' ? 'لوحة أفضل الداعمين' : 'Top Gifters',
-          value: language === 'ar' ? 'الأكثر دعماً' : 'Leaderboard',
-          action: () => {
-            if (onOpenTopGifters) onOpenTopGifters();
-          },
-        },
-        {
-          id: 'trending_today',
-          icon: 'flame-outline',
-          label: language === 'ar' ? 'ترند اليوم' : 'Trending Today',
-          value: language === 'ar' ? 'الريلز الأكثر هدايا' : 'Hot Reels',
-          action: () => {
-            if (onOpenTrendingToday) onOpenTrendingToday();
+            if (onOpenGiftsHub) onOpenGiftsHub();
           },
         },
         {

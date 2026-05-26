@@ -12,6 +12,7 @@ const HOME_ICONS = {
   chat: '/home_icons/chat.jpg',
   friends: '/home_icons/friends.jpg',
   brand: '/home_icons/gem_brand.jpg',
+  gifts: 'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?auto=format&fit=crop&w=1400&q=80',
 };
 
 const HeroTile = ({ image, title, subtitle, badge, onClick, isRTL }) => {
@@ -68,6 +69,7 @@ const HomePage = ({
   onNavigateToChat,
   onNavigateToFortunes,
   onNavigateToFriends,
+  onNavigateToGifts,
   onRefresh,
 }) => {
   const { language } = useLanguage();
@@ -101,6 +103,10 @@ const HomePage = ({
       chatSub: isArabic ? 'مجانية' : 'Free',
       friendsTitle: isArabic ? 'الأصدقاء' : 'Friends',
       friendsSub: isArabic ? 'أضف وتواصل' : 'Add & connect',
+      sectionGifts: isArabic ? 'الهدايا' : 'GIFTS',
+      giftsTitle: isArabic ? 'مركز الهدايا' : 'Gifts Hub',
+      giftsSub: isArabic ? 'متجر · هداياي · لوحة الداعمين · ترند' : 'Store · Inbox · Leaderboard · Trending',
+      giftsBadge: isArabic ? 'جديد ✨' : 'New ✨',
       hot: isArabic ? 'الأكثر رواجاً' : 'Hot',
       new: isArabic ? 'جديد' : 'New',
       footer: isArabic
@@ -190,6 +196,21 @@ const HomePage = ({
             title={copy.reelsTitle}
             subtitle={copy.reelsSub}
             onClick={onNavigateToClips}
+            isRTL={isArabic}
+          />
+        </div>
+
+        {/* GIFTS HUB */}
+        <p className="text-[11px] font-bold tracking-widest px-5 mt-4 mb-2 text-pink-400/80 text-right uppercase">
+          {copy.sectionGifts}
+        </p>
+        <div className="px-4">
+          <HeroTile
+            image={HOME_ICONS.gifts}
+            title={copy.giftsTitle}
+            subtitle={copy.giftsSub}
+            badge={copy.giftsBadge}
+            onClick={onNavigateToGifts}
             isRTL={isArabic}
           />
         </div>

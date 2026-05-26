@@ -118,9 +118,7 @@ const SettingsPage = ({ onBack, onNavigate, user, onUpdateProfile, onLogout }) =
       id: 'gifts',
       title: isRTL ? 'الهدايا والترند' : 'Gifts & Trending',
       items: [
-        { id: 'gift_inbox', icon: Gift, label: isRTL ? 'هداياي' : 'My Gifts', action: () => onNavigate && onNavigate('gift-inbox'), color: 'text-pink-400', bgColor: 'bg-pink-500/10' },
-        { id: 'top_gifters', icon: Trophy, label: isRTL ? 'لوحة أفضل الداعمين' : 'Top Gifters', action: () => onNavigate && onNavigate('top-gifters'), color: 'text-amber-400', bgColor: 'bg-amber-500/10' },
-        { id: 'trending_today', icon: Flame, label: isRTL ? 'ترند اليوم' : 'Trending Today', action: () => onNavigate && onNavigate('trending-today'), color: 'text-orange-400', bgColor: 'bg-orange-500/10' },
+        { id: 'gifts_hub', icon: Gift, label: isRTL ? 'مركز الهدايا' : 'Gifts Hub', action: () => onNavigate && onNavigate('gifts-hub'), color: 'text-pink-400', bgColor: 'bg-pink-500/10' },
       ],
     },
     {

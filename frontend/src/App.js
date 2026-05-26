@@ -33,6 +33,8 @@ import UserProfilePage from "./components/UserProfilePage";
 import GiftInboxPage from "./components/GiftInboxPage";
 import TopGiftersPage from "./components/TopGiftersPage";
 import TrendingTodayPage from "./components/TrendingTodayPage";
+import GiftsHubPage from "./components/GiftsHubPage";
+import GiftStorePage from "./components/GiftStorePage";
 import BottomNav from "./components/BottomNav";
 import { Toaster } from "./components/ui/toaster";
 import { toast } from "./hooks/use-toast";
@@ -502,6 +504,11 @@ function MainApp() {
                   <HomePage 
                     user={user}
                     onNavigateToAds={() => setShowFullScreenAds(true)}
+                    onNavigateToClips={() => setCurrentPage('clips')}
+                    onNavigateToChat={() => setCurrentPage('messages')}
+                    onNavigateToFortunes={() => setCurrentPage('fortunes')}
+                    onNavigateToFriends={() => setCurrentPage('friends')}
+                    onNavigateToGifts={() => setCurrentPage('gifts-hub')}
                     onNavigate={handleNavigate}
                   />
                   <AIFloatingButton user={user} />
@@ -609,16 +616,33 @@ function MainApp() {
                   onWithdrawRequest={handleWithdrawRequest}
                 />
               )}
+              {currentPage === 'gifts-hub' && !showFullScreenAds && (
+                <GiftsHubPage
+                  user={user}
+                  onBack={() => setCurrentPage('home')}
+                  onOpenStore={() => setCurrentPage('gift-store')}
+                  onOpenInbox={() => setCurrentPage('gift-inbox')}
+                  onOpenLeaderboard={() => setCurrentPage('top-gifters')}
+                  onOpenTrending={() => setCurrentPage('trending-today')}
+                  onOpenFriends={() => setCurrentPage('friends')}
+                />
+              )}
+              {currentPage === 'gift-store' && !showFullScreenAds && (
+                <GiftStorePage
+                  onBack={() => setCurrentPage('gifts-hub')}
+                  onSendToFriend={() => setCurrentPage('friends')}
+                />
+              )}
               {currentPage === 'gift-inbox' && !showFullScreenAds && (
                 <GiftInboxPage
                   user={user}
-                  onBack={() => setCurrentPage('settings')}
+                  onBack={() => setCurrentPage('gifts-hub')}
                 />
               )}
               {currentPage === 'top-gifters' && !showFullScreenAds && (
                 <TopGiftersPage
                   user={user}
-                  onBack={() => setCurrentPage('settings')}
+                  onBack={() => setCurrentPage('gifts-hub')}
                   onOpenUserProfile={(uid) => {
                     setViewingUserId(uid);
                     setCurrentPage('user-profile');
@@ -628,7 +652,7 @@ function MainApp() {
               {currentPage === 'trending-today' && !showFullScreenAds && (
                 <TrendingTodayPage
                   user={user}
-                  onBack={() => setCurrentPage('home')}
+                  onBack={() => setCurrentPage('gifts-hub')}
                   onOpenUserProfile={(uid) => {
                     setViewingUserId(uid);
                     setCurrentPage('user-profile');
@@ -636,7 +660,7 @@ function MainApp() {
                   onOpenClip={() => setCurrentPage('clips')}
                 />
               )}
-              {currentPage !== 'withdraw' && currentPage !== 'user-profile' && currentPage !== 'gift-inbox' && currentPage !== 'top-gifters' && currentPage !== 'trending-today' && !showFullScreenAds && (
+              {currentPage !== 'withdraw' && currentPage !== 'user-profile' && currentPage !== 'gift-inbox' && currentPage !== 'top-gifters' && currentPage !== 'trending-today' && currentPage !== 'gifts-hub' && currentPage !== 'gift-store' && !showFullScreenAds && (
                 <BottomNav 
                   currentPage={currentPage}
                   onNavigate={handleNavigate}
