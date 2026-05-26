@@ -52,6 +52,7 @@ import SettingsScreen from "./src/screens/SettingsScreen";
 import BlockedUsersScreen from "./src/screens/BlockedUsersScreen";
 import GiftInboxScreen from "./src/screens/GiftInboxScreen";
 import TopGiftersScreen from "./src/screens/TopGiftersScreen";
+import TrendingTodayScreen from "./src/screens/TrendingTodayScreen";
 import { GiftCenterProvider } from "./src/components/GiftCenterProvider";
 import { initIAP, shutdownIAP } from "./src/services/appleIapService";
 import SupportScreen from "./src/screens/SupportScreen";
@@ -711,6 +712,7 @@ function AppContent() {
               onOpenBlockedUsers={() => setCurrentPage("blocked-users")}
               onOpenGiftInbox={() => setCurrentPage("gift-inbox")}
               onOpenTopGifters={() => setCurrentPage("top-gifters")}
+              onOpenTrendingToday={() => setCurrentPage("trending-today")}
               onUpdateProfile={async (updates) => {
                 const updatedUser = { ...(user || {}), ...(updates || {}) };
                 setUser(updatedUser);
@@ -738,6 +740,17 @@ function AppContent() {
                 setViewingUserId(uid);
                 setCurrentPage("user-profile");
               }}
+            />
+          )}
+          {currentPage === "trending-today" && (
+            <TrendingTodayScreen
+              user={user}
+              onBack={() => setCurrentPage("settings")}
+              onOpenUserProfile={(uid) => {
+                setViewingUserId(uid);
+                setCurrentPage("user-profile");
+              }}
+              onOpenClip={() => setCurrentPage("clips")}
             />
           )}
           {currentPage === "advertiser" && <AdvertiserScreen />}

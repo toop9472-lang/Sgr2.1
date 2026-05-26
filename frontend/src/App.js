@@ -30,6 +30,9 @@ import SaqrFortunesPage from "./components/SaqrFortunesPage";
 import GlobalChatPage from "./components/GlobalChatPage";
 import FriendsPage from "./components/FriendsPage";
 import UserProfilePage from "./components/UserProfilePage";
+import GiftInboxPage from "./components/GiftInboxPage";
+import TopGiftersPage from "./components/TopGiftersPage";
+import TrendingTodayPage from "./components/TrendingTodayPage";
 import BottomNav from "./components/BottomNav";
 import { Toaster } from "./components/ui/toaster";
 import { toast } from "./hooks/use-toast";
@@ -606,7 +609,34 @@ function MainApp() {
                   onWithdrawRequest={handleWithdrawRequest}
                 />
               )}
-              {currentPage !== 'withdraw' && currentPage !== 'user-profile' && !showFullScreenAds && (
+              {currentPage === 'gift-inbox' && !showFullScreenAds && (
+                <GiftInboxPage
+                  user={user}
+                  onBack={() => setCurrentPage('settings')}
+                />
+              )}
+              {currentPage === 'top-gifters' && !showFullScreenAds && (
+                <TopGiftersPage
+                  user={user}
+                  onBack={() => setCurrentPage('settings')}
+                  onOpenUserProfile={(uid) => {
+                    setViewingUserId(uid);
+                    setCurrentPage('user-profile');
+                  }}
+                />
+              )}
+              {currentPage === 'trending-today' && !showFullScreenAds && (
+                <TrendingTodayPage
+                  user={user}
+                  onBack={() => setCurrentPage('home')}
+                  onOpenUserProfile={(uid) => {
+                    setViewingUserId(uid);
+                    setCurrentPage('user-profile');
+                  }}
+                  onOpenClip={() => setCurrentPage('clips')}
+                />
+              )}
+              {currentPage !== 'withdraw' && currentPage !== 'user-profile' && currentPage !== 'gift-inbox' && currentPage !== 'top-gifters' && currentPage !== 'trending-today' && !showFullScreenAds && (
                 <BottomNav 
                   currentPage={currentPage}
                   onNavigate={handleNavigate}

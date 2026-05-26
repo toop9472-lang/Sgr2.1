@@ -14,6 +14,7 @@
 
 ## Test User Email
 - Reward test: `reward_test_22112@test.com` / `Test1234!`
+- Demo web account (created Feb 2026): `demo_1779827224@test.com` / `DemoTest123!`
 
 ## Notes
 - Never commit `.p8` files to git (already in `.gitignore`).

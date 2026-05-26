@@ -177,10 +177,23 @@ Strict requirement: Web UI MUST perfectly mirror Mobile UI.
   - Aggregation pipeline groups gift_transactions by sender/receiver, sums price_sar + gems + count.
   - Hydrates user info via `$or` on legacy `id` and modern `user_id` fields.
   - 422 validation on invalid scope/period.
-- ✅ **Mobile screens**: `TopGiftersScreen.js` (luxury leaderboard with rank medals + period toggles + tap-to-profile) and `GiftInboxScreen.js` (received/sent tabs with totals + gem badges).
-- ✅ Wired into Settings → "هداياي" and "لوحة أفضل الداعمين".
+- ✅ **Gift Trending Reels backend** (`GET /api/gifts/trending-reels?period=day|week|month|all`):
+  - Aggregation groups gift_transactions by context_id (clip_id) where context_type IN (reel, reel_comment).
+  - Hydrates clip metadata (thumbnail, title, user info, likes, views).
+  - Powers the new "🔥 ترند اليوم" feature that incentivizes creators with gift-based ranking.
+- ✅ **Mobile screens**: 
+  - `TopGiftersScreen.js` — luxury leaderboard with rank medals + period toggles + tap-to-profile.
+  - `GiftInboxScreen.js` — received/sent tabs with totals + gem badges.
+  - `TrendingTodayScreen.js` — 2-column grid of most-gifted reels with flame rank + SAR badges.
+- ✅ **Web parity pages** (matching mobile UX):
+  - `GiftInboxPage.jsx` — RTL inbox with same totals UX.
+  - `TopGiftersPage.jsx` — leaderboard with gold/silver/bronze medals.
+  - `TrendingTodayPage.jsx` — gradient orange/pink/purple hero + reel grid.
+- ✅ Wired into mobile Settings → "هداياي" / "لوحة أفضل الداعمين" / "ترند اليوم".
+- ✅ Wired into web Settings → same 3 entries in new "الهدايا والترند" section.
 - ✅ Fixed stale receiver balance in `/api/gifts/send` response (was overwriting atomic `find_one_and_update` result).
 - ✅ Backend test report `/app/test_reports/iteration_14.json`: 24/24 PASS (100%).
+- ✅ Visual verification: All 3 web pages tested via Playwright with real registered user — render perfectly with empty states.
 
 ## Phase 3 — Next steps
 - 🍎 Run `eas build --profile production --platform ios` to produce TestFlight Build 118 with all fixes

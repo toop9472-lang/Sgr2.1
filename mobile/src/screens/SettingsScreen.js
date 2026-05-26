@@ -27,6 +27,7 @@ const SettingsScreen = ({
   onOpenBlockedUsers,
   onOpenGiftInbox,
   onOpenTopGifters,
+  onOpenTrendingToday,
 }) => {
   const [theme, setTheme] = useState(currentTheme);
   const [homePreset, setHomePreset] = useState(currentHomePreset);
@@ -285,6 +286,15 @@ const SettingsScreen = ({
           value: language === 'ar' ? 'الأكثر دعماً' : 'Leaderboard',
           action: () => {
             if (onOpenTopGifters) onOpenTopGifters();
+          },
+        },
+        {
+          id: 'trending_today',
+          icon: 'flame-outline',
+          label: language === 'ar' ? 'ترند اليوم' : 'Trending Today',
+          value: language === 'ar' ? 'الريلز الأكثر هدايا' : 'Hot Reels',
+          action: () => {
+            if (onOpenTrendingToday) onOpenTrendingToday();
           },
         },
         {

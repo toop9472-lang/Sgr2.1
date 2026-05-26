@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Moon, Sun, Monitor, Globe, Shield, Bell, Palette, ChevronRight, ChevronLeft, Check, Lock, LockOpen, Share2, Eye, EyeOff, Copy, Wallet, History, HelpCircle, FileText, LogOut, KeyRound } from 'lucide-react';
+import { ArrowLeft, Moon, Sun, Monitor, Globe, Shield, Bell, Palette, ChevronRight, ChevronLeft, Check, Lock, LockOpen, Share2, Eye, EyeOff, Copy, Wallet, History, HelpCircle, FileText, LogOut, KeyRound, Gift, Trophy, Flame } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
@@ -112,6 +112,15 @@ const SettingsPage = ({ onBack, onNavigate, user, onUpdateProfile, onLogout }) =
       items: [
         { id: 'withdraw', icon: Wallet, label: t('withdrawBalance'), action: () => onNavigate && onNavigate('withdraw'), color: 'text-emerald-400', bgColor: 'bg-emerald-500/10' },
         { id: 'history', icon: History, label: t('transactionHistory'), action: () => setShowHistory(true), color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
+      ],
+    },
+    {
+      id: 'gifts',
+      title: isRTL ? 'الهدايا والترند' : 'Gifts & Trending',
+      items: [
+        { id: 'gift_inbox', icon: Gift, label: isRTL ? 'هداياي' : 'My Gifts', action: () => onNavigate && onNavigate('gift-inbox'), color: 'text-pink-400', bgColor: 'bg-pink-500/10' },
+        { id: 'top_gifters', icon: Trophy, label: isRTL ? 'لوحة أفضل الداعمين' : 'Top Gifters', action: () => onNavigate && onNavigate('top-gifters'), color: 'text-amber-400', bgColor: 'bg-amber-500/10' },
+        { id: 'trending_today', icon: Flame, label: isRTL ? 'ترند اليوم' : 'Trending Today', action: () => onNavigate && onNavigate('trending-today'), color: 'text-orange-400', bgColor: 'bg-orange-500/10' },
       ],
     },
     {

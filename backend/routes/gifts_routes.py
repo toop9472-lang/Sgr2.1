@@ -508,6 +508,75 @@ async def gift_leaderboard(
     }
 
 
+@router.get("/trending-reels")
+async def trending_reels(period: Literal["day", "week", "month", "all"] = "day", limit: int = 20):
+    """Most-gifted reels in the time window. Useful for a 'ترند اليوم' feed.
+    Aggregates gift_transactions where context_type IN (reel, reel_comment) and groups by context_id (clip_id).
+    """
+    capped = max(1, min(int(limit or 20), 50))
+    match = {"context_type": {"$in": ["reel", "reel_comment"]}, "context_id": {"$ne": None}}
+    if period != "all":
+        days = {"day": 1, "week": 7, "month": 30}[period]
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+        match["created_at"] = {"$gte": cutoff}
+
+    pipeline = [
+        {"$match": match},
+        {
+            "$group": {
+                "_id": "$context_id",
+                "total_sar": {"$sum": "$price_sar"},
+                "total_gifts": {"$sum": 1},
+                "total_gems": {"$sum": {"$ifNull": ["$gems_awarded", 0]}},
+                "last_gift_at": {"$max": "$created_at"},
+            }
+        },
+        {"$sort": {"total_sar": -1, "total_gifts": -1}},
+        {"$limit": capped},
+    ]
+    rows = await db.gift_transactions.aggregate(pipeline).to_list(capped)
+
+    # Hydrate clip info
+    clip_ids = [r["_id"] for r in rows if r.get("_id")]
+    clips = await db.clips.find(
+        {"clip_id": {"$in": clip_ids}},
+        {
+            "_id": 0, "clip_id": 1, "user_id": 1, "title": 1, "description": 1,
+            "thumbnail_url": 1, "video_url": 1, "user_name": 1, "user_avatar": 1,
+            "likes_count": 1, "views_count": 1, "created_at": 1,
+        },
+    ).to_list(len(clip_ids)) if clip_ids else []
+    clip_map = {c["clip_id"]: c for c in clips}
+
+    trending = []
+    for idx, r in enumerate(rows):
+        cid = r.get("_id")
+        if not cid:
+            continue
+        clip = clip_map.get(cid)
+        if not clip:
+            continue  # clip may have been deleted
+        trending.append({
+            "rank": idx + 1,
+            "clip_id": cid,
+            "title": clip.get("title") or "ريل",
+            "description": clip.get("description") or "",
+            "thumbnail_url": clip.get("thumbnail_url"),
+            "video_url": clip.get("video_url"),
+            "user_id": clip.get("user_id"),
+            "user_name": clip.get("user_name") or "مبدع",
+            "user_avatar": clip.get("user_avatar"),
+            "likes_count": int(clip.get("likes_count", 0) or 0),
+            "views_count": int(clip.get("views_count", 0) or 0),
+            "total_sar": round(float(r.get("total_sar", 0)), 2),
+            "total_gifts": int(r.get("total_gifts", 0)),
+            "total_gems": int(r.get("total_gems", 0)),
+            "last_gift_at": r.get("last_gift_at"),
+        })
+
+    return {"period": period, "count": len(trending), "reels": trending}
+
+
 # Phase 2 placeholder — Apple IAP receipt verification endpoint.
 class VerifyReceiptRequest(BaseModel):
     user_id: str
