@@ -19,6 +19,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Clipboard from "expo-clipboard";
+import { Video, ResizeMode } from "expo-av";
 import {
   getTrackingPermissionsAsync,
   requestTrackingPermissionsAsync,
@@ -746,6 +747,7 @@ const ProfileScreen = ({
             <View style={styles.reelsGrid}>
               {myClips.slice(0, 9).map((clip) => {
                 const thumb = resolveClipThumb(clip);
+                const videoUrl = toAbsoluteUrl(clip?.video_url);
                 return (
                   <TouchableOpacity
                     key={clip.clip_id}
@@ -755,6 +757,19 @@ const ProfileScreen = ({
                   >
                     {thumb ? (
                       <Image source={{ uri: thumb }} style={styles.reelTileImage} />
+                    ) : videoUrl ? (
+                      // Render the actual video's first frame as a paused poster.
+                      // This guarantees each tile shows its OWN video without
+                      // relying on a stored thumbnail.
+                      <Video
+                        source={{ uri: videoUrl }}
+                        style={styles.reelTileImage}
+                        resizeMode={ResizeMode.COVER}
+                        shouldPlay={false}
+                        isMuted
+                        positionMillis={300}
+                        useNativeControls={false}
+                      />
                     ) : (
                       <LinearGradient
                         colors={["#0f172a", "#1e293b"]}

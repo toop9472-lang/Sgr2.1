@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { Video, ResizeMode } from "expo-av";
 import api from "../services/api";
 import FollowListModal from "../components/FollowListModal";
 import GiftPickerModal from "../components/GiftPickerModal";
@@ -163,6 +164,7 @@ const UserProfileScreen = ({
   const renderClipTile = useCallback(
     ({ item }) => {
       const thumb = resolveClipThumb(item);
+      const videoUrl = toAbsoluteUrl(item?.video_url);
       return (
         <TouchableOpacity
           style={styles.tile}
@@ -171,6 +173,16 @@ const UserProfileScreen = ({
         >
           {thumb ? (
             <Image source={{ uri: thumb }} style={styles.tileImage} />
+          ) : videoUrl ? (
+            <Video
+              source={{ uri: videoUrl }}
+              style={styles.tileImage}
+              resizeMode={ResizeMode.COVER}
+              shouldPlay={false}
+              isMuted
+              positionMillis={300}
+              useNativeControls={false}
+            />
           ) : (
             <LinearGradient
               colors={["#0f172a", "#1e293b"]}
