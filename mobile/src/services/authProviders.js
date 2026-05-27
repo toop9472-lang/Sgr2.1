@@ -314,8 +314,12 @@ export const signInWithApple = async () => {
       ],
     });
 
-    // Build name from credential
-    let name = 'مستخدم Apple';
+    // Build name from credential. Apple only returns fullName on the FIRST
+    // sign-in. After that, it's null. To avoid showing the generic
+    // "مستخدم Apple" label, we let the backend hydrate from a previously
+    // stored name (by apple user_id) — and if still empty, the user will be
+    // asked to set a display name in the profile setup step after login.
+    let name = null;
     if (credential.fullName) {
       const firstName = credential.fullName.givenName || '';
       const lastName = credential.fullName.familyName || '';

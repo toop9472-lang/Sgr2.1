@@ -90,7 +90,7 @@ const MessageItem = ({ message, isOwn, onReport }) => {
 };
 
 // مكون المحادثة
-const ConversationView = ({ user, friend, onBack, onReport }) => {
+const ConversationView = ({ user, friend, onBack, onReport, onOpenUserProfile }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -188,10 +188,17 @@ const ConversationView = ({ user, friend, onBack, onReport }) => {
           <Ionicons name="arrow-back" size={24} color="#FFF" />
         </TouchableOpacity>
         
-        <View style={styles.conversationHeaderInfo}>
+        <TouchableOpacity
+          style={styles.conversationHeaderInfo}
+          activeOpacity={0.7}
+          onPress={() => {
+            const targetId = friend.id || friend.user_id || friend.from_user_id;
+            if (targetId && onOpenUserProfile) onOpenUserProfile(targetId);
+          }}
+        >
           <Text style={styles.conversationName}>{friend.name || friend.from_user_name}</Text>
-          <Text style={styles.conversationStatus}>صديق</Text>
-        </View>
+          <Text style={styles.conversationStatus}>اضغط لعرض الملف الشخصي · إرسال هدية</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity 
           style={styles.reportBtn}
@@ -318,7 +325,7 @@ const ConversationView = ({ user, friend, onBack, onReport }) => {
 };
 
 // المكون الرئيسي
-const PrivateMessagesScreen = ({ user, onClose, initialFriend }) => {
+const PrivateMessagesScreen = ({ user, onClose, initialFriend, onOpenUserProfile }) => {
   const [inbox, setInbox] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedConversation, setSelectedConversation] = useState(initialFriend || null);
@@ -378,6 +385,7 @@ const PrivateMessagesScreen = ({ user, onClose, initialFriend }) => {
           loadInbox();
         }}
         onReport={handleReport}
+        onOpenUserProfile={onOpenUserProfile}
       />
     );
   }

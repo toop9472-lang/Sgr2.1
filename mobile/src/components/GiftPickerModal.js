@@ -232,10 +232,6 @@ const GiftPickerModal = ({
             <Ionicons name="cash-outline" size={11} color="#fbbf24" />
             <Text style={styles.tilePrice}>{item.price_sar} ر.س</Text>
           </View>
-          <View style={styles.tileGemsRow}>
-            <Ionicons name="diamond-outline" size={10} color="#22d3ee" />
-            <Text style={styles.tileGems}>+{item.gems_reward}</Text>
-          </View>
         </TouchableOpacity>
       );
     },
@@ -350,7 +346,7 @@ const GiftPickerModal = ({
                   <View style={{ flex: 1 }}>
                     <Text style={styles.footerName}>{selected.name_ar}</Text>
                     <Text style={styles.footerHint}>
-                      المتلقي يكسب {selected.gems_reward} جوهرة (20% من قيمة الهدية)
+                      {selected.price_sar} ر.س — أرسلها الآن
                     </Text>
                   </View>
                 </>

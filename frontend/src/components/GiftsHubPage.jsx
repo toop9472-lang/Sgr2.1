@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ChevronRight, Gift, Trophy, Flame, Diamond, Download, Send, ShoppingBag, Sparkles } from 'lucide-react';
+import { ChevronRight, Gift, Trophy, Flame, Download, Send } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
@@ -56,21 +56,21 @@ const HubTile = ({ image, title, subtitle, badge, accent, onClick, testId }) => 
 const GiftsHubPage = ({ user, onBack, onOpenStore, onOpenInbox, onOpenLeaderboard, onOpenTrending, onOpenFriends }) => {
   const { isRTL } = useLanguage();
   const userId = user?.id || user?._id;
-  const [stats, setStats] = useState({ received: 0, gems: 0, catalog: 12 });
+  const [stats, setStats] = useState({ received: 0, sent: 0, catalog: 12 });
 
   const loadStats = useCallback(async () => {
     try {
-      const [catRes, inboxRes] = await Promise.all([
+      const [catRes, inboxRes, sentRes] = await Promise.all([
         fetch(`${API_URL}/api/gifts/catalog`, { credentials: 'include' }),
         userId ? fetch(`${API_URL}/api/gifts/inbox/${encodeURIComponent(userId)}?limit=100`, { credentials: 'include' }) : Promise.resolve(null),
+        userId ? fetch(`${API_URL}/api/gifts/sent/${encodeURIComponent(userId)}?limit=100`, { credentials: 'include' }) : Promise.resolve(null),
       ]);
       const catData = catRes ? await catRes.json().catch(() => null) : null;
       const inboxData = inboxRes ? await inboxRes.json().catch(() => null) : null;
-      const list = inboxData?.gifts || [];
-      const gemsSum = list.reduce((s, g) => s + Number(g?.gems_awarded || 0), 0);
+      const sentData = sentRes ? await sentRes.json().catch(() => null) : null;
       setStats({
-        received: list.length,
-        gems: gemsSum,
+        received: (inboxData?.gifts || []).length,
+        sent: (sentData?.gifts || []).length,
         catalog: catData?.gifts?.length || 12,
       });
     } catch (_) {
@@ -116,9 +116,9 @@ const GiftsHubPage = ({ user, onBack, onOpenStore, onOpenInbox, onOpenLeaderboar
             <span className="text-[10px] text-slate-400 font-semibold text-center">هدية استلمتها</span>
           </div>
           <div className="flex flex-col items-center gap-1 p-3 rounded-2xl bg-slate-900/90 border border-white/8">
-            <Diamond className="w-4 h-4 text-cyan-400" />
-            <span className="text-lg font-black text-white">{stats.gems}</span>
-            <span className="text-[10px] text-slate-400 font-semibold text-center">جوهرة كسبتها</span>
+            <Send className="w-4 h-4 text-cyan-400" />
+            <span className="text-lg font-black text-white">{stats.sent}</span>
+            <span className="text-[10px] text-slate-400 font-semibold text-center">هدية أرسلتها</span>
           </div>
         </div>
 
@@ -185,7 +185,7 @@ const GiftsHubPage = ({ user, onBack, onOpenStore, onOpenInbox, onOpenLeaderboar
           <div className="flex items-start gap-3 flex-row-reverse text-right">
             <span className="w-7 h-7 rounded-full bg-cyan-400/15 border border-cyan-400/45 flex items-center justify-center text-cyan-200 font-black text-xs shrink-0">3</span>
             <p className="text-slate-200 text-sm leading-relaxed flex-1">
-              المستلم يحصل على <span className="font-black text-white">20%</span> من قيمة الهدية كجواهر قابلة للسحب.
+              تظهر هديتك مع <span className="font-black text-white">أنيميشن سينمائي فاخر</span> على شاشة المستلم فوراً.
             </p>
           </div>
         </div>

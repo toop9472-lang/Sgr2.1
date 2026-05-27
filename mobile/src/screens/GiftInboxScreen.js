@@ -131,7 +131,7 @@ const GiftInboxScreen = ({ user, onBack }) => {
   };
 
   return (
-    <LinearGradient colors={["#05070d", "#0b1020", "#0e172d"]} style={styles.container}>
+    <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack} style={styles.headerBtn} accessibilityLabel="رجوع">
@@ -211,12 +211,12 @@ const GiftInboxScreen = ({ user, onBack }) => {
           }
         />
       )}
-    </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: "rgba(5,7,13,0.55)" },
   header: {
     flexDirection: "row",
     alignItems: "center",

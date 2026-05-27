@@ -55,7 +55,7 @@ const GiftStoreScreen = ({ onBack, onSendToFriend }) => {
   );
 
   return (
-    <LinearGradient colors={["#0a0410", "#15102a", "#1c0f30"]} style={styles.container}>
+    <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack} style={styles.headerBtn} accessibilityLabel="رجوع">
@@ -125,12 +125,12 @@ const GiftStoreScreen = ({ onBack, onSendToFriend }) => {
           </View>
         </View>
       </Modal>
-    </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: "rgba(10,4,16,0.65)" },
   header: {
     flexDirection: "row",
     alignItems: "center",

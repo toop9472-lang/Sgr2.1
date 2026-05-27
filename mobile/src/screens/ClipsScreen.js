@@ -38,12 +38,6 @@ import GiftPickerModal from "../components/GiftPickerModal";
 import { useGiftCenter } from "../components/GiftCenterProvider";
 
 const MAX_CLIP_DURATION = 15;
-const CLIP_PLACEHOLDERS = [
-  "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1521334884684-d80222895322?auto=format&fit=crop&w=900&q=80",
-];
 const toAbsoluteMediaUrl = (value) => {
   const normalized = (value || "").trim();
   if (!normalized) return "";
@@ -536,9 +530,7 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
 
   const renderClip = useCallback(
     ({ item, index }) => {
-      const image =
-        item.thumbnail_url ||
-        CLIP_PLACEHOLDERS[index % CLIP_PLACEHOLDERS.length];
+      const image = item.thumbnail_url || "";
       const rawUrl = typeof item.video_url === "string" ? item.video_url : "";
       const lower = rawUrl.toLowerCase();
       const hasVideo =
@@ -571,12 +563,21 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
               }}
             />
           ) : (
-            <ImageBackground source={{ uri: image }} style={styles.reelVideo}>
-              <LinearGradient
-                colors={["rgba(0,0,0,0.2)", "rgba(0,0,0,0.7)"]}
-                style={StyleSheet.absoluteFillObject}
-              />
-            </ImageBackground>
+            <View style={[styles.reelVideo, { backgroundColor: "#0f172a" }]}>
+              {image ? (
+                <ImageBackground source={{ uri: image }} style={styles.reelVideo}>
+                  <LinearGradient
+                    colors={["rgba(0,0,0,0.2)", "rgba(0,0,0,0.7)"]}
+                    style={StyleSheet.absoluteFillObject}
+                  />
+                </ImageBackground>
+              ) : (
+                <LinearGradient
+                  colors={["#0f172a", "#1e293b"]}
+                  style={StyleSheet.absoluteFillObject}
+                />
+              )}
+            </View>
           )}
 
           <LinearGradient
@@ -589,7 +590,7 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
                 style={styles.publisherStrip}
                 activeOpacity={0.7}
                 onPress={() => {
-                  if (item.user_id && item.user_id !== userId && onOpenUserProfile) {
+                  if (item.user_id && onOpenUserProfile) {
                     onOpenUserProfile(item.user_id);
                   }
                 }}

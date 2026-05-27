@@ -18,6 +18,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Video, ResizeMode } from "expo-av";
+import { LinearGradient } from "expo-linear-gradient";
 import api from "../services/api";
 import storage from "../services/storage";
 import admobService from "../services/admobService";
@@ -32,9 +33,9 @@ const ADMOB_INSERT_EVERY = 2;
 const buildAdMobSlot = (slotIndex = 1) => ({
   id: `${ADMOB_SLOT_PREFIX}${slotIndex}`,
   ad_source: "admob",
-  title: "إعلان Google AdMob",
-  description: "إعلان ممول من Google",
-  advertiser: "Google AdMob",
+  title: "شاهد واكسب جواهر صقر",
+  description: "شاهد إعلاناً قصيراً واحصل على جواهر صقر فوراً",
+  advertiser: "صقر",
   duration: 60,
   image_url: null,
 });
@@ -137,7 +138,7 @@ const AdViewerScreen = ({
   const currentVisualUri =
     currentAd?.image_url || currentAd?.thumbnail_url || null;
   const advertiserLabel = isAdMobSlot
-    ? "Google AdMob"
+    ? "صقر"
     : currentAd?.advertiser ||
       currentAd?.advertiser_name ||
       "معلن";
@@ -154,7 +155,7 @@ const AdViewerScreen = ({
         setAdMobStatusMessage("لا يوجد إعلان متاح الآن");
       } else if (eventType === "unavailable") {
         setAdMobReady(false);
-        setAdMobStatusMessage("تعذر تحميل إعلان AdMob حالياً");
+        setAdMobStatusMessage("تعذر تحميل الإعلان حالياً");
       } else if (eventType === "closed") {
         const ready = admobService.isReady();
         setAdMobReady(ready);
@@ -706,17 +707,37 @@ const AdViewerScreen = ({
 
       {/* Full-screen watch CTA (primary AdMob flow) */}
       {!showComments && (
-        <View style={styles.watchPrimaryContainer}>
-          <View style={styles.watchPrimaryCard}>
+        <ImageBackground
+          source={{ uri: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1400&q=80" }}
+          style={styles.watchPrimaryContainer}
+          imageStyle={{ opacity: 0.18 }}
+        >
+          <LinearGradient
+            colors={["rgba(5,7,13,0.55)", "rgba(11,16,32,0.92)"]}
+            style={StyleSheet.absoluteFillObject}
+            pointerEvents="none"
+          />
+          <View
+            style={[
+              styles.watchPrimaryCard,
+              !isAdMobSlot && styles.watchPrimaryCardAdvertiser,
+            ]}
+          >
+            {!isAdMobSlot ? (
+              <View style={styles.advertiserBadge}>
+                <Ionicons name="business" size={11} color="#fde047" />
+                <Text style={styles.advertiserBadgeText}>إعلان مُموَّل</Text>
+              </View>
+            ) : null}
             <Text style={styles.watchPrimaryTitle}>
               {isAdMobSlot
-                ? "إعلان Google AdMob"
+                ? "شاهد واكسب جواهر صقر"
                 : currentAd?.title || "إعلان معلن"}
             </Text>
             <Text style={styles.watchPrimarySubtitle}>
               {isAdMobSlot
-                ? "إعلان ممول من Google بكامل الشاشة"
-                : "إعلان ممول من معلن موثّق"}
+                ? "شاهد إعلاناً قصيراً واحصل على جواهر صقر فوراً"
+                : "إعلان من معلن موثّق — قد يحتوي على رابط للموقع"}
             </Text>
             <View style={styles.advertiserStrip}>
               <Ionicons name="megaphone-outline" size={13} color="#cbd5e1" />
@@ -756,17 +777,15 @@ const AdViewerScreen = ({
                     color="#fff"
                   />
                   <Text style={styles.watchPrimaryBtnText}>
-                    {isAdMobSlot
-                      ? "مشاهدة AdMob بكامل الشاشة"
-                      : "فتح إعلان المعلن"}
+                    {isAdMobSlot ? "شاهد" : "فتح إعلان المعلن"}
                   </Text>
                 </>
               )}
             </TouchableOpacity>
             <Text style={styles.watchPrimaryHint}>
               {isAdMobSlot
-                ? "بعد إكمال إعلان Google تنتقل تلقائياً للعنصر التالي"
-                : "يمكنك الانتقال بين الإعلانات الشخصية وAdMob من أزرار السابق/التالي"}
+                ? "بعد انتهاء الإعلان تكسب الجواهر تلقائياً وتنتقل للعنصر التالي"
+                : "تنقّل بين الإعلانات الشخصية بأزرار السابق/التالي"}
             </Text>
 
             {/* Website card — Personal ads only */}
@@ -824,7 +843,7 @@ const AdViewerScreen = ({
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </ImageBackground>
       )}
 
       {/* Right Side Actions - Always visible */}
@@ -1246,6 +1265,8 @@ const styles = StyleSheet.create({
     right: 16,
     bottom: 22,
     zIndex: 25,
+    borderRadius: 24,
+    overflow: "hidden",
   },
   watchPrimaryCard: {
     borderRadius: 22,
@@ -1255,6 +1276,37 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(9,11,24,0.75)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.18)",
+  },
+  watchPrimaryCardAdvertiser: {
+    borderWidth: 2,
+    borderColor: "#fde047",
+    backgroundColor: "rgba(15,12,3,0.85)",
+    // Glowing effect (iOS shadow; harmless on Android)
+    shadowColor: "#facc15",
+    shadowOpacity: 0.65,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 12,
+  },
+  advertiserBadge: {
+    position: "absolute",
+    top: -10,
+    right: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: "rgba(15,12,3,0.95)",
+    borderWidth: 1,
+    borderColor: "#fde047",
+    zIndex: 1,
+  },
+  advertiserBadgeText: {
+    color: "#fde047",
+    fontSize: 10,
+    fontWeight: "800",
   },
   watchPrimaryTitle: {
     color: "#fff",

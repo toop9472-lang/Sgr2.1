@@ -116,7 +116,7 @@ const TrendingTodayScreen = ({ user, onBack, onOpenUserProfile, onOpenClip }) =>
   );
 
   return (
-    <LinearGradient colors={["#0a0410", "#1a0a1f", "#2a0a1f"]} style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack} style={styles.headerBtn} accessibilityLabel="رجوع">
           <Ionicons name="chevron-forward" size={22} color="#fff" />
@@ -172,12 +172,12 @@ const TrendingTodayScreen = ({ user, onBack, onOpenUserProfile, onOpenClip }) =>
           }
         />
       )}
-    </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: "rgba(10,4,16,0.6)" },
   header: {
     flexDirection: "row",
     alignItems: "center",

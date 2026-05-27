@@ -953,14 +953,14 @@ async def apple_sign_in_callback(request: Request):
                 print(f"Error decoding Apple token: {e}")
         
         # Parse user data if provided (first sign in only)
-        name = 'مستخدم Apple'
+        name = ''
         if user_data:
             try:
                 import json
                 parsed_user = json.loads(user_data)
                 first_name = parsed_user.get('name', {}).get('firstName', '')
                 last_name = parsed_user.get('name', {}).get('lastName', '')
-                name = f"{first_name} {last_name}".strip() or 'مستخدم Apple'
+                name = f"{first_name} {last_name}".strip()
             except:
                 pass
         
@@ -987,12 +987,14 @@ async def apple_sign_in_callback(request: Request):
                 }}
             )
         else:
-            # Create new user
+            # Create new user with friendly default name if Apple didn't share one.
             user_id = f"user_{uuid.uuid4().hex[:12]}"
+            display_name = (name or '').strip() or f"صديق صقر {user_id[-4:]}"
             new_user = {
                 'id': user_id,
                 'email': apple_user.get('email', f"{apple_user['id']}@privaterelay.appleid.com"),
-                'name': name,
+                'name': display_name,
+                'needs_name_setup': not bool((name or '').strip()),
                 'provider': 'apple',
                 'provider_id': apple_user['id'],
                 'points': 0,
@@ -1109,18 +1111,26 @@ async def apple_native_sign_in(data: AppleNativeLogin):
             # Only update name if provided and user doesn't have one
             if data.name and (not existing_user.get('name') or existing_user.get('name') == 'مستخدم Apple'):
                 update_data['name'] = data.name
-            
+            # If the existing record still has the generic placeholder,
+            # promote it to "صديق صقر" so the UI doesn't show "مستخدم Apple".
+            elif existing_user.get('name') == 'مستخدم Apple':
+                update_data['name'] = 'صديق صقر'
+
             await db.users.update_one(
                 {'$or': [{'id': user_id}, {'user_id': user_id}]},
                 {'$set': update_data}
             )
         else:
-            # Create new user
+            # Create new user. If Apple did not give us a name (Hide-Email or
+            # repeat sign-in), use a friendly default and prompt the user to
+            # personalize it from their profile settings.
             user_id = f"user_{uuid.uuid4().hex[:12]}"
+            default_name = (data.name or '').strip() or f"صديق صقر {user_id[-4:]}"
             new_user = {
                 'id': user_id,
                 'email': data.email or f"{data.user_id[:10]}@privaterelay.appleid.com",
-                'name': data.name or 'مستخدم Apple',
+                'name': default_name,
+                'needs_name_setup': not bool((data.name or '').strip()),
                 'provider': 'apple',
                 'provider_id': data.user_id,
                 'points': 0,

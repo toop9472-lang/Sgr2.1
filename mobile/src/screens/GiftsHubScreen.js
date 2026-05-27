@@ -68,7 +68,7 @@ const GiftsHubScreen = ({
   onOpenFriends,      // optional — used by send CTA
 }) => {
   const userId = user?.id || user?.user_id;
-  const [stats, setStats] = useState({ received: 0, gems: 0, catalog: 12 });
+  const [stats, setStats] = useState({ received: 0, sent: 0, catalog: 12 });
 
   const loadStats = useCallback(async () => {
     try {
@@ -76,11 +76,21 @@ const GiftsHubScreen = ({
         getCatalog(false).catch(() => null),
         userId ? fetchInbox(userId, 100).catch(() => null) : Promise.resolve(null),
       ]);
+      // Optional: fetch sent count
+      let sentCount = 0;
+      if (userId) {
+        try {
+          const r = await api.fetch(`/api/gifts/sent/${encodeURIComponent(userId)}?limit=100`);
+          if (r.ok) {
+            const d = await r.json();
+            sentCount = Array.isArray(d?.gifts) ? d.gifts.length : 0;
+          }
+        } catch (_) {/* ignore */}
+      }
       const list = inbox?.gifts || [];
-      const gemsSum = list.reduce((s, g) => s + Number(g?.gems_awarded || 0), 0);
       setStats({
         received: list.length,
-        gems: gemsSum,
+        sent: sentCount,
         catalog: Array.isArray(cat?.gifts) ? cat.gifts.length : 12,
       });
     } catch (_) {
@@ -93,7 +103,7 @@ const GiftsHubScreen = ({
   }, [loadStats]);
 
   return (
-    <LinearGradient colors={["#0a0410", "#15102a", "#1c0f30"]} style={styles.container}>
+    <View style={styles.container}>
       <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>
         {/* Header with hero image */}
         <View style={styles.heroWrap}>
@@ -133,9 +143,9 @@ const GiftsHubScreen = ({
             <Text style={styles.statLabel}>هدية استلمتها</Text>
           </View>
           <View style={styles.statCard}>
-            <Ionicons name="diamond" size={16} color="#22d3ee" />
-            <Text style={styles.statValue}>{stats.gems}</Text>
-            <Text style={styles.statLabel}>جوهرة كسبتها</Text>
+            <Ionicons name="send" size={16} color="#22d3ee" />
+            <Text style={styles.statValue}>{stats.sent}</Text>
+            <Text style={styles.statLabel}>هدية أرسلتها</Text>
           </View>
         </View>
 
@@ -204,7 +214,7 @@ const GiftsHubScreen = ({
               <Text style={[styles.howNumText, { color: "#67e8f9" }]}>3</Text>
             </View>
             <Text style={styles.howText}>
-              المستلم يحصل على <Text style={styles.bold}>20%</Text> من قيمة الهدية كجواهر قابلة للسحب.
+              تظهر هديتك مع أنيميشن سينمائي فاخر على شاشة المستلم فوراً.
             </Text>
           </View>
         </View>
@@ -228,12 +238,12 @@ const GiftsHubScreen = ({
           </TouchableOpacity>
         ) : null}
       </ScrollView>
-    </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: "rgba(10,4,16,0.65)" },
   heroWrap: { height: 200 },
   heroBg: { flex: 1 },
   heroImg: { resizeMode: "cover" },

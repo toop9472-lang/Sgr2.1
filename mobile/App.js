@@ -834,6 +834,10 @@ function AppContent() {
                 setCurrentPage("home");
               }}
               initialFriend={privateChatTarget || selectedFriend}
+              onOpenUserProfile={(uid) => {
+                setViewingUserId(uid);
+                setCurrentPage("user-profile");
+              }}
             />
           )}
         </LinearGradient>
