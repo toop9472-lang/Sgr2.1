@@ -18,6 +18,32 @@ router = APIRouter(prefix='/auth', tags=['Authentication'])
 DEFAULT_PUBLIC_BASE_URL = "https://saqr-ui-sync.emergent.host"
 OAUTH_TEMP_TTL_MINUTES = 20
 
+
+async def _check_is_admin(user_id_or_email: str) -> dict:
+    """Single source of truth for admin detection.
+    Returns {'is_admin': bool, 'role': str|None, 'admin_id': str|None}
+    """
+    from server import db as _db
+    if not user_id_or_email:
+        return {"is_admin": False, "role": None, "admin_id": None}
+    admin = await _db.admins.find_one(
+        {"$or": [
+            {"id": user_id_or_email},
+            {"user_id": user_id_or_email},
+            {"email": user_id_or_email},
+        ]},
+        {"_id": 0, "id": 1, "email": 1, "role": 1, "name": 1},
+    )
+    if not admin:
+        return {"is_admin": False, "role": None, "admin_id": None}
+    return {
+        "is_admin": True,
+        "role": admin.get("role") or "admin",
+        "admin_id": admin.get("id") or admin.get("email"),
+        "email": admin.get("email"),
+        "name": admin.get("name"),
+    }
+
 def _resolve_public_base_url(request: Request) -> str:
     """Resolve the externally reachable base URL behind proxies."""
     proto = request.headers.get("x-forwarded-proto", request.url.scheme)
@@ -1354,3 +1380,9 @@ async def oauth_providers_status():
         "apple_enabled": bool(apple_enabled),
         "email_enabled": True,
     }
+
+
+@router.get('/is-admin')
+async def is_admin_endpoint(user_id: str = ""):
+    """Mobile/web UI calls this to decide whether to show the admin panel."""
+    return await _check_is_admin(user_id)

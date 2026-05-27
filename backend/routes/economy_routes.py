@@ -640,7 +640,12 @@ async def delete_chat_message(message_id: str, user_id: str):
         raise HTTPException(status_code=404, detail="الرسالة غير موجودة")
     is_owner = message.get("user_id") == user_id
     admin = await db.admins.find_one(
-        {"$or": [{"id": user_id}, {"email": user_id}]}, {"_id": 0, "id": 1}
+        {"$or": [
+            {"id": user_id},
+            {"user_id": user_id},
+            {"email": user_id},
+        ]},
+        {"_id": 0, "id": 1},
     )
     is_admin = bool(admin)
     if not is_owner and not is_admin:

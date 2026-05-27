@@ -73,6 +73,7 @@ const ProfileScreen = ({
   onUpdateProfile,
   onOpenSettings,
   onOpenUserProfile,
+  adminLoginTrigger = 0,
 }) => {
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -83,6 +84,14 @@ const ProfileScreen = ({
   const [adminPassword, setAdminPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+
+  // Open the admin login modal whenever Settings asks us to (uses a changing
+  // timestamp as the trigger so a repeated tap re-opens reliably).
+  useEffect(() => {
+    if (adminLoginTrigger && adminLoginTrigger > 0) {
+      setShowAdminLogin(true);
+    }
+  }, [adminLoginTrigger]);
   const [passwords, setPasswords] = useState({
     current: "",
     new: "",

@@ -1,5 +1,5 @@
 // Settings Screen - Theme, Language settings and Logout
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -26,6 +26,7 @@ const SettingsScreen = ({
   onUpdateProfile,
   onOpenBlockedUsers,
   onOpenGiftsHub,
+  onRequestAdminLogin,
 }) => {
   const [theme, setTheme] = useState(currentTheme);
   const [homePreset, setHomePreset] = useState(currentHomePreset);
@@ -340,8 +341,18 @@ const SettingsScreen = ({
           id: 'version',
           icon: 'information-circle-outline',
           label: language === 'ar' ? 'الإصدار' : 'Version',
-          value: '7.2.23',
+          value: '7.3.0',
           action: () => {},
+        },
+        {
+          id: 'admin_login',
+          icon: 'shield-checkmark-outline',
+          label: language === 'ar' ? 'الدخول للإدارة' : 'Admin Login',
+          value: '',
+          action: () => {
+            if (onRequestAdminLogin) onRequestAdminLogin();
+          },
+          tint: '#ef4444',
         },
       ],
     },
@@ -399,8 +410,23 @@ const SettingsScreen = ({
                   onPress={item.action}
                   activeOpacity={0.7}
                 >
-                  <View style={styles.iconContainer}>
-                    <Ionicons name={item.icon} size={20} color="#FFF" />
+                  <View
+                    style={[
+                      styles.iconContainer,
+                      item.tint
+                        ? {
+                            backgroundColor: `${item.tint}22`,
+                            borderColor: `${item.tint}55`,
+                            borderWidth: 1,
+                          }
+                        : null,
+                    ]}
+                  >
+                    <Ionicons
+                      name={item.icon}
+                      size={20}
+                      color={item.tint || "#FFF"}
+                    />
                   </View>
                   <View style={styles.menuItemContent}>
                     <Text

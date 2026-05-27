@@ -735,8 +735,14 @@ async def get_profile_follow_stats(user_id: str, viewer_id: Optional[str] = None
 async def _is_admin(user_id: str) -> bool:
     if not user_id:
         return False
+    # Match by id, user_id, or email — covers all admin login variants
     admin = await db.admins.find_one(
-        {"$or": [{"id": user_id}, {"email": user_id}]}, {"_id": 0, "id": 1}
+        {"$or": [
+            {"id": user_id},
+            {"user_id": user_id},
+            {"email": user_id},
+        ]},
+        {"_id": 0, "id": 1},
     )
     return bool(admin)
 

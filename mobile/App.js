@@ -106,6 +106,7 @@ function AppContent() {
   const [viewingUserId, setViewingUserId] = useState(null);
   const [privateChatTarget, setPrivateChatTarget] = useState(null);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showAdminLoginRequest, setShowAdminLoginRequest] = useState(0);
   const [settings, setSettings] = useState(null);
   const [balanceRefresh, setBalanceRefresh] = useState(0);
   const [selectedFriend, setSelectedFriend] = useState(null);
@@ -673,6 +674,7 @@ function AppContent() {
               onOpenAchievements={() => setShowAchievements(true)}
               onOpenAdminPanel={() => setShowAdminPanel(true)}
               onOpenSettings={() => setCurrentPage("settings")}
+              adminLoginTrigger={showAdminLoginRequest}
               onOpenUserProfile={(targetUserId) => {
                 setViewingUserId(targetUserId);
                 setCurrentPage("user-profile");
@@ -714,6 +716,11 @@ function AppContent() {
               onHomePresetChange={handleHomePresetChange}
               onOpenBlockedUsers={() => setCurrentPage("blocked-users")}
               onOpenGiftsHub={() => setCurrentPage("gifts-hub")}
+              onRequestAdminLogin={() => {
+                // Navigate to profile then auto-open the admin login modal
+                setCurrentPage("profile");
+                setTimeout(() => setShowAdminLoginRequest(Date.now()), 250);
+              }}
               onUpdateProfile={async (updates) => {
                 const updatedUser = { ...(user || {}), ...(updates || {}) };
                 setUser(updatedUser);
