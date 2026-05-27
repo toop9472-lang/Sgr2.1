@@ -641,14 +641,38 @@ const AdViewerScreen = ({
           onLoadEnd={() => setVideoLoading(false)}
         />
       ) : (
-        <View style={[styles.video, styles.videoFallback]}>
-          <Ionicons
-            name="tv-outline"
-            size={72}
-            color="rgba(255,255,255,0.35)"
+        <ImageBackground
+          source={{
+            uri: "https://images.unsplash.com/photo-1614851099175-e5b30eb6f696?auto=format&fit=crop&w=1400&q=80",
+          }}
+          style={styles.video}
+          imageStyle={{ opacity: 0.42 }}
+        >
+          <LinearGradient
+            colors={[
+              "rgba(10,8,20,0.55)",
+              "rgba(11,16,32,0.75)",
+              "rgba(7,8,17,0.95)",
+            ]}
+            style={StyleSheet.absoluteFillObject}
+            pointerEvents="none"
           />
-          <Text style={styles.videoFallbackText}>Google AdMob</Text>
-        </View>
+          <View style={styles.videoFallback}>
+            <View style={styles.videoFallbackBadge}>
+              <Ionicons name="diamond" size={18} color="#fde047" />
+              <Text style={styles.videoFallbackBadgeText}>صقر</Text>
+            </View>
+            <Ionicons
+              name="sparkles"
+              size={72}
+              color="rgba(253,224,71,0.85)"
+            />
+            <Text style={styles.videoFallbackTitle}>شاهد واكسب جواهر صقر</Text>
+            <Text style={styles.videoFallbackSub}>
+              إعلان قصير + 5 جواهر مكافأة فورية
+            </Text>
+          </View>
+        </ImageBackground>
       )}
 
       {/* Dark overlay when paused */}
@@ -1122,20 +1146,50 @@ const AdViewerScreen = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#06070d",
   },
   video: {
     ...StyleSheet.absoluteFillObject,
   },
   videoFallback: {
+    ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#0b1020",
-    gap: 10,
+    gap: 12,
+    paddingHorizontal: 30,
   },
-  videoFallbackText: {
-    color: "rgba(255,255,255,0.65)",
-    fontSize: 14,
+  videoFallbackBadge: {
+    position: "absolute",
+    top: 100,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: "rgba(15,12,3,0.85)",
+    borderWidth: 1,
+    borderColor: "rgba(253,224,71,0.55)",
+  },
+  videoFallbackBadgeText: {
+    color: "#fde047",
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
+  videoFallbackTitle: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "900",
+    textAlign: "center",
+    marginTop: 4,
+    textShadowColor: "rgba(253,224,71,0.5)",
+    textShadowRadius: 14,
+  },
+  videoFallbackSub: {
+    color: "rgba(226,232,240,0.78)",
+    fontSize: 13,
+    textAlign: "center",
     fontWeight: "600",
   },
   pauseOverlay: {
