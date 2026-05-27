@@ -640,7 +640,9 @@ const AdViewerScreen = ({
           onLoadStart={() => setVideoLoading(true)}
           onLoadEnd={() => setVideoLoading(false)}
         />
-      ) : (
+      ) : isAdMobSlot ? (
+        // Full-screen AdMob background (only for AdMob slots, not for
+        // advertiser slots without a media URL — those keep the dark UI).
         <ImageBackground
           source={{
             uri: "https://images.unsplash.com/photo-1614851099175-e5b30eb6f696?auto=format&fit=crop&w=1400&q=80",
@@ -673,6 +675,8 @@ const AdViewerScreen = ({
             </Text>
           </View>
         </ImageBackground>
+      ) : (
+        <View style={[styles.video, { backgroundColor: "#06070d" }]} />
       )}
 
       {/* Dark overlay when paused */}
