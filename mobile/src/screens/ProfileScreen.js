@@ -30,24 +30,9 @@ import storage from "../services/storage";
 import { useAchievements } from "../services/AchievementsContext";
 import FollowListModal from "../components/FollowListModal";
 
-// Diverse fallback thumbnails used when a clip has no `thumbnail_url`.
-// Each clip is deterministically mapped to a different image so the grid
-// doesn't look like a uniform red/pink block.
-const REEL_FALLBACKS = [
-  "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=600&q=80",
-  "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=600&q=80",
-  "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=600&q=80",
-  "https://images.unsplash.com/photo-1521334884684-d80222895322?auto=format&fit=crop&w=600&q=80",
-  "https://images.unsplash.com/photo-1493612276216-ee3925520721?auto=format&fit=crop&w=600&q=80",
-  "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=600&q=80",
-  "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=600&q=80",
-  "https://images.unsplash.com/photo-1518609571773-39b7d303a87b?auto=format&fit=crop&w=600&q=80",
-  "https://images.unsplash.com/photo-1483393458019-411bc6bd104e?auto=format&fit=crop&w=600&q=80",
-];
-
 // Some clips share a generic placeholder thumbnail uploaded by older
-// versions of the app. We treat these as "no real thumbnail" so the
-// grid still looks varied.
+// versions of the app. We treat these as "no real thumbnail" so the tile
+// falls back to a clean dark play-icon placeholder.
 const PLACEHOLDER_SIGNATURES = [
   "static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8",
   "example.com/t.jpg",
@@ -68,15 +53,13 @@ const toAbsoluteUrl = (value) => {
   return normalized;
 };
 
-const resolveClipThumb = (clip, index) => {
+// Returns the REAL thumbnail URL only — never substitutes a random image.
+// When the clip has no genuine thumbnail (or only the legacy placeholder),
+// returns null so the UI renders a neutral dark play-icon tile.
+const resolveClipThumb = (clip) => {
   const direct = toAbsoluteUrl(clip?.thumbnail_url);
-  // Skip the well-known placeholder so we fall back to varied images
   if (direct && !isPlaceholderThumb(direct)) return direct;
-  // Deterministic fallback per clip so tiles look varied, not uniform.
-  const key = String(clip?.clip_id || clip?.video_url || index || "");
-  let hash = 0;
-  for (let i = 0; i < key.length; i += 1) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
-  return REEL_FALLBACKS[hash % REEL_FALLBACKS.length];
+  return null;
 };
 
 const ProfileScreen = ({
@@ -760,28 +743,35 @@ const ProfileScreen = ({
             </View>
           ) : (
             <View style={styles.reelsGrid}>
-              {myClips.slice(0, 9).map((clip, idx) => (
-                <TouchableOpacity
-                  key={clip.clip_id}
-                  style={styles.reelTile}
-                  onPress={() => onNavigate && onNavigate("clips")}
-                  activeOpacity={0.7}
-                >
-                  <Image
-                    source={{ uri: resolveClipThumb(clip, idx) }}
-                    style={styles.reelTileImage}
-                  />
-                  <View style={styles.reelTilePlayOverlay}>
-                    <Ionicons name="play" size={18} color="rgba(255,255,255,0.92)" />
-                  </View>
-                  <View style={styles.reelTileBadge}>
-                    <Ionicons name="heart" size={10} color="#fff" />
-                    <Text style={styles.reelTileBadgeText}>
-                      {clip.likes_count || 0}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
+              {myClips.slice(0, 9).map((clip) => {
+                const thumb = resolveClipThumb(clip);
+                return (
+                  <TouchableOpacity
+                    key={clip.clip_id}
+                    style={styles.reelTile}
+                    onPress={() => onNavigate && onNavigate("clips")}
+                    activeOpacity={0.7}
+                  >
+                    {thumb ? (
+                      <Image source={{ uri: thumb }} style={styles.reelTileImage} />
+                    ) : (
+                      <LinearGradient
+                        colors={["#0f172a", "#1e293b"]}
+                        style={StyleSheet.absoluteFillObject}
+                      />
+                    )}
+                    <View style={styles.reelTilePlayOverlay}>
+                      <Ionicons name="play" size={18} color="rgba(255,255,255,0.92)" />
+                    </View>
+                    <View style={styles.reelTileBadge}>
+                      <Ionicons name="heart" size={10} color="#fff" />
+                      <Text style={styles.reelTileBadgeText}>
+                        {clip.likes_count || 0}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           )}
         </View>

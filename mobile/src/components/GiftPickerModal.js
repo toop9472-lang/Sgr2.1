@@ -18,6 +18,8 @@ import {
   isIAPAvailable,
   purchaseGiftProduct,
   finishPurchase,
+  fetchGiftProducts,
+  initIAP,
 } from "../services/appleIapService";
 import { hapticLight, hapticMedium } from "../utils/haptics";
 
@@ -62,10 +64,11 @@ const GiftPickerModal = ({
     setLoading(true);
     setLoadError(null);
     (async () => {
+      let list = [];
       try {
         const data = await getCatalog(true); // force refresh on every open
         if (!alive) return;
-        const list = Array.isArray(data?.gifts) ? data.gifts : [];
+        list = Array.isArray(data?.gifts) ? data.gifts : [];
         if (list.length === 0) {
           setLoadError("لم يصل أي محتوى من السيرفر. تأكد من اتصال الإنترنت.");
         }
@@ -78,6 +81,21 @@ const GiftPickerModal = ({
         setGifts([]);
       } finally {
         if (alive) setLoading(false);
+      }
+
+      // Pre-fetch all StoreKit products as early as possible so iOS doesn't
+      // throw "Invalid product ID. Did you call getProducts?" when the user
+      // taps a gift. Safe no-op on Android / Expo Go.
+      if (Platform.OS === "ios" && isIAPAvailable()) {
+        try {
+          await initIAP();
+          const skus = list.map((g) => g?.ios_product_id).filter(Boolean);
+          if (skus.length) {
+            await fetchGiftProducts(skus);
+          }
+        } catch (_) {
+          // silent — the actual purchase call will surface a clear error
+        }
       }
     })();
     return () => {

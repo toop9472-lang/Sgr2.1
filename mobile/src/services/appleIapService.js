@@ -127,6 +127,31 @@ export const purchaseGiftProduct = async (sku) => {
   if (!initialized) await initIAP();
   if (!initialized) throw new Error("لم يتم الاتصال بـ StoreKit.");
 
+  // ⚠️ مهم جداً: StoreKit يرفض requestPurchase إذا لم يكن المنتج
+  // قد جُلب مسبقاً عبر getProducts. خطأ Apple الشهير:
+  // "Invalid product ID. Did you call getProducts/Subscriptions?"
+  // نحاول جلب المنتج هنا — إذا أرجع مصفوفة فارغة، فالمنتج إما:
+  //   1) غير مسجّل في App Store Connect
+  //   2) Bundle ID لا يطابق
+  //   3) المنتج لم يُوافق عليه بعد (حالة "غير معدّ" Missing Metadata)
+  //   4) المستخدم ليس Sandbox Tester
+  try {
+    const products = await fetchGiftProducts([sku]);
+    if (!Array.isArray(products) || products.length === 0) {
+      throw new Error(
+        `المنتج "${sku}" غير متاح حالياً في App Store. ` +
+        `تأكد من اكتمال إعداده وأن حالته "Ready to Submit" أو "Approved"، ` +
+        `وأنك مسجّل دخول بحساب Sandbox Tester.`,
+      );
+    }
+  } catch (e) {
+    if (/Invalid product ID|غير متاح/i.test(e?.message || "")) {
+      throw e;
+    }
+    console.warn("[IAP] product fetch warn:", e?.message || e);
+    // لا نُسقط العملية تماماً — قد يكون getProducts غير مدعوم في نسخة قديمة من المكتبة
+  }
+
   let purchase = null;
   try {
     if (RNIap.requestPurchase) {
@@ -134,7 +159,9 @@ export const purchaseGiftProduct = async (sku) => {
       try {
         purchase = await RNIap.requestPurchase({
           request: {
-            apple: { sku },
+            ios: { sku },          // النسخة الأحدث تستخدم ios بدلاً من apple
+            apple: { sku },        // احتياط
+            android: { skus: [sku] },
             google: { skus: [sku] },
           },
           type: "in-app",

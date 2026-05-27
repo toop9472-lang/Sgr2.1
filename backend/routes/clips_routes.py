@@ -450,6 +450,52 @@ async def upload_clip_video(
     }
 
 
+@router.post("/upload-thumb")
+async def upload_clip_thumbnail(
+    file: UploadFile = File(...),
+    user_id: str = Form(...),
+):
+    """Upload a thumbnail image (first video frame) for a clip.
+    The mobile client extracts the first frame locally via expo-video-thumbnails
+    and uploads it here so the profile grid shows the real video preview
+    instead of a random fallback.
+    """
+    await _fetch_user(user_id, {"_id": 0, "id": 1, "user_id": 1})
+
+    filename = file.filename or "thumb.jpg"
+    ext = filename.split(".")[-1].lower()
+    safe_ext = ext if ext in {"jpg", "jpeg", "png", "webp"} else "jpg"
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="ملف الصورة فارغ")
+    if len(content) > 8 * 1024 * 1024:  # 8MB cap is plenty for thumbs
+        raise HTTPException(status_code=400, detail="حجم الصورة يتجاوز 8MB")
+
+    file_id = str(uuid.uuid4())
+    object_key = f"clip-thumbs/{file_id}.{safe_ext}"
+    mime = {
+        "jpg": "image/jpeg", "jpeg": "image/jpeg",
+        "png": "image/png", "webp": "image/webp",
+    }.get(safe_ext, "image/jpeg")
+
+    thumbnail_url: Optional[str] = None
+    if r2.is_configured:
+        try:
+            thumbnail_url = r2.upload_bytes(object_key, content, content_type=mime)
+        except Exception as exc:  # pragma: no cover
+            print(f"[clip_thumb_upload] R2 failed, falling back: {exc}")
+            thumbnail_url = None
+
+    if not thumbnail_url:
+        absolute_path = MEDIA_CLIPS_DIR / f"thumb-{file_id}.{safe_ext}"
+        with open(absolute_path, "wb") as output:
+            output.write(content)
+        thumbnail_url = f"/api/clips/media/thumb-{file_id}.{safe_ext}"
+
+    return {"success": True, "thumbnail_url": thumbnail_url}
+
+
 @router.get("/media/{filename}")
 async def get_clip_media(filename: str, request: Request):
     """Serve uploaded clip media with byte-range support so iOS / expo-av can stream the video."""

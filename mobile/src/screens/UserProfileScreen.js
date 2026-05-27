@@ -18,18 +18,6 @@ import FollowListModal from "../components/FollowListModal";
 import GiftPickerModal from "../components/GiftPickerModal";
 import { useGiftCenter } from "../components/GiftCenterProvider";
 
-const REEL_FALLBACKS = [
-  "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=600&q=80",
-  "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=600&q=80",
-  "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=600&q=80",
-  "https://images.unsplash.com/photo-1521334884684-d80222895322?auto=format&fit=crop&w=600&q=80",
-  "https://images.unsplash.com/photo-1493612276216-ee3925520721?auto=format&fit=crop&w=600&q=80",
-  "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=600&q=80",
-  "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=600&q=80",
-  "https://images.unsplash.com/photo-1518609571773-39b7d303a87b?auto=format&fit=crop&w=600&q=80",
-  "https://images.unsplash.com/photo-1483393458019-411bc6bd104e?auto=format&fit=crop&w=600&q=80",
-];
-
 const PLACEHOLDER_SIGNATURES = [
   "static.prod-images.emergentagent.com/jobs/3943d011-4c0b-4252-9b99-046dc8",
   "example.com/t.jpg",
@@ -50,13 +38,12 @@ const toAbsoluteUrl = (value) => {
   return normalized;
 };
 
-const resolveClipThumb = (clip, index) => {
+// Returns the REAL thumbnail URL only; if none, returns null so the UI can
+// render a neutral dark play-icon tile instead of a random fallback image.
+const resolveClipThumb = (clip) => {
   const direct = toAbsoluteUrl(clip?.thumbnail_url);
   if (direct && !isPlaceholderThumb(direct)) return direct;
-  const key = String(clip?.clip_id || clip?.video_url || index || "");
-  let hash = 0;
-  for (let i = 0; i < key.length; i += 1) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
-  return REEL_FALLBACKS[hash % REEL_FALLBACKS.length];
+  return null;
 };
 
 const { width: screenWidth } = Dimensions.get("window");
@@ -174,25 +161,32 @@ const UserProfileScreen = ({
   }, [isSelf, onOpenChat, profile]);
 
   const renderClipTile = useCallback(
-    ({ item, index }) => (
-      <TouchableOpacity
-        style={styles.tile}
-        activeOpacity={0.7}
-        onPress={() => onOpenClip && onOpenClip(item)}
-      >
-        <Image
-          source={{ uri: resolveClipThumb(item, index) }}
-          style={styles.tileImage}
-        />
-        <View style={styles.tilePlayOverlay}>
-          <Ionicons name="play" size={22} color="rgba(255,255,255,0.92)" />
-        </View>
-        <View style={styles.tileBadge}>
-          <Ionicons name="heart" size={11} color="#fff" />
-          <Text style={styles.tileBadgeText}>{item.likes_count || 0}</Text>
-        </View>
-      </TouchableOpacity>
-    ),
+    ({ item }) => {
+      const thumb = resolveClipThumb(item);
+      return (
+        <TouchableOpacity
+          style={styles.tile}
+          activeOpacity={0.7}
+          onPress={() => onOpenClip && onOpenClip(item)}
+        >
+          {thumb ? (
+            <Image source={{ uri: thumb }} style={styles.tileImage} />
+          ) : (
+            <LinearGradient
+              colors={["#0f172a", "#1e293b"]}
+              style={StyleSheet.absoluteFillObject}
+            />
+          )}
+          <View style={styles.tilePlayOverlay}>
+            <Ionicons name="play" size={22} color="rgba(255,255,255,0.92)" />
+          </View>
+          <View style={styles.tileBadge}>
+            <Ionicons name="heart" size={11} color="#fff" />
+            <Text style={styles.tileBadgeText}>{item.likes_count || 0}</Text>
+          </View>
+        </TouchableOpacity>
+      );
+    },
     [onOpenClip],
   );
 

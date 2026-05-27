@@ -956,6 +956,37 @@ export const api = {
     );
   },
 
+  async uploadClipThumbnail(fileUri, userId) {
+    // Upload an extracted video first-frame as the clip's thumbnail.
+    const formData = new FormData();
+    const filename = (fileUri || "").split("/").pop() || `thumb-${Date.now()}.jpg`;
+    formData.append("user_id", String(userId || ""));
+    formData.append("file", {
+      uri: fileUri,
+      name: filename,
+      type: "image/jpeg",
+    });
+    const headers = {};
+    if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+      const r = await fetch(`${this.baseUrl}/api/clips/upload-thumb`, {
+        method: "POST",
+        headers,
+        body: formData,
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      if (!r.ok) return null;
+      const d = await r.json().catch(() => null);
+      return d?.thumbnail_url || null;
+    } catch (e) {
+      console.log("[uploadClipThumbnail] failed:", e?.message || e);
+      return null;
+    }
+  },
+
   async toggleClipLike(clipId, userId) {
     return this.fetch("/api/clips/like", {
       method: "POST",

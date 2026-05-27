@@ -20,6 +20,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Video, ResizeMode } from "expo-av";
 import * as ImagePicker from "expo-image-picker";
+import * as VideoThumbnails from "expo-video-thumbnails";
 import * as Sharing from "expo-sharing";
 import * as Linking from "expo-linking";
 import api from "../services/api";
@@ -275,7 +276,32 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
         return;
       }
       setNewClipVideoUrl(toAbsoluteMediaUrl(uploadData.video_url));
-      setNewClipThumb(uploadData?.thumbnail_url || "");
+
+      // Extract the real first-frame of the video locally and upload it as
+      // the thumbnail so the profile grid shows the actual reel preview
+      // (no random Unsplash fallbacks).
+      try {
+        const { uri: thumbUri } = await VideoThumbnails.getThumbnailAsync(
+          videoAsset.uri,
+          { time: 800, quality: 0.85 },
+        );
+        if (thumbUri) {
+          const uploadedThumb = await api.uploadClipThumbnail(thumbUri, userId);
+          if (uploadedThumb) {
+            setNewClipThumb(toAbsoluteMediaUrl(uploadedThumb));
+          } else if (uploadData?.thumbnail_url) {
+            setNewClipThumb(uploadData.thumbnail_url);
+          }
+        } else if (uploadData?.thumbnail_url) {
+          setNewClipThumb(uploadData.thumbnail_url);
+        }
+      } catch (thumbErr) {
+        console.log("[thumbnail extract] failed:", thumbErr?.message || thumbErr);
+        if (uploadData?.thumbnail_url) {
+          setNewClipThumb(uploadData.thumbnail_url);
+        }
+      }
+
       Alert.alert("تم", "تم رفع الفيديو بنجاح.");
     } catch (e) {
       console.log("[pickAndUploadVideo] error:", e?.name, e?.message);
@@ -308,17 +334,16 @@ const ClipsScreen = ({ user, onClose, onNavigateToAds, onOpenUserProfile }) => {
     }
     setPublishing(true);
     try {
-      const fallbackImage =
-        CLIP_PLACEHOLDERS[Math.floor(Math.random() * CLIP_PLACEHOLDERS.length)];
       const response = await api.createClip({
         user_id: userId,
         user_name: user?.name || "مستخدم",
         title,
-        // Upload flow now requests title only before publish.
         content: "",
         caption: title,
         video_url: newClipVideoUrl.trim(),
-        thumbnail_url: newClipThumb.trim() || fallbackImage,
+        // Use the real extracted frame (or empty if extraction failed).
+        // Backend will fall back to the video_url itself rather than to a random image.
+        thumbnail_url: newClipThumb.trim(),
       });
       if (!response.ok) {
         const message = await parseApiErrorMessage(
