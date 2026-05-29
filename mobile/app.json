@@ -2,7 +2,7 @@
   "expo": {
     "name": "صقر",
     "slug": "saqr-app",
-    "version": "7.3.0",
+    "version": "7.3.1",
     "orientation": "default",
     "icon": "./assets/logo_saqr.png",
     "userInterfaceStyle": "automatic",
@@ -63,7 +63,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.saqr.rewards",
-      "buildNumber": "122",
+      "buildNumber": "124",
       "usesAppleSignIn": true,
       "config": {
         "usesNonExemptEncryption": false
@@ -157,7 +157,7 @@
         "backgroundColor": "#0a0a0f"
       },
       "package": "com.saqr.rewards",
-      "versionCode": 95,
+      "versionCode": 96,
       "softwareKeyboardLayoutMode": "resize",
       "intentFilters": [
         {
