@@ -45,7 +45,9 @@ const GiftStoreScreen = ({ onBack, onSendToFriend }) => {
       onPress={() => { hapticLight(); setPicked(item); }}
     >
       <View style={[styles.glow, { backgroundColor: item.accent_color + "33" }]} />
-      <Image source={{ uri: item.icon_url }} style={styles.icon} />
+      <View style={styles.iconWrap}>
+        <Image source={{ uri: item.icon_url }} style={styles.icon} />
+      </View>
       <Text style={styles.name} numberOfLines={1}>{item.name_ar}</Text>
       <View style={styles.priceRow}>
         <Ionicons name="cash-outline" size={11} color="#fbbf24" />
@@ -174,8 +176,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: "rgba(15,23,42,0.7)",
     borderWidth: 1,
-    padding: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     alignItems: "center",
+    justifyContent: "center",
     overflow: "hidden",
   },
   glow: {
@@ -186,7 +190,13 @@ const styles = StyleSheet.create({
     borderRadius: 45,
     opacity: 0.9,
   },
-  icon: { width: 64, height: 64, marginTop: 6, resizeMode: "contain" },
+  iconWrap: {
+    flex: 1,
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  icon: { width: 72, height: 72, resizeMode: "contain" },
   name: {
     color: "#fff",
     fontSize: 11,

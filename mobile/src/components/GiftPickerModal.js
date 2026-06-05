@@ -224,7 +224,9 @@ const GiftPickerModal = ({
           }}
         >
           <View style={[styles.tileGlow, { backgroundColor: `${item.accent_color}22` }]} />
-          <Image source={{ uri: item.icon_url }} style={styles.tileImage} />
+          <View style={styles.tileImageWrap}>
+            <Image source={{ uri: item.icon_url }} style={styles.tileImage} />
+          </View>
           <Text style={styles.tileName} numberOfLines={1}>
             {item.name_ar}
           </Text>
@@ -442,9 +444,10 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(15,23,42,0.7)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.06)",
-    padding: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     alignItems: "center",
-    justifyContent: "flex-start",
+    justifyContent: "center",
     overflow: "hidden",
   },
   tileGlow: {
@@ -455,10 +458,15 @@ const styles = StyleSheet.create({
     borderRadius: 45,
     opacity: 0.9,
   },
+  tileImageWrap: {
+    flex: 1,
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   tileImage: {
-    width: 64,
-    height: 64,
-    marginTop: 6,
+    width: 72,
+    height: 72,
     resizeMode: "contain",
   },
   tileName: {
