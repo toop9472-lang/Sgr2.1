@@ -1,6 +1,6 @@
 // Profile Screen - User profile and settings
 // Complete Professional Design with All Features
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -376,18 +376,30 @@ const ProfileScreen = ({
     }
   };
 
+  const adminTapResetRef = useRef(null);
+
   // معالجة الضغط المتكرر على رقم الإصدار لفتح تسجيل دخول الأدمن
   const handleVersionTap = () => {
-    const newCount = adminTapCount + 1;
-    setAdminTapCount(newCount);
-
-    if (newCount >= 7) {
-      setShowAdminLogin(true);
-      setAdminTapCount(0);
+    // إلغاء أي عدّاد إعادة تعيين سابق حتى لا يُلغى التقدم
+    if (adminTapResetRef.current) {
+      clearTimeout(adminTapResetRef.current);
+      adminTapResetRef.current = null;
     }
 
-    // إعادة تعيين العداد بعد 3 ثواني
-    setTimeout(() => setAdminTapCount(0), 3000);
+    setAdminTapCount((prev) => {
+      const newCount = prev + 1;
+      if (newCount >= 7) {
+        // فتح المودال + إعادة العداد للصفر
+        setShowAdminLogin(true);
+        return 0;
+      }
+      // جدولة إعادة التعيين بعد 3 ثواني من آخر ضغطة فقط
+      adminTapResetRef.current = setTimeout(() => {
+        setAdminTapCount(0);
+        adminTapResetRef.current = null;
+      }, 3000);
+      return newCount;
+    });
   };
 
   // تسجيل دخول الأدمن
