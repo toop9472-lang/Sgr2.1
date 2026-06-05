@@ -17,9 +17,7 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Video, ResizeMode } from "expo-av";
 import api from "../services/api";
-import { LinearGradient } from "expo-linear-gradient";
 import storage from "../services/storage";
 import admobService from "../services/admobService";
 import { useAchievements } from "../services/AchievementsContext";
@@ -33,9 +31,9 @@ const ADMOB_INSERT_EVERY = 2;
 const buildAdMobSlot = (slotIndex = 1) => ({
   id: `${ADMOB_SLOT_PREFIX}${slotIndex}`,
   ad_source: "admob",
-  title: "شاهد واكسب جواهر صقر",
-  description: "شاهد إعلاناً قصيراً واحصل على جواهر صقر فوراً",
-  advertiser: "صقر",
+  title: "إعلان Google AdMob",
+  description: "إعلان ممول من Google",
+  advertiser: "Google AdMob",
   duration: 60,
   image_url: null,
 });
@@ -109,36 +107,10 @@ const AdViewerScreen = ({
 
   const currentAd = ads[currentIndex];
   const isAdMobSlot = currentAd?.ad_source === "admob";
-  const toAbsoluteMediaUrl = (value) => {
-    const normalized = (value || "").trim();
-    if (!normalized) return "";
-    if (normalized.startsWith("http")) return normalized;
-    if (normalized.startsWith("/")) {
-      return `${api.getActiveBaseUrl()}${normalized}`;
-    }
-    return normalized;
-  };
-  const isPlayableVideoUrl = (value) => {
-    const v = (value || "").toLowerCase();
-    if (!v) return false;
-    return (
-      v.endsWith(".mp4") ||
-      v.endsWith(".mov") ||
-      v.endsWith(".m4v") ||
-      v.endsWith(".webm") ||
-      v.includes("/media/ads/") ||
-      v.includes("/api/clips/media/") ||
-      v.includes("/clips/media/")
-    );
-  };
-  const rawVideoUrl = !isAdMobSlot ? currentAd?.video_url : null;
-  const currentVideoUri = isPlayableVideoUrl(rawVideoUrl)
-    ? toAbsoluteMediaUrl(rawVideoUrl)
-    : null;
   const currentVisualUri =
     currentAd?.image_url || currentAd?.thumbnail_url || null;
   const advertiserLabel = isAdMobSlot
-    ? "صقر"
+    ? "Google AdMob"
     : currentAd?.advertiser ||
       currentAd?.advertiser_name ||
       "معلن";
@@ -155,7 +127,7 @@ const AdViewerScreen = ({
         setAdMobStatusMessage("لا يوجد إعلان متاح الآن");
       } else if (eventType === "unavailable") {
         setAdMobReady(false);
-        setAdMobStatusMessage("تعذر تحميل الإعلان حالياً");
+        setAdMobStatusMessage("تعذر تحميل إعلان AdMob حالياً");
       } else if (eventType === "closed") {
         const ready = admobService.isReady();
         setAdMobReady(ready);
@@ -271,7 +243,7 @@ const AdViewerScreen = ({
       }
 
       const persisted = await persistReward({
-        watchDuration: 30,
+        watchDuration: 60,
         adType: "admob_rewarded",
       });
 
@@ -285,16 +257,11 @@ const AdViewerScreen = ({
               persisted?.payload?.points_earned ??
               0,
           ) || 0;
-        const newBalance =
-          Number(persisted?.payload?.new_gems_balance ?? NaN);
         setEarnedGems(gems);
         setShowPointsAnimation(true);
         Vibration.vibrate(100);
         if (onRewardsEarned) {
-          onRewardsEarned({
-            gems,
-            newBalance: Number.isFinite(newBalance) ? newBalance : undefined,
-          });
+          onRewardsEarned({ gems });
         }
         if (recordAdWatched) {
           recordAdWatched();
@@ -493,13 +460,10 @@ const AdViewerScreen = ({
 
   const handlePointsEarned = useCallback(
     async (points) => {
+      const requestedMinutes = Math.max(1, Number(points) || 1);
       if (currentAd) {
-        // Use the ad's actual duration if available; fall back to requested minutes * 60
-        const requestedMinutes = Math.max(1, Number(points) || 1);
-        const declaredDuration = Number(currentAd?.duration) || 0;
-        const watchSeconds = Math.max(15, declaredDuration > 0 ? declaredDuration : requestedMinutes * 60);
         const persisted = await persistReward({
-          watchDuration: watchSeconds,
+          watchDuration: requestedMinutes * 60,
           adType: "advertiser_rewarded",
         });
         if (!persisted?.ok) {
@@ -615,24 +579,7 @@ const AdViewerScreen = ({
       onTouchEnd={handleTouchEnd}
     >
       {/* Full-screen background for current feed item */}
-      {currentVideoUri ? (
-        <Video
-          ref={videoRef}
-          source={{ uri: currentVideoUri }}
-          style={styles.video}
-          resizeMode={ResizeMode.COVER}
-          shouldPlay={isPlaying}
-          isLooping
-          isMuted={isMuted}
-          volume={isMuted ? 0 : 1.0}
-          useNativeControls={false}
-          onLoadStart={() => setVideoLoading(true)}
-          onLoad={() => setVideoLoading(false)}
-          onError={() => setVideoLoading(false)}
-          posterSource={currentVisualUri ? { uri: currentVisualUri } : undefined}
-          usePoster={Boolean(currentVisualUri)}
-        />
-      ) : currentVisualUri ? (
+      {currentVisualUri ? (
         <ImageBackground
           source={{ uri: currentVisualUri }}
           style={styles.video}
@@ -640,43 +587,15 @@ const AdViewerScreen = ({
           onLoadStart={() => setVideoLoading(true)}
           onLoadEnd={() => setVideoLoading(false)}
         />
-      ) : isAdMobSlot ? (
-        // Full-screen AdMob background (only for AdMob slots, not for
-        // advertiser slots without a media URL — those keep the dark UI).
-        <ImageBackground
-          source={{
-            uri: "https://images.unsplash.com/photo-1614851099175-e5b30eb6f696?auto=format&fit=crop&w=1400&q=80",
-          }}
-          style={styles.video}
-          imageStyle={{ opacity: 0.42 }}
-        >
-          <LinearGradient
-            colors={[
-              "rgba(10,8,20,0.55)",
-              "rgba(11,16,32,0.75)",
-              "rgba(7,8,17,0.95)",
-            ]}
-            style={StyleSheet.absoluteFillObject}
-            pointerEvents="none"
-          />
-          <View style={styles.videoFallback}>
-            <View style={styles.videoFallbackBadge}>
-              <Ionicons name="diamond" size={18} color="#fde047" />
-              <Text style={styles.videoFallbackBadgeText}>صقر</Text>
-            </View>
-            <Ionicons
-              name="sparkles"
-              size={72}
-              color="rgba(253,224,71,0.85)"
-            />
-            <Text style={styles.videoFallbackTitle}>شاهد واكسب جواهر صقر</Text>
-            <Text style={styles.videoFallbackSub}>
-              إعلان قصير + 5 جواهر مكافأة فورية
-            </Text>
-          </View>
-        </ImageBackground>
       ) : (
-        <View style={[styles.video, { backgroundColor: "#06070d" }]} />
+        <View style={[styles.video, styles.videoFallback]}>
+          <Ionicons
+            name="tv-outline"
+            size={72}
+            color="rgba(255,255,255,0.35)"
+          />
+          <Text style={styles.videoFallbackText}>Google AdMob</Text>
+        </View>
       )}
 
       {/* Dark overlay when paused */}
@@ -735,37 +654,17 @@ const AdViewerScreen = ({
 
       {/* Full-screen watch CTA (primary AdMob flow) */}
       {!showComments && (
-        <ImageBackground
-          source={{ uri: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1400&q=80" }}
-          style={styles.watchPrimaryContainer}
-          imageStyle={{ opacity: 0.18 }}
-        >
-          <LinearGradient
-            colors={["rgba(5,7,13,0.55)", "rgba(11,16,32,0.92)"]}
-            style={StyleSheet.absoluteFillObject}
-            pointerEvents="none"
-          />
-          <View
-            style={[
-              styles.watchPrimaryCard,
-              !isAdMobSlot && styles.watchPrimaryCardAdvertiser,
-            ]}
-          >
-            {!isAdMobSlot ? (
-              <View style={styles.advertiserBadge}>
-                <Ionicons name="business" size={11} color="#fde047" />
-                <Text style={styles.advertiserBadgeText}>إعلان مُموَّل</Text>
-              </View>
-            ) : null}
+        <View style={styles.watchPrimaryContainer}>
+          <View style={styles.watchPrimaryCard}>
             <Text style={styles.watchPrimaryTitle}>
               {isAdMobSlot
-                ? "شاهد واكسب جواهر صقر"
+                ? "إعلان Google AdMob"
                 : currentAd?.title || "إعلان معلن"}
             </Text>
             <Text style={styles.watchPrimarySubtitle}>
               {isAdMobSlot
-                ? "شاهد إعلاناً قصيراً واحصل على جواهر صقر فوراً"
-                : "إعلان من معلن موثّق — قد يحتوي على رابط للموقع"}
+                ? "إعلان ممول من Google بكامل الشاشة"
+                : "إعلان ممول من معلن موثّق"}
             </Text>
             <View style={styles.advertiserStrip}>
               <Ionicons name="megaphone-outline" size={13} color="#cbd5e1" />
@@ -805,43 +704,18 @@ const AdViewerScreen = ({
                     color="#fff"
                   />
                   <Text style={styles.watchPrimaryBtnText}>
-                    {isAdMobSlot ? "شاهد" : "فتح إعلان المعلن"}
+                    {isAdMobSlot
+                      ? "مشاهدة AdMob بكامل الشاشة"
+                      : "فتح إعلان المعلن"}
                   </Text>
                 </>
               )}
             </TouchableOpacity>
             <Text style={styles.watchPrimaryHint}>
               {isAdMobSlot
-                ? "بعد انتهاء الإعلان تكسب الجواهر تلقائياً وتنتقل للعنصر التالي"
-                : "تنقّل بين الإعلانات الشخصية بأزرار السابق/التالي"}
+                ? "بعد إكمال إعلان Google تنتقل تلقائياً للعنصر التالي"
+                : "يمكنك الانتقال بين الإعلانات الشخصية وAdMob من أزرار السابق/التالي"}
             </Text>
-
-            {/* Website card — Personal ads only */}
-            {!isAdMobSlot && currentAd?.website_url && /^https?:\/\//i.test(currentAd.website_url) && (
-              <TouchableOpacity
-                style={styles.adWebsiteCard}
-                onPress={handleOpenAdvertiserAd}
-                activeOpacity={0.85}
-                accessibilityRole="button"
-                accessibilityLabel="انتقل لصفحة الإعلان"
-              >
-                <View style={styles.adWebsiteIconWrap}>
-                  <Ionicons name="globe-outline" size={18} color="#93c5fd" />
-                </View>
-                <View style={styles.adWebsiteBody}>
-                  <Text style={styles.adWebsiteTitle} numberOfLines={1}>
-                    انتقل لصفحة الإعلان
-                  </Text>
-                  <Text style={styles.adWebsiteHost} numberOfLines={1}>
-                    {String(currentAd.website_url).replace(/^https?:\/\//, '').split('/')[0]}
-                  </Text>
-                </View>
-                <View style={styles.adWebsiteArrow}>
-                  <Ionicons name="chevron-back" size={16} color="#bfdbfe" />
-                </View>
-              </TouchableOpacity>
-            )}
-
             <View style={styles.watchPrimaryNavRow}>
               <TouchableOpacity
                 style={[
@@ -871,7 +745,7 @@ const AdViewerScreen = ({
               </TouchableOpacity>
             </View>
           </View>
-        </ImageBackground>
+        </View>
       )}
 
       {/* Right Side Actions - Always visible */}
@@ -1150,50 +1024,20 @@ const AdViewerScreen = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#06070d",
+    backgroundColor: "#000",
   },
   video: {
     ...StyleSheet.absoluteFillObject,
   },
   videoFallback: {
-    ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
     alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 30,
+    backgroundColor: "#0b1020",
+    gap: 10,
   },
-  videoFallbackBadge: {
-    position: "absolute",
-    top: 100,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: "rgba(15,12,3,0.85)",
-    borderWidth: 1,
-    borderColor: "rgba(253,224,71,0.55)",
-  },
-  videoFallbackBadgeText: {
-    color: "#fde047",
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 0.5,
-  },
-  videoFallbackTitle: {
-    color: "#fff",
-    fontSize: 22,
-    fontWeight: "900",
-    textAlign: "center",
-    marginTop: 4,
-    textShadowColor: "rgba(253,224,71,0.5)",
-    textShadowRadius: 14,
-  },
-  videoFallbackSub: {
-    color: "rgba(226,232,240,0.78)",
-    fontSize: 13,
-    textAlign: "center",
+  videoFallbackText: {
+    color: "rgba(255,255,255,0.65)",
+    fontSize: 14,
     fontWeight: "600",
   },
   pauseOverlay: {
@@ -1323,8 +1167,6 @@ const styles = StyleSheet.create({
     right: 16,
     bottom: 22,
     zIndex: 25,
-    borderRadius: 24,
-    overflow: "hidden",
   },
   watchPrimaryCard: {
     borderRadius: 22,
@@ -1334,37 +1176,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(9,11,24,0.75)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.18)",
-  },
-  watchPrimaryCardAdvertiser: {
-    borderWidth: 2,
-    borderColor: "#fde047",
-    backgroundColor: "rgba(15,12,3,0.85)",
-    // Glowing effect (iOS shadow; harmless on Android)
-    shadowColor: "#facc15",
-    shadowOpacity: 0.65,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 12,
-  },
-  advertiserBadge: {
-    position: "absolute",
-    top: -10,
-    right: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: "rgba(15,12,3,0.95)",
-    borderWidth: 1,
-    borderColor: "#fde047",
-    zIndex: 1,
-  },
-  advertiserBadgeText: {
-    color: "#fde047",
-    fontSize: 10,
-    fontWeight: "800",
   },
   watchPrimaryTitle: {
     color: "#fff",
@@ -1426,50 +1237,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-  },
-  adWebsiteCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginTop: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    borderRadius: 16,
-    backgroundColor: "rgba(59, 130, 246, 0.10)",
-    borderWidth: 1,
-    borderColor: "rgba(59, 130, 246, 0.32)",
-  },
-  adWebsiteIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: "rgba(59, 130, 246, 0.18)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  adWebsiteBody: {
-    flex: 1,
-    alignItems: "flex-end",
-  },
-  adWebsiteTitle: {
-    color: "#fff",
-    fontSize: 13,
-    fontWeight: "700",
-    textAlign: "right",
-  },
-  adWebsiteHost: {
-    color: "rgba(191, 219, 254, 0.85)",
-    fontSize: 11,
-    marginTop: 2,
-    textAlign: "right",
-  },
-  adWebsiteArrow: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: "rgba(59, 130, 246, 0.22)",
-    alignItems: "center",
-    justifyContent: "center",
   },
   watchPrimaryNavBtn: {
     flexDirection: "row",

@@ -1,21 +1,20 @@
-# Saqr Test Credentials
+# Test Credentials — Saqr App
 
-## Apple IAP (Phase 2)
-- **Sandbox Tester**: `aaaaaatata079@gmail.com`
-- **Country/Region**: Saudi Arabia
-- **Bundle ID**: com.saqr.rewards
-- **How to use**: On a real iPhone → Settings → [Your Apple ID] → Media & Purchases → Sandbox Account → Sign in.
-  Then any purchase in the app shows `[Sandbox]` and is free.
+## 🛡️ Super Admin
+- **Email**: `sky-321@hotmail.com`
+- **Password**: (held by owner)
+- **user_id**: `user_93fd2a08e40e`
+- **admin id**: `admin_e014ed8981b8`
+- **role**: `super_admin`
+- **name**: `مدير صقر`
+- **is_admin**: `true`
 
-## Apple App Store Server API
-- **Issuer ID**: `2b3dfd1a-b44d-4cf7-94b8-6f10d64b9567`
-- **Key ID**: `KX82RC2996`
-- **Private Key**: `/app/backend/secrets/apple_iap_key.p8` (mode 600, NOT in git)
-
-## Test User Email
-- Reward test: `reward_test_22112@test.com` / `Test1234!`
-- Demo web account (created Feb 2026): `demo_1779827224@test.com` / `DemoTest123!`
+## Apple Sandbox Tester
+- Used for IAP testing in TestFlight (sandbox account managed by owner).
 
 ## Notes
-- Never commit `.p8` files to git (already in `.gitignore`).
-- Sandbox tester emails must NOT be used as real Apple IDs.
+- Admin login uses `/api/admin/auth/login` and returns a JWT for admin actions.
+- Regular flows (delete clip/comment) accept either the admin's `user_id` or the linked `users.id` because backend `_is_admin` resolves admin status via:
+  1. `admins.id / user_id / email`
+  2. `users.role / is_admin` flags
+  3. `users.email → admins.email` lookup

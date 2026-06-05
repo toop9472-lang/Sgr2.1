@@ -801,6 +801,44 @@ const ProfileScreen = ({
           )}
         </View>
 
+        {/* Menu Section - settings, withdraw, etc */}
+        <View style={[styles.menuSection, { marginTop: 20 }]}>
+          {menuItems.map((item, idx) => (
+            <TouchableOpacity
+              key={item.id}
+              onPress={item.action}
+              activeOpacity={0.7}
+              style={[
+                styles.menuItem,
+                idx === menuItems.length - 1 && styles.logoutItem,
+              ]}
+              data-testid={`profile-menu-${item.id}`}
+            >
+              <View
+                style={[
+                  styles.menuIconContainer,
+                  { backgroundColor: `${item.color}20` },
+                ]}
+              >
+                <Ionicons name={item.icon} size={18} color={item.color} />
+              </View>
+              <Text
+                style={[
+                  styles.menuLabel,
+                  item.id === "delete-account" && styles.logoutText,
+                ]}
+              >
+                {item.label}
+              </Text>
+              <Ionicons
+                name="chevron-back"
+                size={18}
+                color="rgba(255,255,255,0.3)"
+              />
+            </TouchableOpacity>
+          ))}
+        </View>
+
         {/* App Version - اضغط 7 مرات لفتح لوحة الأدمن */}
         <TouchableOpacity onPress={handleVersionTap} activeOpacity={0.7}>
           <Text style={styles.versionText}>الإصدار 7.3.1</Text>
