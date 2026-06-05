@@ -19,6 +19,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Video, ResizeMode } from "expo-av";
 import api from "../services/api";
+import { LinearGradient } from "expo-linear-gradient";
 import storage from "../services/storage";
 import admobService from "../services/admobService";
 import { useAchievements } from "../services/AchievementsContext";
@@ -639,9 +640,42 @@ const AdViewerScreen = ({
           onLoadStart={() => setVideoLoading(true)}
           onLoadEnd={() => setVideoLoading(false)}
         />
+      ) : isAdMobSlot ? (
+        // Full-screen AdMob background (only for AdMob slots, not for
+        // advertiser slots without a media URL — those keep the dark UI).
+        <ImageBackground
+          source={{
+            uri: "https://images.unsplash.com/photo-1614851099175-e5b30eb6f696?auto=format&fit=crop&w=1400&q=80",
+          }}
+          style={styles.video}
+          imageStyle={{ opacity: 0.42 }}
+        >
+          <LinearGradient
+            colors={[
+              "rgba(10,8,20,0.55)",
+              "rgba(11,16,32,0.75)",
+              "rgba(7,8,17,0.95)",
+            ]}
+            style={StyleSheet.absoluteFillObject}
+            pointerEvents="none"
+          />
+          <View style={styles.videoFallback}>
+            <View style={styles.videoFallbackBadge}>
+              <Ionicons name="diamond" size={18} color="#fde047" />
+              <Text style={styles.videoFallbackBadgeText}>صقر</Text>
+            </View>
+            <Ionicons
+              name="sparkles"
+              size={72}
+              color="rgba(253,224,71,0.85)"
+            />
+            <Text style={styles.videoFallbackTitle}>شاهد واكسب جواهر صقر</Text>
+            <Text style={styles.videoFallbackSub}>
+              إعلان قصير + 5 جواهر مكافأة فورية
+            </Text>
+          </View>
+        </ImageBackground>
       ) : (
-        // Clean dark background (no custom AdMob framing - complies with
-        // Google AdMob policies that prohibit any custom UI around the ad).
         <View style={[styles.video, { backgroundColor: "#06070d" }]} />
       )}
 
@@ -701,7 +735,16 @@ const AdViewerScreen = ({
 
       {/* Full-screen watch CTA (primary AdMob flow) */}
       {!showComments && (
-        <View style={styles.watchPrimaryContainer}>
+        <ImageBackground
+          source={{ uri: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1400&q=80" }}
+          style={styles.watchPrimaryContainer}
+          imageStyle={{ opacity: 0.18 }}
+        >
+          <LinearGradient
+            colors={["rgba(5,7,13,0.55)", "rgba(11,16,32,0.92)"]}
+            style={StyleSheet.absoluteFillObject}
+            pointerEvents="none"
+          />
           <View
             style={[
               styles.watchPrimaryCard,
@@ -828,7 +871,7 @@ const AdViewerScreen = ({
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </ImageBackground>
       )}
 
       {/* Right Side Actions - Always visible */}
@@ -1282,7 +1325,6 @@ const styles = StyleSheet.create({
     zIndex: 25,
     borderRadius: 24,
     overflow: "hidden",
-    backgroundColor: "rgba(7,8,17,0.92)",
   },
   watchPrimaryCard: {
     borderRadius: 22,

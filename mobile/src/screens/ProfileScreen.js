@@ -803,8 +803,16 @@ const ProfileScreen = ({
 
         {/* App Version - اضغط 7 مرات لفتح لوحة الأدمن */}
         <TouchableOpacity onPress={handleVersionTap} activeOpacity={0.7}>
-          <Text style={styles.versionText}>الإصدار 7.2.19</Text>
+          <Text style={styles.versionText}>الإصدار 7.3.1</Text>
         </TouchableOpacity>
+
+        {/* Maroof Verification Badge - وزارة التجارة السعودية */}
+        <View style={styles.maroofContainer}>
+          <Ionicons name="shield-checkmark" size={14} color="#10b981" />
+          <Text style={styles.maroofText}>
+            موثّق من وزارة التجارة · رقم التوثيق: 0000294044
+          </Text>
+        </View>
       </View>
 
       {/* Admin Login Modal */}
@@ -1409,6 +1417,28 @@ const styles = StyleSheet.create({
     fontSize: 10,
     textAlign: "center",
     marginTop: 20,
+  },
+
+  maroofContainer: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 8,
+    marginBottom: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: "rgba(16, 185, 129, 0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(16, 185, 129, 0.25)",
+    alignSelf: "center",
+  },
+  maroofText: {
+    color: "rgba(167, 243, 208, 0.9)",
+    fontSize: 10,
+    fontWeight: "600",
+    textAlign: "center",
   },
 
   // Modal Styles

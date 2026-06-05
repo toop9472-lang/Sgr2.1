@@ -735,7 +735,7 @@ async def get_profile_follow_stats(user_id: str, viewer_id: Optional[str] = None
 async def _is_admin(user_id: str) -> bool:
     if not user_id:
         return False
-    # Match by id, user_id, or email — covers all admin login variants
+    # First, match by id/user_id/email directly in admins collection
     admin = await db.admins.find_one(
         {"$or": [
             {"id": user_id},
@@ -744,7 +744,28 @@ async def _is_admin(user_id: str) -> bool:
         ]},
         {"_id": 0, "id": 1},
     )
-    return bool(admin)
+    if admin:
+        return True
+    # Fallback: look up the user by id and check their email against admins
+    try:
+        user = await db.users.find_one(
+            {"$or": [{"id": user_id}, {"user_id": user_id}]},
+            {"_id": 0, "email": 1, "role": 1, "is_admin": 1},
+        )
+        if user:
+            if user.get("is_admin") or user.get("role") in ("admin", "super_admin"):
+                return True
+            email = (user.get("email") or "").strip().lower()
+            if email:
+                admin_by_email = await db.admins.find_one(
+                    {"email": {"$regex": f"^{email}$", "$options": "i"}},
+                    {"_id": 0, "id": 1},
+                )
+                if admin_by_email:
+                    return True
+    except Exception:
+        pass
+    return False
 
 
 class DeleteClipRequest(BaseModel):

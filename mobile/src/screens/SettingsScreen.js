@@ -341,18 +341,8 @@ const SettingsScreen = ({
           id: 'version',
           icon: 'information-circle-outline',
           label: language === 'ar' ? 'الإصدار' : 'Version',
-          value: '7.3.0',
+          value: '7.3.1',
           action: () => {},
-        },
-        {
-          id: 'admin_login',
-          icon: 'shield-checkmark-outline',
-          label: language === 'ar' ? 'الدخول للإدارة' : 'Admin Login',
-          value: '',
-          action: () => {
-            if (onRequestAdminLogin) onRequestAdminLogin();
-          },
-          tint: '#ef4444',
         },
       ],
     },
