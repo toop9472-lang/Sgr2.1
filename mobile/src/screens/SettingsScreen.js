@@ -341,7 +341,7 @@ const SettingsScreen = ({
           id: 'version',
           icon: 'information-circle-outline',
           label: language === 'ar' ? 'الإصدار' : 'Version',
-          value: '7.3.1',
+          value: '7.3.2',
           action: () => {},
         },
       ],

@@ -853,7 +853,7 @@ const ProfileScreen = ({
 
         {/* App Version - اضغط 7 مرات لفتح لوحة الأدمن */}
         <TouchableOpacity onPress={handleVersionTap} activeOpacity={0.7}>
-          <Text style={styles.versionText}>الإصدار 7.3.1</Text>
+          <Text style={styles.versionText}>الإصدار 7.3.2</Text>
         </TouchableOpacity>
 
         {/* Maroof Verification Badge - وزارة التجارة السعودية */}
