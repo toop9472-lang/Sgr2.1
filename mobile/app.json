@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "صقر",
+    "name": "طير",
     "slug": "saqr-app",
     "version": "7.3.2",
     "orientation": "default",
-    "icon": "./assets/logo_saqr.png",
-    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/logo_saqr.png",
+      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0a0a0f"
+      "backgroundColor": "#c8fce6"
     },
     "assetBundlePatterns": [
       "**/*"

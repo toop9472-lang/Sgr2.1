@@ -78,6 +78,14 @@ from routes.referrals_routes import router as referrals_router
 from routes.clips_routes import router as clips_router
 from routes import games_routes
 
+# طير — bird marketplace routes
+from routes.listings_routes import router as tair_listings_router
+from routes.trips_routes import router as tair_trips_router
+from routes.orders_routes import router as tair_orders_router
+from routes.ratings_routes import router as tair_ratings_router
+from routes.tair_reports_routes import router as tair_reports_router
+from routes.species_routes import router as tair_species_router
+
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -468,6 +476,14 @@ api_router.include_router(iap_router)
 api_router.include_router(cache_router)
 api_router.include_router(referrals_router)
 api_router.include_router(clips_router)
+
+# طير — bird marketplace routers
+api_router.include_router(tair_listings_router)
+api_router.include_router(tair_trips_router)
+api_router.include_router(tair_orders_router)
+api_router.include_router(tair_ratings_router)
+api_router.include_router(tair_reports_router)
+api_router.include_router(tair_species_router)
 
 # Include WebSocket router (at app level, not api_router)
 app.include_router(websocket_router)
