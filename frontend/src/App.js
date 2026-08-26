@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import AuthCallback from "./components/AuthCallback";
+import AuthPage from "./components/AuthPage";
 import ForgotPasswordPage from "./components/ForgotPasswordPage";
 import AdminLogin from "./components/AdminLogin";
 import AdminDashboard from "./components/AdminDashboard";
@@ -68,11 +69,16 @@ function MainApp() {
 
       // Try to fetch real user session
       try {
+        const token = localStorage.getItem("user_token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
         const response = await fetch(`${API_URL}/api/auth/me`, {
           credentials: "include",
+          headers,
         });
         if (response.ok) {
-          const userData = await response.json();
+          const data = await response.json();
+          // Backend returns { user: {...} }, but AuthPage sends flat user obj — normalize.
+          const userData = data.user || data;
           setUser(userData);
           setIsLoading(false);
           return;
@@ -164,6 +170,14 @@ function MainApp() {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/landing" element={<TairPage />} />
 
+      {/* Auth (email/password + Google + Guest) */}
+      <Route
+        path="/auth"
+        element={
+          <AuthGate onLoginSuccess={setUser} onAdminLogin={handleAdminLogin} />
+        }
+      />
+
       {/* Main App (Tair) — no auth wall, guest by default */}
       <Route
         path="/*"
@@ -210,6 +224,29 @@ function App() {
         </BrowserRouter>
       </LanguageProvider>
     </ThemeProvider>
+  );
+}
+
+function AuthGate({ onLoginSuccess, onAdminLogin }) {
+  const navigate = useNavigate();
+  const handleLogin = (userData) => {
+    onLoginSuccess(userData);
+    navigate("/", { replace: true });
+  };
+  const handleGuest = (guest) => {
+    onLoginSuccess(guest);
+    navigate("/", { replace: true });
+  };
+  const handleAdmin = (admin) => {
+    onAdminLogin(admin);
+    navigate("/admin/dashboard", { replace: true });
+  };
+  return (
+    <AuthPage
+      onLogin={handleLogin}
+      onGuestMode={handleGuest}
+      onAdminLogin={handleAdmin}
+    />
   );
 }
 

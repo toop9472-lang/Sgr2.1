@@ -45,7 +45,7 @@ export default function ProfileScreen({ user, onOpenListing, onOpenTrip, onLogou
 
         {isGuest && (
           <button
-            onClick={() => (window.location.href = "/forgot-password")}
+            onClick={() => (window.location.href = "/auth")}
             style={styles.signInBtn}
             data-testid="signin-cta"
           >
