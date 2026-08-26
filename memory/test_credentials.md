@@ -1,4 +1,4 @@
-# Test Credentials — Saqr App
+# Test Credentials — طير (Tair)
 
 ## 🛡️ Super Admin
 - **Email**: `sky-321@hotmail.com`
@@ -9,12 +9,14 @@
 - **name**: `مدير صقر`
 - **is_admin**: `true`
 
-## Apple Sandbox Tester
-- Used for IAP testing in TestFlight (sandbox account managed by owner).
+## Guest Mode (for web preview testing)
+- Tap **"الدخول كزائر"** on the auth page. No account needed.
+- The guest gets a temporary `id: guest_<timestamp>` and can browse listings/trips freely.
+- Guest cannot create listings or place real orders (backend expects a valid user_id).
+
+## Test User (create via /api/auth/register)
+- Any email/password works. `POST /api/auth/register` with a valid strong password will create a user and return `{ user, token }`.
 
 ## Notes
 - Admin login uses `/api/admin/auth/login` and returns a JWT for admin actions.
-- Regular flows (delete clip/comment) accept either the admin's `user_id` or the linked `users.id` because backend `_is_admin` resolves admin status via:
-  1. `admins.id / user_id / email`
-  2. `users.role / is_admin` flags
-  3. `users.email → admins.email` lookup
+- Tair backend routes are user-scoped via `?user_id=` query — no strict JWT enforcement on the marketplace endpoints (MVP).

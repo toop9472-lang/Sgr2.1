@@ -82,7 +82,8 @@ async def list_reports(status: Optional[str] = "open", user_id: str = Query(...)
     if status and status != "all":
         query["status"] = status
     cursor = db.tair_reports.find(query).sort("created_at", -1)
-    items = [_serialize(d) async for d in cursor.to_list(500)]
+    docs = await cursor.to_list(500)
+    items = [_serialize(d) for d in docs]
     return {"items": items, "total": len(items)}
 
 

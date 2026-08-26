@@ -93,7 +93,7 @@ const AuthPage = ({ onLogin, onGuestMode, onAdminLogin }) => {
     onGuestMode({
       id: 'guest_' + Date.now(),
       name: isRTL ? 'زائر' : 'Guest',
-      email: 'guest@saqr.app',
+      email: 'guest@tair.app',
       avatar: 'https://ui-avatars.com/api/?name=Guest&background=94A3B8&color=fff',
       provider: 'guest',
       isGuest: true,
@@ -466,8 +466,8 @@ const AuthPage = ({ onLogin, onGuestMode, onAdminLogin }) => {
             style={{ boxShadow: '0 0 30px rgba(96,165,250,0.5)' }}
           >
             <img
-              src="/logo_saqr.png"
-              alt="صقر"
+              src="/tair_logo.png"
+              alt="طير"
               className="object-contain rounded-[24px]"
               style={{ width: 110, height: 110 }}
               data-testid="auth-logo"
@@ -483,13 +483,13 @@ const AuthPage = ({ onLogin, onGuestMode, onAdminLogin }) => {
           }}
           data-testid="auth-app-name"
         >
-          صقر
+          طير
         </h1>
         <p
           className="text-center mb-9"
           style={{ fontSize: 16, color: 'rgba(241,245,249,0.86)', letterSpacing: '0.5px' }}
         >
-          {isRTL ? 'أكمل التحديات واكسب المكافآت' : 'Complete challenges and earn rewards'}
+          {isRTL ? 'سوق الطيور والحيوانات الأليفة الموثوق' : 'Trusted bird & pet marketplace'}
         </p>
 
         <div className="space-y-3">

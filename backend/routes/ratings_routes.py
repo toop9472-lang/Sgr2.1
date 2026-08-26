@@ -107,5 +107,6 @@ async def ratings_for_user(user_id: str, role: Optional[str] = None):
     if role:
         query["rated_role"] = role
     cursor = db.tair_ratings.find(query).sort("created_at", -1)
-    items = [_serialize(d) async for d in cursor.to_list(200)]
+    docs = await cursor.to_list(200)
+    items = [_serialize(d) for d in docs]
     return {"items": items, "total": len(items)}

@@ -244,5 +244,6 @@ async def orders_by_user(user_id: str, role: str = "all", status: Optional[str] 
         query["status"] = status
 
     cursor = db.tair_orders.find(query).sort("created_at", -1)
-    items = [_serialize(d) async for d in cursor.to_list(500)]
+    docs = await cursor.to_list(500)
+    items = [_serialize(d) for d in docs]
     return {"items": items, "total": len(items)}

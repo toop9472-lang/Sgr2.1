@@ -2,14 +2,28 @@
 import os
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from models.listing import Listing, ListingCreate, ListingUpdate
+from services.r2_storage import r2
 
 router = APIRouter(prefix="/listings", tags=["Tair-Listings"])
+
+MEDIA_LISTINGS_DIR = Path(__file__).resolve().parent.parent / "static" / "media" / "listings"
+MEDIA_LISTINGS_DIR.mkdir(parents=True, exist_ok=True)
+ALLOWED_IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".heic"}
+CONTENT_TYPE_BY_EXT = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+    ".heic": "image/heic",
+}
+MAX_LISTING_IMAGE_MB = 8
 
 mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
 client = AsyncIOMotorClient(mongo_url)
@@ -190,3 +204,43 @@ async def my_favorites(user_id: str = Query(...)):
     ids = [f["listing_id"] for f in favs]
     listings = await db.listings.find({"listing_id": {"$in": ids}}).to_list(500)
     return {"items": [_serialize(d) for d in listings]}
+
+
+# ==================== Image Upload ====================
+@router.post("/upload-image")
+async def upload_listing_image(
+    file: UploadFile = File(...),
+    user_id: str = Form(...),
+):
+    if not user_id:
+        raise HTTPException(400, "user_id required")
+
+    filename = file.filename or "image.jpg"
+    ext = ("." + filename.split(".")[-1].lower()) if "." in filename else ".jpg"
+    if ext not in ALLOWED_IMAGE_EXTS:
+        raise HTTPException(400, "صيغة الصورة غير مدعومة")
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(400, "الملف فارغ")
+    if len(content) > MAX_LISTING_IMAGE_MB * 1024 * 1024:
+        raise HTTPException(413, f"الصورة تتجاوز {MAX_LISTING_IMAGE_MB}MB")
+
+    file_id = uuid.uuid4().hex
+    object_key = f"tair-listings/{user_id}/{file_id}{ext}"
+    content_type = CONTENT_TYPE_BY_EXT.get(ext, "image/jpeg")
+
+    image_url: Optional[str] = None
+    if r2.is_configured:
+        try:
+            image_url = r2.upload_bytes(object_key, content, content_type=content_type)
+        except Exception as exc:
+            print(f"[tair_upload_image] R2 failed, fallback: {exc}")
+            image_url = None
+
+    if not image_url:
+        local_path = MEDIA_LISTINGS_DIR / f"{file_id}{ext}"
+        local_path.write_bytes(content)
+        image_url = f"/media/listings/{file_id}{ext}"
+
+    return {"success": True, "url": image_url, "image_url": image_url}
