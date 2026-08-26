@@ -109,6 +109,7 @@ async def get_listing(listing_id: str, viewer_id: Optional[str] = None):
         await db.listings.update_one(
             {"listing_id": listing_id}, {"$inc": {"view_count": 1}}
         )
+        doc["view_count"] = (doc.get("view_count") or 0) + 1
     return _serialize(doc)
 
 

@@ -124,6 +124,11 @@ async def accept_by_carrier(order_id: str, user_id: str = Query(...)):
 
 @router.post("/{order_id}/start-transit")
 async def start_transit(order_id: str, user_id: str = Query(...)):
+    doc = await db.tair_orders.find_one({"order_id": order_id})
+    if not doc:
+        raise HTTPException(404, "Order not found")
+    if doc.get("carrier_id") != user_id:
+        raise HTTPException(403, "Only the carrier can start transit")
     return await _transition(
         order_id, "in_transit", user_id, ["accepted_by_carrier"]
     )
@@ -131,6 +136,11 @@ async def start_transit(order_id: str, user_id: str = Query(...)):
 
 @router.post("/{order_id}/mark-delivered")
 async def mark_delivered(order_id: str, user_id: str = Query(...)):
+    doc = await db.tair_orders.find_one({"order_id": order_id})
+    if not doc:
+        raise HTTPException(404, "Order not found")
+    if doc.get("carrier_id") != user_id:
+        raise HTTPException(403, "Only the carrier can mark delivered")
     return await _transition(order_id, "delivered", user_id, ["in_transit"])
 
 

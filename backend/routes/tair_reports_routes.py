@@ -42,18 +42,27 @@ async def create_report(payload: TairReportCreate, user_id: str = Query(...)):
     doc = rep.model_dump()
     await db.tair_reports.insert_one(doc)
 
-    # Auto-increment target counts.
+    # Auto-increment target counts atomically.
     if payload.target_type == "listing":
-        await db.listings.update_one(
+        updated = await db.listings.find_one_and_update(
             {"listing_id": payload.target_id},
             {"$inc": {"report_count": 1}},
+            return_document=True,  # return post-update doc
+            projection={"_id": 0, "report_count": 1, "is_flagged": 1},
         )
-        # auto-flag if 3+ reports
-        target = await db.listings.find_one({"listing_id": payload.target_id})
-        if target and target.get("report_count", 0) >= 3:
+        if (
+            updated
+            and (updated.get("report_count") or 0) >= 3
+            and not updated.get("is_flagged")
+        ):
             await db.listings.update_one(
-                {"listing_id": payload.target_id},
-                {"$set": {"is_flagged": True, "moderation_notes": "Auto-flag: 3+ reports"}},
+                {"listing_id": payload.target_id, "is_flagged": {"$ne": True}},
+                {
+                    "$set": {
+                        "is_flagged": True,
+                        "moderation_notes": "Auto-flag: 3+ reports",
+                    }
+                },
             )
 
     return _serialize(doc)
