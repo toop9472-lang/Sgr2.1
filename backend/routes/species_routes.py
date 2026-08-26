@@ -5,7 +5,7 @@ from typing import Optional
 from fastapi import APIRouter
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from models.species import SEED_SPECIES
+from models.species import SEED_SPECIES, FAMILIES
 
 router = APIRouter(prefix="/species", tags=["Tair-Species"])
 
@@ -20,13 +20,21 @@ async def seed_species_if_empty():
         await db.species_catalog.insert_many(SEED_SPECIES)
 
 
+@router.get("/families")
+async def list_families():
+    """List all species families (used by UI to group species by taxonomy)."""
+    return {"items": FAMILIES, "total": len(FAMILIES)}
+
+
 @router.get("/list")
-async def list_species(category: Optional[str] = None):
+async def list_species(category: Optional[str] = None, family: Optional[str] = None):
     # Ensure seed on first call.
     await seed_species_if_empty()
     query: dict = {}
     if category:
         query["category"] = category
+    if family:
+        query["family"] = family
     cursor = db.species_catalog.find(query, {"_id": 0})
     items = await cursor.to_list(500)
     return {"items": items, "total": len(items)}

@@ -1,18 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import AuthPage from "./components/AuthPage";
 import AuthCallback from "./components/AuthCallback";
 import ForgotPasswordPage from "./components/ForgotPasswordPage";
 import AdminLogin from "./components/AdminLogin";
 import AdminDashboard from "./components/AdminDashboard";
-import PaymentSuccess from "./components/PaymentSuccess";
-import PaymentCancel from "./components/PaymentCancel";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
-import DownloadPage from "./pages/DownloadPage";
-import SupportPage from "./pages/SupportPage";
-import AppDocumentation from "./pages/AppDocumentation";
 import DeleteAccountPage from "./pages/DeleteAccountPage";
 import TairPage from "./pages/TairPage";
 import TairShell from "./tair/TairShell";
@@ -22,6 +16,7 @@ import { LanguageProvider } from "./i18n/LanguageContext";
 import { ThemeProvider } from "./context/ThemeContext";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
+const DEVICE_ID_KEY = "tair_device_id";
 
 // Router wrapper to detect session_id in URL
 function AppRouter() {
@@ -32,15 +27,25 @@ function AppRouter() {
   return <MainApp />;
 }
 
+function getOrCreateDeviceUser() {
+  let id = localStorage.getItem(DEVICE_ID_KEY);
+  if (!id) {
+    id = "guest_" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+    localStorage.setItem(DEVICE_ID_KEY, id);
+  }
+  return {
+    id,
+    user_id: id,
+    name: "زائر",
+    email: "guest@tair.app",
+    isGuest: true,
+  };
+}
+
 function MainApp() {
   const location = useLocation();
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    location.state?.user ? true : null,
-  );
-  const [user, setUser] = useState(location.state?.user || null);
+  const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Admin state
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminData, setAdminData] = useState(null);
 
@@ -50,12 +55,8 @@ function MainApp() {
   }, []);
 
   useEffect(() => {
-    if (location.state?.user) {
-      setIsLoading(false);
-      return;
-    }
-
-    const checkAuth = async () => {
+    const bootstrap = async () => {
+      // Admin check first
       const adminToken = localStorage.getItem("admin_token");
       const savedAdmin = localStorage.getItem("admin_data");
       if (adminToken && savedAdmin) {
@@ -65,6 +66,7 @@ function MainApp() {
         return;
       }
 
+      // Try to fetch real user session
       try {
         const response = await fetch(`${API_URL}/api/auth/me`, {
           credentials: "include",
@@ -72,40 +74,19 @@ function MainApp() {
         if (response.ok) {
           const userData = await response.json();
           setUser(userData);
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
+          setIsLoading(false);
+          return;
         }
-      } catch {
-        setIsAuthenticated(false);
+      } catch (e) {
+        // ignore
       }
+
+      // Fallback: auto-guest based on device id
+      setUser(getOrCreateDeviceUser());
       setIsLoading(false);
     };
-    checkAuth();
-  }, [location.state]);
-
-  const handleLogin = async (userData) => {
-    setIsLoading(true);
-    try {
-      if (userData.isGuest) {
-        setUser({ ...userData, joined_date: new Date().toISOString() });
-        setIsAuthenticated(true);
-        return;
-      }
-      setUser(userData);
-      setIsAuthenticated(true);
-      const welcomeShown = localStorage.getItem("welcome_shown_" + userData.id);
-      if (!welcomeShown) {
-        toast({
-          title: "✅ مرحباً بك في طير!",
-          description: `أهلاً ${userData.name} 🐦`,
-        });
-        localStorage.setItem("welcome_shown_" + userData.id, "true");
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    bootstrap();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -117,8 +98,8 @@ function MainApp() {
       // ignore
     }
     localStorage.removeItem("user_token");
-    setIsAuthenticated(false);
-    setUser(null);
+    // Reset to fresh guest (do NOT wipe device id so their data persists)
+    setUser(getOrCreateDeviceUser());
     toast({ title: "تم تسجيل الخروج", description: "نراك قريباً!" });
   };
 
@@ -174,40 +155,19 @@ function MainApp() {
         }
       />
 
-      {/* Payment (legacy — kept for backwards compat) */}
-      <Route path="/payment/success" element={<PaymentSuccess />} />
-      <Route path="/payment/cancel" element={<PaymentCancel />} />
-
       {/* Static */}
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<TermsOfService />} />
       <Route path="/terms-of-service" element={<TermsOfService />} />
-      <Route path="/support" element={<SupportPage />} />
-      <Route path="/help" element={<SupportPage />} />
-      <Route path="/docs" element={<AppDocumentation />} />
-      <Route path="/documentation" element={<AppDocumentation />} />
-      <Route path="/download" element={<DownloadPage />} />
       <Route path="/delete-account" element={<DeleteAccountPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-
-      {/* Public marketing landing */}
       <Route path="/landing" element={<TairPage />} />
 
-      {/* Main App (Tair) */}
+      {/* Main App (Tair) — no auth wall, guest by default */}
       <Route
         path="/*"
-        element={
-          !isAuthenticated ? (
-            <AuthPage
-              onLogin={handleLogin}
-              onGuestMode={handleLogin}
-              onAdminLogin={handleAdminLogin}
-            />
-          ) : (
-            <TairShell user={user} onLogout={handleLogout} />
-          )
-        }
+        element={<TairShell user={user} onLogout={handleLogout} onSetUser={setUser} />}
       />
     </Routes>
   );
@@ -219,21 +179,21 @@ const loaderStyles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "linear-gradient(135deg, #c8fce6 0%, #7dd3fc 100%)",
+    background: "#f9fafb",
   },
   card: { textAlign: "center" },
   logo: {
-    width: 88,
-    height: 88,
-    borderRadius: 22,
-    boxShadow: "0 20px 50px rgba(6, 95, 70, 0.20)",
+    width: 72,
+    height: 72,
+    borderRadius: 18,
+    boxShadow: "0 8px 24px rgba(15, 23, 42, 0.08)",
     animation: "tair-pulse 1.4s ease-in-out infinite",
   },
   text: {
-    color: "#065f46",
-    fontSize: 15,
+    color: "#6b7280",
+    fontSize: 14,
     marginTop: 14,
-    fontWeight: 700,
+    fontWeight: 600,
     fontFamily: "'Tajawal', system-ui",
   },
 };

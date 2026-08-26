@@ -1,8 +1,9 @@
 // طير — Rate Order Screen (mandatory after completion)
 import React, { useState } from "react";
+import { Star } from "lucide-react";
 import { T, S } from "./tairTheme";
 import { tairApi } from "./tairApi";
-import { TopBar } from "./CreateListingScreen";
+import { TopBar } from "./TairUI";
 
 const TAG_OPTIONS = {
   seller: ["صادق", "سريع الرد", "طيور بحالة ممتازة", "معلومات دقيقة"],
@@ -92,7 +93,9 @@ export default function RateOrderScreen({ user, order, onBack, onDone }) {
       <div style={S.container}>
         <div style={S.card}>
           <div style={{ textAlign: "center", padding: 12 }}>
-            <div style={{ fontSize: 44 }}>⭐</div>
+            <div style={styles.iconWrap}>
+              <Star size={40} strokeWidth={1.8} fill={T.accent} color={T.accent} />
+            </div>
             <h2 style={{ margin: "6px 0", fontSize: 20, fontWeight: 900 }}>كيف كانت تجربتك مع {roleLabel}؟</h2>
             <p style={{ color: T.textMuted, margin: 0 }}>
               التقييم يساعد المجتمع على بناء الثقة.
@@ -104,10 +107,16 @@ export default function RateOrderScreen({ user, order, onBack, onDone }) {
               <button
                 key={n}
                 onClick={() => setStars(n)}
-                style={{ ...styles.star, color: n <= stars ? T.yellow : T.divider }}
+                style={styles.starBtn}
                 data-testid={`star-${n}`}
+                aria-label={`${n} نجوم`}
               >
-                ★
+                <Star
+                  size={40}
+                  strokeWidth={n <= stars ? 0 : 1.8}
+                  fill={n <= stars ? T.accent : "transparent"}
+                  color={n <= stars ? T.accent : T.borderStrong}
+                />
               </button>
             ))}
           </div>
@@ -163,19 +172,31 @@ export default function RateOrderScreen({ user, order, onBack, onDone }) {
 }
 
 const styles = {
+  iconWrap: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    background: "#fffbeb",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
   starsRow: {
     display: "flex",
     flexDirection: "row-reverse",
     justifyContent: "center",
-    gap: 6,
+    gap: 4,
     margin: "16px 0",
   },
-  star: {
+  starBtn: {
     background: "transparent",
     border: "none",
-    fontSize: 44,
+    padding: 6,
     cursor: "pointer",
-    lineHeight: 1,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     transition: "transform 0.15s",
   },
   tagsRow: {

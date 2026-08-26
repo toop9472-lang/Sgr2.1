@@ -1,8 +1,9 @@
 // طير — Checkout: pick a trip (carrier) + create order
 import React, { useEffect, useState } from "react";
+import { MapPin, Bird, Calendar, Package, Wallet, Check } from "lucide-react";
 import { T, S } from "./tairTheme";
 import { tairApi, TRIP_STATUS_LABEL } from "./tairApi";
-import { TopBar } from "./CreateListingScreen";
+import { TopBar } from "./TairUI";
 
 export default function CheckoutScreen({ user, listing, onBack, onCreated }) {
   const [trips, setTrips] = useState([]);
@@ -59,11 +60,19 @@ export default function CheckoutScreen({ user, listing, onBack, onCreated }) {
             <div style={styles.thumbBox}>
               {listing.cover_image ? (
                 <img src={listing.cover_image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              ) : "🐦"}
+              ) : (
+                <Bird size={28} strokeWidth={1.5} color={T.textFaint} />
+              )}
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 15, textAlign: "right" }}>{listing.title}</div>
-              <div style={{ color: T.textMuted, fontSize: 12, textAlign: "right" }}>📍 {listing.city}</div>
+              <div style={{
+                color: T.textMuted, fontSize: 12, textAlign: "right",
+                display: "inline-flex", alignItems: "center", gap: 4, marginTop: 2,
+              }}>
+                <MapPin size={12} strokeWidth={2.2} />
+                <span>{listing.city}</span>
+              </div>
               <div style={{ color: T.primary, fontWeight: 900, fontSize: 18, textAlign: "right", marginTop: 4 }}>
                 {listing.price_sar} ر.س
               </div>
@@ -96,7 +105,11 @@ export default function CheckoutScreen({ user, listing, onBack, onCreated }) {
                   <div style={{ fontWeight: 800 }}>بدون موصّل</div>
                   <div style={{ fontSize: 11, color: T.textMuted }}>سأنسق مع البائع بنفسي</div>
                 </div>
-                {selectedTrip === null && <span style={styles.check}>✓</span>}
+                {selectedTrip === null && (
+                  <span style={styles.check}>
+                    <Check size={14} strokeWidth={3} />
+                  </span>
+                )}
               </button>
               {trips.map((t) => {
                 const active = selectedTrip?.trip_id === t.trip_id;
@@ -112,12 +125,28 @@ export default function CheckoutScreen({ user, listing, onBack, onCreated }) {
                       <div style={{ fontWeight: 800 }}>
                         {t.from_city} ← {t.to_city}
                       </div>
-                      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
-                        📅 {dt ? dt.toLocaleDateString("ar-SA") : "-"} · 📦 {t.available_cages} أقفاص
-                        {t.price_hint_sar ? ` · 💰 ${t.price_hint_sar} ر.س` : ""}
+                      <div style={styles.tripMeta}>
+                        <span style={styles.tripMetaItem}>
+                          <Calendar size={11} strokeWidth={2.2} />
+                          {dt ? dt.toLocaleDateString("ar-SA") : "-"}
+                        </span>
+                        <span style={styles.tripMetaItem}>
+                          <Package size={11} strokeWidth={2.2} />
+                          {t.available_cages} أقفاص
+                        </span>
+                        {t.price_hint_sar && (
+                          <span style={styles.tripMetaItem}>
+                            <Wallet size={11} strokeWidth={2.2} />
+                            {t.price_hint_sar} ر.س
+                          </span>
+                        )}
                       </div>
                     </div>
-                    {active && <span style={styles.check}>✓</span>}
+                    {active && (
+                      <span style={styles.check}>
+                        <Check size={14} strokeWidth={3} />
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -178,29 +207,44 @@ const styles = {
     flexDirection: "row-reverse",
     alignItems: "center",
     gap: 10,
-    background: "#f8fafc",
-    border: `1.5px solid ${T.border}`,
-    borderRadius: 12,
-    padding: "10px 14px",
+    background: T.surface,
+    borderWidth: 1.5,
+    borderStyle: "solid",
+    borderColor: T.border,
+    borderRadius: T.radius,
+    padding: "12px 14px",
     cursor: "pointer",
     fontFamily: "inherit",
     textAlign: "right",
   },
   tripOptionActive: {
-    background: "#ecfdf5",
+    background: "#f0fdfa",
     borderColor: T.primary,
+  },
+  tripMeta: {
+    display: "flex",
+    flexDirection: "row-reverse",
+    gap: 8,
+    marginTop: 4,
+    fontSize: 11,
+    color: T.textMuted,
+    flexWrap: "wrap",
+  },
+  tripMetaItem: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 3,
   },
   check: {
     background: T.primary,
-    color: "#fff",
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    color: T.textInverse,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: 14,
-    fontWeight: 800,
+    flexShrink: 0,
   },
   emptyMini: {
     padding: 14,

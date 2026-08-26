@@ -80,6 +80,7 @@ async def feed_listings(
     city: Optional[str] = None,
     category: Optional[str] = None,
     species: Optional[str] = None,
+    family: Optional[str] = None,
     min_price: Optional[float] = None,
     max_price: Optional[float] = None,
     q: Optional[str] = None,
@@ -93,6 +94,17 @@ async def feed_listings(
         query["category"] = category
     if species:
         query["species"] = species
+    if family:
+        # Resolve family → list of species_ids
+        fam_species = await db.species_catalog.find(
+            {"family": family}, {"_id": 0, "species_id": 1}
+        ).to_list(200)
+        species_ids = [s["species_id"] for s in fam_species]
+        if species_ids:
+            query["species"] = {"$in": species_ids}
+        else:
+            # No species match → return empty
+            return {"items": [], "total": 0, "skip": skip, "limit": limit}
     if min_price is not None or max_price is not None:
         query["price_sar"] = {}
         if min_price is not None:

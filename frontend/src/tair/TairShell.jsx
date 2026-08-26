@@ -11,6 +11,7 @@ import CheckoutScreen from "./CheckoutScreen";
 import OrderDetailsScreen from "./OrderDetailsScreen";
 import RateOrderScreen from "./RateOrderScreen";
 import OnboardingScreen from "./OnboardingScreen";
+import { InjectAnimations } from "./TairUI";
 
 const ONBOARDING_KEY = "tair_onboarding_done";
 
@@ -35,7 +36,12 @@ export default function TairShell({ user, onLogout }) {
   };
 
   if (showOnboarding) {
-    return <OnboardingScreen onComplete={completeOnboarding} />;
+    return (
+      <>
+        <InjectAnimations />
+        <OnboardingScreen onComplete={completeOnboarding} />
+      </>
+    );
   }
 
   // Route rendering
@@ -112,6 +118,7 @@ export default function TairShell({ user, onLogout }) {
 
   return (
     <>
+      <InjectAnimations />
       {tab === "home" && (
         <HomeScreen
           user={user}

@@ -1,8 +1,11 @@
 // طير — Order Details with status timeline + role-aware actions
 import React, { useCallback, useEffect, useState } from "react";
+import {
+  ShoppingBag, Bird, Truck, MapPin, Flag, Calendar, Star, Check,
+} from "lucide-react";
 import { T, S } from "./tairTheme";
 import { tairApi, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } from "./tairApi";
-import { TopBar } from "./CreateListingScreen";
+import { TopBar, StatusPill } from "./TairUI";
 
 const TIMELINE_STEPS = [
   { key: "pending", label: "بانتظار الموصّل" },
@@ -102,15 +105,14 @@ export default function OrderDetailsScreen({ user, orderId, onBack, onRate }) {
       <div style={S.container}>
         <div style={S.card}>
           <div style={{ display: "flex", flexDirection: "row-reverse", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ ...S.pill, background: statusColor + "22", color: statusColor, fontSize: 13 }}>
-              {ORDER_STATUS_LABEL[order.status]}
-            </span>
+            <StatusPill label={ORDER_STATUS_LABEL[order.status]} color={statusColor} size="lg" />
             <span style={{ fontSize: 22, fontWeight: 900, color: T.primary }}>
               {order.agreed_price_sar} ر.س
             </span>
           </div>
-          <div style={{ color: T.textMuted, fontSize: 12, textAlign: "right", marginTop: 6 }}>
-            📅 {new Date(order.created_at).toLocaleString("ar-SA")}
+          <div style={{ color: T.textMuted, fontSize: 12, textAlign: "right", marginTop: 8, display: "inline-flex", alignItems: "center", gap: 4 }}>
+            <Calendar size={12} strokeWidth={2.2} />
+            <span>{new Date(order.created_at).toLocaleString("ar-SA")}</span>
           </div>
         </div>
 
@@ -121,17 +123,19 @@ export default function OrderDetailsScreen({ user, orderId, onBack, onRate }) {
 
         <div style={S.card}>
           <h2 style={S.h2}>الأطراف</h2>
-          <PartyRow icon="🛍️" label="المشتري" id={order.buyer_id} you={isBuyer} />
-          <PartyRow icon="🐦" label="البائع" id={order.seller_id} you={isSeller} />
-          <PartyRow icon="🚗" label="الموصّل" id={order.carrier_id || "لم يُعيَّن"} you={isCarrier} />
+          <PartyRow Icon={ShoppingBag} label="المشتري" id={order.buyer_id} you={isBuyer} />
+          <PartyRow Icon={Bird} label="البائع" id={order.seller_id} you={isSeller} />
+          <PartyRow Icon={Truck} label="الموصّل" id={order.carrier_id || "لم يُعيَّن"} you={isCarrier} />
           {order.pickup_address_hint && (
-            <div style={{ marginTop: 10, color: T.textMuted, fontSize: 13, textAlign: "right" }}>
-              📍 استلام: {order.pickup_address_hint}
+            <div style={styles.addrLine}>
+              <MapPin size={13} strokeWidth={2.2} color={T.textMuted} />
+              <span>استلام: {order.pickup_address_hint}</span>
             </div>
           )}
           {order.dropoff_address_hint && (
-            <div style={{ color: T.textMuted, fontSize: 13, textAlign: "right" }}>
-              🏁 تسليم: {order.dropoff_address_hint}
+            <div style={styles.addrLine}>
+              <Flag size={13} strokeWidth={2.2} color={T.textMuted} />
+              <span>تسليم: {order.dropoff_address_hint}</span>
             </div>
           )}
         </div>
@@ -153,10 +157,11 @@ export default function OrderDetailsScreen({ user, orderId, onBack, onRate }) {
           {canRate && (
             <button
               onClick={() => onRate(order)}
-              style={{ ...S.primaryBtn, background: T.yellow, color: T.text }}
+              style={{ ...S.primaryBtn, background: T.accent }}
               data-testid="rate-order-btn"
             >
-              ⭐ قيّم الأطراف
+              <Star size={17} strokeWidth={2.4} fill="#fff" />
+              <span>قيّم الأطراف</span>
             </button>
           )}
           {canCancel && (
@@ -167,7 +172,7 @@ export default function OrderDetailsScreen({ user, orderId, onBack, onRate }) {
                 }
               }}
               disabled={busy}
-              style={{ ...S.secondaryBtn, borderColor: T.danger, color: T.danger }}
+              style={{ ...S.secondaryBtn, borderColor: T.danger, color: T.danger, width: "100%" }}
               data-testid="cancel-order"
             >
               إلغاء الطلب
@@ -188,13 +193,13 @@ function Timeline({ order }) {
     return (
       <div style={{
         padding: 14,
-        borderRadius: 12,
-        background: (isCancel ? "#fee2e2" : "#fef3c7"),
+        borderRadius: T.radius,
+        background: (isCancel ? "#fef2f2" : "#fffbeb"),
         color: (isCancel ? "#991b1b" : "#92400e"),
         fontWeight: 700,
         textAlign: "center",
       }}>
-        {isCancel ? "❌ الطلب مُلغى" : "⚠️ الطلب في نزاع — قيد المراجعة"}
+        {isCancel ? "الطلب مُلغى" : "الطلب في نزاع — قيد المراجعة"}
       </div>
     );
   }
@@ -205,13 +210,13 @@ function Timeline({ order }) {
         const done = i <= currentIdx;
         const active = i === currentIdx;
         return (
-          <div key={step.key} style={{ flex: 1, minWidth: 90, textAlign: "center" }}>
+          <div key={step.key} style={{ flex: 1, minWidth: 80, textAlign: "center" }}>
             <div
               style={{
-                width: 30,
-                height: 30,
-                borderRadius: 15,
-                background: done ? T.primary : T.divider,
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                background: done ? T.primary : T.bgAlt,
                 color: done ? "#fff" : T.textFaint,
                 margin: "0 auto",
                 display: "flex",
@@ -219,12 +224,17 @@ function Timeline({ order }) {
                 justifyContent: "center",
                 fontWeight: 800,
                 fontSize: 13,
-                border: active ? `3px solid ${T.mintDeep}` : "none",
+                boxShadow: active ? `0 0 0 3px ${T.primary}33` : "none",
+                transition: "all 0.2s",
               }}
             >
-              {done ? "✓" : i + 1}
+              {done ? <Check size={16} strokeWidth={3} /> : i + 1}
             </div>
-            <div style={{ fontSize: 10, marginTop: 4, color: done ? T.text : T.textFaint, fontWeight: 700 }}>
+            <div style={{
+              fontSize: 10, marginTop: 5,
+              color: done ? T.text : T.textFaint,
+              fontWeight: 700,
+            }}>
               {step.label}
             </div>
           </div>
@@ -234,15 +244,52 @@ function Timeline({ order }) {
   );
 }
 
-function PartyRow({ icon, label, id, you }) {
+function PartyRow({ Icon, label, id, you }) {
   return (
-    <div style={{ display: "flex", flexDirection: "row-reverse", alignItems: "center", gap: 10, padding: "8px 0" }}>
-      <span style={{ fontSize: 22 }}>{icon}</span>
-      <div style={{ flex: 1, textAlign: "right" }}>
-        <div style={{ fontSize: 12, color: T.textMuted, fontWeight: 700 }}>{label}</div>
-        <div style={{ fontSize: 13, color: T.text, fontWeight: 700 }}>{id}</div>
+    <div style={styles.partyRow}>
+      <div style={styles.partyIcon}>
+        <Icon size={18} strokeWidth={1.8} color={T.primary} />
       </div>
-      {you && <span style={{ ...S.pill, background: "#ecfdf5", color: T.primary }}>أنت</span>}
+      <div style={{ flex: 1, textAlign: "right", minWidth: 0 }}>
+        <div style={{ fontSize: 11, color: T.textMuted, fontWeight: 700 }}>{label}</div>
+        <div style={{
+          fontSize: 13, color: T.text, fontWeight: 700,
+          whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+        }}>{id}</div>
+      </div>
+      {you && <StatusPill label="أنت" color={T.primary} />}
     </div>
   );
 }
+
+const styles = {
+  addrLine: {
+    display: "flex",
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 10,
+    color: T.textMuted,
+    fontSize: 13,
+    textAlign: "right",
+    fontWeight: 600,
+  },
+  partyRow: {
+    display: "flex",
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 10,
+    padding: "10px 0",
+    borderBottom: `1px solid ${T.divider}`,
+  },
+  partyIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    background: "#f0fdfa",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+};

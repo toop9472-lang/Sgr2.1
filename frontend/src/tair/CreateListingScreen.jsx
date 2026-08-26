@@ -1,7 +1,9 @@
 // طير — Create Listing (seller flow)
 import React, { useEffect, useState } from "react";
+import { X, Image as ImageIcon, Camera } from "lucide-react";
 import { T, S } from "./tairTheme";
 import { tairApi, SAUDI_CITIES } from "./tairApi";
+import { TopBar } from "./TairUI";
 
 const GENDERS = [
   { id: "unknown", label: "غير محدد" },
@@ -119,8 +121,9 @@ export default function CreateListingScreen({ user, onBack, onCreated }) {
                   onClick={() => removeImage(i)}
                   style={styles.imgRemove}
                   data-testid={`remove-image-${i}`}
+                  aria-label="حذف"
                 >
-                  ✕
+                  <X size={12} strokeWidth={3} />
                 </button>
                 {i === 0 && <div style={styles.coverBadge}>الغلاف</div>}
               </div>
@@ -135,7 +138,12 @@ export default function CreateListingScreen({ user, onBack, onCreated }) {
                   onChange={handleImageUpload}
                   disabled={uploading}
                 />
-                {uploading ? "…" : "+"}
+                {uploading ? "…" : (
+                  <>
+                    <Camera size={22} strokeWidth={1.8} />
+                    <span style={{ fontSize: 10, marginTop: 4 }}>إضافة</span>
+                  </>
+                )}
               </label>
             )}
           </div>
@@ -325,61 +333,7 @@ export default function CreateListingScreen({ user, onBack, onCreated }) {
   );
 }
 
-export function TopBar({ title, onBack, right }) {
-  return (
-    <div style={topStyles.wrap}>
-      <div style={topStyles.inner}>
-        <div style={topStyles.side}>
-          {right}
-        </div>
-        <h2 style={topStyles.title}>{title}</h2>
-        <button onClick={onBack} style={topStyles.back} data-testid="topbar-back">
-          →
-        </button>
-      </div>
-    </div>
-  );
-}
-
-const topStyles = {
-  wrap: {
-    background: "#fff",
-    borderBottom: `1px solid ${T.border}`,
-    position: "sticky",
-    top: 0,
-    zIndex: 20,
-  },
-  inner: {
-    maxWidth: 900,
-    margin: "0 auto",
-    padding: "14px 16px",
-    display: "flex",
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  title: {
-    margin: 0,
-    fontSize: 17,
-    fontWeight: 800,
-    color: T.text,
-    flex: 1,
-    textAlign: "center",
-  },
-  back: {
-    background: T.divider,
-    border: "none",
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    fontSize: 20,
-    cursor: "pointer",
-    color: T.text,
-    fontWeight: 700,
-  },
-  side: { minWidth: 36, display: "flex", justifyContent: "flex-start" },
-};
+export function TopBarStub() { return null; }
 
 const styles = {
   hint: { fontSize: 12, color: T.textMuted, marginTop: 0, marginBottom: 12, textAlign: "right" },
@@ -422,13 +376,15 @@ const styles = {
   },
   imgAdd: {
     aspectRatio: "1/1",
-    borderRadius: 10,
-    border: `2px dashed ${T.mintDeep}`,
-    background: "#ecfdf5",
+    borderRadius: T.radius,
+    borderWidth: 2,
+    borderStyle: "dashed",
+    borderColor: T.borderStrong,
+    background: T.bgAlt,
     display: "flex",
+    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: 32,
     color: T.primary,
     cursor: "pointer",
     fontWeight: 700,

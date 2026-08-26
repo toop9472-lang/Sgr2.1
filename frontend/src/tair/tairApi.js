@@ -10,8 +10,12 @@ const client = axios.create({
 
 export const tairApi = {
   // Species catalog
-  listSpecies: async (category) => {
-    const { data } = await client.get("/species/list", { params: { category } });
+  listSpecies: async (category, family) => {
+    const { data } = await client.get("/species/list", { params: { category, family } });
+    return data.items || [];
+  },
+  listFamilies: async () => {
+    const { data } = await client.get("/species/families");
     return data.items || [];
   },
 

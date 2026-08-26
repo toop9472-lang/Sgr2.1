@@ -1,10 +1,17 @@
-// طير — Profile: shows user info, my listings, my trips, ratings
+// طير — Profile (professional, lucide icons, sign-in prompt for guests)
 import React, { useEffect, useState } from "react";
+import {
+  User, Star, Bird, Truck, LogOut, ChevronLeft,
+  ShieldCheck, FileText, Trash2, HelpCircle, LogIn,
+} from "lucide-react";
 import { T, S } from "./tairTheme";
 import { tairApi } from "./tairApi";
+import { StatusPill } from "./TairUI";
 
 export default function ProfileScreen({ user, onOpenListing, onOpenTrip, onLogout }) {
   const uid = user.id || user.user_id;
+  const isGuest = !!user.isGuest;
+
   const [tab, setTab] = useState("listings");
   const [myListings, setMyListings] = useState([]);
   const [myTrips, setMyTrips] = useState([]);
@@ -12,6 +19,7 @@ export default function ProfileScreen({ user, onOpenListing, onOpenTrip, onLogou
   const [avg, setAvg] = useState({ seller: 0, carrier: 0 });
 
   useEffect(() => {
+    if (isGuest) return;
     tairApi.listingsBySeller(uid, true).then(setMyListings).catch(() => {});
     tairApi.tripsByCarrier(uid, true).then(setMyTrips).catch(() => {});
     tairApi
@@ -24,212 +32,310 @@ export default function ProfileScreen({ user, onOpenListing, onOpenTrip, onLogou
         setAvg({ seller: avgOf(bySeller), carrier: avgOf(byCarrier) });
       })
       .catch(() => {});
-  }, [uid]);
+  }, [uid, isGuest]);
 
   return (
     <div style={S.screen} data-testid="profile-screen">
       <header style={styles.hero}>
-        <div style={styles.heroInner}>
-          <div style={styles.avatar}>
-            {user.name?.charAt(0)?.toUpperCase() || "🧑"}
-          </div>
-          <h1 style={styles.name}>{user.name || "مستخدم طير"}</h1>
-          <p style={styles.email}>{user.email || uid}</p>
-
-          <div style={styles.stats}>
-            <div style={styles.stat}>
-              <div style={styles.statVal}>{myListings.length}</div>
-              <div style={styles.statLabel}>إعلان</div>
-            </div>
-            <div style={styles.stat}>
-              <div style={styles.statVal}>{myTrips.length}</div>
-              <div style={styles.statLabel}>رحلة</div>
-            </div>
-            <div style={styles.stat}>
-              <div style={styles.statVal}>
-                {avg.seller > 0 ? avg.seller : "—"}
-              </div>
-              <div style={styles.statLabel}>⭐ كبائع</div>
-            </div>
-            <div style={styles.stat}>
-              <div style={styles.statVal}>
-                {avg.carrier > 0 ? avg.carrier : "—"}
-              </div>
-              <div style={styles.statLabel}>⭐ كموصّل</div>
-            </div>
-          </div>
+        <div style={styles.avatar}>
+          <User size={40} strokeWidth={1.8} color={T.primary} />
         </div>
+        <h1 style={styles.name}>{user.name || "زائر"}</h1>
+        <p style={styles.email}>{isGuest ? "حساب زائر — سجّل للحصول على كامل الميزات" : user.email || uid}</p>
+
+        {isGuest && (
+          <button
+            onClick={() => (window.location.href = "/forgot-password")}
+            style={styles.signInBtn}
+            data-testid="signin-cta"
+          >
+            <LogIn size={16} strokeWidth={2.4} />
+            <span>إنشاء حساب / تسجيل الدخول</span>
+          </button>
+        )}
+
+        {!isGuest && (
+          <div style={styles.stats}>
+            <Stat label="إعلانات" value={myListings.length} Icon={Bird} />
+            <Stat label="رحلات" value={myTrips.length} Icon={Truck} />
+            <Stat label="بائع" value={avg.seller > 0 ? avg.seller : "—"} Icon={Star} suffix="⭐" />
+            <Stat label="موصّل" value={avg.carrier > 0 ? avg.carrier : "—"} Icon={Star} suffix="⭐" />
+          </div>
+        )}
       </header>
 
       <div style={S.container}>
-        <div style={styles.tabs}>
-          {[
-            { id: "listings", label: `إعلاناتي (${myListings.length})` },
-            { id: "trips", label: `رحلاتي (${myTrips.length})` },
-            { id: "ratings", label: `تقييماتي (${ratings.length})` },
-          ].map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              style={{ ...styles.tab, ...(tab === t.id ? styles.tabActive : {}) }}
-              data-testid={`profile-tab-${t.id}`}
-            >
-              {t.label}
-            </button>
-          ))}
+        {!isGuest && (
+          <>
+            <div style={styles.tabsRow}>
+              {[
+                { id: "listings", label: `إعلاناتي (${myListings.length})` },
+                { id: "trips", label: `رحلاتي (${myTrips.length})` },
+                { id: "ratings", label: `تقييماتي (${ratings.length})` },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  style={{ ...styles.tab, ...(tab === t.id ? styles.tabActive : {}) }}
+                  data-testid={`profile-tab-${t.id}`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {tab === "listings" && (
+              <div style={{ display: "grid", gap: 8, marginBottom: 20 }}>
+                {myListings.length === 0 ? (
+                  <div style={styles.emptyCard}>لم تنشر إعلانات بعد.</div>
+                ) : (
+                  myListings.map((l) => (
+                    <button
+                      key={l.listing_id}
+                      onClick={() => onOpenListing(l.listing_id)}
+                      style={styles.row}
+                      data-testid={`my-listing-${l.listing_id}`}
+                    >
+                      <div style={styles.rowThumb}>
+                        {l.cover_image ? (
+                          <img src={l.cover_image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        ) : (
+                          <Bird size={22} strokeWidth={1.5} color={T.textFaint} />
+                        )}
+                      </div>
+                      <div style={{ flex: 1, textAlign: "right", minWidth: 0 }}>
+                        <div style={styles.rowTitle}>{l.title}</div>
+                        <div style={styles.rowMeta}>
+                          {l.price_sar} ر.س · {l.status}
+                        </div>
+                      </div>
+                      <ChevronLeft size={18} strokeWidth={2} color={T.textFaint} />
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+
+            {tab === "trips" && (
+              <div style={{ display: "grid", gap: 8, marginBottom: 20 }}>
+                {myTrips.length === 0 ? (
+                  <div style={styles.emptyCard}>لم تسجّل رحلات بعد.</div>
+                ) : (
+                  myTrips.map((t) => (
+                    <button
+                      key={t.trip_id}
+                      onClick={() => onOpenTrip(t.trip_id)}
+                      style={styles.row}
+                      data-testid={`my-trip-${t.trip_id}`}
+                    >
+                      <div style={styles.rowThumb}>
+                        <Truck size={22} strokeWidth={1.8} color={T.primary} />
+                      </div>
+                      <div style={{ flex: 1, textAlign: "right", minWidth: 0 }}>
+                        <div style={styles.rowTitle}>
+                          {t.from_city} → {t.to_city}
+                        </div>
+                        <div style={styles.rowMeta}>
+                          {new Date(t.depart_at).toLocaleDateString("ar-SA")} · {t.status}
+                        </div>
+                      </div>
+                      <ChevronLeft size={18} strokeWidth={2} color={T.textFaint} />
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+
+            {tab === "ratings" && (
+              <div style={{ display: "grid", gap: 8, marginBottom: 20 }}>
+                {ratings.length === 0 ? (
+                  <div style={styles.emptyCard}>لا توجد تقييمات بعد.</div>
+                ) : (
+                  ratings.map((r) => (
+                    <div key={r.rating_id} style={styles.ratingCard}>
+                      <div style={styles.ratingTop}>
+                        <div style={styles.starsRow}>
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} size={14} strokeWidth={0}
+                              fill={i < r.stars ? T.accent : T.border}
+                              color={i < r.stars ? T.accent : T.border} />
+                          ))}
+                        </div>
+                        <StatusPill
+                          label={`كـ${r.rated_role === "seller" ? "بائع" : r.rated_role === "carrier" ? "موصّل" : "مشتري"}`}
+                          color={T.primary}
+                        />
+                      </div>
+                      {r.comment && (
+                        <p style={styles.ratingComment}>&ldquo;{r.comment}&rdquo;</p>
+                      )}
+                      {r.tags?.length > 0 && (
+                        <div style={styles.tagsRow}>
+                          {r.tags.map((t, i) => (
+                            <span key={i} style={S.pill}>{t}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Settings menu */}
+        <div style={styles.menuCard}>
+          <MenuLink
+            icon={<ShieldCheck size={20} strokeWidth={1.8} />}
+            label="سياسة الخصوصية"
+            onClick={() => window.location.assign("/privacy-policy")}
+            testId="menu-privacy"
+          />
+          <MenuLink
+            icon={<FileText size={20} strokeWidth={1.8} />}
+            label="الشروط والأحكام"
+            onClick={() => window.location.assign("/terms-of-service")}
+            testId="menu-terms"
+          />
+          <MenuLink
+            icon={<HelpCircle size={20} strokeWidth={1.8} />}
+            label="المساعدة والدعم"
+            onClick={() => window.location.assign("/support")}
+            testId="menu-support"
+          />
+          <MenuLink
+            icon={<Trash2 size={20} strokeWidth={1.8} />}
+            label="حذف الحساب"
+            onClick={() => window.location.assign("/delete-account")}
+            danger
+            testId="menu-delete"
+          />
         </div>
 
-        {tab === "listings" && (
-          <div style={{ display: "grid", gap: 8 }}>
-            {myListings.length === 0 ? (
-              <div style={S.card}>لم تنشر إعلانات بعد.</div>
-            ) : (
-              myListings.map((l) => (
-                <button
-                  key={l.listing_id}
-                  onClick={() => onOpenListing(l.listing_id)}
-                  style={styles.row}
-                  data-testid={`my-listing-${l.listing_id}`}
-                >
-                  <div style={styles.rowThumb}>
-                    {l.cover_image ? (
-                      <img src={l.cover_image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    ) : "🐦"}
-                  </div>
-                  <div style={{ flex: 1, textAlign: "right" }}>
-                    <div style={{ fontWeight: 800 }}>{l.title}</div>
-                    <div style={{ fontSize: 12, color: T.textMuted }}>
-                      {l.price_sar} ر.س · {l.status}
-                    </div>
-                  </div>
-                </button>
-              ))
-            )}
-          </div>
-        )}
-
-        {tab === "trips" && (
-          <div style={{ display: "grid", gap: 8 }}>
-            {myTrips.length === 0 ? (
-              <div style={S.card}>لم تسجّل رحلات بعد.</div>
-            ) : (
-              myTrips.map((t) => (
-                <button
-                  key={t.trip_id}
-                  onClick={() => onOpenTrip(t.trip_id)}
-                  style={styles.row}
-                  data-testid={`my-trip-${t.trip_id}`}
-                >
-                  <div style={{ fontSize: 26 }}>🚗</div>
-                  <div style={{ flex: 1, textAlign: "right" }}>
-                    <div style={{ fontWeight: 800 }}>
-                      {t.from_city} ← {t.to_city}
-                    </div>
-                    <div style={{ fontSize: 12, color: T.textMuted }}>
-                      {new Date(t.depart_at).toLocaleDateString("ar-SA")} · {t.status}
-                    </div>
-                  </div>
-                </button>
-              ))
-            )}
-          </div>
-        )}
-
-        {tab === "ratings" && (
-          <div style={{ display: "grid", gap: 8 }}>
-            {ratings.length === 0 ? (
-              <div style={S.card}>لا توجد تقييمات بعد.</div>
-            ) : (
-              ratings.map((r) => (
-                <div key={r.rating_id} style={{ ...S.card, marginBottom: 0 }}>
-                  <div style={{ display: "flex", flexDirection: "row-reverse", justifyContent: "space-between" }}>
-                    <span style={{ color: T.yellow, fontSize: 18 }}>{"★".repeat(r.stars)}</span>
-                    <span style={{ ...S.pill, background: "#ecfdf5", color: T.primary }}>
-                      كـ{r.rated_role === "seller" ? "بائع" : r.rated_role === "carrier" ? "موصّل" : "مشتري"}
-                    </span>
-                  </div>
-                  {r.comment && (
-                    <p style={{ color: T.textMuted, fontSize: 14, textAlign: "right", marginTop: 6 }}>
-                      &ldquo;{r.comment}&rdquo;
-                    </p>
-                  )}
-                  {r.tags?.length > 0 && (
-                    <div style={{ display: "flex", flexDirection: "row-reverse", gap: 4, flexWrap: "wrap", marginTop: 6 }}>
-                      {r.tags.map((t, i) => (
-                        <span key={i} style={{ ...S.pill, fontSize: 10 }}>{t}</span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        <div style={{ marginTop: 20 }}>
+        {!isGuest && (
           <button
             onClick={onLogout}
-            style={{ ...S.secondaryBtn, width: "100%", borderColor: T.danger, color: T.danger }}
+            style={styles.logoutBtn}
             data-testid="logout-btn"
           >
-            تسجيل الخروج
+            <LogOut size={16} strokeWidth={2.4} />
+            <span>تسجيل الخروج</span>
           </button>
-        </div>
+        )}
       </div>
     </div>
   );
 }
 
+function Stat({ label, value, Icon, suffix }) {
+  return (
+    <div style={styles.stat}>
+      <div style={styles.statVal}>
+        {value}
+        {suffix && <span style={{ marginRight: 3, fontSize: 12 }}>{suffix}</span>}
+      </div>
+      <div style={styles.statLabel}>{label}</div>
+    </div>
+  );
+}
+
+function MenuLink({ icon, label, onClick, danger, testId }) {
+  return (
+    <button onClick={onClick} style={{
+      ...styles.menuLink,
+      color: danger ? T.danger : T.text,
+    }} data-testid={testId}>
+      <span style={{
+        ...styles.menuIcon,
+        color: danger ? T.danger : T.primary,
+        background: danger ? "#fef2f2" : "#f0fdfa",
+      }}>{icon}</span>
+      <span style={{ flex: 1, textAlign: "right", fontWeight: 700 }}>{label}</span>
+      <ChevronLeft size={18} strokeWidth={2} color={T.textFaint} />
+    </button>
+  );
+}
+
 const styles = {
   hero: {
-    background: `linear-gradient(135deg, ${T.mint} 0%, ${T.sky} 100%)`,
-    padding: "26px 20px 24px",
+    background: T.surface,
+    padding: "28px 20px 24px",
     textAlign: "center",
+    borderBottom: `1px solid ${T.divider}`,
   },
-  heroInner: { maxWidth: 500, margin: "0 auto" },
   avatar: {
     width: 84,
     height: 84,
     borderRadius: 42,
-    background: "#fff",
+    background: "#f0fdfa",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: 36,
-    fontWeight: 900,
-    color: T.primary,
     margin: "0 auto 12px",
-    boxShadow: T.shadowMd,
+    border: `2px solid ${T.primary}22`,
   },
-  name: { margin: 0, fontSize: 22, fontWeight: 900, color: T.primary },
-  email: { margin: "3px 0 0", fontSize: 12, color: "#0f766e" },
+  name: {
+    margin: 0,
+    fontSize: 20,
+    fontWeight: 900,
+    color: T.textStrong,
+    letterSpacing: "-0.01em",
+  },
+  email: {
+    margin: "4px 0 0",
+    fontSize: 12,
+    color: T.textMuted,
+    fontWeight: 600,
+  },
+  signInBtn: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 18,
+    background: T.primary,
+    color: T.textInverse,
+    border: "none",
+    borderRadius: T.radius,
+    padding: "11px 22px",
+    fontSize: 14,
+    fontWeight: 800,
+    cursor: "pointer",
+    fontFamily: "inherit",
+    boxShadow: T.shadowSm,
+  },
   stats: {
     display: "grid",
     gridTemplateColumns: "repeat(4, 1fr)",
     gap: 8,
-    marginTop: 18,
-    background: "rgba(255,255,255,0.7)",
-    borderRadius: 16,
-    padding: 12,
+    marginTop: 20,
+    background: T.bgAlt,
+    borderRadius: T.radiusMd,
+    padding: 14,
   },
   stat: { textAlign: "center" },
-  statVal: { fontSize: 18, fontWeight: 900, color: T.primary },
+  statVal: {
+    fontSize: 18,
+    fontWeight: 900,
+    color: T.textStrong,
+    letterSpacing: "-0.01em",
+  },
   statLabel: { fontSize: 10, color: T.textMuted, marginTop: 2, fontWeight: 700 },
-  tabs: {
+
+  tabsRow: {
     display: "flex",
     flexDirection: "row-reverse",
-    gap: 6,
-    background: "#fff",
+    gap: 4,
+    background: T.bgAlt,
     padding: 4,
-    borderRadius: 999,
-    marginBottom: 12,
-    boxShadow: T.shadowSm,
+    borderRadius: T.radius,
+    marginBottom: 14,
   },
   tab: {
     flex: 1,
     padding: "9px 4px",
     border: "none",
-    borderRadius: 999,
+    borderRadius: T.radiusSm,
     background: "transparent",
     color: T.textMuted,
     fontSize: 12,
@@ -238,17 +344,27 @@ const styles = {
     fontFamily: "inherit",
   },
   tabActive: {
-    background: T.primary,
-    color: "#fff",
+    background: T.surface,
+    color: T.text,
+    boxShadow: T.shadowXs,
+  },
+  emptyCard: {
+    padding: 22,
+    background: T.surface,
+    border: `1px solid ${T.border}`,
+    borderRadius: T.radiusMd,
+    textAlign: "center",
+    color: T.textMuted,
+    fontSize: 13,
   },
   row: {
     display: "flex",
     flexDirection: "row-reverse",
     alignItems: "center",
     gap: 10,
-    background: "#fff",
+    background: T.surface,
     border: `1px solid ${T.border}`,
-    borderRadius: 12,
+    borderRadius: T.radiusMd,
     padding: "10px 12px",
     cursor: "pointer",
     fontFamily: "inherit",
@@ -257,12 +373,97 @@ const styles = {
   rowThumb: {
     width: 50,
     height: 50,
-    borderRadius: 10,
-    background: T.divider,
+    borderRadius: T.radius,
+    background: T.bgAlt,
     overflow: "hidden",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: 22,
+    flexShrink: 0,
+  },
+  rowTitle: {
+    fontWeight: 800,
+    fontSize: 14,
+    color: T.text,
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  rowMeta: { fontSize: 11, color: T.textMuted, marginTop: 2, fontWeight: 600 },
+
+  ratingCard: {
+    background: T.surface,
+    border: `1px solid ${T.border}`,
+    borderRadius: T.radiusMd,
+    padding: 14,
+  },
+  ratingTop: {
+    display: "flex",
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  starsRow: { display: "flex", flexDirection: "row-reverse", gap: 2 },
+  ratingComment: {
+    color: T.textMuted,
+    fontSize: 13,
+    textAlign: "right",
+    margin: "8px 0 0",
+    lineHeight: 1.6,
+  },
+  tagsRow: {
+    display: "flex",
+    flexDirection: "row-reverse",
+    gap: 4,
+    flexWrap: "wrap",
+    marginTop: 8,
+  },
+
+  menuCard: {
+    background: T.surface,
+    border: `1px solid ${T.border}`,
+    borderRadius: T.radiusMd,
+    overflow: "hidden",
+    marginTop: 10,
+    marginBottom: 16,
+  },
+  menuLink: {
+    display: "flex",
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 12,
+    width: "100%",
+    padding: "14px 16px",
+    background: "transparent",
+    border: "none",
+    borderBottom: `1px solid ${T.divider}`,
+    cursor: "pointer",
+    fontFamily: "inherit",
+    fontSize: 14,
+  },
+  menuIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  logoutBtn: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    width: "100%",
+    background: T.surface,
+    border: `1.5px solid ${T.danger}`,
+    color: T.danger,
+    borderRadius: T.radius,
+    padding: "13px 18px",
+    fontSize: 14,
+    fontWeight: 800,
+    cursor: "pointer",
+    fontFamily: "inherit",
   },
 };

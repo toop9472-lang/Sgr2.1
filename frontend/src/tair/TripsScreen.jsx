@@ -1,8 +1,12 @@
-// طير — Trips list + create modal (carrier network)
+// طير — Trips list + create modal (professional)
 import React, { useEffect, useState } from "react";
+import {
+  Truck, Plus, MapPin, Calendar, Package, Snowflake, ArrowLeftRight,
+  X, Car, Wallet,
+} from "lucide-react";
 import { T, S } from "./tairTheme";
 import { tairApi, SAUDI_CITIES, TRIP_STATUS_LABEL } from "./tairApi";
-import { EmptyState } from "./HomeScreen";
+import { BottomSheet, SelectorItem, FilterChipButton, EmptyState, StatusPill } from "./TairUI";
 
 export default function TripsScreen({ user, onOpenTrip }) {
   const [trips, setTrips] = useState([]);
@@ -10,6 +14,7 @@ export default function TripsScreen({ user, onOpenTrip }) {
   const [fromCity, setFromCity] = useState(null);
   const [toCity, setToCity] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [sheet, setSheet] = useState(null); // 'from' | 'to'
 
   const load = () => {
     setLoading(true);
@@ -29,47 +34,49 @@ export default function TripsScreen({ user, onOpenTrip }) {
     <div style={S.screen} data-testid="trips-screen">
       <header style={styles.hero}>
         <div style={styles.heroInner}>
-          <h1 style={styles.title}>الرحلات</h1>
-          <p style={styles.subtitle}>شبكة الموصّلين — نقل الطيور بأمان بين المدن</p>
-          <button
-            onClick={() => setShowCreate(true)}
-            style={styles.createBtn}
-            data-testid="create-trip-btn"
-          >
-            + سجّل رحلتك
-          </button>
+          <div style={styles.headTop}>
+            <div>
+              <h1 style={styles.title}>الرحلات</h1>
+              <p style={styles.subtitle}>شبكة الموصّلين لنقل الطيور بين المدن</p>
+            </div>
+            <button
+              onClick={() => setShowCreate(true)}
+              style={styles.createBtn}
+              data-testid="create-trip-btn"
+            >
+              <Plus size={16} strokeWidth={2.6} />
+              <span>رحلة جديدة</span>
+            </button>
+          </div>
         </div>
       </header>
 
-      <div style={styles.filters}>
-        <div style={styles.filterCol}>
-          <label style={styles.filterLabel}>من</label>
-          <select
-            style={styles.filterSelect}
-            value={fromCity || ""}
-            onChange={(e) => setFromCity(e.target.value || null)}
-            data-testid="filter-from-city"
-          >
-            <option value="">الكل</option>
-            {SAUDI_CITIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </div>
-        <div style={styles.filterArrow}>←</div>
-        <div style={styles.filterCol}>
-          <label style={styles.filterLabel}>إلى</label>
-          <select
-            style={styles.filterSelect}
-            value={toCity || ""}
-            onChange={(e) => setToCity(e.target.value || null)}
-            data-testid="filter-to-city"
-          >
-            <option value="">الكل</option>
-            {SAUDI_CITIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+      <div style={styles.filterBar}>
+        <div style={styles.filterInner}>
+          <FilterChipButton
+            icon={<MapPin size={15} strokeWidth={2.2} />}
+            label="من"
+            value={fromCity}
+            onClick={() => setSheet("from")}
+            testId="filter-from-btn"
+          />
+          <ArrowLeftRight size={16} color={T.textFaint} />
+          <FilterChipButton
+            icon={<MapPin size={15} strokeWidth={2.2} />}
+            label="إلى"
+            value={toCity}
+            onClick={() => setSheet("to")}
+            testId="filter-to-btn"
+          />
+          {(fromCity || toCity) && (
+            <button
+              onClick={() => { setFromCity(null); setToCity(null); }}
+              style={styles.clearBtn}
+              data-testid="clear-trip-filters"
+            >
+              مسح
+            </button>
+          )}
         </div>
       </div>
 
@@ -78,11 +85,15 @@ export default function TripsScreen({ user, onOpenTrip }) {
           <div style={S.loadingText}>جاري التحميل…</div>
         ) : trips.length === 0 ? (
           <EmptyState
-            emoji="🚗"
+            icon={<Truck size={36} strokeWidth={1.5} />}
             title="لا توجد رحلات مطابقة"
-            desc="كن أول موصّل بين هاتين المدينتين"
-            actionLabel="سجّل رحلة"
-            onAction={() => setShowCreate(true)}
+            desc="كن أول موصّل بين هاتين المدينتين واحصل على طلبات نقل"
+            action={
+              <button onClick={() => setShowCreate(true)} style={S.primaryBtn} data-testid="empty-create-trip">
+                <Plus size={16} strokeWidth={2.6} />
+                <span>سجّل رحلتك</span>
+              </button>
+            }
           />
         ) : (
           <div style={{ display: "grid", gap: 12 }}>
@@ -93,14 +104,51 @@ export default function TripsScreen({ user, onOpenTrip }) {
         )}
       </div>
 
+      <BottomSheet open={sheet === "from"} onClose={() => setSheet(null)} title="مدينة الانطلاق">
+        <SelectorItem
+          icon={<MapPin size={16} strokeWidth={2.2} />}
+          label="الكل"
+          active={!fromCity}
+          onClick={() => { setFromCity(null); setSheet(null); }}
+          testId="from-city-all"
+        />
+        {SAUDI_CITIES.map((c) => (
+          <SelectorItem
+            key={c}
+            icon={<MapPin size={16} strokeWidth={2.2} />}
+            label={c}
+            active={fromCity === c}
+            onClick={() => { setFromCity(c); setSheet(null); }}
+            testId={`from-city-${c}`}
+          />
+        ))}
+      </BottomSheet>
+
+      <BottomSheet open={sheet === "to"} onClose={() => setSheet(null)} title="مدينة الوصول">
+        <SelectorItem
+          icon={<MapPin size={16} strokeWidth={2.2} />}
+          label="الكل"
+          active={!toCity}
+          onClick={() => { setToCity(null); setSheet(null); }}
+          testId="to-city-all"
+        />
+        {SAUDI_CITIES.map((c) => (
+          <SelectorItem
+            key={c}
+            icon={<MapPin size={16} strokeWidth={2.2} />}
+            label={c}
+            active={toCity === c}
+            onClick={() => { setToCity(c); setSheet(null); }}
+            testId={`to-city-${c}`}
+          />
+        ))}
+      </BottomSheet>
+
       {showCreate && (
         <CreateTripModal
           user={user}
           onClose={() => setShowCreate(false)}
-          onCreated={() => {
-            setShowCreate(false);
-            load();
-          }}
+          onCreated={() => { setShowCreate(false); load(); }}
         />
       )}
     </div>
@@ -109,6 +157,7 @@ export default function TripsScreen({ user, onOpenTrip }) {
 
 function TripCard({ trip, onClick }) {
   const dt = trip.depart_at ? new Date(trip.depart_at) : null;
+  const statusColor = { scheduled: T.info, departed: T.warning, in_transit: T.warning, arrived: T.success }[trip.status] || T.textMuted;
   return (
     <div
       onClick={onClick}
@@ -116,9 +165,10 @@ function TripCard({ trip, onClick }) {
       data-testid={`trip-card-${trip.trip_id}`}
     >
       <div style={styles.tripTop}>
-        <span style={styles.statusPill}>{TRIP_STATUS_LABEL[trip.status] || trip.status}</span>
+        <StatusPill label={TRIP_STATUS_LABEL[trip.status] || trip.status} color={statusColor} />
         <span style={styles.cageBadge}>
-          📦 {trip.available_cages}/{trip.total_cages} أقفاص
+          <Package size={12} strokeWidth={2.4} />
+          {trip.available_cages}/{trip.total_cages} أقفاص
         </span>
       </div>
 
@@ -127,7 +177,9 @@ function TripCard({ trip, onClick }) {
           <div style={styles.cityLabel}>من</div>
           <div style={styles.cityName}>{trip.from_city}</div>
         </div>
-        <div style={styles.routeArrow}>←</div>
+        <div style={styles.routeArrow}>
+          <ArrowLeftRight size={22} strokeWidth={1.8} color={T.primary} />
+        </div>
         <div style={styles.cityBox}>
           <div style={styles.cityLabel}>إلى</div>
           <div style={styles.cityName}>{trip.to_city}</div>
@@ -135,10 +187,26 @@ function TripCard({ trip, onClick }) {
       </div>
 
       <div style={styles.tripMeta}>
-        <span>📅 {dt ? dt.toLocaleDateString("ar-SA") : "-"}</span>
-        <span>🚗 {trip.vehicle_type}</span>
-        {trip.has_ac && <span style={{ color: T.accent }}>❄ مكيّف</span>}
-        {trip.price_hint_sar && <span>💰 {trip.price_hint_sar} ر.س</span>}
+        <span style={styles.metaItem}>
+          <Calendar size={13} strokeWidth={2.2} />
+          {dt ? dt.toLocaleDateString("ar-SA") : "-"}
+        </span>
+        <span style={styles.metaItem}>
+          <Car size={13} strokeWidth={2.2} />
+          {trip.vehicle_type}
+        </span>
+        {trip.has_ac && (
+          <span style={{ ...styles.metaItem, color: T.info }}>
+            <Snowflake size={13} strokeWidth={2.2} />
+            مكيّف
+          </span>
+        )}
+        {trip.price_hint_sar && (
+          <span style={styles.metaItem}>
+            <Wallet size={13} strokeWidth={2.2} />
+            {trip.price_hint_sar} ر.س
+          </span>
+        )}
       </div>
 
       {trip.notes && <p style={styles.tripNotes}>{trip.notes}</p>}
@@ -198,8 +266,11 @@ function CreateTripModal({ user, onClose, onCreated }) {
         data-testid="create-trip-modal"
       >
         <div style={modalStyles.header}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>رحلة جديدة</h2>
-          <button onClick={onClose} style={modalStyles.close} data-testid="close-create-trip">✕</button>
+          <button onClick={onClose} style={S.iconBtn} data-testid="close-create-trip" aria-label="إغلاق">
+            <X size={18} strokeWidth={2.2} />
+          </button>
+          <h2 style={modalStyles.title}>رحلة جديدة</h2>
+          <div style={{ width: 40 }} />
         </div>
 
         <div style={modalStyles.body}>
@@ -232,7 +303,7 @@ function CreateTripModal({ user, onClose, onCreated }) {
             </div>
           </div>
 
-          <label style={{ ...S.label, marginTop: 12 }}>موعد الانطلاق *</label>
+          <label style={{ ...S.label, marginTop: 14 }}>موعد الانطلاق *</label>
           <input
             type="datetime-local"
             style={S.input}
@@ -241,14 +312,14 @@ function CreateTripModal({ user, onClose, onCreated }) {
             data-testid="trip-depart-at"
           />
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 14 }}>
             <div>
               <label style={S.label}>نوع المركبة</label>
               <input
                 style={S.input}
                 value={form.vehicle_type}
                 onChange={(e) => set("vehicle_type", e.target.value)}
-                placeholder="سيدان / بيك أب / GMC"
+                placeholder="سيدان / GMC"
                 data-testid="trip-vehicle"
               />
             </div>
@@ -265,7 +336,7 @@ function CreateTripModal({ user, onClose, onCreated }) {
             </div>
           </div>
 
-          <label style={{ ...S.label, marginTop: 12 }}>سعر إرشادي (ر.س)</label>
+          <label style={{ ...S.label, marginTop: 14 }}>سعر إرشادي (ر.س)</label>
           <input
             type="number"
             style={S.input}
@@ -275,33 +346,29 @@ function CreateTripModal({ user, onClose, onCreated }) {
             data-testid="trip-price"
           />
 
-          <div style={{ display: "flex", flexDirection: "row-reverse", gap: 16, marginTop: 12, flexWrap: "wrap" }}>
-            <label style={styles.checkboxRow}>
-              <input
-                type="checkbox"
-                checked={form.has_ac}
-                onChange={(e) => set("has_ac", e.target.checked)}
-                data-testid="trip-has-ac"
-              />
-              <span>مكيّف ❄</span>
-            </label>
-            <label style={styles.checkboxRow}>
-              <input
-                type="checkbox"
-                checked={form.accepts_sensitive}
-                onChange={(e) => set("accepts_sensitive", e.target.checked)}
-                data-testid="trip-sensitive"
-              />
-              <span>يقبل الطيور الحساسة</span>
-            </label>
+          <div style={styles.checkRow}>
+            <CheckOption
+              label="مكيّف"
+              icon={<Snowflake size={16} strokeWidth={2.2} />}
+              checked={form.has_ac}
+              onChange={(v) => set("has_ac", v)}
+              testId="trip-has-ac"
+            />
+            <CheckOption
+              label="طيور حساسة"
+              icon={<Truck size={16} strokeWidth={2.2} />}
+              checked={form.accepts_sensitive}
+              onChange={(v) => set("accepts_sensitive", v)}
+              testId="trip-sensitive"
+            />
           </div>
 
-          <label style={{ ...S.label, marginTop: 12 }}>ملاحظات</label>
+          <label style={{ ...S.label, marginTop: 14 }}>ملاحظات</label>
           <textarea
             style={{ ...S.input, minHeight: 80, resize: "vertical" }}
             value={form.notes}
             onChange={(e) => set("notes", e.target.value)}
-            placeholder="أي تفاصيل مهمة…"
+            placeholder="تفاصيل إضافية…"
             data-testid="trip-notes"
           />
 
@@ -310,7 +377,7 @@ function CreateTripModal({ user, onClose, onCreated }) {
           <button
             onClick={submit}
             disabled={saving}
-            style={{ ...S.primaryBtn, width: "100%", marginTop: 14, opacity: saving ? 0.7 : 1 }}
+            style={{ ...S.primaryBtn, width: "100%", marginTop: 18, opacity: saving ? 0.7 : 1 }}
             data-testid="submit-trip"
           >
             {saving ? "جاري النشر…" : "انشر الرحلة"}
@@ -321,73 +388,118 @@ function CreateTripModal({ user, onClose, onCreated }) {
   );
 }
 
+function CheckOption({ label, icon, checked, onChange, testId }) {
+  return (
+    <button
+      onClick={() => onChange(!checked)}
+      type="button"
+      style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "row-reverse",
+        alignItems: "center",
+        gap: 8,
+        padding: "10px 12px",
+        borderRadius: T.radius,
+        border: `1.5px solid ${checked ? T.primary : T.border}`,
+        background: checked ? "#f0fdfa" : T.surface,
+        color: checked ? T.primary : T.text,
+        fontSize: 13,
+        fontWeight: 700,
+        cursor: "pointer",
+        fontFamily: "inherit",
+      }}
+      data-testid={testId}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
+}
+
 const styles = {
   hero: {
-    background: `linear-gradient(135deg, ${T.mint} 0%, ${T.sky} 100%)`,
-    padding: "22px 20px 24px",
+    background: T.surface,
+    padding: "20px 20px 16px",
+    borderBottom: `1px solid ${T.divider}`,
   },
   heroInner: { maxWidth: 900, margin: "0 auto" },
+  headTop: {
+    display: "flex",
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
   title: {
     margin: 0,
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: 900,
-    color: T.primary,
+    color: T.textStrong,
     textAlign: "right",
+    letterSpacing: "-0.01em",
   },
   subtitle: {
-    margin: "4px 0 14px",
-    fontSize: 13,
-    color: "#0f766e",
+    margin: "3px 0 0",
+    fontSize: 12,
+    color: T.textMuted,
     fontWeight: 600,
     textAlign: "right",
   },
   createBtn: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
     background: T.primary,
-    color: "#fff",
+    color: T.textInverse,
     border: "none",
-    borderRadius: 12,
-    padding: "10px 18px",
-    fontSize: 14,
+    borderRadius: T.radiusPill,
+    padding: "9px 14px",
+    fontSize: 13,
     fontWeight: 800,
     cursor: "pointer",
     fontFamily: "inherit",
-    boxShadow: T.shadowMd,
+    boxShadow: T.shadowSm,
+    whiteSpace: "nowrap",
   },
-  filters: {
-    background: "#fff",
+
+  filterBar: {
+    background: T.surface,
     borderBottom: `1px solid ${T.border}`,
-    padding: "10px 16px",
+    padding: "12px 0",
+    position: "sticky",
+    top: 0,
+    zIndex: 10,
+  },
+  filterInner: {
+    maxWidth: 900,
+    margin: "0 auto",
+    padding: "0 16px",
     display: "flex",
     flexDirection: "row-reverse",
     gap: 8,
-    alignItems: "flex-end",
-    maxWidth: 900,
-    margin: "0 auto",
+    alignItems: "center",
+    overflowX: "auto",
+    scrollbarWidth: "none",
   },
-  filterCol: { flex: 1 },
-  filterLabel: { fontSize: 11, color: T.textMuted, fontWeight: 700, display: "block", marginBottom: 4, textAlign: "right" },
-  filterSelect: {
-    width: "100%",
-    padding: "8px 12px",
-    border: `1px solid ${T.border}`,
-    borderRadius: 10,
-    fontSize: 13,
-    background: "#fff",
+  clearBtn: {
+    background: "transparent",
+    border: "none",
+    color: T.danger,
+    fontSize: 12,
+    fontWeight: 700,
+    cursor: "pointer",
     fontFamily: "inherit",
-    textAlign: "right",
+    padding: "6px 4px",
   },
-  filterArrow: {
-    fontSize: 22,
-    color: T.primary,
-    paddingBottom: 8,
-  },
+
   tripCard: {
-    background: "#fff",
-    borderRadius: 16,
+    background: T.surface,
+    border: `1px solid ${T.border}`,
+    borderRadius: T.radiusMd,
     padding: 16,
     cursor: "pointer",
-    boxShadow: T.shadowSm,
-    transition: "transform 0.15s",
+    boxShadow: T.shadowXs,
   },
   tripTop: {
     display: "flex",
@@ -395,54 +507,52 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "center",
   },
-  statusPill: {
-    padding: "4px 12px",
-    borderRadius: 999,
-    fontSize: 11,
-    fontWeight: 800,
-    background: "#ecfeff",
-    color: "#0891b2",
-  },
   cageBadge: {
-    background: "#ecfdf5",
-    color: T.primary,
-    padding: "4px 12px",
-    borderRadius: 999,
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 4,
+    background: T.bgAlt,
+    color: T.text,
+    padding: "4px 10px",
+    borderRadius: T.radiusPill,
     fontSize: 11,
-    fontWeight: 800,
+    fontWeight: 700,
   },
   route: {
     display: "flex",
     flexDirection: "row-reverse",
     alignItems: "center",
     gap: 12,
-    marginTop: 12,
-    padding: "6px 0",
+    marginTop: 14,
+    padding: "8px 0",
   },
   cityBox: { flex: 1, textAlign: "center" },
-  cityLabel: { fontSize: 10, color: T.textFaint, fontWeight: 700 },
-  cityName: { fontSize: 18, fontWeight: 900, color: T.text, marginTop: 2 },
-  routeArrow: { fontSize: 22, color: T.success },
+  cityLabel: { fontSize: 10, color: T.textFaint, fontWeight: 700, letterSpacing: "0.05em" },
+  cityName: { fontSize: 18, fontWeight: 900, color: T.textStrong, marginTop: 3, letterSpacing: "-0.01em" },
+  routeArrow: { display: "flex", alignItems: "center", justifyContent: "center" },
   tripMeta: {
     display: "flex",
     flexDirection: "row-reverse",
     flexWrap: "wrap",
-    gap: 8,
-    marginTop: 10,
+    gap: 12,
+    marginTop: 12,
+    paddingTop: 12,
+    borderTop: `1px solid ${T.divider}`,
     fontSize: 12,
     color: T.textMuted,
-    fontWeight: 700,
+    fontWeight: 600,
   },
-  tripNotes: { color: T.textMuted, fontSize: 12, marginTop: 8, textAlign: "right" },
-  checkboxRow: {
+  metaItem: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 4,
+  },
+  tripNotes: { color: T.textMuted, fontSize: 12, marginTop: 10, textAlign: "right", margin: "10px 0 0" },
+  checkRow: {
     display: "flex",
     flexDirection: "row-reverse",
-    alignItems: "center",
-    gap: 6,
-    fontSize: 13,
-    color: T.text,
-    fontWeight: 600,
-    cursor: "pointer",
+    gap: 8,
+    marginTop: 14,
   },
 };
 
@@ -450,7 +560,7 @@ const modalStyles = {
   overlay: {
     position: "fixed",
     inset: 0,
-    background: "rgba(15, 23, 42, 0.55)",
+    background: "rgba(3, 7, 18, 0.55)",
     backdropFilter: "blur(4px)",
     display: "flex",
     alignItems: "center",
@@ -459,33 +569,33 @@ const modalStyles = {
     padding: 16,
   },
   modal: {
-    background: "#fff",
-    borderRadius: 20,
+    background: T.surface,
+    borderRadius: T.radiusLg,
     maxWidth: 520,
     width: "100%",
     maxHeight: "90vh",
     overflow: "auto",
+    fontFamily: "'Tajawal', 'IBM Plex Sans Arabic', system-ui, sans-serif",
+    direction: "rtl",
   },
   header: {
     position: "sticky",
     top: 0,
-    background: "#fff",
+    background: T.surface,
     padding: "14px 18px",
     borderBottom: `1px solid ${T.border}`,
     display: "flex",
     flexDirection: "row-reverse",
-    justifyContent: "space-between",
     alignItems: "center",
+    justifyContent: "space-between",
   },
-  close: {
-    background: T.divider,
-    border: "none",
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    cursor: "pointer",
-    fontSize: 14,
+  title: {
+    margin: 0,
+    fontSize: 17,
     fontWeight: 800,
+    color: T.text,
+    flex: 1,
+    textAlign: "center",
   },
   body: { padding: 18 },
 };
