@@ -2,13 +2,13 @@
 import React, { useEffect, useState } from "react";
 import {
   User, Star, Bird, Truck, LogOut, ChevronLeft,
-  ShieldCheck, FileText, Trash2, HelpCircle, LogIn,
+  ShieldCheck, FileText, Trash2, HelpCircle, LogIn, Fingerprint,
 } from "lucide-react";
 import { T, S } from "./tairTheme";
 import { tairApi } from "./tairApi";
 import { StatusPill } from "./TairUI";
 
-export default function ProfileScreen({ user, onOpenListing, onOpenTrip, onLogout }) {
+export default function ProfileScreen({ user, onOpenListing, onOpenTrip, onLogout, onOpenKyc }) {
   const uid = user.id || user.user_id;
   const isGuest = !!user.isGuest;
 
@@ -186,6 +186,14 @@ export default function ProfileScreen({ user, onOpenListing, onOpenTrip, onLogou
 
         {/* Settings menu */}
         <div style={styles.menuCard}>
+          {onOpenKyc && (
+            <MenuLink
+              icon={<Fingerprint size={20} strokeWidth={1.8} />}
+              label="التحقق من الهوية (KYC)"
+              onClick={onOpenKyc}
+              testId="menu-kyc"
+            />
+          )}
           <MenuLink
             icon={<ShieldCheck size={20} strokeWidth={1.8} />}
             label="سياسة الخصوصية"

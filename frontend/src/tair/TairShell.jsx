@@ -1,17 +1,19 @@
-// طير — Main authenticated shell (bottom nav + all screens)
+// طير — Main shell (bottom nav + all screens). Checkout/Orders flow removed.
 import React, { useEffect, useState } from "react";
 import TairBottomNav from "./TairBottomNav";
 import HomeScreen from "./HomeScreen";
 import CreateListingScreen from "./CreateListingScreen";
 import TripsScreen from "./TripsScreen";
-import OrdersScreen from "./OrdersScreen";
 import ProfileScreen from "./ProfileScreen";
+import ForumScreen from "./ForumScreen";
+import ForumPostScreen from "./ForumPostScreen";
+import MessagesScreen, { ChatThreadScreen } from "./MessagesScreen";
 import ListingDetailsScreen from "./ListingDetailsScreen";
-import CheckoutScreen from "./CheckoutScreen";
-import OrderDetailsScreen from "./OrderDetailsScreen";
-import RateOrderScreen from "./RateOrderScreen";
+import KycScreen from "./KycScreen";
+import NotificationsScreen from "./NotificationsScreen";
 import OnboardingScreen from "./OnboardingScreen";
 import { InjectAnimations } from "./TairUI";
+import { tairApi } from "./tairApi";
 
 const ONBOARDING_KEY = "tair_onboarding_done";
 
@@ -20,9 +22,59 @@ export default function TairShell({ user, onLogout }) {
     () => !localStorage.getItem(ONBOARDING_KEY),
   );
   const [tab, setTab] = useState("home");
-  // Modal-ish stack. Only one overlay screen at a time.
   const [overlay, setOverlay] = useState(null);
-  // overlay shape: { name: 'create-listing' | 'listing-details' | 'checkout' | 'order-details' | 'rate' , payload: ... }
+  const [unread, setUnread] = useState(0);
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
+
+  const uid = user?.id || user?.user_id;
+
+  useEffect(() => {
+    if (!uid) return;
+    const load = () => {
+      tairApi.chatUnreadCount(uid).then(setUnread).catch(() => {});
+      tairApi.myNotifications(uid).then((d) => setUnreadNotifs(d.unread_count || 0)).catch(() => {});
+    };
+    load();
+    const t = setInterval(load, 20000);
+    return () => clearInterval(t);
+  }, [uid, tab, overlay]);
+
+  // Global chat WebSocket — increment unread badges instantly
+  useEffect(() => {
+    if (!uid) return;
+    const base = process.env.REACT_APP_BACKEND_URL || "";
+    const wsUrl = base.replace(/^http/, "ws") + `/api/chat/ws?user_id=${encodeURIComponent(uid)}`;
+    let ws;
+    let reconnectTimer;
+    let closed = false;
+
+    const connect = () => {
+      try {
+        ws = new WebSocket(wsUrl);
+        ws.onmessage = (ev) => {
+          try {
+            const data = JSON.parse(ev.data);
+            if (data.type === "message") {
+              // Refresh unread counts fast
+              tairApi.chatUnreadCount(uid).then(setUnread).catch(() => {});
+              tairApi.myNotifications(uid).then((d) => setUnreadNotifs(d.unread_count || 0)).catch(() => {});
+            }
+          } catch (e) { /* ignore */ }
+        };
+        ws.onclose = () => {
+          if (!closed) reconnectTimer = setTimeout(connect, 4000);
+        };
+        ws.onerror = () => {};
+      } catch (e) { /* ignore */ }
+    };
+    connect();
+
+    return () => {
+      closed = true;
+      clearTimeout(reconnectTimer);
+      try { ws && ws.close(); } catch (e) { /* ignore */ }
+    };
+  }, [uid]);
 
   useEffect(() => {
     document.documentElement.setAttribute("dir", "rtl");
@@ -44,14 +96,14 @@ export default function TairShell({ user, onLogout }) {
     );
   }
 
-  // Route rendering
   const openListing = (listingId) =>
     setOverlay({ name: "listing-details", payload: { listingId } });
-  const openTrip = () => setTab("trips"); // trips have their own inline modal; fine for now
-  const openOrder = (orderId) =>
-    setOverlay({ name: "order-details", payload: { orderId } });
+  const openTrip = () => setTab("trips");
+  const openPost = (postId) =>
+    setOverlay({ name: "post-details", payload: { postId } });
+  const openThread = (threadId) =>
+    setOverlay({ name: "chat-thread", payload: { threadId } });
 
-  // Overlay stack renders on top of everything (no bottom nav)
   if (overlay?.name === "create-listing") {
     return (
       <CreateListingScreen
@@ -70,48 +122,43 @@ export default function TairShell({ user, onLogout }) {
         user={user}
         listingId={overlay.payload.listingId}
         onBack={() => setOverlay(null)}
-        onCheckout={(listing) =>
-          setOverlay({ name: "checkout", payload: { listing } })
-        }
+        onOpenThread={(threadId) => setOverlay({ name: "chat-thread", payload: { threadId } })}
       />
     );
   }
-  if (overlay?.name === "checkout") {
+  if (overlay?.name === "post-details") {
     return (
-      <CheckoutScreen
+      <ForumPostScreen
         user={user}
-        listing={overlay.payload.listing}
-        onBack={() => setOverlay({ name: "listing-details", payload: { listingId: overlay.payload.listing.listing_id } })}
-        onCreated={(order) => {
-          setOverlay({ name: "order-details", payload: { orderId: order.order_id } });
-        }}
+        postId={overlay.payload.postId}
+        onBack={() => { setOverlay(null); setTab("forum"); }}
       />
     );
   }
-  if (overlay?.name === "order-details") {
+  if (overlay?.name === "chat-thread") {
     return (
-      <OrderDetailsScreen
+      <ChatThreadScreen
         user={user}
-        orderId={overlay.payload.orderId}
-        onBack={() => {
-          setOverlay(null);
-          setTab("orders");
-        }}
-        onRate={(order) => setOverlay({ name: "rate", payload: { order } })}
+        threadId={overlay.payload.threadId}
+        onBack={() => { setOverlay(null); setTab("messages"); }}
       />
     );
   }
-  if (overlay?.name === "rate") {
+  if (overlay?.name === "kyc") {
     return (
-      <RateOrderScreen
+      <KycScreen
         user={user}
-        order={overlay.payload.order}
-        onBack={() =>
-          setOverlay({ name: "order-details", payload: { orderId: overlay.payload.order.order_id } })
-        }
-        onDone={() => {
-          setOverlay({ name: "order-details", payload: { orderId: overlay.payload.order.order_id } });
-        }}
+        onBack={() => setOverlay(null)}
+      />
+    );
+  }
+  if (overlay?.name === "notifications") {
+    return (
+      <NotificationsScreen
+        user={user}
+        onBack={() => setOverlay(null)}
+        onOpenThread={(threadId) => setOverlay({ name: "chat-thread", payload: { threadId } })}
+        onOpenListing={openListing}
       />
     );
   }
@@ -124,13 +171,20 @@ export default function TairShell({ user, onLogout }) {
           user={user}
           onOpenListing={openListing}
           onCreateListing={() => setOverlay({ name: "create-listing" })}
+          onOpenMessages={() => setTab("messages")}
+          onOpenNotifications={() => setOverlay({ name: "notifications" })}
+          unreadMessages={unread}
+          unreadNotifs={unreadNotifs}
         />
       )}
       {tab === "trips" && (
         <TripsScreen user={user} onOpenTrip={openTrip} />
       )}
-      {tab === "orders" && (
-        <OrdersScreen user={user} onOpenOrder={openOrder} />
+      {tab === "messages" && (
+        <MessagesScreen user={user} onOpenThread={openThread} />
+      )}
+      {tab === "forum" && (
+        <ForumScreen user={user} onOpenPost={openPost} />
       )}
       {tab === "profile" && (
         <ProfileScreen
@@ -138,9 +192,10 @@ export default function TairShell({ user, onLogout }) {
           onOpenListing={openListing}
           onOpenTrip={openTrip}
           onLogout={onLogout}
+          onOpenKyc={() => setOverlay({ name: "kyc" })}
         />
       )}
-      <TairBottomNav current={tab} onChange={setTab} />
+      <TairBottomNav current={tab} onChange={setTab} unread={unread} />
     </>
   );
 }

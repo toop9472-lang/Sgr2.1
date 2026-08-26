@@ -26,8 +26,9 @@ class Listing(BaseModel):
     seller_id: str
 
     title: str
-    category: Literal["birds", "mammals", "reptiles", "fish", "other"] = "birds"
-    species: str                    # canonical species id from species catalog
+    category: str = "birds"          # broad category (birds, mammals, livestock, supplies, services, ...)
+    family: Optional[str] = None     # taxonomic/product family (parrots, cats, feed, ...)
+    species: Optional[str] = None    # optional canonical species id from species catalog
     breed: Optional[str] = None
     gender: Literal["male", "female", "pair", "unknown"] = "unknown"
     age_months: Optional[int] = None
@@ -48,20 +49,40 @@ class Listing(BaseModel):
     status: Literal["active", "paused", "sold", "removed", "reported"] = "active"
     view_count: int = 0
     favorite_count: int = 0
+    comments_count: int = 0
     report_count: int = 0
     is_flagged: bool = False
     moderation_notes: Optional[str] = None
 
+    # Contact (optional — for WhatsApp deep-link)
+    seller_name: Optional[str] = None
+    seller_phone: Optional[str] = None
+
+    # Timestamps
     posted_at: datetime = Field(default_factory=_now)
     expires_at: datetime = Field(default_factory=_expires)
     sold_at: Optional[datetime] = None
     updated_at: datetime = Field(default_factory=_now)
 
 
+class ListingUpdate(BaseModel):
+    """Partial update — all fields optional."""
+    title: Optional[str] = None
+    description: Optional[str] = None
+    price_sar: Optional[float] = None
+    price_negotiable: Optional[bool] = None
+    images: Optional[List[str]] = None
+    videos: Optional[List[str]] = None
+    cover_image: Optional[str] = None
+    status: Optional[Literal["active", "paused", "sold", "removed"]] = None
+    health: Optional[ListingHealth] = None
+
+
 class ListingCreate(BaseModel):
     title: str
-    category: Literal["birds", "mammals", "reptiles", "fish", "other"] = "birds"
-    species: str
+    category: str = "birds"
+    family: Optional[str] = None
+    species: Optional[str] = None
     breed: Optional[str] = None
     gender: Literal["male", "female", "pair", "unknown"] = "unknown"
     age_months: Optional[int] = None
@@ -75,15 +96,5 @@ class ListingCreate(BaseModel):
     price_negotiable: bool = True
     city: str
     district: Optional[str] = None
-
-
-class ListingUpdate(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    price_sar: Optional[float] = None
-    price_negotiable: Optional[bool] = None
-    images: Optional[List[str]] = None
-    videos: Optional[List[str]] = None
-    cover_image: Optional[str] = None
-    status: Optional[Literal["active", "paused", "sold", "removed"]] = None
-    health: Optional[ListingHealth] = None
+    seller_name: Optional[str] = None
+    seller_phone: Optional[str] = None

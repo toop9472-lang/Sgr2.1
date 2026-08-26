@@ -9,6 +9,7 @@ from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from models.listing import Listing, ListingCreate, ListingUpdate
+from models.listing_comment import ListingComment, ListingCommentCreate
 from services.r2_storage import r2
 
 router = APIRouter(prefix="/listings", tags=["Tair-Listings"])
@@ -95,16 +96,20 @@ async def feed_listings(
     if species:
         query["species"] = species
     if family:
-        # Resolve family → list of species_ids
+        # Match either listings tagged directly with this family, OR listings whose species is in this family.
         fam_species = await db.species_catalog.find(
             {"family": family}, {"_id": 0, "species_id": 1}
-        ).to_list(200)
+        ).to_list(500)
         species_ids = [s["species_id"] for s in fam_species]
+        family_clauses = [{"family": family}]
         if species_ids:
-            query["species"] = {"$in": species_ids}
+            family_clauses.append({"species": {"$in": species_ids}})
+        # Compose with any existing $and clauses safely.
+        existing_or = query.pop("$or", None)
+        if existing_or:
+            query["$and"] = [{"$or": existing_or}, {"$or": family_clauses}]
         else:
-            # No species match → return empty
-            return {"items": [], "total": 0, "skip": skip, "limit": limit}
+            query["$or"] = family_clauses
     if min_price is not None or max_price is not None:
         query["price_sar"] = {}
         if min_price is not None:
@@ -256,3 +261,80 @@ async def upload_listing_image(
         image_url = f"/media/listings/{file_id}{ext}"
 
     return {"success": True, "url": image_url, "image_url": image_url}
+
+
+# ==================== Listing Comments (Public replies) ====================
+@router.get("/{listing_id}/comments")
+async def list_comments(listing_id: str, limit: int = 100):
+    cursor = db.listing_comments.find({"listing_id": listing_id}).sort("created_at", 1).limit(min(limit, 200))
+    items = []
+    async for d in cursor:
+        d.pop("_id", None)
+        val = d.get("created_at")
+        if isinstance(val, datetime):
+            d["created_at"] = val.isoformat()
+        items.append(d)
+    return {"items": items, "total": len(items)}
+
+
+@router.post("/{listing_id}/comment")
+async def add_comment(listing_id: str, payload: ListingCommentCreate, user_id: str = Query(...)):
+    body = payload.body.strip()
+    if not body:
+        raise HTTPException(400, "Empty comment")
+    exists = await db.listings.find_one({"listing_id": listing_id})
+    if not exists:
+        raise HTTPException(404, "Listing not found")
+    comment_id = f"cmt_{uuid.uuid4().hex[:12]}"
+    comment = ListingComment(
+        comment_id=comment_id,
+        listing_id=listing_id,
+        author_id=user_id,
+        author_name=payload.author_name,
+        body=body,
+    )
+    doc = comment.model_dump()
+    await db.listing_comments.insert_one(doc)
+    await db.listings.update_one(
+        {"listing_id": listing_id},
+        {"$inc": {"comments_count": 1}},
+    )
+    d = {**doc}
+    d.pop("_id", None)
+    d["created_at"] = d["created_at"].isoformat() if isinstance(d.get("created_at"), datetime) else d.get("created_at")
+    return d
+
+
+@router.post("/comment/{comment_id}/like")
+async def toggle_comment_like(comment_id: str, user_id: str = Query(...)):
+    c = await db.listing_comments.find_one({"comment_id": comment_id})
+    if not c:
+        raise HTTPException(404, "Comment not found")
+    liked_by = c.get("liked_by", [])
+    if user_id in liked_by:
+        await db.listing_comments.update_one(
+            {"comment_id": comment_id},
+            {"$pull": {"liked_by": user_id}, "$inc": {"likes_count": -1}},
+        )
+        return {"liked": False}
+    await db.listing_comments.update_one(
+        {"comment_id": comment_id},
+        {"$addToSet": {"liked_by": user_id}, "$inc": {"likes_count": 1}},
+    )
+    return {"liked": True}
+
+
+@router.delete("/comment/{comment_id}")
+async def delete_comment(comment_id: str, user_id: str = Query(...)):
+    c = await db.listing_comments.find_one({"comment_id": comment_id})
+    if not c:
+        raise HTTPException(404, "Comment not found")
+    if c.get("author_id") != user_id:
+        raise HTTPException(403, "Not the author")
+    await db.listing_comments.delete_one({"comment_id": comment_id})
+    await db.listings.update_one(
+        {"listing_id": c["listing_id"]},
+        {"$inc": {"comments_count": -1}},
+    )
+    return {"success": True}
+

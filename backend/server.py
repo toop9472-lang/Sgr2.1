@@ -85,6 +85,10 @@ from routes.orders_routes import router as tair_orders_router
 from routes.ratings_routes import router as tair_ratings_router
 from routes.tair_reports_routes import router as tair_reports_router
 from routes.species_routes import router as tair_species_router
+from routes.forum_routes import router as tair_forum_router
+from routes.chat_routes import router as tair_chat_router
+from routes.tair_notifications_routes import router as tair_notifs_router
+from routes.kyc_routes import router as tair_kyc_router
 
 
 ROOT_DIR = Path(__file__).parent
@@ -484,6 +488,10 @@ api_router.include_router(tair_orders_router)
 api_router.include_router(tair_ratings_router)
 api_router.include_router(tair_reports_router)
 api_router.include_router(tair_species_router)
+api_router.include_router(tair_forum_router)
+api_router.include_router(tair_chat_router)
+api_router.include_router(tair_notifs_router)
+api_router.include_router(tair_kyc_router)
 
 # Include WebSocket router (at app level, not api_router)
 app.include_router(websocket_router)

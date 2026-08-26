@@ -1,55 +1,62 @@
 # طير (Tair) — Product Requirements & Status
 
 ## 🎯 Vision
-Saudi Arabia's most trusted marketplace and logistics network for birds and pets.
+Saudi Arabia's most trusted classifieds + carrier network for birds and pets.
+User model = Haraj-style: post listing → chat/WhatsApp → carrier trip → face-to-face exchange.
 
-## 🚀 Strategic Pivot Journey
-- **v1**: Saqr (Watch-to-Earn) — paused
-- **v2 (June 2026)**: طير — bird/pet marketplace + carrier delivery network
+## 🚀 Strategic Journey
+- v1: Saqr (Watch-to-Earn) — paused
+- v2 (June 2026): طير — bird/pet marketplace + carrier delivery network
+- v2.1 (Feb 2026): Pivot from direct-checkout → contact-seller + KYC + WebSocket chat + In-App notifications
 - Bundle ID: `com.saqr.rewards`, App name: **طير**
 
 ## ✅ Completed
 
-### Backend (Phase 0 → Phase 2)
-- **7 Models**: `listing`, `trip`, `order`, `rating`, `tair_report`, `species` (with `family` field)
-- **7 Route groups**: listings (+upload-image), trips, orders, ratings, tair-reports, species (+families)
-- **Species taxonomy** (Feb 26, 2026): 25 species grouped into 10 families — canaries, finches, parrots, falcons, pigeons, songbirds, cats_dogs, small_mammals, reptiles, fish
-- **Listings feed** now supports `family` filter (resolves to species_ids server-side)
-- Fixed `cursor.to_list()` async iteration bugs (iteration_16)
-- R2-backed image upload endpoint with local fallback
+### Backend
+- **Models**: `listing`, `trip`, `forum`, `chat`, `listing_comment`, `species` (17 families + 58 species), `tair_report`, `rating`, `order` (deprecated), `kyc_submissions`, `tair_notifications`
+- **Routes**:
+  - `/api/listings/*` — CRUD + families/species filter + upload-image (R2) + comments + likes
+  - `/api/trips/*` — with waypoints + carrier_phone + is_direct
+  - `/api/forum/*` — categories, feed, posts, replies, likes
+  - `/api/chat/*` — REST (start, threads, messages, mark-read, unread-count) + **WebSocket `/api/chat/ws`** real-time push + typing indicator
+  - `/api/tair-notifications/*` — in-app inbox (auto-created on new chat message + KYC decision)
+  - `/api/kyc/*` — carrier/shop identity submission + upload-doc + admin review
+- **Data cleanup (Feb 26, 2026)**: Deleted all fake test listings, trips, chats, notifications from DB.
+- **Bug fix**: `models/listing.py` had duplicate `Optional` field overrides in `ListingCreate` — fixed. Timestamps now persist on new listings.
 
-### Web Frontend — Tair MVP + Professional Design v2 (Feb 26, 2026)
-- **Auto-guest**: no more login wall — device-scoped guest id on first load. Auth optional from Profile.
-- **New Theme (v2)**: teal-based professional palette (`T` tokens), refined spacing, cleaner borders, subtle shadows
-- **Shared UI Kit** (`TairUI.jsx`): TopBar, BottomSheet, SelectorItem, FilterChipButton, SearchField, EmptyState, StatusPill, InjectAnimations
-- **Zero emojis**: all icons use lucide-react SVGs (Bird, Truck, Package, User, Star, Heart, MapPin, Bird, Music2, Feather, Wind, Egg, Music, Cat, Rabbit, Shell, Fish, ShoppingBag, Store, HeartPulse, Syringe, Fingerprint, Palette, Tag, Calendar, Clock, ShieldCheck, FileText, HelpCircle, Trash2, LogIn, LogOut, ChevronLeft, ArrowRight, Check, X, Plus…)
+### Web Frontend (React MVP)
+- **Auto-guest**: no login wall, device-scoped guest_id in localStorage
+- **Bottom Nav**: floating semi-transparent pill (5 tabs — السوق, الرحلات, رسائل, المنتدى, حسابي)
 - **HomeScreen**:
-  - Full-page gradient background (mint→cyan→sky)
-  - 200×200 prominent logo box at top
-  - Filters → Bottom-Sheet pickers (city + family) — no more inline chip rows
-  - Haraj-style row listings: image on left, teal title, SAR symbol ﷼, meta chips, owner + avatar row
-- **Bottom Nav**: 4 lucide tabs, active state pill, home indicator bar
-- **Onboarding**, **Trips**, **Orders**, **Profile**, **Listing Details**, **Checkout**, **Order Details** (5-step timeline), **Rate Order** (lucide stars) — all redesigned
-- **Privacy Policy** & **Terms of Service** — fully redesigned with lucide hero icons, matching app theme
-- **Testing (iteration_17)**: 16/16 checks 100% pass
+  - Notifications bell + Messages bell in header
+  - Category chips (17 families, lucide icons)
+  - Haraj-style row listings with clean divider spacing (matches user's reference image)
+- **ListingDetailsScreen**: no more "شراء" — replaced with "راسل البائع" (chat) + WhatsApp + Like + Comments section
+- **MessagesScreen + ChatThreadScreen**: WebSocket real-time messages, typing indicator, unread badges
+- **NotificationsScreen**: in-app inbox with per-type icons, mark-read + read-all
+- **KycScreen**: role selector (carrier/shop), ID upload (front/back/selfie/business), status view (pending/approved/rejected)
+- **ProfileScreen**: KYC menu link, Privacy, Terms, Support, Delete account
+- **Deleted**: `CheckoutScreen.jsx`, `OrderDetailsScreen.jsx`, `RateOrderScreen.jsx`, `OrdersScreen.jsx` (deprecated by pivot)
+- **Testing (iteration_18)**: 15/15 backend + 100% frontend pass
 
 ## 🔧 Files of Reference
-- `/app/backend/models/species.py` (with FAMILIES metadata)
-- `/app/backend/routes/species_routes.py` (+ `/families`)
-- `/app/backend/routes/listings_routes.py` (+ family filter, + upload-image)
-- `/app/frontend/src/tair/*.jsx` (12 screens + UI kit)
-- `/app/frontend/src/App.js` (auto-guest bootstrap)
-- `/app/frontend/src/pages/{PrivacyPolicy,TermsOfService}.jsx`
+- `/app/backend/routes/chat_routes.py` — REST + WebSocket + notification fanout
+- `/app/backend/routes/tair_notifications_routes.py`
+- `/app/backend/routes/kyc_routes.py`
+- `/app/backend/routes/listings_routes.py`
+- `/app/frontend/src/tair/TairShell.jsx` — global WebSocket + overlays
+- `/app/frontend/src/tair/HomeScreen.jsx` — categories + row listings + bells
+- `/app/frontend/src/tair/MessagesScreen.jsx` — WS + typing indicator
+- `/app/frontend/src/tair/KycScreen.jsx` (new)
+- `/app/frontend/src/tair/NotificationsScreen.jsx` (new)
 
-## 🚧 Next (P1)
-- Real chat wiring between order parties
-- KYC upload for carriers/shops (backend model exists)
-- Notifications (FCM/APNS) for matching trips + order updates
-- Admin panel for report review & species catalog editor
-
-## 🛡️ Compliance
-- Species `is_prohibited` + `requires_cites_permit` flags
-- Auto-flag on 3+ reports or prohibited species
+## 🚧 Backlog (P1/P2)
+- P1: Admin panel screen to review KYC submissions + approve/reject
+- P1: Send FCM/APNS push notifications (backend already has helpers; needs device-token registration wired to Expo/FCM on future mobile builds)
+- P2: Voice/video call from chat thread
+- P2: Auctions, Subscriptions, Insurance (frozen per user request)
+- P2: Refactor: shared `db` module (chat/kyc/notifs each open own Motor client)
+- P2: Split server.py routers into `routers/__init__.py` list
 
 ## 🔐 Admin
 - Email: `sky-321@hotmail.com` | user_id: `user_93fd2a08e40e` | super_admin
@@ -63,3 +70,4 @@ Saudi Arabia's most trusted marketplace and logistics network for birds and pets
 ## ⚠️ Rules
 - **DO NOT** trigger EAS build unless user explicitly says "ابنِ" / "build now"
 - Web preview only for testing
+- Language: Arabic (RTL)

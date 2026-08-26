@@ -1,9 +1,9 @@
 // طير — Create Listing (seller flow)
 import React, { useEffect, useState } from "react";
-import { X, Image as ImageIcon, Camera } from "lucide-react";
+import { X, Camera, MapPin, Bird } from "lucide-react";
 import { T, S } from "./tairTheme";
-import { tairApi, SAUDI_CITIES } from "./tairApi";
-import { TopBar } from "./TairUI";
+import { tairApi, ALL_LOCATIONS } from "./tairApi";
+import { TopBar, BottomSheet, SelectorItem } from "./TairUI";
 
 const GENDERS = [
   { id: "unknown", label: "غير محدد" },
@@ -19,9 +19,11 @@ const HEALTH_STATUS = [
 ];
 
 export default function CreateListingScreen({ user, onBack, onCreated }) {
+  const [families, setFamilies] = useState([]);
   const [species, setSpecies] = useState([]);
   const [form, setForm] = useState({
     title: "",
+    family: "",
     species: "",
     breed: "",
     gender: "unknown",
@@ -30,7 +32,7 @@ export default function CreateListingScreen({ user, onBack, onCreated }) {
     description: "",
     price_sar: "",
     price_negotiable: true,
-    city: SAUDI_CITIES[0],
+    city: ALL_LOCATIONS[0],
     district: "",
     health: { status: "good", vaccinated: false, ring_number: "", notes: "" },
     images: [],
@@ -38,15 +40,25 @@ export default function CreateListingScreen({ user, onBack, onCreated }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [sheet, setSheet] = useState(null); // 'family' | 'species' | 'city'
 
   useEffect(() => {
-    tairApi.listSpecies().then((s) => {
-      setSpecies(s);
-      if (s.length && !form.species) {
-        setForm((f) => ({ ...f, species: s[0].species_id }));
+    tairApi.listFamilies().then((f) => {
+      setFamilies(f);
+      if (f.length && !form.family) {
+        setForm((prev) => ({ ...prev, family: f[0].family_id }));
       }
     });
   }, []);
+
+  useEffect(() => {
+    if (!form.family) return;
+    tairApi.listSpecies(undefined, form.family).then((s) => {
+      setSpecies(s);
+      // reset species selection when family changes
+      setForm((prev) => ({ ...prev, species: s[0]?.species_id || "" }));
+    });
+  }, [form.family]);
 
   const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const setHealth = (k, v) =>
@@ -83,13 +95,14 @@ export default function CreateListingScreen({ user, onBack, onCreated }) {
     setError("");
     if (!form.title.trim()) return setError("العنوان مطلوب");
     if (!form.description.trim()) return setError("الوصف مطلوب");
-    if (!form.species) return setError("اختر نوع الطائر");
+    if (!form.family) return setError("اختر الفئة");
     if (!form.price_sar || isNaN(Number(form.price_sar)))
       return setError("السعر مطلوب");
     if (!form.city) return setError("المدينة مطلوبة");
 
     const payload = {
       ...form,
+      species: form.species || null,
       price_sar: Number(form.price_sar),
       age_months: form.age_months ? Number(form.age_months) : null,
       cover_image: form.images[0] || null,
@@ -104,6 +117,9 @@ export default function CreateListingScreen({ user, onBack, onCreated }) {
       setSaving(false);
     }
   };
+
+  const currentFamily = families.find((f) => f.family_id === form.family);
+  const currentSpecies = species.find((s) => s.species_id === form.species);
 
   return (
     <div style={S.screen} data-testid="create-listing-screen">
@@ -161,19 +177,31 @@ export default function CreateListingScreen({ user, onBack, onCreated }) {
             data-testid="input-title"
           />
 
-          <label style={{ ...S.label, marginTop: 12 }}>النوع *</label>
-          <select
-            style={S.input}
-            value={form.species}
-            onChange={(e) => setField("species", e.target.value)}
-            data-testid="input-species"
+          <label style={{ ...S.label, marginTop: 12 }}>الفئة *</label>
+          <button
+            type="button"
+            onClick={() => setSheet("family")}
+            style={styles.selectBtn}
+            data-testid="input-family"
           >
-            {species.map((s) => (
-              <option key={s.species_id} value={s.species_id}>
-                {s.name_ar}
-              </option>
-            ))}
-          </select>
+            <Bird size={14} strokeWidth={2.2} color={T.primary} />
+            <span>{currentFamily?.name_ar || "اختر الفئة"}</span>
+          </button>
+
+          {species.length > 0 && (
+            <>
+              <label style={{ ...S.label, marginTop: 12 }}>النوع (اختياري)</label>
+              <button
+                type="button"
+                onClick={() => setSheet("species")}
+                style={styles.selectBtn}
+                data-testid="input-species"
+              >
+                <Bird size={14} strokeWidth={2.2} color={T.primary} />
+                <span>{currentSpecies?.name_ar || "اختر النوع"}</span>
+              </button>
+            </>
+          )}
 
           <div style={styles.row2}>
             <div>
@@ -294,16 +322,15 @@ export default function CreateListingScreen({ user, onBack, onCreated }) {
           <div style={styles.row2}>
             <div>
               <label style={S.label}>المدينة *</label>
-              <select
-                style={S.input}
-                value={form.city}
-                onChange={(e) => setField("city", e.target.value)}
+              <button
+                type="button"
+                onClick={() => setSheet("city")}
+                style={styles.selectBtn}
                 data-testid="input-city"
               >
-                {SAUDI_CITIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+                <MapPin size={14} strokeWidth={2.2} color={T.primary} />
+                <span>{form.city}</span>
+              </button>
             </div>
             <div>
               <label style={S.label}>الحي</label>
@@ -329,6 +356,58 @@ export default function CreateListingScreen({ user, onBack, onCreated }) {
           {saving ? "جاري النشر…" : "انشر الإعلان"}
         </button>
       </div>
+
+      {/* Sheets */}
+      <BottomSheet
+        open={sheet === "family"}
+        onClose={() => setSheet(null)}
+        title="اختر الفئة"
+      >
+        {families.map((f) => (
+          <SelectorItem
+            key={f.family_id}
+            icon={<Bird size={16} strokeWidth={2.2} />}
+            label={f.name_ar}
+            active={form.family === f.family_id}
+            onClick={() => { setField("family", f.family_id); setSheet(null); }}
+            testId={`family-opt-${f.family_id}`}
+          />
+        ))}
+      </BottomSheet>
+
+      <BottomSheet
+        open={sheet === "species"}
+        onClose={() => setSheet(null)}
+        title="اختر النوع"
+      >
+        {species.map((s) => (
+          <SelectorItem
+            key={s.species_id}
+            icon={<Bird size={16} strokeWidth={2.2} />}
+            label={s.name_ar}
+            active={form.species === s.species_id}
+            onClick={() => { setField("species", s.species_id); setSheet(null); }}
+            testId={`species-opt-${s.species_id}`}
+          />
+        ))}
+      </BottomSheet>
+
+      <BottomSheet
+        open={sheet === "city"}
+        onClose={() => setSheet(null)}
+        title="اختر المدينة أو الدولة"
+      >
+        {ALL_LOCATIONS.map((c) => (
+          <SelectorItem
+            key={c}
+            icon={<MapPin size={16} strokeWidth={2.2} />}
+            label={c}
+            active={form.city === c}
+            onClick={() => { setField("city", c); setSheet(null); }}
+            testId={`city-opt-${c}`}
+          />
+        ))}
+      </BottomSheet>
     </div>
   );
 }
@@ -337,6 +416,24 @@ export function TopBarStub() { return null; }
 
 const styles = {
   hint: { fontSize: 12, color: T.textMuted, marginTop: 0, marginBottom: 12, textAlign: "right" },
+  selectBtn: {
+    width: "100%",
+    display: "flex",
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 8,
+    padding: "12px 14px",
+    background: T.surface,
+    border: `1.5px solid ${T.border}`,
+    borderRadius: T.radius,
+    fontFamily: "inherit",
+    fontSize: 14,
+    fontWeight: 700,
+    color: T.text,
+    cursor: "pointer",
+    textAlign: "right",
+    boxSizing: "border-box",
+  },
   imagesGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))",
